@@ -1,6 +1,6 @@
 {
   "hosting": {
-    "public": "tkd_brackets/build/web",
+    "public": "build/web",
     "ignore": [
       "firebase.json",
       "**/.*",
