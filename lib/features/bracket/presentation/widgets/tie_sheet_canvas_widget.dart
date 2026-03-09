@@ -497,7 +497,9 @@ class TieSheetPainter extends CustomPainter {
       
     // Header for the Left Bracket Side
     final leftHeaderX = margin;
-    canvas.drawRect(Rect.fromLTRB(leftHeaderX, headerRowTop, leftHeaderX + listW, headerRowBottom), thickPen);
+    final rRectL = RRect.fromLTRBR(leftHeaderX, headerRowTop, leftHeaderX + listW, headerRowBottom, const Radius.circular(6.0));
+    canvas.drawRRect(rRectL, Paint()..color = const Color(0xFFF1F5F9)..style = PaintingStyle.fill);
+    canvas.drawRRect(rRectL, thickPen);
     canvas.drawLine(Offset(leftHeaderX + noColW, headerRowTop), Offset(leftHeaderX + noColW, headerRowBottom), normalPen);
     canvas.drawLine(Offset(leftHeaderX + noColW + nameColW, headerRowTop), Offset(leftHeaderX + noColW + nameColW, headerRowBottom), normalPen);
 
@@ -508,7 +510,9 @@ class TieSheetPainter extends CustomPainter {
     // If double elimination, we could draw right side header, but currently layout assumes symmetry only if single.
     if (!_isDouble) {
       final rightHeaderX = size.width - margin - listW;
-      canvas.drawRect(Rect.fromLTRB(rightHeaderX, headerRowTop, rightHeaderX + listW, headerRowBottom), thickPen);
+      final rRectR = RRect.fromLTRBR(rightHeaderX, headerRowTop, rightHeaderX + listW, headerRowBottom, const Radius.circular(6.0));
+      canvas.drawRRect(rRectR, Paint()..color = const Color(0xFFF1F5F9)..style = PaintingStyle.fill);
+      canvas.drawRRect(rRectR, thickPen);
       canvas.drawLine(Offset(rightHeaderX + regIdColW, headerRowTop), Offset(rightHeaderX + regIdColW, headerRowBottom), normalPen);
       canvas.drawLine(Offset(rightHeaderX + regIdColW + nameColW, headerRowTop), Offset(rightHeaderX + regIdColW + nameColW, headerRowBottom), normalPen);
 
@@ -532,7 +536,9 @@ class TieSheetPainter extends CustomPainter {
     // The "No." is positioned without borders, and the Name/RegID have a thick border.
     if (!mirrored) {
       final boxLeft = x + noColW;
-      canvas.drawRect(Rect.fromLTRB(boxLeft, y, right, y + rowH), pen);
+      final rectL = RRect.fromLTRBR(boxLeft, y, right, y + rowH, const Radius.circular(6.0));
+      canvas.drawRRect(rectL, Paint()..color = const Color(0xFFF9FAFB)..style = PaintingStyle.fill);
+      canvas.drawRRect(rectL, pen);
       canvas.drawLine(Offset(boxLeft + nameColW, y), Offset(boxLeft + nameColW, y + rowH), normalPen);
 
       _drawText(canvas, '$idx', x + noColW / 2, y + rowH / 2 - 6, _bold(12), center: true);
@@ -546,7 +552,9 @@ class TieSheetPainter extends CustomPainter {
     } else {
       // Mirrored layout: [REG ID | NAME | NO] -> No border for NO.
       final boxRight = right - noColW;
-      canvas.drawRect(Rect.fromLTRB(x, y, boxRight, y + rowH), pen);
+      final rectR = RRect.fromLTRBR(x, y, boxRight, y + rowH, const Radius.circular(6.0));
+      canvas.drawRRect(rectR, Paint()..color = const Color(0xFFF9FAFB)..style = PaintingStyle.fill);
+      canvas.drawRRect(rectR, pen);
       canvas.drawLine(Offset(x + regIdColW, y), Offset(x + regIdColW, y + rowH), normalPen);
 
       if (p.registrationId != null && p.registrationId!.isNotEmpty) {
@@ -561,14 +569,21 @@ class TieSheetPainter extends CustomPainter {
   }
 
   void _paintJunction(Canvas canvas, MatchEntity match, double junctionX, Paint pen, {required bool mirrored}) {
+    final pendingPen = Paint()..color = const Color(0xFFD1D5DB)..strokeWidth = 1.0..style = PaintingStyle.stroke;
+    final winnerPen = Paint()..color = const Color(0xFF1F2937)..strokeWidth = 2.0..strokeCap = StrokeCap.round..style = PaintingStyle.stroke;
+
+    Paint topPen = (match.participantBlueId != null) ? winnerPen : pendingPen;
+    Paint botPen = (match.participantRedId != null) ? winnerPen : pendingPen;
+    Paint outPen = (match.winnerId != null) ? winnerPen : pendingPen;
+
     final isBye = match.resultType == MatchResultType.bye;
     
     if (isBye) {
       final topIn = _resolveInputOffset(match, isTopSlot: true);
       if (topIn != null) {
-        canvas.drawLine(topIn, Offset(junctionX, topIn.dy), pen);
+        canvas.drawLine(topIn, Offset(junctionX, topIn.dy), topPen);
         final nextJunctionX = mirrored ? junctionX - roundColW : junctionX + roundColW;
-        canvas.drawLine(Offset(junctionX, topIn.dy), Offset(nextJunctionX, topIn.dy), pen);
+        canvas.drawLine(Offset(junctionX, topIn.dy), Offset(nextJunctionX, topIn.dy), outPen);
         
         _nodeOffsets[match.id] = Offset(junctionX, topIn.dy);
 
@@ -611,30 +626,44 @@ class TieSheetPainter extends CustomPainter {
     final output = Offset(junctionX, midY);
     _nodeOffsets[match.id] = output;
 
-    canvas.drawLine(effectiveTop, Offset(junctionX, effectiveTop.dy), pen);
-    canvas.drawLine(effectiveBot, Offset(junctionX, effectiveBot.dy), pen);
-    canvas.drawLine(Offset(junctionX, effectiveTop.dy), Offset(junctionX, effectiveBot.dy), pen);
+    final r = 6.0;
+    
+    // Top arm
+    final pathT = Path();
+    pathT.moveTo(effectiveTop.dx, effectiveTop.dy);
+    pathT.lineTo(junctionX - (mirrored ? -r : r), effectiveTop.dy);
+    pathT.quadraticBezierTo(junctionX, effectiveTop.dy, junctionX, effectiveTop.dy + r);
+    pathT.lineTo(junctionX, midY);
+    canvas.drawPath(pathT, topPen);
+
+    // Bottom arm
+    final pathB = Path();
+    pathB.moveTo(effectiveBot.dx, effectiveBot.dy);
+    pathB.lineTo(junctionX - (mirrored ? -r : r), effectiveBot.dy);
+    pathB.quadraticBezierTo(junctionX, effectiveBot.dy, junctionX, effectiveBot.dy - r);
+    pathB.lineTo(junctionX, midY);
+    canvas.drawPath(pathB, botPen);
 
     final nextJunctionX = mirrored ? junctionX - roundColW : junctionX + roundColW;
-    canvas.drawLine(output, Offset(nextJunctionX, midY), pen);
+    canvas.drawLine(output, Offset(nextJunctionX, midY), outPen);
 
-    final bStyle = const TextStyle(color: Colors.blue, fontWeight: FontWeight.bold, fontSize: 10);
-    final rStyle = const TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 10);
+    final blueColor = const Color(0xFF3B82F6);
+    final redColor = const Color(0xFFEF4444);
 
     if (!mirrored) {
-      _drawText(canvas, 'B', junctionX + 4, effectiveTop.dy - 14, bStyle);
-      _drawText(canvas, 'R', junctionX + 4, effectiveBot.dy + 2, rStyle);
+      _drawBadge(canvas, 'B', blueColor, junctionX + 10, effectiveTop.dy - 8);
+      _drawBadge(canvas, 'R', redColor, junctionX + 10, effectiveBot.dy + 8);
     } else {
-      _drawText(canvas, 'B', junctionX - 14, effectiveTop.dy - 14, bStyle);
-      _drawText(canvas, 'R', junctionX - 14, effectiveBot.dy + 2, rStyle);
+      _drawBadge(canvas, 'B', blueColor, junctionX - 10, effectiveTop.dy - 8);
+      _drawBadge(canvas, 'R', redColor, junctionX - 10, effectiveBot.dy + 8);
     }
 
     final gNum = _matchGlobalNumbers[match.id];
     if (gNum != null) {
       if (!mirrored) {
-        _drawText(canvas, '$gNum', junctionX + 4, midY + 2, _bold(9));
+        _drawText(canvas, '$gNum', junctionX + 4, midY - 6, _bold(9));
       } else {
-        _drawText(canvas, '$gNum', junctionX - 14, midY + 2, _bold(9));
+        _drawText(canvas, '$gNum', junctionX - 14, midY - 6, _bold(9));
       }
     }
 
@@ -741,24 +770,33 @@ class TieSheetPainter extends CustomPainter {
     final y = size.height - medalH - margin + 10;
 
     final normalPen = Paint()
-      ..color = pen.color
+      ..color = const Color(0xFFD1D5DB)
       ..strokeWidth = 1.0
       ..style = PaintingStyle.stroke;
+      
+    final goldBg = Paint()..color = const Color(0xFFFEF3C7)..style = PaintingStyle.fill;
+    final silverBg = Paint()..color = const Color(0xFFF3F4F6)..style = PaintingStyle.fill;
+    final bronzeBg = Paint()..color = const Color(0xFFFFEDD5)..style = PaintingStyle.fill;
 
     for (var row = 0; row < 3; row++) {
       final rY = y + row * mRowH;
-      // Empty medal winner name box
-      canvas.drawRect(Rect.fromLTWH(x, rY, leftBlank + nameW, mRowH), normalPen);
-      // Medal name box (Gold/Silver/Bronze)
-      canvas.drawRect(Rect.fromLTWH(x + leftBlank + nameW, rY, medalLabelW, mRowH), normalPen);
+      final fillPaint = row == 0 ? goldBg : (row == 1 ? silverBg : bronzeBg);
       
-      // Outer bold border
-      canvas.drawRect(Rect.fromLTWH(x, rY, tableW, mRowH), pen);
+      final labelRect = Rect.fromLTWH(x + leftBlank + nameW, rY, medalLabelW, mRowH);
+      final rLabelRect = RRect.fromRectAndCorners(labelRect, topRight: const Radius.circular(6.0), bottomRight: const Radius.circular(6.0));
+      canvas.drawRRect(rLabelRect, fillPaint);
+      
+      final nameRect = Rect.fromLTWH(x + leftBlank, rY, nameW, mRowH);
+      final rNameRect = RRect.fromRectAndCorners(nameRect, topLeft: const Radius.circular(6.0), bottomLeft: const Radius.circular(6.0));
+      canvas.drawRRect(rNameRect, Paint()..color = Colors.white..style = PaintingStyle.fill);
+
+      canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(x + leftBlank, rY, nameW + medalLabelW, mRowH), const Radius.circular(6.0)), normalPen);
+      canvas.drawLine(Offset(x + leftBlank + nameW, rY), Offset(x + leftBlank + nameW, rY + mRowH), normalPen);
     }
 
-    _drawText(canvas, 'Gold',   x + leftBlank + nameW + medalLabelW / 2, y + 8, _bold(13), center: true);
-    _drawText(canvas, 'Silver', x + leftBlank + nameW + medalLabelW / 2, y + mRowH + 8, _bold(13), center: true);
-    _drawText(canvas, 'Bronze', x + leftBlank + nameW + medalLabelW / 2, y + mRowH * 2 + 8, _bold(13), center: true);
+    _drawText(canvas, '🥇 Gold',   x + leftBlank + nameW + medalLabelW / 2, y + 8, const TextStyle(color: Color(0xFFB45309), fontSize: 13, fontWeight: FontWeight.bold, fontFamily: 'Roboto'), center: true);
+    _drawText(canvas, '🥈 Silver', x + leftBlank + nameW + medalLabelW / 2, y + mRowH + 8, const TextStyle(color: Color(0xFF374151), fontSize: 13, fontWeight: FontWeight.bold, fontFamily: 'Roboto'), center: true);
+    _drawText(canvas, '🥉 Bronze', x + leftBlank + nameW + medalLabelW / 2, y + mRowH * 2 + 8, const TextStyle(color: Color(0xFF9A3412), fontSize: 13, fontWeight: FontWeight.bold, fontFamily: 'Roboto'), center: true);
 
     final allRounds = matches.map((m) => m.roundNumber).reduce(max);
     final finals = matches.where((m) => m.roundNumber == allRounds && m.matchNumberInRound == 1).firstOrNull;
@@ -780,8 +818,14 @@ class TieSheetPainter extends CustomPainter {
 
   String _pName(ParticipantEntity p) => '${p.firstName} ${p.lastName}'.toUpperCase();
 
-  TextStyle _bold(double size) => TextStyle(color: Colors.black, fontSize: size, fontWeight: FontWeight.bold, fontFamily: 'Roboto');
-  TextStyle _normal(double size) => TextStyle(color: Colors.black, fontSize: size, fontFamily: 'Roboto');
+  TextStyle _bold(double size) => TextStyle(color: const Color(0xFF111827), fontSize: size, fontWeight: FontWeight.bold, fontFamily: 'Roboto');
+  TextStyle _normal(double size) => TextStyle(color: const Color(0xFF4B5563), fontSize: size, fontFamily: 'Roboto');
+
+  void _drawBadge(Canvas canvas, String text, Color color, double cx, double cy) {
+    final badgePaint = Paint()..color = color..style = PaintingStyle.fill;
+    canvas.drawCircle(Offset(cx, cy), 8.0, badgePaint);
+    _drawText(canvas, text, cx, cy - 6, const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold), center: true);
+  }
 
   void _drawText(Canvas canvas, String text, double x, double y, TextStyle style, {bool center = false, bool alignRight = false}) {
     final tp = TextPainter(text: TextSpan(text: text, style: style), textDirection: TextDirection.ltr);
