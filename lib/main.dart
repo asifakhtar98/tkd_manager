@@ -455,20 +455,10 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
     }
     balanced.addAll(noDojang);
 
-    List<String> finalSeeded = List<String>.filled(balanced.length, balanced.isEmpty ? "" : balanced.first.id);
-    if (balanced.isEmpty) return [];
-
-    int topIndex = 0;
-    int bottomIndex = balanced.length - 1;
-    for (int i = 0; i < balanced.length; i++) {
-        if (i % 2 == 0) {
-            finalSeeded[topIndex++] = balanced[i].id;
-        } else {
-            finalSeeded[bottomIndex--] = balanced[i].id;
-        }
-    }
-
-    return finalSeeded;
+    // Provide the balanced list directly to the generators. 
+    // The WT seeding algorithm naturally spaces adjacent seeds apart (e.g. 1 & 2 meet in finals, 1 & 3 in semi-finals).
+    // The round-robin extraction creates an interleaved list [A1, B1, C1, A2, B2, ...].
+    return balanced.map((p) => p.id).toList();
   }
 
   void _generateBracket() async {
@@ -604,6 +594,10 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
 
   void _declareWinner(MatchEntity match, String? winnerId, MatchResultType resultType) {
     Navigator.pop(context);
+    _processMatchResult(match, winnerId, resultType);
+  }
+
+  void _processMatchResult(MatchEntity match, String? winnerId, MatchResultType resultType) {
     setState(() {
       final matchIndex = _matches!.indexWhere((m) => m.id == match.id);
       if (matchIndex != -1) {
@@ -617,31 +611,49 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
       if (match.winnerAdvancesToMatchId != null) {
         final nextMatchIndex = _matches!.indexWhere((m) => m.id == match.winnerAdvancesToMatchId);
         if (nextMatchIndex != -1) {
-          final nextMatch = _matches![nextMatchIndex];
+          var nextMatch = _matches![nextMatchIndex];
           if (nextMatch.participantRedId == null) {
-            _matches![nextMatchIndex] = nextMatch.copyWith(participantRedId: winnerId);
+            nextMatch = nextMatch.copyWith(participantRedId: winnerId);
           } else if (nextMatch.participantBlueId == null) {
-            _matches![nextMatchIndex] = nextMatch.copyWith(participantBlueId: winnerId);
+            nextMatch = nextMatch.copyWith(participantBlueId: winnerId);
           } else {
             if (nextMatch.participantRedId == match.participantRedId || nextMatch.participantRedId == match.participantBlueId) {
-              _matches![nextMatchIndex] = nextMatch.copyWith(participantRedId: winnerId);
+              nextMatch = nextMatch.copyWith(participantRedId: winnerId);
             } else {
-              _matches![nextMatchIndex] = nextMatch.copyWith(participantBlueId: winnerId);
+              nextMatch = nextMatch.copyWith(participantBlueId: winnerId);
             }
+          }
+          _matches![nextMatchIndex] = nextMatch;
+
+          if (nextMatch.notes != null && nextMatch.notes!.startsWith('PHANTOM_BYE_1')) {
+            // Auto advance since the other player is a phantom
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+               _processMatchResult(nextMatch, winnerId, MatchResultType.bye);
+            });
           }
         }
       }
       
       if (match.loserAdvancesToMatchId != null) {
          final loserId = (winnerId == match.participantRedId) ? match.participantBlueId : match.participantRedId;
-         final nextMatchIndex = _matches!.indexWhere((m) => m.id == match.loserAdvancesToMatchId);
-         if (nextMatchIndex != -1) {
-             final nextMatch = _matches![nextMatchIndex];
-             if (nextMatch.participantRedId == null) {
-                _matches![nextMatchIndex] = nextMatch.copyWith(participantRedId: loserId);
-             } else if (nextMatch.participantBlueId == null) {
-                _matches![nextMatchIndex] = nextMatch.copyWith(participantBlueId: loserId);
-             }
+         if (loserId != null) {
+           final nextMatchIndex = _matches!.indexWhere((m) => m.id == match.loserAdvancesToMatchId);
+           if (nextMatchIndex != -1) {
+               var nextMatch = _matches![nextMatchIndex];
+               if (nextMatch.participantRedId == null) {
+                  nextMatch = nextMatch.copyWith(participantRedId: loserId);
+               } else if (nextMatch.participantBlueId == null) {
+                  nextMatch = nextMatch.copyWith(participantBlueId: loserId);
+               }
+               _matches![nextMatchIndex] = nextMatch;
+
+               if (nextMatch.notes != null && nextMatch.notes!.startsWith('PHANTOM_BYE_1')) {
+                  // Auto advance since the other player is a phantom
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                     _processMatchResult(nextMatch, loserId, MatchResultType.bye);
+                  });
+               }
+           }
          }
       }
     });

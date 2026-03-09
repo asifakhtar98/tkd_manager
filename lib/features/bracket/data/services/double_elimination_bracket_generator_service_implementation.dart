@@ -221,38 +221,155 @@ class DoubleEliminationBracketGeneratorServiceImplementation
       }
     }
 
-    // Step 10: Assign participants to WB Round 1 and handle byes
+    // Step 10: Assign participants to WB Round 1 (Standard WT Seeding)
     final r1Matches = wbMatchMap[1]!;
     final r1Count = r1Matches.length;
-    final byeCount = bracketSize - n;
-    var pIdx = 0;
+
+    List<int> generateSeeding(int rounds) {
+      if (rounds <= 1) return [1, 2];
+      final prev = generateSeeding(rounds - 1);
+      final result = <int>[];
+      final nextSum = (1 << rounds) + 1;
+      for (final p in prev) {
+        result.add(p);
+        result.add(nextSum - p);
+      }
+      return result;
+    }
+
+    final seeding = generateSeeding(max(1, wRounds));
+
     for (var m = 1; m <= r1Count; m++) {
-      String? redId;
+      final seedBlue = seeding[(m - 1) * 2]; // Top slot (Blue)
+      final seedRed = seeding[(m - 1) * 2 + 1]; // Bottom slot (Red)
+
       String? blueId;
-      if (m <= byeCount) {
-        if (pIdx < n) redId = participantIds[pIdx++];
-      } else {
-        if (pIdx < n) redId = participantIds[pIdx++];
-        if (pIdx < n) blueId = participantIds[pIdx++];
+      String? redId;
+
+      if (seedBlue <= n) {
+        blueId = participantIds[seedBlue - 1];
+      }
+      if (seedRed <= n) {
+        redId = participantIds[seedRed - 1];
       }
 
       var match = r1Matches[m]!;
       match = match.copyWith(
-        participantRedId: redId,
         participantBlueId: blueId,
+        participantRedId: redId,
       );
-
-      if (redId != null && blueId == null) {
-        match = match.copyWith(
-          status: MatchStatus.completed,
-          resultType: MatchResultType.bye,
-          completedAtTimestamp: now,
-          winnerId: redId,
-          loserAdvancesToMatchId: null, // Bye has no loser
-        );
-      }
       r1Matches[m] = match;
     }
+
+    // Flatten all matches into a map for topological processing
+    final allMatchesMap = <String, MatchEntity>{};
+    for (final roundMatches in wbMatchMap.values) {
+      for (final m in roundMatches.values) allMatchesMap[m.id] = m;
+    }
+    for (final roundMatches in lbMatchMap.values) {
+      for (final m in roundMatches.values) allMatchesMap[m.id] = m;
+    }
+    allMatchesMap[grandFinalsMatch.id] = grandFinalsMatch;
+    if (resetMatch != null) allMatchesMap[resetMatch.id] = resetMatch;
+
+    // Evaluate phantom paths
+    final matchInputs = <String, List<String>>{};
+    for (final m in allMatchesMap.values) matchInputs[m.id] = [];
+
+    // Initialize WB R1 inputs
+    for (var m = 1; m <= r1Count; m++) {
+      final seedBlue = seeding[(m - 1) * 2];
+      final seedRed = seeding[(m - 1) * 2 + 1];
+      matchInputs[wbMatchMap[1]![m]!.id]!.add(seedBlue <= n ? 'REAL' : 'PHANTOM');
+      matchInputs[wbMatchMap[1]![m]!.id]!.add(seedRed <= n ? 'REAL' : 'PHANTOM');
+    }
+
+    final evaluatedMatches = <String>{};
+    bool changed = true;
+    while(changed) {
+       changed = false;
+       for (final matchId in allMatchesMap.keys) {
+          if (evaluatedMatches.contains(matchId)) continue;
+          final inputs = matchInputs[matchId]!;
+          if (inputs.length == 2) {
+             final phantomCount = inputs.where((i) => i == 'PHANTOM').length;
+             
+             String winnerOutput;
+             String loserOutput;
+
+             if (phantomCount == 2) {
+                winnerOutput = 'PHANTOM';
+                loserOutput = 'PHANTOM';
+             } else if (phantomCount == 1) {
+                winnerOutput = 'REAL'; 
+                loserOutput = 'PHANTOM'; 
+             } else {
+                winnerOutput = 'REAL';
+                loserOutput = 'REAL';
+             }
+
+             // Push outputs down the graph
+             final m = allMatchesMap[matchId]!;
+             if (m.winnerAdvancesToMatchId != null) {
+                matchInputs[m.winnerAdvancesToMatchId!]!.add(winnerOutput);
+             }
+             if (m.loserAdvancesToMatchId != null) {
+                matchInputs[m.loserAdvancesToMatchId!]!.add(loserOutput);
+             }
+
+             evaluatedMatches.add(matchId);
+             changed = true;
+          }
+       }
+    }
+
+    // Apply phantom status to the matches
+    for (final matchId in allMatchesMap.keys) {
+      final m = allMatchesMap[matchId]!;
+      final inputs = matchInputs[matchId]!;
+      if (inputs.length == 2) {
+        final phantomCount = inputs.where((i) => i == 'PHANTOM').length;
+        if (phantomCount > 0) {
+           // We mark this universally as a phantom bye.
+           // For WB R1, we know the real player immediately, so we can complete it.
+           if (m.roundNumber == 1 && m.bracketId == winnersBracketId) {
+              final winnerId = (m.participantBlueId != null) ? m.participantBlueId : m.participantRedId;
+              allMatchesMap[matchId] = m.copyWith(
+                status: MatchStatus.completed,
+                resultType: MatchResultType.bye,
+                completedAtTimestamp: now,
+                winnerId: winnerId,
+                loserAdvancesToMatchId: null, // WB R1 bye loser doesn't drop
+              );
+           } else {
+              // For LB matches or others, the real player is unknown until runtime.
+              // Mark it so runtime auto-declares them winner. Use 'notes' since MatchEntity doesn't have custom JSON.
+              allMatchesMap[matchId] = m.copyWith(
+                 notes: 'PHANTOM_BYE_$phantomCount',
+                 // Leave status as pending. Once the real player arrives, runtime fires _declareWinner.
+                 // If phantomCount == 2, it's a permanent ghost match, mark it completed.
+                 status: phantomCount == 2 ? MatchStatus.completed : MatchStatus.pending,
+                 resultType: phantomCount == 2 ? MatchResultType.bye : null,
+              );
+           }
+        }
+      }
+    }
+
+    // Re-pack match maps if needed, or just use allMatchesMap values
+    // But Step 11 expects wbMatchMap to be updated!
+    for (int r = 1; r <= wRounds; r++) {
+       for (final key in wbMatchMap[r]!.keys.toList()) {
+          wbMatchMap[r]![key] = allMatchesMap[wbMatchMap[r]![key]!.id]!;
+       }
+    }
+    for (int r = 1; r <= lRounds; r++) {
+       for (final key in lbMatchMap[r]!.keys.toList()) {
+          lbMatchMap[r]![key] = allMatchesMap[lbMatchMap[r]![key]!.id]!;
+       }
+    }
+    grandFinalsMatch = allMatchesMap[grandFinalsMatch.id]!;
+    if (resetMatch != null) resetMatch = allMatchesMap[resetMatch.id]!;
 
     // Step 11: Advance bye winners in Winners Bracket
     if (wRounds >= 2) {
@@ -264,9 +381,9 @@ class DoubleEliminationBracketGeneratorServiceImplementation
           final nextMatchNum = (m + 1) ~/ 2;
           var nextMatch = wbMatchMap[2]![nextMatchNum]!;
           if (m % 2 != 0) {
-            nextMatch = nextMatch.copyWith(participantRedId: match.winnerId);
-          } else {
             nextMatch = nextMatch.copyWith(participantBlueId: match.winnerId);
+          } else {
+            nextMatch = nextMatch.copyWith(participantRedId: match.winnerId);
           }
           wbMatchMap[2]![nextMatchNum] = nextMatch;
         }

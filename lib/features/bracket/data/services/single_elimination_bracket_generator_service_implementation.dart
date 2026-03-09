@@ -23,6 +23,12 @@ class SingleEliminationBracketGeneratorServiceImplementation
     bool includeThirdPlaceMatch = false,
   }) {
     final n = participantIds.length;
+    if (n < 2) {
+      throw ArgumentError(
+        'At least 2 participants are required '
+        'to generate a single elimination bracket.',
+      );
+    }
     final totalRounds = (log(n) / ln2).ceil();
     final bracketSize = pow(2, totalRounds).toInt();
     final now = DateTime.now();
@@ -107,39 +113,39 @@ class SingleEliminationBracketGeneratorServiceImplementation
     final seeding = generateSeeding(totalRounds);
     
     for (var m = 1; m <= r1Count; m++) {
-      final seedRed = seeding[(m - 1) * 2];
-      final seedBlue = seeding[(m - 1) * 2 + 1];
+      final seedBlue = seeding[(m - 1) * 2]; // Top slot (Blue)
+      final seedRed = seeding[(m - 1) * 2 + 1]; // Bottom slot (Red)
 
-      String? redId;
       String? blueId;
+      String? redId;
 
-      if (seedRed <= n) {
-        redId = participantIds[seedRed - 1];
-      }
       if (seedBlue <= n) {
         blueId = participantIds[seedBlue - 1];
+      }
+      if (seedRed <= n) {
+        redId = participantIds[seedRed - 1];
       }
 
       var match = r1Matches[m]!;
       match = match.copyWith(
-        participantRedId: redId,
         participantBlueId: blueId,
+        participantRedId: redId,
       );
 
       // Handle BYE Status/Result
-      if (redId != null && blueId == null) {
-        match = match.copyWith(
-          status: MatchStatus.completed,
-          resultType: MatchResultType.bye,
-          completedAtTimestamp: now,
-          winnerId: redId,
-        );
-      } else if (redId == null && blueId != null) {
+      if (blueId != null && redId == null) {
         match = match.copyWith(
           status: MatchStatus.completed,
           resultType: MatchResultType.bye,
           completedAtTimestamp: now,
           winnerId: blueId,
+        );
+      } else if (blueId == null && redId != null) {
+        match = match.copyWith(
+          status: MatchStatus.completed,
+          resultType: MatchResultType.bye,
+          completedAtTimestamp: now,
+          winnerId: redId,
         );
       }
       r1Matches[m] = match;
@@ -184,9 +190,9 @@ class SingleEliminationBracketGeneratorServiceImplementation
           var nextMatch = r2Matches[nextMatchNum]!;
 
           if (m % 2 != 0) {
-            nextMatch = nextMatch.copyWith(participantRedId: match.winnerId);
-          } else {
             nextMatch = nextMatch.copyWith(participantBlueId: match.winnerId);
+          } else {
+            nextMatch = nextMatch.copyWith(participantRedId: match.winnerId);
           }
           r2Matches[nextMatchNum] = nextMatch;
         }

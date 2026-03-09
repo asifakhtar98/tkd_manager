@@ -123,7 +123,8 @@ void main() {
       await tester.tap(clearAll);
       await tester.pumpAndSettle();
 
-      expect(find.text('GENERATE'), findsNothing);
+      // Expect GENERATE button to be disabled. The disabled Tooltip should be visible in the widget tree.
+      expect(find.byTooltip('Add at least 2 players to generate a bracket'), findsOneWidget);
     });
 
     testWidgets('3b. CSV import (First,Last,Dojang,RegID)', (tester) async {
