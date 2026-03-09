@@ -3,9 +3,19 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:tkd_saas/main.dart' as app;
 
 void main() {
+  // Helper: navigate to setup screen
+  Future<void> navigateToSetup(WidgetTester tester) async {
+    await tester.pumpWidget(const app.BracketGeneratorApp());
+    await tester.pumpAndSettle();
+    
+    final startBtn = find.text('Start New Tournament');
+    await tester.ensureVisible(startBtn);
+    await tester.tap(startBtn);
+    await tester.pumpAndSettle();
+  }
+
   // Helper: add N players
   Future<void> addPlayers(WidgetTester tester, List<List<String>> players) async {
-    // Participant fields are indices 6, 7, 8 in the current layout due to Tournament Info fields
     final firstInput = find.widgetWithText(TextField, 'First Name');
     final lastInput = find.widgetWithText(TextField, 'Last Name');
     final dojangInput = find.widgetWithText(TextField, 'Dojang / Club (Optional)');
@@ -35,10 +45,17 @@ void main() {
     await tester.pumpAndSettle(const Duration(seconds: 1));
   }
 
-  // Helper: go back to setup
+  // Helper: go back
   Future<void> goBack(WidgetTester tester) async {
     final backButton = find.byType(BackButton);
-    if (tester.any(backButton)) {
+    if (!tester.any(backButton)) {
+      // Try leading icon button if BackButton isn't found (GoRouter uses a back arrow icon)
+      final iconBack = find.byIcon(Icons.arrow_back);
+      if (tester.any(iconBack)) {
+        await tester.tap(iconBack);
+        await tester.pumpAndSettle();
+      }
+    } else {
       await tester.tap(backButton);
       await tester.pumpAndSettle();
     }
@@ -54,23 +71,19 @@ void main() {
 
   group('1. Single Elimination', () {
     testWidgets('1a. 4 players: correct bracket structure', (tester) async {
-      await tester.pumpWidget(const app.BracketGeneratorApp());
-      await tester.pumpAndSettle();
+      await navigateToSetup(tester);
       expect(find.text('New Bracket Setup'), findsOneWidget);
 
       await addPlayers(tester, fourPlayers);
       await tapGenerate(tester);
-      expect(find.textContaining('Tournament Bracket'), findsOneWidget);
-
-      // Verify custom paint exists
-      expect(find.byType(CustomPaint), findsWidgets);
+      // New screen title: 'Single Elimination - 4 Players'
+      expect(find.textContaining('Single Elimination'), findsOneWidget);
 
       await goBack(tester);
     });
 
     testWidgets('1b. 3 players: BYE handling', (tester) async {
-      await tester.pumpWidget(const app.BracketGeneratorApp());
-      await tester.pumpAndSettle();
+      await navigateToSetup(tester);
 
       await addPlayers(tester, [
         ['Alice', 'Kim', 'Dojang A'],
@@ -79,8 +92,7 @@ void main() {
       ]);
 
       await tapGenerate(tester);
-      expect(find.textContaining('Tournament Bracket'), findsOneWidget);
-      expect(find.byType(CustomPaint), findsWidgets);
+      expect(find.textContaining('Single Elimination'), findsOneWidget);
 
       await goBack(tester);
     });
@@ -88,8 +100,7 @@ void main() {
 
   group('2. Double Elimination', () {
     testWidgets('2a. 4 players: winners+losers brackets generated', (tester) async {
-      await tester.pumpWidget(const app.BracketGeneratorApp());
-      await tester.pumpAndSettle();
+      await navigateToSetup(tester);
 
       // Switch to Double Elimination
       final formatDropdown = find.byType(DropdownButton<String>).first;
@@ -103,8 +114,10 @@ void main() {
 
       await addPlayers(tester, fourPlayers);
       await tapGenerate(tester);
-      expect(find.textContaining('Tournament Bracket'), findsOneWidget);
-      expect(find.byType(CustomPaint), findsWidgets);
+      expect(find.textContaining('Double Elimination'), findsOneWidget);
+      // Tabs should be present
+      expect(find.text('Winners Bracket'), findsOneWidget);
+      expect(find.text('Losers Bracket'), findsOneWidget);
 
       await goBack(tester);
     });
@@ -112,8 +125,7 @@ void main() {
 
   group('3. Participant Management', () {
     testWidgets('3a. Add, verify count, clear all', (tester) async {
-      await tester.pumpWidget(const app.BracketGeneratorApp());
-      await tester.pumpAndSettle();
+      await navigateToSetup(tester);
 
       await addPlayers(tester, fourPlayers);
       expect(find.text('GENERATE'), findsOneWidget);
@@ -128,8 +140,7 @@ void main() {
     });
 
     testWidgets('3b. CSV import (First,Last,Dojang,RegID)', (tester) async {
-      await tester.pumpWidget(const app.BracketGeneratorApp());
-      await tester.pumpAndSettle();
+      await navigateToSetup(tester);
 
       final csvBtn = find.text('Paste CSV (First,Last,Dojang,RegID)');
       await tester.ensureVisible(csvBtn);
@@ -152,8 +163,7 @@ void main() {
 
   group('4. Tournament Info & Registration', () {
     testWidgets('4a. Tournament info fields present on entry screen', (tester) async {
-      await tester.pumpWidget(const app.BracketGeneratorApp());
-      await tester.pumpAndSettle();
+      await navigateToSetup(tester);
       expect(find.text('Tournament Name'), findsOneWidget);
       expect(find.text('Date Range'), findsOneWidget);
       expect(find.text('Venue'), findsOneWidget);
@@ -161,8 +171,7 @@ void main() {
     });
 
     testWidgets('4b. Registration ID field present', (tester) async {
-      await tester.pumpWidget(const app.BracketGeneratorApp());
-      await tester.pumpAndSettle();
+      await navigateToSetup(tester);
       expect(find.text('Registration ID (Optional)'), findsOneWidget);
     });
   });

@@ -8,6 +8,24 @@ void main() {
 
   // ─── HELPERS ──────────────────────────────────────────────────────────
 
+  /// Start the app and navigate to the setup screen.
+  Future<void> startAppAndNavigateToSetup(WidgetTester tester) async {
+    app.main();
+    await tester.pumpAndSettle();
+    
+    // Start at Dashboard
+    expect(find.text('TKD Brackets'), findsOneWidget);
+    
+    final startButton = find.text('Start New Tournament');
+    await tester.ensureVisible(startButton);
+    await tester.tap(startButton);
+    await tester.pumpAndSettle();
+    
+    // Wait for route transition
+    await tester.pumpAndSettle(const Duration(seconds: 1));
+    expect(find.text('New Bracket Setup'), findsOneWidget);
+  }
+
   /// Add players via the Quick Add Player form.
   /// Each player is [firstName, lastName, dojang].
   /// Optionally pass a 4th element for registrationId.
@@ -47,9 +65,9 @@ void main() {
 
   /// Navigate back to the setup screen.
   Future<void> goBack(WidgetTester tester) async {
-    final backButton = find.byTooltip('Back');
+    final backButton = find.byIcon(Icons.arrow_back);
     if (tester.any(backButton)) {
-      await tester.tap(backButton);
+      await tester.tap(backButton.first);
       await tester.pumpAndSettle();
     }
   }
@@ -76,15 +94,14 @@ void main() {
 
   group('1. Single Elimination Bracket', () {
     testWidgets('1a. 4 players → tie sheet renders with CustomPaint', (tester) async {
-      app.main();
-      await tester.pumpAndSettle();
+      await startAppAndNavigateToSetup(tester);
       expect(find.text('New Bracket Setup'), findsOneWidget);
 
       await addPlayers(tester, fourPlayers);
       await tapGenerate(tester);
 
       // Bracket viewer screen is shown
-      expect(find.textContaining('Tournament Bracket'), findsOneWidget);
+      expect(find.textContaining('Players'), findsOneWidget);
 
       // The tie sheet is rendered via CustomPaint (not card widgets)
       expect(find.byType(CustomPaint), findsWidgets);
@@ -94,8 +111,7 @@ void main() {
     });
 
     testWidgets('1b. 3 players → BYE handling (auto-completed)', (tester) async {
-      app.main();
-      await tester.pumpAndSettle();
+      await startAppAndNavigateToSetup(tester);
 
       await addPlayers(tester, [
         ['Alice', 'Kim', 'Dojang A'],
@@ -104,7 +120,7 @@ void main() {
       ]);
 
       await tapGenerate(tester);
-      expect(find.textContaining('Tournament Bracket'), findsOneWidget);
+      expect(find.textContaining('Players'), findsOneWidget);
 
       // 3 players → bracketSize=4, 1 BYE
       // Canvas renders without errors
@@ -114,8 +130,7 @@ void main() {
     });
 
     testWidgets('1c. 2 players → simple finals-only bracket', (tester) async {
-      app.main();
-      await tester.pumpAndSettle();
+      await startAppAndNavigateToSetup(tester);
 
       await addPlayers(tester, [
         ['Alpha', 'One', 'Gym A'],
@@ -123,15 +138,14 @@ void main() {
       ]);
 
       await tapGenerate(tester);
-      expect(find.textContaining('Tournament Bracket'), findsOneWidget);
+      expect(find.textContaining('Players'), findsOneWidget);
       expect(find.byType(CustomPaint), findsWidgets);
 
       await goBack(tester);
     });
 
     testWidgets('1d. 8 players → 3 rounds bracket renders correctly', (tester) async {
-      app.main();
-      await tester.pumpAndSettle();
+      await startAppAndNavigateToSetup(tester);
 
       await addPlayers(tester, [
         ['P1', 'One', 'Gym A'],
@@ -145,15 +159,14 @@ void main() {
       ]);
 
       await tapGenerate(tester);
-      expect(find.textContaining('Tournament Bracket'), findsOneWidget);
+      expect(find.textContaining('Players'), findsOneWidget);
       expect(find.byType(CustomPaint), findsWidgets);
 
       await goBack(tester);
     });
 
     testWidgets('1e. 3rd place match toggle generates bronze match', (tester) async {
-      app.main();
-      await tester.pumpAndSettle();
+      await startAppAndNavigateToSetup(tester);
 
       // Enable 3rd place match (it's the last SwitchListTile when Single Elim is selected)
       final thirdPlaceToggle = find.text('3rd Place Match');
@@ -164,7 +177,7 @@ void main() {
       await addPlayers(tester, fourPlayers);
       await tapGenerate(tester);
 
-      expect(find.textContaining('Tournament Bracket'), findsOneWidget);
+      expect(find.textContaining('Players'), findsOneWidget);
       expect(find.byType(CustomPaint), findsWidgets);
 
       await goBack(tester);
@@ -175,22 +188,20 @@ void main() {
 
   group('2. Double Elimination Bracket', () {
     testWidgets('2a. 4 players → winners+losers brackets render', (tester) async {
-      app.main();
-      await tester.pumpAndSettle();
+      await startAppAndNavigateToSetup(tester);
 
       await selectFormat(tester, 'Double Elimination');
       await addPlayers(tester, fourPlayers);
       await tapGenerate(tester);
 
-      expect(find.textContaining('Tournament Bracket'), findsOneWidget);
+      expect(find.textContaining('Players'), findsOneWidget);
       expect(find.byType(CustomPaint), findsWidgets);
 
       await goBack(tester);
     });
 
     testWidgets('2b. 8 players double elimination', (tester) async {
-      app.main();
-      await tester.pumpAndSettle();
+      await startAppAndNavigateToSetup(tester);
 
       await selectFormat(tester, 'Double Elimination');
       await addPlayers(tester, [
@@ -205,7 +216,7 @@ void main() {
       ]);
 
       await tapGenerate(tester);
-      expect(find.textContaining('Tournament Bracket'), findsOneWidget);
+      expect(find.textContaining('Players'), findsOneWidget);
       expect(find.byType(CustomPaint), findsWidgets);
 
       await goBack(tester);
@@ -216,8 +227,7 @@ void main() {
 
   group('3. Tournament Info & Registration ID', () {
     testWidgets('3a. Tournament info fields are present on entry screen', (tester) async {
-      app.main();
-      await tester.pumpAndSettle();
+      await startAppAndNavigateToSetup(tester);
 
       expect(find.text('Tournament Info'), findsOneWidget);
       expect(find.widgetWithText(TextField, 'Tournament Name'), findsOneWidget);
@@ -229,16 +239,14 @@ void main() {
     });
 
     testWidgets('3b. Registration ID field is present', (tester) async {
-      app.main();
-      await tester.pumpAndSettle();
+      await startAppAndNavigateToSetup(tester);
 
       final regIdField = find.widgetWithText(TextField, 'Registration ID (Optional)');
       expect(regIdField, findsOneWidget);
     });
 
     testWidgets('3c. Registration ID appears in participant roster', (tester) async {
-      app.main();
-      await tester.pumpAndSettle();
+      await startAppAndNavigateToSetup(tester);
 
       await addPlayers(tester, [
         ['Test', 'Player', 'Gym', 'REG-12345'],
@@ -249,8 +257,7 @@ void main() {
     });
 
     testWidgets('3d. Tournament info is passed to bracket screen', (tester) async {
-      app.main();
-      await tester.pumpAndSettle();
+      await startAppAndNavigateToSetup(tester);
 
       // Fill tournament info
       await tester.enterText(find.widgetWithText(TextField, 'Tournament Name'), '2ND FEDERATION CUP');
@@ -262,7 +269,7 @@ void main() {
       await tapGenerate(tester);
 
       // Bracket screen renders (tournament info is painted on canvas, not findable as text widgets)
-      expect(find.textContaining('Tournament Bracket'), findsOneWidget);
+      expect(find.textContaining('Players'), findsOneWidget);
       expect(find.byType(CustomPaint), findsWidgets);
 
       await goBack(tester);
@@ -273,8 +280,7 @@ void main() {
 
   group('4. Participant Management', () {
     testWidgets('4a. Add, verify count, clear all', (tester) async {
-      app.main();
-      await tester.pumpAndSettle();
+      await startAppAndNavigateToSetup(tester);
 
       await addPlayers(tester, fourPlayers);
 
@@ -298,8 +304,7 @@ void main() {
     });
 
     testWidgets('4b. Remove individual participant', (tester) async {
-      app.main();
-      await tester.pumpAndSettle();
+      await startAppAndNavigateToSetup(tester);
 
       await addPlayers(tester, [
         ['Test', 'Player1', 'Gym'],
@@ -320,8 +325,7 @@ void main() {
     });
 
     testWidgets('4c. CSV import with 4 columns (first,last,dojang,regId)', (tester) async {
-      app.main();
-      await tester.pumpAndSettle();
+      await startAppAndNavigateToSetup(tester);
 
       // Tap CSV import button  
       final csvBtn = find.textContaining('Paste CSV');
@@ -346,8 +350,7 @@ void main() {
     });
 
     testWidgets('4d. Cannot generate with 0 or 1 player', (tester) async {
-      app.main();
-      await tester.pumpAndSettle();
+      await startAppAndNavigateToSetup(tester);
 
       // 0 players: no GENERATE
       expect(find.textContaining('GENERATE'), findsNothing);
@@ -364,8 +367,7 @@ void main() {
     });
 
     testWidgets('4e. Participant names shown in UPPERCASE in roster', (tester) async {
-      app.main();
-      await tester.pumpAndSettle();
+      await startAppAndNavigateToSetup(tester);
 
       await addPlayers(tester, [['john', 'doe', 'Eagle TKD']]);
 
@@ -378,8 +380,7 @@ void main() {
 
   group('5. Format Switching', () {
     testWidgets('5a. Switch between Single and Double Elimination', (tester) async {
-      app.main();
-      await tester.pumpAndSettle();
+      await startAppAndNavigateToSetup(tester);
 
       // Default: Single Elimination
       expect(find.text('Single Elimination'), findsOneWidget);
@@ -401,8 +402,7 @@ void main() {
     });
 
     testWidgets('5b. No Round Robin option in dropdown', (tester) async {
-      app.main();
-      await tester.pumpAndSettle();
+      await startAppAndNavigateToSetup(tester);
 
       // Open dropdown
       final dropdown = find.byType(DropdownButton<String>).first;
@@ -426,8 +426,7 @@ void main() {
 
   group('6. Dojang Separation', () {
     testWidgets('6a. Toggle is ON by default, players separated', (tester) async {
-      app.main();
-      await tester.pumpAndSettle();
+      await startAppAndNavigateToSetup(tester);
 
       // Verify dojang separation switch is present and on
       expect(find.text('Dojang / School Separation'), findsOneWidget);
@@ -437,7 +436,7 @@ void main() {
       await tapGenerate(tester);
 
       // Bracket renders without errors
-      expect(find.textContaining('Tournament Bracket'), findsOneWidget);
+      expect(find.textContaining('Players'), findsOneWidget);
       expect(find.byType(CustomPaint), findsWidgets);
 
       await goBack(tester);
@@ -448,8 +447,7 @@ void main() {
 
   group('7. Bracket Viewer Features', () {
     testWidgets('7a. InteractiveViewer wraps the canvas for pan/zoom', (tester) async {
-      app.main();
-      await tester.pumpAndSettle();
+      await startAppAndNavigateToSetup(tester);
 
       await addPlayers(tester, fourPlayers);
       await tapGenerate(tester);
@@ -461,8 +459,7 @@ void main() {
     });
 
     testWidgets('7b. Regenerate bracket dialog works', (tester) async {
-      app.main();
-      await tester.pumpAndSettle();
+      await startAppAndNavigateToSetup(tester);
 
       await addPlayers(tester, fourPlayers);
       await tapGenerate(tester);
@@ -480,14 +477,13 @@ void main() {
       await tester.pumpAndSettle();
 
       // Still on bracket screen
-      expect(find.textContaining('Tournament Bracket'), findsOneWidget);
+      expect(find.textContaining('Players'), findsOneWidget);
 
       await goBack(tester);
     });
 
     testWidgets('7c. Export PDF button exists', (tester) async {
-      app.main();
-      await tester.pumpAndSettle();
+      await startAppAndNavigateToSetup(tester);
 
       await addPlayers(tester, fourPlayers);
       await tapGenerate(tester);
@@ -503,8 +499,7 @@ void main() {
 
   group('8. Edge Cases', () {
     testWidgets('8a. 5 players (non-power-of-2) renders without error', (tester) async {
-      app.main();
-      await tester.pumpAndSettle();
+      await startAppAndNavigateToSetup(tester);
 
       await addPlayers(tester, [
         ['P1', 'One', 'A'],
@@ -522,8 +517,7 @@ void main() {
     });
 
     testWidgets('8b. 7 players (non-power-of-2) renders without error', (tester) async {
-      app.main();
-      await tester.pumpAndSettle();
+      await startAppAndNavigateToSetup(tester);
 
       await addPlayers(tester, [
         ['P1', 'One', 'A'],
@@ -543,8 +537,7 @@ void main() {
     });
 
     testWidgets('8c. 14 players (like reference image) renders without error', (tester) async {
-      app.main();
-      await tester.pumpAndSettle();
+      await startAppAndNavigateToSetup(tester);
 
       await addPlayers(tester, [
         ['Saiansh', 'Mathur', 'Delhi', 'DL012025-22514'],
