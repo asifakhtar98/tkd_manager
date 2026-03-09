@@ -144,14 +144,18 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
       appBar: AppBar(
         title: const Text('New Bracket Setup'),
         actions: [
-          if (_participants.length >= 2)
-            Padding(
-              padding: const EdgeInsets.only(right: 16.0),
+          Padding(
+            padding: const EdgeInsets.only(right: 16.0),
+            child: Tooltip(
+              message: _participants.length < 2 ? 'Add at least 2 players to generate a bracket' : 'Generate Bracket',
               child: ElevatedButton.icon(
-                icon: const Icon(Icons.bolt, color: Colors.yellow),
+                icon: Icon(Icons.bolt, color: _participants.length >= 2 ? Colors.yellow : Colors.grey),
                 label: const Text('GENERATE', style: TextStyle(fontWeight: FontWeight.bold)),
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.blueAccent, foregroundColor: Colors.white),
-                onPressed: () {
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _participants.length >= 2 ? Colors.blueAccent : Colors.grey[800],
+                  foregroundColor: _participants.length >= 2 ? Colors.white : Colors.grey,
+                ),
+                onPressed: _participants.length >= 2 ? () {
                   Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (_) => BracketViewerScreen(
@@ -170,9 +174,10 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                       ),
                     ),
                   );
-                },
+                } : null,
               ),
             ),
+          ),
         ],
       ),
       body: Row(
@@ -192,17 +197,17 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                         padding: const EdgeInsets.all(16.0),
                         child: Column(
                           children: [
-                            TextField(controller: _tournamentNameController, decoration: const InputDecoration(labelText: 'Tournament Name')),
+                            TextField(controller: _tournamentNameController, decoration: const InputDecoration(labelText: 'Tournament Name'), textInputAction: TextInputAction.next),
                             const SizedBox(height: 8),
-                            TextField(controller: _dateRangeController, decoration: const InputDecoration(labelText: 'Date Range')),
+                            TextField(controller: _dateRangeController, decoration: const InputDecoration(labelText: 'Date Range'), textInputAction: TextInputAction.next),
                             const SizedBox(height: 8),
-                            TextField(controller: _venueController, decoration: const InputDecoration(labelText: 'Venue')),
+                            TextField(controller: _venueController, decoration: const InputDecoration(labelText: 'Venue'), textInputAction: TextInputAction.next),
                             const SizedBox(height: 8),
-                            TextField(controller: _organizerController, decoration: const InputDecoration(labelText: 'Organizer')),
+                            TextField(controller: _organizerController, decoration: const InputDecoration(labelText: 'Organizer'), textInputAction: TextInputAction.next),
                             const SizedBox(height: 8),
-                            TextField(controller: _categoryController, decoration: const InputDecoration(labelText: 'Category (e.g., JUNIOR)')),
+                            TextField(controller: _categoryController, decoration: const InputDecoration(labelText: 'Category (e.g., JUNIOR)'), textInputAction: TextInputAction.next),
                             const SizedBox(height: 8),
-                            TextField(controller: _divisionLabelController, decoration: const InputDecoration(labelText: 'Division (e.g., BOYS)')),
+                            TextField(controller: _divisionLabelController, decoration: const InputDecoration(labelText: 'Division (e.g., BOYS)'), textInputAction: TextInputAction.done),
                           ],
                         ),
                       ),
@@ -253,24 +258,28 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                             TextField(
                               controller: _firstNameController,
                               decoration: const InputDecoration(labelText: 'First Name'),
+                              textInputAction: TextInputAction.next,
                               onSubmitted: (_) => _addParticipant(),
                             ),
                             const SizedBox(height: 8),
                             TextField(
                               controller: _lastNameController,
                               decoration: const InputDecoration(labelText: 'Last Name'),
+                              textInputAction: TextInputAction.next,
                               onSubmitted: (_) => _addParticipant(),
                             ),
                             const SizedBox(height: 8),
                             TextField(
                               controller: _dojangController,
                               decoration: const InputDecoration(labelText: 'Dojang / Club (Optional)'),
+                              textInputAction: TextInputAction.next,
                               onSubmitted: (_) => _addParticipant(),
                             ),
                             const SizedBox(height: 8),
                             TextField(
                               controller: _registrationIdController,
                               decoration: const InputDecoration(labelText: 'Registration ID (Optional)'),
+                              textInputAction: TextInputAction.done,
                               onSubmitted: (_) => _addParticipant(),
                             ),
                             const SizedBox(height: 16),

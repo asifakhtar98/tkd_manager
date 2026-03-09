@@ -88,25 +88,36 @@ class SingleEliminationBracketGeneratorServiceImplementation
       }
     }
 
-    // 3. Assign participants to Round 1 and handle byes
+    // 3. Assign participants to Round 1 (Standard WT Seeding)
     final r1Matches = matchMap[1]!;
     final r1Count = r1Matches.length;
-    final byeCount = bracketSize - n;
 
-    // Byes go to top matches first (M1..MB), then normal
-    // matches (MB+1..r1Count).
-    var pIdx = 0;
+    List<int> generateSeeding(int rounds) {
+      if (rounds == 1) return [1, 2];
+      final prev = generateSeeding(rounds - 1);
+      final result = <int>[];
+      final nextSum = (1 << rounds) + 1;
+      for (final p in prev) {
+        result.add(p);
+        result.add(nextSum - p);
+      }
+      return result;
+    }
+
+    final seeding = generateSeeding(totalRounds);
+    
     for (var m = 1; m <= r1Count; m++) {
+      final seedRed = seeding[(m - 1) * 2];
+      final seedBlue = seeding[(m - 1) * 2 + 1];
+
       String? redId;
       String? blueId;
 
-      if (m <= byeCount) {
-        // Bye match: top-seeded positions get byes
-        if (pIdx < n) redId = participantIds[pIdx++];
-      } else {
-        // Normal match
-        if (pIdx < n) redId = participantIds[pIdx++];
-        if (pIdx < n) blueId = participantIds[pIdx++];
+      if (seedRed <= n) {
+        redId = participantIds[seedRed - 1];
+      }
+      if (seedBlue <= n) {
+        blueId = participantIds[seedBlue - 1];
       }
 
       var match = r1Matches[m]!;
@@ -122,6 +133,13 @@ class SingleEliminationBracketGeneratorServiceImplementation
           resultType: MatchResultType.bye,
           completedAtTimestamp: now,
           winnerId: redId,
+        );
+      } else if (redId == null && blueId != null) {
+        match = match.copyWith(
+          status: MatchStatus.completed,
+          resultType: MatchResultType.bye,
+          completedAtTimestamp: now,
+          winnerId: blueId,
         );
       }
       r1Matches[m] = match;

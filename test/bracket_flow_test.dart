@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:integration_test/integration_test.dart';
 import 'package:tkd_saas/main.dart' as app;
 
 void main() {
-  IntegrationTestWidgetsFlutterBinding.ensureInitialized();
-
   // Helper: add N players
   Future<void> addPlayers(WidgetTester tester, List<List<String>> players) async {
     // Participant fields are indices 6, 7, 8 in the current layout due to Tournament Info fields

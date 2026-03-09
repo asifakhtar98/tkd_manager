@@ -80,13 +80,17 @@ void main() {
 
     // Verify no errors during rendering
     expect(find.byType(CustomPaint), findsWidgets);
+    await expectLater(
+      find.byType(TieSheetCanvasWidget),
+      matchesGoldenFile('14_player_golden.png'),
+    );
 
     // Verify canvas has proper size - find the one with TieSheetPainter
     final customPaints = tester.widgetList<CustomPaint>(find.byType(CustomPaint));
     final tiePaint = customPaints.firstWhere((cp) => cp.painter is TieSheetPainter);
     expect(tiePaint.size, isNotNull);
-    expect(tiePaint.size!.width, greaterThan(0));
-    expect(tiePaint.size!.height, greaterThan(0));
+    expect(tiePaint.size.width, greaterThan(0));
+    expect(tiePaint.size.height, greaterThan(0));
 
     // Debug: Print match info
     debugPrint('=== MATCH INFO ===');
@@ -156,6 +160,11 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
+
+    await expectLater(
+      find.byType(TieSheetCanvasWidget),
+      matchesGoldenFile('4_player_golden.png'),
+    );
 
     expect(find.byType(CustomPaint), findsWidgets);
 
