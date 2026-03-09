@@ -450,6 +450,51 @@ class TieSheetPainter extends CustomPainter {
   void _paintJunction(Canvas canvas, MatchEntity match, double junctionX,
       Paint pen, {required bool mirrored}) {
 
+    final isBye = match.resultType == MatchResultType.bye;
+    
+    // ─ BYE MATCH: straight-through line, no junction vertical bar ─
+    if (isBye) {
+      final topIn = _resolveInputOffset(match, isTopSlot: true);
+      if (topIn != null) {
+        // Draw horizontal line from participant to junction X
+        canvas.drawLine(topIn, Offset(junctionX, topIn.dy), pen);
+        // Output: straight through at the same Y
+        final nextJunctionX = mirrored
+            ? junctionX - roundColW
+            : junctionX + roundColW;
+        canvas.drawLine(Offset(junctionX, topIn.dy), Offset(nextJunctionX, topIn.dy), pen);
+        
+        // Register output point at the participant's Y (straight through)
+        _nodeOffsets[match.id] = Offset(junctionX, topIn.dy);
+
+        // Winner name along the output line
+        if (match.winnerId != null) {
+          final winner = participants.where((p) => p.id == match.winnerId).firstOrNull;
+          if (winner != null) {
+            final wName = '${winner.firstName} ${winner.lastName}'.toUpperCase();
+            if (!mirrored) {
+              _drawText(canvas, wName, junctionX + roundColW * 0.15, topIn.dy - 14, _bold(9));
+            } else {
+              _drawText(canvas, wName, junctionX - roundColW * 0.15, topIn.dy - 14, _bold(9),
+                alignRight: true);
+            }
+          }
+        }
+
+        // Hit area
+        matchHitAreas.add(MapEntry(
+          match.id,
+          Rect.fromCenter(
+            center: Offset(junctionX, topIn.dy),
+            width: roundColW * 0.6,
+            height: 35,
+          ),
+        ));
+      }
+      return;
+    }
+    
+    // ─ NORMAL MATCH: full junction with vertical bar ─
     final topIn = _resolveInputOffset(match, isTopSlot: true);
     final botIn = _resolveInputOffset(match, isTopSlot: false);
 

@@ -4,7 +4,7 @@ import 'package:integration_test/integration_test.dart';
 import 'package:tkd_saas/main.dart' as app;
 
 void main() {
-  final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
+  IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
   Future<void> addPlayers(WidgetTester tester, List<List<String>> players) async {
     for (final p in players) {
@@ -37,61 +37,7 @@ void main() {
     await tester.pumpAndSettle(const Duration(seconds: 2));
   }
 
-  testWidgets('Screenshot: 4 player bracket', (tester) async {
-    app.main();
-    await tester.pumpAndSettle();
-
-    await tester.enterText(find.widgetWithText(TextField, 'Tournament Name'), '2ND FEDERATION CUP - 2026');
-    await tester.enterText(find.widgetWithText(TextField, 'Date Range'), '18 Jan. to 22 Jan, 2026');
-    await tester.enterText(find.widgetWithText(TextField, 'Venue'), 'SMS Indoor Stadium, Jaipur');
-    await tester.enterText(find.widgetWithText(TextField, 'Organizer'), 'INDIA TAEKWONDO');
-    await tester.enterText(find.widgetWithText(TextField, 'Category (e.g., JUNIOR)'), 'JUNIOR');
-    await tester.enterText(find.widgetWithText(TextField, 'Division (e.g., BOYS)'), 'BOYS');
-    await tester.pumpAndSettle();
-
-    await addPlayers(tester, [
-      ['John', 'Doe', 'Eagle TKD', 'DL012025-22514'],
-      ['Jane', 'Smith', 'Tiger TKD', 'TN012024-14083'],
-      ['Mike', 'Lee', 'Eagle TKD', 'HR172026-26123'],
-      ['Sarah', 'Connor', 'Dragon TKD', 'TN222026-26267'],
-    ]);
-
-    await tapGenerate(tester);
-    expect(find.textContaining('Tournament Bracket'), findsOneWidget);
-    await tester.pumpAndSettle(const Duration(seconds: 1));
-
-    await binding.takeScreenshot('bracket_4_players');
-  });
-
-  testWidgets('Screenshot: 8 player bracket', (tester) async {
-    app.main();
-    await tester.pumpAndSettle();
-
-    await tester.enterText(find.widgetWithText(TextField, 'Tournament Name'), '2ND FEDERATION CUP - 2026');
-    await tester.enterText(find.widgetWithText(TextField, 'Organizer'), 'INDIA TAEKWONDO');
-    await tester.enterText(find.widgetWithText(TextField, 'Category (e.g., JUNIOR)'), 'JUNIOR');
-    await tester.enterText(find.widgetWithText(TextField, 'Division (e.g., BOYS)'), 'BOYS');
-    await tester.pumpAndSettle();
-
-    await addPlayers(tester, [
-      ['Saiansh', 'Mathur', 'Delhi', 'DL012025-22514'],
-      ['R.S.', 'Vignesh', 'Tamil Nadu', 'TN012024-14083'],
-      ['Shashi', 'Kumar', 'Haryana', 'HR172026-26123'],
-      ['J.', 'Vino', 'Tamil Nadu', 'TN222026-26267'],
-      ['Aarush', 'Barua', 'Chandigarh', 'CH012026-26255'],
-      ['Asad', 'Khan', 'UP', 'UP322025-20125'],
-      ['Arsalan Siraj', 'Khan', 'Maharashtra', 'MH032025-25234'],
-      ['Ayush', 'Kumar', 'UP', 'UP53202525572'],
-    ]);
-
-    await tapGenerate(tester);
-    expect(find.textContaining('Tournament Bracket'), findsOneWidget);
-    await tester.pumpAndSettle(const Duration(seconds: 1));
-
-    await binding.takeScreenshot('bracket_8_players');
-  });
-
-  testWidgets('Screenshot: 14 player bracket (reference match)', (tester) async {
+  testWidgets('Render 14-player bracket and hold for screenshot', (tester) async {
     app.main();
     await tester.pumpAndSettle();
 
@@ -122,8 +68,9 @@ void main() {
 
     await tapGenerate(tester);
     expect(find.textContaining('Tournament Bracket'), findsOneWidget);
-    await tester.pumpAndSettle(const Duration(seconds: 1));
+    await tester.pumpAndSettle(const Duration(seconds: 2));
 
-    await binding.takeScreenshot('bracket_14_players');
+    // Hold for 15 seconds to allow xcrun simctl screenshot
+    await tester.pump(const Duration(seconds: 15));
   });
 }
