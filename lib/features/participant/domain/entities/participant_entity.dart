@@ -5,6 +5,7 @@ class ParticipantEntity {
   final String lastName;
   final String? schoolOrDojangName;
   final String? beltRank;
+  final String? registrationId;
   final int? seedNumber;
   final bool isBye;
 
@@ -15,6 +16,7 @@ class ParticipantEntity {
     required this.lastName,
     this.schoolOrDojangName,
     this.beltRank,
+    this.registrationId,
     this.seedNumber,
     this.isBye = false,
   });
@@ -26,6 +28,7 @@ class ParticipantEntity {
     String? lastName,
     String? schoolOrDojangName,
     String? beltRank,
+    String? registrationId,
     int? seedNumber,
     bool? isBye,
   }) {
@@ -36,8 +39,10 @@ class ParticipantEntity {
       lastName: lastName ?? this.lastName,
       schoolOrDojangName: schoolOrDojangName ?? this.schoolOrDojangName,
       beltRank: beltRank ?? this.beltRank,
+      registrationId: registrationId ?? this.registrationId,
       seedNumber: seedNumber ?? this.seedNumber,
       isBye: isBye ?? this.isBye,
     );
   }
 }
+

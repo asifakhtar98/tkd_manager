@@ -26,7 +26,6 @@ class BracketLayoutEngineImplementation implements BracketLayoutEngine {
     final format = _getFormat(bracket, matches);
 
     return switch (format) {
-      BracketFormat.roundRobin => _calculateRoundRobinLayout(),
       BracketFormat.doubleElimination => _calculateDoubleEliminationLayout(
         bracket,
         matches,
@@ -41,9 +40,7 @@ class BracketLayoutEngineImplementation implements BracketLayoutEngine {
   }
 
   BracketFormat _getFormat(BracketEntity bracket, List<MatchEntity> matches) {
-    if (bracket.bracketType == BracketType.pool) {
-      return BracketFormat.roundRobin;
-    }
+
     
     // A bracket is double elimination if there are multiple matches with loser advances,
     // or if the bracket Data JSON says so.
@@ -295,13 +292,7 @@ class BracketLayoutEngineImplementation implements BracketLayoutEngine {
     );
   }
 
-  BracketLayout _calculateRoundRobinLayout() {
-    return const BracketLayout(
-      format: BracketFormat.roundRobin,
-      rounds: [],
-      canvasSize: Size(1.0, 1.0),
-    );
-  }
+
 
   String _getRoundLabel(int roundNumber, int totalRounds) {
     final roundsFromEnd = totalRounds - roundNumber;

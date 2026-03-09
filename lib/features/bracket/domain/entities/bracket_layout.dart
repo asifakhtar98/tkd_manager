@@ -2,7 +2,7 @@ import 'dart:ui' show Offset, Size;
 import 'package:flutter/foundation.dart' show immutable, listEquals;
 
 /// Format of the bracket layout, determining how matches are positioned.
-enum BracketFormat { singleElimination, doubleElimination, roundRobin }
+enum BracketFormat { singleElimination, doubleElimination }
 
 /// Represents the full visual layout of a bracket.
 @immutable
