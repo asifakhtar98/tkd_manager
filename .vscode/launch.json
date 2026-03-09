@@ -1,0 +1,53 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "🚀 Dev (Web / Chrome)",
+            "cwd": "${workspaceFolder}",
+            "request": "launch",
+            "type": "dart",
+            "program": "lib/main.dart",
+            "args": [
+                "-d", "chrome"
+            ]
+        },
+        {
+            "name": "� Dev (iPad / iOS Simulator)",
+            "cwd": "${workspaceFolder}",
+            "request": "launch",
+            "type": "dart",
+            "program": "lib/main.dart",
+            "args": [
+                "-d", "ipad"
+            ]
+        },
+        {
+            "name": "📊 Profile Mode (Chrome)",
+            "cwd": "${workspaceFolder}",
+            "request": "launch",
+            "type": "dart",
+            "program": "lib/main.dart",
+            "flutterMode": "profile",
+            "args": [
+                "-d", "chrome"
+            ]
+        },
+        {
+            "name": "🏭 Release Mode (Chrome)",
+            "cwd": "${workspaceFolder}",
+            "request": "launch",
+            "type": "dart",
+            "program": "lib/main.dart",
+            "flutterMode": "release",
+            "args": [
+                "-d", "chrome"
+            ]
+        },
+        {
+            "name": "🔌 Attach to Flutter",
+            "cwd": "${workspaceFolder}",
+            "request": "attach",
+            "type": "dart"
+        }
+    ]
+}

@@ -1,0 +1,84 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Flutter: Build Web",
+      "type": "flutter",
+      "command": "flutter",
+      "args": [
+        "build",
+        "web"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": [],
+      "group": "build",
+      "detail": "Builds the Flutter web application"
+    },
+    {
+      "label": "Flutter: Generate Code",
+      "type": "shell",
+      "command": "dart run build_runner build --delete-conflicting-outputs",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": [
+        "$dart-build_runner"
+      ],
+      "group": "build",
+      "detail": "Runs build_runner to generate code (freezed, json_serializable, injectable)"
+    },
+    {
+      "label": "Flutter: build_runner",
+      "type": "shell",
+      "command": "dart run build_runner --delete-conflicting-outputs",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": [
+        "$dart-build_runner"
+      ],
+      "group": "build",
+      "detail": "Runs build_runner to generate code on file changes",
+      "isBackground": true
+    },
+    {
+      "label": "Flutter: Run Tests",
+      "type": "shell",
+      "command": "flutter test",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": [
+        "$dart-test"
+      ],
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      },
+      "detail": "Run Flutter unit and widget tests"
+    },
+    {
+      "label": "Flutter: Clean",
+      "type": "shell",
+      "command": "flutter clean",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": [],
+      "group": "build"
+    },
+    {
+      "label": "Firebase: Deploy",
+      "type": "shell",
+      "command": "firebase deploy",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": [],
+      "group": "build",
+      "detail": "Deploys the application to Firebase"
+    }
+  ]
+}

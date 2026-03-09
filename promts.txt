@@ -1,0 +1,28 @@
+-Validate story using [@checklist.md](file:///Users/asak/Documents/dev/proj/personal/taekwondo_fix/_bmad/bmm/workflows/4-implementation/create-story/checklist.md), also enhance, refine, make it verbose  to prevent implementation /executionmistakes. Then apply all Fixes in the story file only, in small multiple shots automatically without asking user, dont overcommunicate.
+
+- Fix All, in small multiple shots, dont overcommunicate
+- Then Fix All as Yolo, in small multiple shots, dont overcommunicate
+- Continue, do in small multiple shots, dont overcommunicate
+
+- build for web , ref [@README.md](file:///Users/asak/Documents/dev/proj/personal/taekwondo_fix/tkd_brackets/README.md), dont overcommunicate
+
+- are we 100% done implementing/executing the story, fresh cross check code with the story. if not, complete it, dont overcommunicate
+
+- (dont overcommunicate unless explicitly mentioned)
+
+- (dont overcommunicate unless explicitly mentioned)Write comprehensive Playwright tests covering all user-facing features and critical workflows within the completed 5 epics. Execute the tests and capture runtime logs, traces, and screenshots for each scenario. Analyze failures using visual evidence and logs to identify functional defects, usability gaps, incomplete flows, and architectural inconsistencies.
+
+Refactor and enhance the code based on these findings while strictly aligning with the PRD and the architectural principles defined in ./_bmad-output.
+
+Repeat this cycle continuously — test → observe → diagnose → improve → re-test — until every completed epic reaches a usable, stable state where:
+
+All intended features are accessible and functional
+End-to-end workflows can be executed by both developers and testers without manual intervention or workarounds
+Core journeys do not break across environments
+UX blockers and critical defects are eliminated
+
+Feature parity with the PRD must be preserved at all times. No feature may be removed, downgraded, bypassed, or disabled as a means of achieving stability. Fixes must resolve root causes rather than masking behavior.
+
+Ensure each iteration improves reliability, clarity, completeness, and architectural correctness without reducing scope or violating design intent.
+
+The loop stops only when all completed epics are fully usable and testable in real workflows with their full intended functionality intact. By the end of the day i want real user journey from my code. Also you can bypass certain external requirements in development mode to test each features quickly
