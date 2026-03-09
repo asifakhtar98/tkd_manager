@@ -511,61 +511,60 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
 
           return StatefulBuilder(
             builder: (context, setState) {
-               return AlertDialog(
-                title: const Text('Score Match / Result', style: TextStyle(fontSize: 16)),
-                contentPadding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
-                content: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      DropdownButton<MatchResultType>(
-                        value: selectedResult,
-                        isExpanded: true,
-                        items: MatchResultType.values.where((r) => r != MatchResultType.bye).map((r) {
-                          return DropdownMenuItem(value: r, child: Text(r.name.toUpperCase()));
-                        }).toList(),
-                        onChanged: (val) {
-                          if (val != null) setState(() => selectedResult = val);
-                        },
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          Expanded(
-                            child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent, padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8)),
-                              onPressed: () => _declareWinner(match, match.participantRedId, selectedResult),
-                              child: Text('${red?.lastName ?? "Red"}\nWINS', textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
-                            ),
-                          ),
-                          const Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 8),
-                            child: Text('VS', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                          ),
-                          Expanded(
-                            child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(backgroundColor: Colors.blueAccent, padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8)),
-                              onPressed: () => _declareWinner(match, match.participantBlueId, selectedResult),
-                              child: Text('${blue?.lastName ?? "Blue"}\nWINS', textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      TextButton.icon(
-                        icon: const Icon(Icons.warning, color: Colors.orange, size: 18),
-                        label: const Text('No-Show', style: TextStyle(fontSize: 12)),
-                        onPressed: () {
-                           Navigator.pop(context);
-                           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Select the winning player via Withdrawal for No-Show')));
-                        },
-                      )
-                    ],
-                  ),
-                ),
-                actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel'))],
-              );
+               return Dialog(
+                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                 elevation: 8,
+                 child: Padding(
+                   padding: const EdgeInsets.all(24.0),
+                   child: Column(
+                     mainAxisSize: MainAxisSize.min,
+                     children: [
+                       const Text('Score Match', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.indigo)),
+                       const SizedBox(height: 16),
+                       DropdownButtonFormField<MatchResultType>(
+                         decoration: InputDecoration(
+                           labelText: 'Result Type',
+                           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                         ),
+                         value: selectedResult,
+                         isExpanded: true,
+                         items: MatchResultType.values.where((r) => r != MatchResultType.bye).map((r) {
+                           return DropdownMenuItem(value: r, child: Text(r.name.toUpperCase()));
+                         }).toList(),
+                         onChanged: (val) {
+                           if (val != null) setState(() => selectedResult = val);
+                         },
+                       ),
+                       const SizedBox(height: 24),
+                       Row(
+                         children: [
+                           Expanded(
+                             child: FilledButton(
+                               style: FilledButton.styleFrom(backgroundColor: Colors.red.shade600, padding: const EdgeInsets.all(16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                               onPressed: () => _declareWinner(match, match.participantRedId, selectedResult),
+                               child: Text('${red?.lastName.toUpperCase() ?? "RED"}\nWINS', textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13, height: 1.3)),
+                             ),
+                           ),
+                           const Padding(
+                             padding: EdgeInsets.symmetric(horizontal: 16),
+                             child: Text('VS', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: Colors.black45)),
+                           ),
+                           Expanded(
+                             child: FilledButton(
+                               style: FilledButton.styleFrom(backgroundColor: Colors.blue.shade600, padding: const EdgeInsets.all(16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                               onPressed: () => _declareWinner(match, match.participantBlueId, selectedResult),
+                               child: Text('${blue?.lastName.toUpperCase() ?? "BLUE"}\nWINS', textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13, height: 1.3)),
+                             ),
+                           ),
+                         ],
+                       ),
+                       const SizedBox(height: 16),
+                       TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel', style: TextStyle(color: Colors.grey))),
+                     ]
+                   )
+                 )
+               );
             }
           );
         }
@@ -720,12 +719,16 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF3F4F6),
       appBar: AppBar(
-        title: Text('Tournament Bracket (${widget.participants.length} Players)'),
+        elevation: 0,
+        backgroundColor: Colors.indigo.shade800,
+        title: Text('Tournament Bracket (${widget.participants.length} Players)', style: const TextStyle(fontWeight: FontWeight.w600, color: Colors.white, letterSpacing: 0.5)),
+        iconTheme: const IconThemeData(color: Colors.white),
         actions: [
-          IconButton(icon: const Icon(Icons.picture_as_pdf), tooltip: 'Export PDF', onPressed: _exportPdf),
+          IconButton(icon: const Icon(Icons.picture_as_pdf, color: Colors.white), tooltip: 'Export PDF', onPressed: _exportPdf),
           IconButton(
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(Icons.refresh, color: Colors.white),
             tooltip: 'Regenerate',
             onPressed: () {
               showDialog(
@@ -738,7 +741,7 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
                       onPressed: () { Navigator.pop(ctx); _generateBracket(); },
-                      child: const Text('Regenerate'),
+                      child: const Text('Regenerate', style: TextStyle(color: Colors.white)),
                     ),
                   ],
                 ),
@@ -754,17 +757,30 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
               boundaryMargin: const EdgeInsets.all(500),
               minScale: 0.1,
               maxScale: 2.0,
-              child: TieSheetCanvasWidget(
-                tournamentInfo: widget.tournamentInfo,
-                matches: _matches!,
-                participants: widget.participants,
-                bracketType: widget.format,
-                onMatchTap: (matchId) {
-                  final match = _matches!.firstWhere((m) => m.id == matchId);
-                  _scoreMatch(match);
-                },
-                printKey: _printKey,
-                includeThirdPlaceMatch: widget.includeThirdPlaceMatch,
+              child: Container(
+                margin: const EdgeInsets.all(40),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 20, spreadRadius: 5),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: TieSheetCanvasWidget(
+                    tournamentInfo: widget.tournamentInfo,
+                    matches: _matches!,
+                    participants: widget.participants,
+                    bracketType: widget.format,
+                    onMatchTap: (matchId) {
+                      final match = _matches!.firstWhere((m) => m.id == matchId);
+                      _scoreMatch(match);
+                    },
+                    printKey: _printKey,
+                    includeThirdPlaceMatch: widget.includeThirdPlaceMatch,
+                  ),
+                ),
               ),
             ),
     );
