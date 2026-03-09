@@ -2,7 +2,7 @@ import 'package:injectable/injectable.dart';
 import 'package:tkd_saas/features/bracket/domain/entities/bracket_entity.dart';
 import 'package:tkd_saas/features/bracket/domain/entities/bracket_generation_result.dart';
 import 'package:tkd_saas/features/bracket/domain/entities/match_entity.dart';
-import 'package:tkd_saas/features/bracket/domain/services/round_robin_tkd_saas_service.dart';
+import 'package:tkd_saas/features/bracket/domain/services/round_robin_bracket_generator_service.dart';
 import 'package:uuid/uuid.dart';
 
 /// Implementation of [RoundRobinBracketGeneratorService].
