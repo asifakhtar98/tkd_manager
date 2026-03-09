@@ -150,16 +150,16 @@ class TieSheetPainter extends CustomPainter {
   final Map<String, int> _matchGlobalNumbers = {};
   final Map<String, Offset> _nodeOffsets = {};
 
-  static const double rowH = 38.0;
-  static const double pairGap = 14.0;
+  static const double rowH = 34.0;
+  static const double pairGap = 12.0;
   static const double noColW = 30.0;
   static const double nameColW = 200.0;
-  static const double regIdColW = 130.0;
+  static const double regIdColW = 120.0;
   static const double roundColW = 120.0;
-  static const double headerH = 90.0;
-  static const double subHeaderH = 22.0;
+  static const double headerH = 110.0; // Increased for table header
+  static const double subHeaderH = 24.0;
   static const double medalH = 120.0;
-  static const double margin = 25.0;
+  static const double margin = 20.0;
   static const double centerGap = 60.0;
 
   static double get listW => noColW + nameColW + regIdColW;
@@ -236,11 +236,7 @@ class TieSheetPainter extends CustomPainter {
     return _participantY(i, tableTop) + rowH / 2;
   }
 
-  double _tableHeight() {
-    final n = max(participants.length, 2);
-    // Rough estimate of max height for left side
-    return _participantY((n / 2).ceil() + 1, 0) + rowH; // We split into two sides
-  }
+
 
   Size calculateCanvasSize() {
     final winnersMatches = _getWinnersMatches();
@@ -284,15 +280,19 @@ class TieSheetPainter extends CustomPainter {
     canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height),
       Paint()..color = Colors.white);
 
-    final pen = Paint()
+    final thickPen = Paint()
       ..color = Colors.black
       ..strokeWidth = 2.0
+      ..strokeCap = StrokeCap.square
       ..style = PaintingStyle.stroke;
 
-    double y = margin;
-    y = _paintHeader(canvas, size, y);
+    final nameTitleText = tournamentInfo.divisionLabel.toUpperCase();
+    final divisionTitleText = tournamentInfo.categoryLabel.toUpperCase();
 
-    final subY = y;
+    double startY = margin;
+    startY = _paintHeader(canvas, size, startY, thickPen, divisionTitleText, nameTitleText);
+
+    final subY = startY; // Use startY as the base for subheaders
     final bgPaint = Paint()..color = Colors.grey[200]!..style = PaintingStyle.fill;
     
     // Draw subheaders for Left side
@@ -300,35 +300,35 @@ class TieSheetPainter extends CustomPainter {
     final divLabel = tournamentInfo.divisionLabel.isNotEmpty ? tournamentInfo.divisionLabel.toUpperCase() : 'REG ID';
 
     canvas.drawRect(Rect.fromLTWH(margin, subY, noColW, subHeaderH), bgPaint);
-    canvas.drawRect(Rect.fromLTWH(margin, subY, noColW, subHeaderH), pen);
+    canvas.drawRect(Rect.fromLTWH(margin, subY, noColW, subHeaderH), thickPen);
     _drawText(canvas, 'No.', margin + noColW / 2, subY + 4, _bold(10), center: true);
     canvas.drawRect(Rect.fromLTWH(margin + noColW, subY, nameColW, subHeaderH), bgPaint);
-    canvas.drawRect(Rect.fromLTWH(margin + noColW, subY, nameColW, subHeaderH), pen);
+    canvas.drawRect(Rect.fromLTWH(margin + noColW, subY, nameColW, subHeaderH), thickPen);
     _drawText(canvas, catLabel, margin + noColW + nameColW / 2, subY + 4, _bold(10), center: true);
     canvas.drawRect(Rect.fromLTWH(margin + noColW + nameColW, subY, regIdColW, subHeaderH), bgPaint);
-    canvas.drawRect(Rect.fromLTWH(margin + noColW + nameColW, subY, regIdColW, subHeaderH), pen);
+    canvas.drawRect(Rect.fromLTWH(margin + noColW + nameColW, subY, regIdColW, subHeaderH), thickPen);
     _drawText(canvas, divLabel, margin + noColW + nameColW + regIdColW / 2, subY + 4, _bold(10), center: true);
 
     // Full-width line
-    canvas.drawLine(Offset(margin + listW, subY), Offset(size.width - margin - listW, subY), pen);
+    canvas.drawLine(Offset(margin + listW, subY), Offset(size.width - margin - listW, subY), thickPen);
     
     // Draw subheaders for Right side (Single Elim)
     if (!_isDouble) {
       final rightX = size.width - margin - listW;
       canvas.drawRect(Rect.fromLTWH(rightX, subY, regIdColW, subHeaderH), bgPaint);
-      canvas.drawRect(Rect.fromLTWH(rightX, subY, regIdColW, subHeaderH), pen);
+      canvas.drawRect(Rect.fromLTWH(rightX, subY, regIdColW, subHeaderH), thickPen);
       _drawText(canvas, divLabel, rightX + regIdColW / 2, subY + 4, _bold(10), center: true);
       canvas.drawRect(Rect.fromLTWH(rightX + regIdColW, subY, nameColW, subHeaderH), bgPaint);
-      canvas.drawRect(Rect.fromLTWH(rightX + regIdColW, subY, nameColW, subHeaderH), pen);
+      canvas.drawRect(Rect.fromLTWH(rightX + regIdColW, subY, nameColW, subHeaderH), thickPen);
       _drawText(canvas, catLabel, rightX + regIdColW + nameColW / 2, subY + 4, _bold(10), center: true);
       canvas.drawRect(Rect.fromLTWH(rightX + regIdColW + nameColW, subY, noColW, subHeaderH), bgPaint);
-      canvas.drawRect(Rect.fromLTWH(rightX + regIdColW + nameColW, subY, noColW, subHeaderH), pen);
+      canvas.drawRect(Rect.fromLTWH(rightX + regIdColW + nameColW, subY, noColW, subHeaderH), thickPen);
       _drawText(canvas, 'No.', rightX + regIdColW + nameColW + noColW / 2, subY + 4, _bold(10), center: true);
     }
 
-    canvas.drawLine(Offset(margin, subY + subHeaderH), Offset(size.width - margin, subY + subHeaderH), pen);
-    y = subY + subHeaderH;
-    final tableTop = y;
+    canvas.drawLine(Offset(margin, subY + subHeaderH), Offset(size.width - margin, subY + subHeaderH), thickPen);
+    startY = subY + subHeaderH;
+    final tableTop = startY;
 
     final wMatches = _getWinnersMatches();
     final winRounds = _maxRound(wMatches);
@@ -337,26 +337,26 @@ class TieSheetPainter extends CustomPainter {
     if (_isDouble) {
       // Original Double Elimination logic (Single sided winners)
       for (var i = 0; i < participants.length; i++) {
-        _paintParticipantRow(canvas, i + 1, participants[i], margin, _participantY(i, tableTop), pen, mirrored: false);
+        _paintParticipantRow(canvas, i + 1, participants[i], margin, _participantY(i, tableTop), thickPen, mirrored: false);
         _nodeOffsets[participants[i].id] = Offset(margin + listW, _participantCenterY(i, tableTop));
       }
       for (var r = 1; r <= winRounds; r++) {
         final roundMatches = winByRound[r] ?? [];
         final junctionX = margin + listW + (r * roundColW);
         for (final match in roundMatches) {
-          _paintJunction(canvas, match, junctionX, pen, mirrored: false);
+          _paintJunction(canvas, match, junctionX, thickPen, mirrored: false);
         }
       }
       final lMatches = _getLosersMatches();
       final lByRound = _groupByRound(lMatches);
       final lRounds = _maxRound(lMatches);
       final rightEdge = size.width - margin;
-      _paintRightSideLabels(canvas, lByRound, rightEdge, tableTop, pen, subY);
+      _paintRightSideLabels(canvas, lByRound, rightEdge, tableTop, thickPen, subY);
       for (var r = 1; r <= lRounds; r++) {
         final roundMatches = lByRound[r] ?? [];
         final junctionX = rightEdge - (r * roundColW);
         for (final match in roundMatches) {
-          _paintJunction(canvas, match, junctionX, pen, mirrored: true);
+          _paintJunction(canvas, match, junctionX, thickPen, mirrored: true);
         }
       }
     } else {
@@ -382,8 +382,8 @@ class TieSheetPainter extends CustomPainter {
       // Draw Left Participant Table
       for (var i = 0; i < leftParticipantRows.length; i++) {
         final p = leftParticipantRows[i];
-        final pIdx = participants.indexOf(p) + 1; // Original seed No.
-        _paintParticipantRow(canvas, pIdx, p, margin, _participantY(i, tableTop), pen, mirrored: false);
+        // final pIdx = participants.indexOf(p) + 1; // Original seed No.
+        _paintParticipantRow(canvas, i + 1, p, margin, _participantY(i, tableTop), thickPen, mirrored: false);
         _nodeOffsets[p.id] = Offset(margin + listW, _participantCenterY(i, tableTop));
       }
       
@@ -392,8 +392,8 @@ class TieSheetPainter extends CustomPainter {
       final rightTableLeft = rightEdge - listW;
       for (var i = 0; i < rightParticipantRows.length; i++) {
         final p = rightParticipantRows[i];
-        final pIdx = participants.indexOf(p) + 1; // Original seed No.
-        _paintParticipantRow(canvas, pIdx, p, rightTableLeft, _participantY(i, tableTop), pen, mirrored: true);
+        // final pIdx = participants.indexOf(p) + 1; // Original seed No.
+        _paintParticipantRow(canvas, i + 1, p, rightTableLeft, _participantY(i, tableTop), thickPen, mirrored: true);
         _nodeOffsets[p.id] = Offset(rightTableLeft, _participantCenterY(i, tableTop));
       }
 
@@ -406,24 +406,24 @@ class TieSheetPainter extends CustomPainter {
           if (r == winRounds) {
             // Final Match is in the center
             final junctionX = size.width / 2;
-            _paintCenterFinalJunction(canvas, match, junctionX, pen);
+            _paintCenterFinalJunction(canvas, match, junctionX, thickPen);
           } else {
             bool isLeft = match.matchNumberInRound <= c / 2;
             final junctionX = isLeft 
                ? margin + listW + (r * roundColW)
                : rightEdge - listW - (r * roundColW);
-            _paintJunction(canvas, match, junctionX, pen, mirrored: !isLeft);
+            _paintJunction(canvas, match, junctionX, thickPen, mirrored: !isLeft);
           }
         }
       }
       
       if (includeThirdPlaceMatch) {
          final thirdMatch = matches.where((m) => m.roundNumber == winRounds && m.matchNumberInRound == 2).firstOrNull;
-         if (thirdMatch != null) _paint3rdPlaceMatch(canvas, thirdMatch, pen, tableTop);
+         if (thirdMatch != null) _paint3rdPlaceMatch(canvas, thirdMatch, thickPen, tableTop);
       }
     }
 
-    _paintMedalTable(canvas, size, pen);
+    _paintMedalTable(canvas, size, thickPen);
   }
   
   void _paintCenterFinalJunction(Canvas canvas, MatchEntity match, double junctionX, Paint pen) {
@@ -469,58 +469,91 @@ class TieSheetPainter extends CustomPainter {
     }
   }
 
-  double _paintHeader(Canvas canvas, Size size, double startY) {
+  double _paintHeader(Canvas canvas, Size size, double startY, Paint thickPen, String divisionTitle, String categoryTitle) {
     var y = startY;
     final title = (tournamentInfo.tournamentName.isNotEmpty ? tournamentInfo.tournamentName : 'TOURNAMENT NAME').toUpperCase();
-    _drawText(canvas, title, size.width / 2, y, _bold(20), center: true);
-    y += 26;
+    _drawText(canvas, title, size.width / 2, y, _bold(18), center: true);
+    y += 24;
     if (tournamentInfo.dateRange.isNotEmpty || tournamentInfo.venue.isNotEmpty) {
       final sub = [tournamentInfo.dateRange, tournamentInfo.venue].where((s) => s.isNotEmpty).join(', ');
-      _drawText(canvas, sub, size.width / 2, y, _normal(12), center: true);
-      y += 20;
+      _drawText(canvas, sub, size.width / 2, y, _normal(14), center: true);
+      y += 22;
     }
     if (tournamentInfo.organizer.isNotEmpty) {
-      _drawText(canvas, 'Organised by : ${tournamentInfo.organizer.toUpperCase()}', size.width / 2, y, _bold(14), center: true);
-      y += 26;
+      _drawText(canvas, 'Organised by : ${tournamentInfo.organizer.toUpperCase()}', size.width / 2, y, _bold(16), center: true);
+      y += 24;
     } else {
       y += 20;
     }
+
+    // Draw the table header row
+    final headerRowTop = y;
+    final headerRowBottom = y + subHeaderH;
+    
+    final normalPen = Paint()
+      ..color = thickPen.color
+      ..strokeWidth = 1.0
+      ..style = PaintingStyle.stroke;
+      
+    // Header for the Left Bracket Side
+    final leftHeaderX = margin;
+    canvas.drawRect(Rect.fromLTRB(leftHeaderX, headerRowTop, leftHeaderX + listW, headerRowBottom), thickPen);
+    canvas.drawLine(Offset(leftHeaderX + noColW, headerRowTop), Offset(leftHeaderX + noColW, headerRowBottom), normalPen);
+    canvas.drawLine(Offset(leftHeaderX + noColW + nameColW, headerRowTop), Offset(leftHeaderX + noColW + nameColW, headerRowBottom), normalPen);
+
+    _drawText(canvas, 'No.', leftHeaderX + noColW / 2, headerRowTop + 14, _normal(13), center: true);
+    _drawText(canvas, divisionTitle.isEmpty ? 'JUNIOR' : divisionTitle, leftHeaderX + noColW + nameColW / 2, headerRowTop + 14, _normal(13), center: true);
+    _drawText(canvas, categoryTitle.isEmpty ? 'BOYS' : categoryTitle, leftHeaderX + noColW + nameColW + regIdColW / 2, headerRowTop + 14, _normal(13), center: true);
+
+    // If double elimination, we could draw right side header, but currently layout assumes symmetry only if single.
+    if (!_isDouble) {
+      final rightHeaderX = size.width - margin - listW;
+      canvas.drawRect(Rect.fromLTRB(rightHeaderX, headerRowTop, rightHeaderX + listW, headerRowBottom), thickPen);
+      canvas.drawLine(Offset(rightHeaderX + regIdColW, headerRowTop), Offset(rightHeaderX + regIdColW, headerRowBottom), normalPen);
+      canvas.drawLine(Offset(rightHeaderX + regIdColW + nameColW, headerRowTop), Offset(rightHeaderX + regIdColW + nameColW, headerRowBottom), normalPen);
+
+      _drawText(canvas, categoryTitle.isEmpty ? 'BOYS' : categoryTitle, rightHeaderX + regIdColW / 2, headerRowTop + 14, _normal(13), center: true);
+      _drawText(canvas, divisionTitle.isEmpty ? 'JUNIOR' : divisionTitle, rightHeaderX + regIdColW + nameColW / 2, headerRowTop + 14, _normal(13), center: true);
+      _drawText(canvas, 'No.', rightHeaderX + listW - noColW / 2, headerRowTop + 14, _normal(13), center: true);
+    }
+    
+    y = headerRowBottom + 10;
     return y;
   }
 
   void _paintParticipantRow(Canvas canvas, int idx, ParticipantEntity p, double x, double y, Paint pen, {required bool mirrored}) {
     final right = x + listW;
+    
+    final normalPen = Paint()
+      ..color = pen.color
+      ..strokeWidth = 1.0
+      ..style = PaintingStyle.stroke;
 
+    // The "No." is positioned without borders, and the Name/RegID have a thick border.
     if (!mirrored) {
-      canvas.drawLine(Offset(x, y), Offset(right, y), pen);
-      canvas.drawLine(Offset(x, y), Offset(x, y + rowH), pen);
-      canvas.drawLine(Offset(x + noColW, y), Offset(x + noColW, y + rowH), pen);
-      canvas.drawLine(Offset(x + noColW + nameColW, y), Offset(x + noColW + nameColW, y + rowH), pen);
-      canvas.drawLine(Offset(right, y), Offset(right, y + rowH), pen);
-      canvas.drawLine(Offset(x, y + rowH), Offset(right, y + rowH), pen);
+      final boxLeft = x + noColW;
+      canvas.drawRect(Rect.fromLTRB(boxLeft, y, right, y + rowH), pen);
+      canvas.drawLine(Offset(boxLeft + nameColW, y), Offset(boxLeft + nameColW, y + rowH), normalPen);
 
-      _drawText(canvas, '$idx', x + noColW / 2, y + rowH / 2 - 6, _normal(12), center: true);
-      _drawText(canvas, _pName(p), x + noColW + 6, y + rowH / 2 - 6, _bold(11));
+      _drawText(canvas, '$idx', x + noColW / 2, y + rowH / 2 - 6, _bold(12), center: true);
+      _drawText(canvas, _pName(p), boxLeft + 6, y + rowH / 2 - 6, _bold(11));
       if (p.registrationId != null && p.registrationId!.isNotEmpty) {
-        _drawText(canvas, p.registrationId!, right - 6, y + rowH / 2 - 6, _normal(10), alignRight: true);
+        _drawText(canvas, p.registrationId!, right - 6, y + rowH / 2 - 6, _bold(11), alignRight: true);
       }
       
       final lineY = y + rowH / 2;
       canvas.drawLine(Offset(right, lineY), Offset(right + roundColW, lineY), pen);
     } else {
-      // Mirrored layout: [REG ID | NAME | NO]
-      canvas.drawLine(Offset(x, y), Offset(right, y), pen);
-      canvas.drawLine(Offset(x, y), Offset(x, y + rowH), pen);
-      canvas.drawLine(Offset(x + regIdColW, y), Offset(x + regIdColW, y + rowH), pen);
-      canvas.drawLine(Offset(x + regIdColW + nameColW, y), Offset(x + regIdColW + nameColW, y + rowH), pen);
-      canvas.drawLine(Offset(right, y), Offset(right, y + rowH), pen);
-      canvas.drawLine(Offset(x, y + rowH), Offset(right, y + rowH), pen);
+      // Mirrored layout: [REG ID | NAME | NO] -> No border for NO.
+      final boxRight = right - noColW;
+      canvas.drawRect(Rect.fromLTRB(x, y, boxRight, y + rowH), pen);
+      canvas.drawLine(Offset(x + regIdColW, y), Offset(x + regIdColW, y + rowH), normalPen);
 
       if (p.registrationId != null && p.registrationId!.isNotEmpty) {
-        _drawText(canvas, p.registrationId!, x + 6, y + rowH / 2 - 6, _normal(10));
+        _drawText(canvas, p.registrationId!, x + 6, y + rowH / 2 - 6, _bold(11));
       }
-      _drawText(canvas, _pName(p), right - noColW - 6, y + rowH / 2 - 6, _bold(11), alignRight: true);
-      _drawText(canvas, '$idx', right - noColW / 2, y + rowH / 2 - 6, _normal(12), center: true);
+      _drawText(canvas, _pName(p), boxRight - 6, y + rowH / 2 - 6, _bold(11), alignRight: true);
+      _drawText(canvas, '$idx', right - noColW / 2, y + rowH / 2 - 6, _bold(12), center: true);
 
       final lineY = y + rowH / 2;
       canvas.drawLine(Offset(x, lineY), Offset(x - roundColW, lineY), pen);
@@ -707,14 +740,20 @@ class TieSheetPainter extends CustomPainter {
     final x = (size.width - tableW) / 2;
     final y = size.height - medalH - margin + 10;
 
-    final bgPaint = Paint()..color = Colors.grey[200]!..style = PaintingStyle.fill;
+    final normalPen = Paint()
+      ..color = pen.color
+      ..strokeWidth = 1.0
+      ..style = PaintingStyle.stroke;
 
     for (var row = 0; row < 3; row++) {
       final rY = y + row * mRowH;
-      canvas.drawRect(Rect.fromLTWH(x + leftBlank + nameW, rY, medalLabelW, mRowH), bgPaint);
+      // Empty medal winner name box
+      canvas.drawRect(Rect.fromLTWH(x, rY, leftBlank + nameW, mRowH), normalPen);
+      // Medal name box (Gold/Silver/Bronze)
+      canvas.drawRect(Rect.fromLTWH(x + leftBlank + nameW, rY, medalLabelW, mRowH), normalPen);
+      
+      // Outer bold border
       canvas.drawRect(Rect.fromLTWH(x, rY, tableW, mRowH), pen);
-      canvas.drawLine(Offset(x + leftBlank, rY), Offset(x + leftBlank, rY + mRowH), pen);
-      canvas.drawLine(Offset(x + leftBlank + nameW, rY), Offset(x + leftBlank + nameW, rY + mRowH), pen);
     }
 
     _drawText(canvas, 'Gold',   x + leftBlank + nameW + medalLabelW / 2, y + 8, _bold(13), center: true);
