@@ -2,12 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:tkd_saas/features/tournament/domain/entities/tournament_entity.dart';
 import 'package:uuid/uuid.dart';
 
-/// Modal dialog to create a new [TournamentEntity].
+/// Modal dialog to create or edit a [TournamentEntity].
 ///
-/// Shows all tournament metadata fields. Returns the completed [TournamentEntity]
-/// via [Navigator.pop] when the user taps "Create", or null on cancel.
+/// Pass [existing] to pre-fill all fields and switch the dialog into
+/// "edit" mode (title → "Edit Tournament", button → "Save").
+/// Returns the completed [TournamentEntity] via [Navigator.pop], or null
+/// on cancel.
 class CreateTournamentDialog extends StatefulWidget {
-  const CreateTournamentDialog({super.key});
+  const CreateTournamentDialog({super.key, this.existing});
+
+  /// When non-null the dialog operates in edit mode.
+  final TournamentEntity? existing;
 
   @override
   State<CreateTournamentDialog> createState() =>
@@ -18,12 +23,26 @@ class _CreateTournamentDialogState extends State<CreateTournamentDialog> {
   static const _uuid = Uuid();
 
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
-  final _dateRangeController = TextEditingController();
-  final _venueController = TextEditingController();
-  final _organizerController = TextEditingController();
-  final _categoryController = TextEditingController();
-  final _divisionController = TextEditingController();
+  late final TextEditingController _nameController;
+  late final TextEditingController _dateRangeController;
+  late final TextEditingController _venueController;
+  late final TextEditingController _organizerController;
+  late final TextEditingController _categoryController;
+  late final TextEditingController _divisionController;
+
+  bool get _isEditing => widget.existing != null;
+
+  @override
+  void initState() {
+    super.initState();
+    final e = widget.existing;
+    _nameController = TextEditingController(text: e?.name ?? '');
+    _dateRangeController = TextEditingController(text: e?.dateRange ?? '');
+    _venueController = TextEditingController(text: e?.venue ?? '');
+    _organizerController = TextEditingController(text: e?.organizer ?? '');
+    _categoryController = TextEditingController(text: e?.categoryLabel ?? '');
+    _divisionController = TextEditingController(text: e?.divisionLabel ?? '');
+  }
 
   @override
   void dispose() {
@@ -39,15 +58,17 @@ class _CreateTournamentDialogState extends State<CreateTournamentDialog> {
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
 
+    final existing = widget.existing;
     final tournament = TournamentEntity(
-      id: _uuid.v4(),
+      // Preserve original id and createdAt when editing.
+      id: existing?.id ?? _uuid.v4(),
       name: _nameController.text.trim(),
       dateRange: _dateRangeController.text.trim(),
       venue: _venueController.text.trim(),
       organizer: _organizerController.text.trim(),
       categoryLabel: _categoryController.text.trim(),
       divisionLabel: _divisionController.text.trim(),
-      createdAt: DateTime.now(),
+      createdAt: existing?.createdAt ?? DateTime.now(),
     );
 
     Navigator.pop(context, tournament);
@@ -56,7 +77,7 @@ class _CreateTournamentDialogState extends State<CreateTournamentDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('New Tournament'),
+      title: Text(_isEditing ? 'Edit Tournament' : 'New Tournament'),
       content: SizedBox(
         width: 480,
         child: Form(
@@ -118,7 +139,7 @@ class _CreateTournamentDialogState extends State<CreateTournamentDialog> {
         ),
         ElevatedButton(
           onPressed: _submit,
-          child: const Text('Create'),
+          child: Text(_isEditing ? 'Save' : 'Create'),
         ),
       ],
     );

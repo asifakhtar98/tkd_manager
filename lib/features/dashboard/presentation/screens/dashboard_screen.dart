@@ -47,7 +47,8 @@ class DashboardScreen extends StatelessWidget {
         dojangSeparation: true,
         format: format,
         includeThirdPlaceMatch: true,
-        tournament: DemoData.getTournamentEntity(format),
+        // No tournament for demos — must NOT pollute TournamentBloc state.
+        tournament: null,
       ),
     ).push(context);
   }
@@ -126,6 +127,12 @@ class DashboardScreen extends StatelessWidget {
     );
     if (tournament != null && context.mounted) {
       context.read<TournamentBloc>().add(TournamentEvent.created(tournament));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Tournament \u201c${tournament.name}\u201d created.'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
     }
   }
 
@@ -188,7 +195,7 @@ class _TournamentCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final bracketCount = context
-        .read<TournamentBloc>()
+        .watch<TournamentBloc>()
         .state
         .bracketsFor(tournament.id)
         .length;

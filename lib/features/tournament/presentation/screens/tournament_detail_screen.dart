@@ -5,6 +5,7 @@ import 'package:tkd_saas/core/router/app_routes.dart';
 import 'package:tkd_saas/features/tournament/domain/entities/bracket_snapshot.dart';
 import 'package:tkd_saas/features/tournament/domain/entities/tournament_entity.dart';
 import 'package:tkd_saas/features/tournament/presentation/bloc/tournament_bloc.dart';
+import 'package:tkd_saas/features/tournament/presentation/widgets/create_tournament_dialog.dart';
 
 /// Shows the detail of a tournament — its metadata and all previously
 /// generated bracket snapshots. Tapping any snapshot re-opens the bracket
@@ -39,6 +40,11 @@ class TournamentDetailScreen extends StatelessWidget {
               onPressed: () => context.pop(),
             ),
             actions: [
+              IconButton(
+                icon: const Icon(Icons.edit_outlined),
+                tooltip: 'Edit Tournament',
+                onPressed: () => _showEditDialog(context, tournament),
+              ),
               IconButton(
                 icon: const Icon(Icons.delete_outline),
                 tooltip: 'Delete Tournament',
@@ -99,6 +105,21 @@ class TournamentDetailScreen extends StatelessWidget {
         );
       },
     );
+  }
+
+  Future<void> _showEditDialog(
+    BuildContext context,
+    TournamentEntity tournament,
+  ) async {
+    final updated = await showDialog<TournamentEntity>(
+      context: context,
+      builder: (_) => CreateTournamentDialog(existing: tournament),
+    );
+    if (updated != null && context.mounted) {
+      context
+          .read<TournamentBloc>()
+          .add(TournamentEvent.updated(updated));
+    }
   }
 
   Future<void> _confirmDelete(
@@ -223,6 +244,33 @@ class _BracketSnapshotCard extends StatelessWidget {
   final TournamentEntity tournament;
   final VoidCallback onDelete;
 
+  Future<void> _confirmDelete(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: const Text('Remove Bracket?'),
+        content: const Text(
+          'This bracket will be removed from history. This action cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(c, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.pop(c, true),
+            child: const Text('Remove'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) onDelete();
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -257,7 +305,7 @@ class _BracketSnapshotCard extends StatelessWidget {
             IconButton(
               icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
               tooltip: 'Remove bracket',
-              onPressed: onDelete,
+              onPressed: () => _confirmDelete(context),
             ),
             const Icon(Icons.chevron_right),
           ],

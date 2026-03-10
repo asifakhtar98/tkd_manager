@@ -176,8 +176,24 @@ class _BracketViewerScreenState extends State<BracketViewerScreen>
               body: const Center(child: CircularProgressIndicator()),
             ),
           BracketFailure(:final message) => Scaffold(
-              appBar: AppBar(title: const Text('Error')),
-              body: Center(child: Text(message)),
+              appBar: AppBar(
+                title: const Text('Error'),
+                leading: IconButton(
+                  icon: const Icon(Icons.arrow_back),
+                  onPressed: () => context.pop(),
+                ),
+              ),
+              body: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.error_outline,
+                        size: 48, color: Colors.redAccent),
+                    const SizedBox(height: 16),
+                    Text(message, textAlign: TextAlign.center),
+                  ],
+                ),
+              ),
             ),
           BracketLoadSuccess(:final result,
               :final participants,
@@ -298,7 +314,11 @@ class _BracketViewerScreenState extends State<BracketViewerScreen>
                 ),
               );
               if (confirm == true && context.mounted) {
-                setState(() => _snapshotSaved = false);
+                // Only reset the snapshot guard if this is NOT a history replay.
+                // In history view we never want to create a new snapshot.
+                if (!widget.isHistoryView) {
+                  setState(() => _snapshotSaved = false);
+                }
                 context
                     .read<BracketBloc>()
                     .add(const BracketRegenerateRequested());
