@@ -4,14 +4,23 @@ import 'package:uuid/uuid.dart';
 import 'package:tkd_saas/features/bracket/domain/entities/tournament_info.dart';
 import 'package:tkd_saas/features/bracket/data/services/single_elimination_bracket_generator_service_implementation.dart';
 import 'package:tkd_saas/features/bracket/presentation/widgets/tie_sheet_canvas_widget.dart';
-// TieSheetPainter is in tie_sheet_canvas_widget.dart
 import 'package:tkd_saas/features/participant/domain/entities/participant_entity.dart';
 
 void main() {
   const uuid = Uuid();
+  final generator = SingleEliminationBracketGeneratorServiceImplementation(uuid);
 
-  List<ParticipantEntity> make14Players() {
-    final data = [
+  final defaultTournament = TournamentInfo(
+    tournamentName: '2ND FEDERATION CUP - 2026 (Kyorugi & Poomsae)',
+    dateRange: '18 Jan. to 22 Jan, 2026',
+    venue: 'SMS Indoor Stadium, Jaipur, Rajasthan',
+    organizer: 'INDIA TAEKWONDO',
+    categoryLabel: 'JUNIOR',
+    divisionLabel: 'BOYS',
+  );
+
+  List<ParticipantEntity> makeParticipants(int count) {
+    final names = [
       ['Saiansh', 'Mathur', 'Delhi', 'DL012025-22514'],
       ['R.S.', 'Vignesh', 'Tamil Nadu', 'TN012024-14083'],
       ['Shashi', 'Kumar', 'Haryana', 'HR172026-26123'],
@@ -26,34 +35,27 @@ void main() {
       ['Pranjit', 'Sakia', 'Assam', 'AS132023-6969'],
       ['Rajat', 'Solanki', 'Rajasthan', 'RJ062022-4069'],
       ['Jay Dinesh', 'Salaskar', 'Maharashtra', 'MH332025-25272'],
+      ['Tej Pratap', 'Sharma', 'Rajasthan', 'RJ082025-33001'],
+      ['Apoorva', 'Pandey', 'Delhi', 'DL052024-44100'],
     ];
-    return List.generate(data.length, (i) => ParticipantEntity(
+    return List.generate(count, (i) => ParticipantEntity(
       id: uuid.v4(),
       divisionId: 'div1',
-      firstName: data[i][0],
-      lastName: data[i][1],
-      schoolOrDojangName: data[i][2],
-      registrationId: data[i][3],
+      firstName: names[i % names.length][0],
+      lastName: names[i % names.length][1],
+      schoolOrDojangName: names[i % names.length][2],
+      registrationId: names[i % names.length][3],
       seedNumber: i + 1,
     ));
   }
 
-  testWidgets('14-player tie sheet renders correctly', (tester) async {
-    final participants = make14Players();
-    final generator = SingleEliminationBracketGeneratorServiceImplementation(uuid);
+  Future<void> runGoldenTest(WidgetTester tester, int playerCount, String goldenFileName, {bool include3rd = false}) async {
+    final participants = makeParticipants(playerCount);
     final result = generator.generate(
       divisionId: 'div1',
       participantIds: participants.map((p) => p.id).toList(),
       bracketId: uuid.v4(),
-    );
-
-    final tournamentInfo = TournamentInfo(
-      tournamentName: '2ND FEDERATION CUP - 2026 (Kyorugi & Poomsae)',
-      dateRange: '18 Jan. to 22 Jan, 2026',
-      venue: 'SMS Indoor Stadium, Jaipur, Rajasthan',
-      organizer: 'INDIA TAEKWONDO',
-      categoryLabel: 'JUNIOR',
-      divisionLabel: 'BOYS',
+      includeThirdPlaceMatch: include3rd,
     );
 
     await tester.pumpWidget(
@@ -63,13 +65,13 @@ void main() {
             scrollDirection: Axis.horizontal,
             child: SingleChildScrollView(
               child: TieSheetCanvasWidget(
-                tournamentInfo: tournamentInfo,
+                tournamentInfo: defaultTournament,
                 matches: result.matches,
                 participants: participants,
                 bracketType: 'Single Elimination',
                 onMatchTap: (_) {},
                 printKey: GlobalKey(),
-                includeThirdPlaceMatch: false,
+                includeThirdPlaceMatch: include3rd,
               ),
             ),
           ),
@@ -78,22 +80,14 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    // Verify no errors during rendering
     expect(find.byType(CustomPaint), findsWidgets);
     await expectLater(
       find.byType(TieSheetCanvasWidget),
-      matchesGoldenFile('14_player_golden.png'),
+      matchesGoldenFile(goldenFileName),
     );
 
-    // Verify canvas has proper size - find the one with TieSheetPainter
-    final customPaints = tester.widgetList<CustomPaint>(find.byType(CustomPaint));
-    final tiePaint = customPaints.firstWhere((cp) => cp.painter is TieSheetPainter);
-    expect(tiePaint.size, isNotNull);
-    expect(tiePaint.size.width, greaterThan(0));
-    expect(tiePaint.size.height, greaterThan(0));
-
-    // Debug: Print match info
-    debugPrint('=== MATCH INFO ===');
+    // Print match info for debugging
+    debugPrint('=== $playerCount PLAYER MATCH INFO ===');
     debugPrint('Total matches: ${result.matches.length}');
     for (final m in result.matches) {
       final red = m.participantRedId != null
@@ -103,82 +97,53 @@ void main() {
           ? participants.where((p) => p.id == m.participantBlueId).firstOrNull
           : null;
       debugPrint('R${m.roundNumber} M${m.matchNumberInRound}: '
-          'Red=${red?.lastName ?? "null"} Blue=${blue?.lastName ?? "null"} '
-          'Status=${m.status} Result=${m.resultType} Winner=${m.winnerId != null ? "yes" : "null"}');
+          'Blue=${blue?.lastName ?? "BYE"} Red=${red?.lastName ?? "BYE"} '
+          'Status=${m.status} Result=${m.resultType} '
+          'Winner=${m.winnerId != null ? "yes" : "-"}');
     }
 
-    // Print canvas size
+    final customPaints = tester.widgetList<CustomPaint>(find.byType(CustomPaint));
+    final tiePaint = customPaints.firstWhere((cp) => cp.painter is TieSheetPainter);
     debugPrint('Canvas size: ${tiePaint.size}');
+  }
+
+  // 2 players: simplest bracket — 1 match, no BYEs
+  testWidgets('2-player bracket', (tester) async {
+    await runGoldenTest(tester, 2, '2_player_golden.png');
   });
 
-  testWidgets('4-player tie sheet renders correctly', (tester) async {
-    final participants = [
-      ParticipantEntity(id: uuid.v4(), divisionId: 'div1', firstName: 'John', lastName: 'Doe',
-          schoolOrDojangName: 'Eagle TKD', registrationId: 'DL012025-22514', seedNumber: 1),
-      ParticipantEntity(id: uuid.v4(), divisionId: 'div1', firstName: 'Jane', lastName: 'Smith',
-          schoolOrDojangName: 'Tiger TKD', registrationId: 'TN012024-14083', seedNumber: 2),
-      ParticipantEntity(id: uuid.v4(), divisionId: 'div1', firstName: 'Mike', lastName: 'Lee',
-          schoolOrDojangName: 'Eagle TKD', registrationId: 'HR172026-26123', seedNumber: 3),
-      ParticipantEntity(id: uuid.v4(), divisionId: 'div1', firstName: 'Sarah', lastName: 'Connor',
-          schoolOrDojangName: 'Dragon TKD', registrationId: 'TN222026-26267', seedNumber: 4),
-    ];
+  // 3 players: 1 BYE, asymmetric bracket
+  testWidgets('3-player bracket', (tester) async {
+    await runGoldenTest(tester, 3, '3_player_golden.png');
+  });
 
-    final generator = SingleEliminationBracketGeneratorServiceImplementation(uuid);
-    final result = generator.generate(
-      divisionId: 'div1',
-      participantIds: participants.map((p) => p.id).toList(),
-      bracketId: uuid.v4(),
-    );
+  // 4 players: perfect bracket, no BYEs
+  testWidgets('4-player bracket', (tester) async {
+    await runGoldenTest(tester, 4, '4_player_golden.png');
+  });
 
-    final tournamentInfo = TournamentInfo(
-      tournamentName: 'TEST TOURNAMENT',
-      dateRange: '2026',
-      venue: 'Test Venue',
-      organizer: 'TEST ORG',
-      categoryLabel: 'JUNIOR',
-      divisionLabel: 'BOYS',
-    );
+  // 5 players: 3 BYEs, heavily asymmetric
+  testWidgets('5-player bracket', (tester) async {
+    await runGoldenTest(tester, 5, '5_player_golden.png');
+  });
 
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: SingleChildScrollView(
-              child: TieSheetCanvasWidget(
-                tournamentInfo: tournamentInfo,
-                matches: result.matches,
-                participants: participants,
-                bracketType: 'Single Elimination',
-                onMatchTap: (_) {},
-                printKey: GlobalKey(),
-                includeThirdPlaceMatch: false,
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-    await tester.pumpAndSettle();
+  // 8 players: perfect bracket, no BYEs, 2 sides
+  testWidgets('8-player bracket', (tester) async {
+    await runGoldenTest(tester, 8, '8_player_golden.png');
+  });
 
-    await expectLater(
-      find.byType(TieSheetCanvasWidget),
-      matchesGoldenFile('4_player_golden.png'),
-    );
+  // 14 players: 2 BYEs, realistic tournament size
+  testWidgets('14-player bracket', (tester) async {
+    await runGoldenTest(tester, 14, '14_player_golden.png');
+  });
 
-    expect(find.byType(CustomPaint), findsWidgets);
+  // 16 players: perfect full bracket, no BYEs
+  testWidgets('16-player bracket', (tester) async {
+    await runGoldenTest(tester, 16, '16_player_golden.png');
+  });
 
-    debugPrint('=== 4 PLAYER MATCH INFO ===');
-    for (final m in result.matches) {
-      final red = m.participantRedId != null
-          ? participants.where((p) => p.id == m.participantRedId).firstOrNull
-          : null;
-      final blue = m.participantBlueId != null
-          ? participants.where((p) => p.id == m.participantBlueId).firstOrNull
-          : null;
-      debugPrint('R${m.roundNumber} M${m.matchNumberInRound}: '
-          'Red=${red?.lastName ?? "null"} Blue=${blue?.lastName ?? "null"} '
-          'Status=${m.status} Result=${m.resultType}');
-    }
+  // 14 players with 3rd place match
+  testWidgets('14-player bracket with 3rd place', (tester) async {
+    await runGoldenTest(tester, 14, '14_player_3rd_place_golden.png', include3rd: true);
   });
 }

@@ -150,17 +150,17 @@ class TieSheetPainter extends CustomPainter {
   final Map<String, int> _matchGlobalNumbers = {};
   final Map<String, Offset> _nodeOffsets = {};
 
-  static const double rowH = 34.0;
-  static const double pairGap = 20.0;
-  static const double noColW = 30.0;
-  static const double nameColW = 200.0;
-  static const double regIdColW = 120.0;
-  static const double roundColW = 120.0;
-  static const double headerH = 110.0; // Increased for table header
+  static const double rowH = 48.0;
+  static const double pairGap = 42.0;
+  static const double noColW = 36.0;
+  static const double nameColW = 210.0;
+  static const double regIdColW = 130.0;
+  static const double roundColW = 150.0;
+  static const double headerH = 110.0;
   static const double subHeaderH = 24.0;
   static const double medalH = 120.0;
-  static const double margin = 20.0;
-  static const double centerGap = 60.0;
+  static const double margin = 30.0;
+  static const double centerGap = 80.0;
 
   static double get listW => noColW + nameColW + regIdColW;
 
@@ -272,8 +272,8 @@ class TieSheetPainter extends CustomPainter {
       final winByRound = _groupByRound(winnersMatches);
       final r1Matches = winByRound[1] ?? [];
       final r1Count = r1Matches.length;
-      final leftR1 = r1Matches.where((m) => m.matchNumberInRound <= r1Count / 2).toList();
-      final rightR1 = r1Matches.where((m) => m.matchNumberInRound > r1Count / 2).toList();
+      final leftR1 = r1Matches.where((m) => m.matchNumberInRound <= (r1Count + 1) ~/ 2).toList();
+      final rightR1 = r1Matches.where((m) => m.matchNumberInRound > (r1Count + 1) ~/ 2).toList();
       final leftH = _computeMatchGroupedHeight(leftR1);
       final rightH = _computeMatchGroupedHeight(rightR1);
       tableH = max(leftH, rightH);
@@ -318,7 +318,7 @@ class TieSheetPainter extends CustomPainter {
 
     // Draw a connecting horizontal line below the header
     canvas.drawLine(Offset(margin + listW, startY), Offset(size.width - margin - listW, startY), thickPen);
-    final tableTop = startY + 8; // Small gap between header and participant table
+    final tableTop = startY + 16; // Generous gap between header and participant table
 
     final wMatches = _getWinnersMatches();
     final winRounds = _maxRound(wMatches);
@@ -354,51 +354,69 @@ class TieSheetPainter extends CustomPainter {
       // Split R1 matches into left and right halves (match-grouped layout)
       final r1Matches = winByRound[1] ?? [];
       final r1Count = r1Matches.length;
-      final leftR1Matches = r1Matches.where((m) => m.matchNumberInRound <= r1Count / 2).toList();
-      final rightR1Matches = r1Matches.where((m) => m.matchNumberInRound > r1Count / 2).toList();
-
-      // Draw Left Participant Table — grouped by match, Blue (top) then Red (bottom)
-      var leftIdx = 0;
-      double leftY = tableTop;
-      for (final m in leftR1Matches) {
-        final b = _findP(m.participantBlueId);  // Blue = top slot
-        final r = _findP(m.participantRedId);    // Red = bottom slot
-        if (b != null) {
-          leftIdx++;
-          _paintParticipantRow(canvas, leftIdx, b, margin, leftY, thickPen, mirrored: false);
-          _nodeOffsets[b.id] = Offset(margin + listW, leftY + rowH / 2);
-          leftY += rowH;
-        }
-        if (r != null) {
-          leftIdx++;
-          _paintParticipantRow(canvas, leftIdx, r, margin, leftY, thickPen, mirrored: false);
-          _nodeOffsets[r.id] = Offset(margin + listW, leftY + rowH / 2);
-          leftY += rowH;
-        }
-        leftY += pairGap;
-      }
-
-      // Draw Right Participant Table — grouped by match, Blue (top) then Red (bottom)
+      final leftHalfCount = (r1Count + 1) ~/ 2; // integer ceil division
       final rightEdge = size.width - margin;
       final rightTableLeft = rightEdge - listW;
-      var rightIdx = 0;
-      double rightY = tableTop;
-      for (final m in rightR1Matches) {
-        final b = _findP(m.participantBlueId);  // Blue = top slot
-        final r = _findP(m.participantRedId);    // Red = bottom slot
+
+      // Special case: 2 players (1 match = direct final)
+      // Put Blue participant on left, Red on right
+      if (r1Count == 1 && winRounds == 1) {
+        final match = r1Matches.first;
+        final b = _findP(match.participantBlueId);
+        final r = _findP(match.participantRedId);
         if (b != null) {
-          rightIdx++;
-          _paintParticipantRow(canvas, rightIdx, b, rightTableLeft, rightY, thickPen, mirrored: true);
-          _nodeOffsets[b.id] = Offset(rightTableLeft, rightY + rowH / 2);
-          rightY += rowH;
+          _paintParticipantRow(canvas, 1, b, margin, tableTop, thickPen, mirrored: false);
+          _nodeOffsets[b.id] = Offset(margin + listW, tableTop + rowH / 2);
         }
         if (r != null) {
-          rightIdx++;
-          _paintParticipantRow(canvas, rightIdx, r, rightTableLeft, rightY, thickPen, mirrored: true);
-          _nodeOffsets[r.id] = Offset(rightTableLeft, rightY + rowH / 2);
-          rightY += rowH;
+          _paintParticipantRow(canvas, 1, r, rightTableLeft, tableTop, thickPen, mirrored: true);
+          _nodeOffsets[r.id] = Offset(rightTableLeft, tableTop + rowH / 2);
         }
-        rightY += pairGap;
+      } else {
+        final leftR1Matches = r1Matches.where((m) => m.matchNumberInRound <= leftHalfCount).toList();
+        final rightR1Matches = r1Matches.where((m) => m.matchNumberInRound > leftHalfCount).toList();
+
+        // Draw Left Participant Table — grouped by match, Blue (top) then Red (bottom)
+        var leftIdx = 0;
+        double leftY = tableTop;
+        for (final m in leftR1Matches) {
+          final b = _findP(m.participantBlueId);
+          final r = _findP(m.participantRedId);
+          if (b != null) {
+            leftIdx++;
+            _paintParticipantRow(canvas, leftIdx, b, margin, leftY, thickPen, mirrored: false);
+            _nodeOffsets[b.id] = Offset(margin + listW, leftY + rowH / 2);
+            leftY += rowH;
+          }
+          if (r != null) {
+            leftIdx++;
+            _paintParticipantRow(canvas, leftIdx, r, margin, leftY, thickPen, mirrored: false);
+            _nodeOffsets[r.id] = Offset(margin + listW, leftY + rowH / 2);
+            leftY += rowH;
+          }
+          leftY += pairGap;
+        }
+
+        // Draw Right Participant Table — grouped by match, Blue (top) then Red (bottom)
+        var rightIdx = 0;
+        double rightY = tableTop;
+        for (final m in rightR1Matches) {
+          final b = _findP(m.participantBlueId);
+          final r = _findP(m.participantRedId);
+          if (b != null) {
+            rightIdx++;
+            _paintParticipantRow(canvas, rightIdx, b, rightTableLeft, rightY, thickPen, mirrored: true);
+            _nodeOffsets[b.id] = Offset(rightTableLeft, rightY + rowH / 2);
+            rightY += rowH;
+          }
+          if (r != null) {
+            rightIdx++;
+            _paintParticipantRow(canvas, rightIdx, r, rightTableLeft, rightY, thickPen, mirrored: true);
+            _nodeOffsets[r.id] = Offset(rightTableLeft, rightY + rowH / 2);
+            rightY += rowH;
+          }
+          rightY += pairGap;
+        }
       }
 
       // Draw Tree
@@ -412,7 +430,7 @@ class TieSheetPainter extends CustomPainter {
             final junctionX = size.width / 2;
             _paintCenterFinalJunction(canvas, match, junctionX, thickPen);
           } else {
-            bool isLeft = match.matchNumberInRound <= c / 2;
+            bool isLeft = match.matchNumberInRound <= (c + 1) ~/ 2;
             final junctionX = isLeft 
                ? margin + listW + (r * roundColW)
                : rightEdge - listW - (r * roundColW);
@@ -451,15 +469,13 @@ class TieSheetPainter extends CustomPainter {
       final midY = (minY + maxY) / 2;
       _nodeOffsets[match.id] = Offset(junctionX, midY);
 
-      // Label B / R (Since Left is usually B, Right is usually R)
-      final leftIn = topIn.dx < botIn.dx ? topIn : botIn;
-      final rightIn = topIn.dx > botIn.dx ? topIn : botIn;
-      _drawText(canvas, 'B', junctionX - 10, leftIn.dy - 12, const TextStyle(color: Colors.blue, fontWeight: FontWeight.bold, fontSize: 10));
-      _drawText(canvas, 'R', junctionX + 4, rightIn.dy - 12, const TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 10));
+      // Label B / R — topIn = Blue slot (Chung), botIn = Red slot (Hong)
+      _drawBadge(canvas, 'B', const Color(0xFF3B82F6), junctionX - 16, topIn.dy - 14);
+      _drawBadge(canvas, 'R', const Color(0xFFEF4444), junctionX + 16, botIn.dy - 14);
 
       final gNum = _matchGlobalNumbers[match.id];
       if (gNum != null) {
-        _drawText(canvas, '$gNum', junctionX + 4, midY + 4, _bold(10));
+        _drawText(canvas, '$gNum', junctionX + 16, midY + 4, _bold(10));
       }
 
       if (match.winnerId != null) {
@@ -630,7 +646,7 @@ class TieSheetPainter extends CustomPainter {
     final output = Offset(junctionX, midY);
     _nodeOffsets[match.id] = output;
 
-    final r = 6.0;
+    final r = 10.0;
     
     // Top arm
     final pathT = Path();
@@ -655,19 +671,19 @@ class TieSheetPainter extends CustomPainter {
     final redColor = const Color(0xFFEF4444);
 
     if (!mirrored) {
-      _drawBadge(canvas, 'B', blueColor, junctionX + 10, effectiveTop.dy - 8);
-      _drawBadge(canvas, 'R', redColor, junctionX + 10, effectiveBot.dy + 8);
+      _drawBadge(canvas, 'B', blueColor, junctionX + 16, effectiveTop.dy - 16);
+      _drawBadge(canvas, 'R', redColor, junctionX + 16, effectiveBot.dy + 16);
     } else {
-      _drawBadge(canvas, 'B', blueColor, junctionX - 10, effectiveTop.dy - 8);
-      _drawBadge(canvas, 'R', redColor, junctionX - 10, effectiveBot.dy + 8);
+      _drawBadge(canvas, 'B', blueColor, junctionX - 16, effectiveTop.dy - 16);
+      _drawBadge(canvas, 'R', redColor, junctionX - 16, effectiveBot.dy + 16);
     }
 
     final gNum = _matchGlobalNumbers[match.id];
     if (gNum != null) {
       if (!mirrored) {
-        _drawText(canvas, '$gNum', junctionX + 4, midY - 6, _bold(9));
+        _drawText(canvas, '$gNum', junctionX + 18, midY - 7, _bold(11));
       } else {
-        _drawText(canvas, '$gNum', junctionX - 14, midY - 6, _bold(9));
+        _drawText(canvas, '$gNum', junctionX - 28, midY - 7, _bold(11));
       }
     }
 
