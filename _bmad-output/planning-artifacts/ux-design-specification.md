@@ -27,14 +27,9 @@ inputDocuments: ["_bmad-output/planning-artifacts/prd.md", "_bmad-output/plannin
 * **Mobile (320px-767px):** Read-Only. Bottom-nav, large live-score cards, strict optimization for poor internet.
 
 ## 4. Design System & Visuals
-**Foundation:** Material Design 3 (Material You).
+**Foundation:** Material Design 3 LIGHT (Material You).
 
-### Color Palette
-* **Primary:** Deep Navy (`#1A237E`) - Stable, authoritative.
-* **Accent:** Arena Gold (`#FBC02D`) - Magic/Live moments.
-* **Chung (Blue):** `#2196F3` - Federation standard.
-* **Hong (Red):** `#F44336` - Federation standard.
-* **Surface:** Eggshell (`#F5F5F5`) - Clean, reduces eye strain.
+
 
 ### Typography & Spacing
 * **Fonts:** Inter (data legibility) & Outfit (headers, ring numbers).
