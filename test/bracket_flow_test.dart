@@ -215,6 +215,12 @@ void main() {
       await tester.tap(clearAll);
       await tester.pumpAndSettle();
 
+      // Confirm the "Clear All Participants?" dialog
+      final confirmBtn = find.widgetWithText(ElevatedButton, 'Clear All');
+      expect(confirmBtn, findsOneWidget);
+      await tester.tap(confirmBtn);
+      await tester.pumpAndSettle();
+
       expect(
         find.byTooltip('Add at least 2 players to generate a bracket'),
         findsOneWidget,

@@ -621,7 +621,37 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                 'Clear All',
                 style: TextStyle(color: Colors.red),
               ),
-              onPressed: () => setState(() => _participants.clear()),
+              onPressed: _participants.isEmpty
+                  ? null
+                  : () async {
+                      final confirmed = await showDialog<bool>(
+                        context: context,
+                        builder: (c) => AlertDialog(
+                          title: const Text('Clear All Participants?'),
+                          content: Text(
+                            'This will remove all ${_participants.length} '
+                            'participants from the roster.',
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(c, false),
+                              child: const Text('Cancel'),
+                            ),
+                            ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.red,
+                                foregroundColor: Colors.white,
+                              ),
+                              onPressed: () => Navigator.pop(c, true),
+                              child: const Text('Clear All'),
+                            ),
+                          ],
+                        ),
+                      );
+                      if (confirmed == true) {
+                        setState(() => _participants.clear());
+                      }
+                    },
             ),
           ],
         ),
