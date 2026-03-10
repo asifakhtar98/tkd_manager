@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 import 'package:go_router/go_router.dart';
+import 'package:tkd_saas/core/router/app_routes.dart';
 import 'package:tkd_saas/features/participant/domain/entities/participant_entity.dart';
 import 'package:tkd_saas/features/bracket/domain/entities/tournament_info.dart';
 
@@ -16,7 +17,10 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
   final Uuid _uuid = const Uuid();
   bool _dojangSeparation = true;
   bool _includeThirdPlaceMatch = false;
-  String _format = 'Single Elimination';
+  static const String _formatSingle = 'Single Elimination';
+  static const String _formatDouble = 'Double Elimination';
+
+  String _format = _formatSingle;
 
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
@@ -118,20 +122,22 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                   foregroundColor: _participants.length >= 2 ? Colors.white : Colors.grey,
                 ),
                 onPressed: _participants.length >= 2 ? () {
-                  context.push('/bracket', extra: {
-                    'participants': List<ParticipantEntity>.from(_participants),
-                    'dojangSeparation': _dojangSeparation,
-                    'format': _format,
-                    'includeThirdPlaceMatch': _includeThirdPlaceMatch,
-                    'tournamentInfo': TournamentInfo(
-                      tournamentName: _tournamentNameController.text.trim(),
-                      dateRange: _dateRangeController.text.trim(),
-                      venue: _venueController.text.trim(),
-                      organizer: _organizerController.text.trim(),
-                      categoryLabel: _categoryController.text.trim(),
-                      divisionLabel: _divisionLabelController.text.trim(),
+                  BracketRoute(
+                    $extra: BracketRouteExtra(
+                      participants: List<ParticipantEntity>.from(_participants),
+                      dojangSeparation: _dojangSeparation,
+                      format: _format,
+                      includeThirdPlaceMatch: _includeThirdPlaceMatch,
+                      tournamentInfo: TournamentInfo(
+                        tournamentName: _tournamentNameController.text.trim(),
+                        dateRange: _dateRangeController.text.trim(),
+                        venue: _venueController.text.trim(),
+                        organizer: _organizerController.text.trim(),
+                        categoryLabel: _categoryController.text.trim(),
+                        divisionLabel: _divisionLabelController.text.trim(),
+                      ),
                     ),
-                  });
+                  ).push(context);
                 } : null,
               ),
             ),
@@ -182,7 +188,7 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                             DropdownButton<String>(
                               value: _format,
                               isExpanded: true,
-                              items: ['Single Elimination', 'Double Elimination']
+                              items: [_formatSingle, _formatDouble]
                                   .map((f) => DropdownMenuItem(value: f, child: Text(f))).toList(),
                               onChanged: (val) {
                                 if (val != null) setState(() => _format = val);
@@ -195,7 +201,7 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                               value: _dojangSeparation,
                               onChanged: (val) => setState(() => _dojangSeparation = val),
                             ),
-                            if (_format == 'Single Elimination') SwitchListTile(
+                            if (_format == _formatSingle) SwitchListTile(
                               title: const Text('3rd Place Match'),
                               subtitle: const Text('Bronze medal match for semi losers'),
                               value: _includeThirdPlaceMatch,

@@ -264,17 +264,23 @@ class DoubleEliminationBracketGeneratorServiceImplementation
     // Flatten all matches into a map for topological processing
     final allMatchesMap = <String, MatchEntity>{};
     for (final roundMatches in wbMatchMap.values) {
-      for (final m in roundMatches.values) allMatchesMap[m.id] = m;
+      for (final m in roundMatches.values) {
+        allMatchesMap[m.id] = m;
+      }
     }
     for (final roundMatches in lbMatchMap.values) {
-      for (final m in roundMatches.values) allMatchesMap[m.id] = m;
+      for (final m in roundMatches.values) {
+        allMatchesMap[m.id] = m;
+      }
     }
     allMatchesMap[grandFinalsMatch.id] = grandFinalsMatch;
     if (resetMatch != null) allMatchesMap[resetMatch.id] = resetMatch;
 
     // Evaluate phantom paths
     final matchInputs = <String, List<String>>{};
-    for (final m in allMatchesMap.values) matchInputs[m.id] = [];
+    for (final m in allMatchesMap.values) {
+      matchInputs[m.id] = [];
+    }
 
     // Initialize WB R1 inputs
     for (var m = 1; m <= r1Count; m++) {

@@ -4,7 +4,7 @@ import 'package:tkd_saas/main.dart' as app;
 
 void main() {
   Future<void> navigateToSetup(WidgetTester tester) async {
-    await tester.pumpWidget(const app.BracketGeneratorApp());
+    await tester.pumpWidget(const app.TkdTournamentApp());
     await tester.pumpAndSettle();
     final startBtn = find.text('Start New Tournament');
     await tester.ensureVisible(startBtn);
@@ -28,7 +28,7 @@ void main() {
   testWidgets('Participant entry screen empty golden', (tester) async {
     await navigateToSetup(tester);
     await expectLater(
-      find.byType(app.BracketGeneratorApp),
+      find.byType(app.TkdTournamentApp),
       matchesGoldenFile('participant_entry_screen_empty.png'),
     );
   });
@@ -41,7 +41,7 @@ void main() {
     ]);
 
     await expectLater(
-      find.byType(app.BracketGeneratorApp),
+      find.byType(app.TkdTournamentApp),
       matchesGoldenFile('participant_entry_screen_with_players.png'),
     );
   });

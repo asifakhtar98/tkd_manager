@@ -1,43 +1,23 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-import 'core/router/app_router.dart';
+import 'package:tkd_saas/core/di/injection.dart';
+import 'package:tkd_saas/core/router/app_router.dart';
+import 'package:tkd_saas/core/theme/app_theme.dart';
 
 void main() {
-  runApp(const BracketGeneratorApp());
+  configureDependencies();
+  runApp(const TkdTournamentApp());
 }
 
-class BracketGeneratorApp extends StatefulWidget {
-  const BracketGeneratorApp({super.key});
-
-  @override
-  State<BracketGeneratorApp> createState() => _BracketGeneratorAppState();
-}
-
-class _BracketGeneratorAppState extends State<BracketGeneratorApp> {
-  late final GoRouter _router;
-
-  @override
-  void initState() {
-    super.initState();
-    _router = AppRouter.createRouter();
-  }
+class TkdTournamentApp extends StatelessWidget {
+  const TkdTournamentApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
       title: 'TKD Tournament Manager',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        brightness: Brightness.light,
-        primarySwatch: Colors.blue,
-        useMaterial3: true,
-      ),
-      darkTheme: ThemeData(
-        brightness: Brightness.dark,
-        primarySwatch: Colors.blue,
-        useMaterial3: true,
-      ),
-      routerConfig: _router,
+      theme: AppTheme.light,
+      routerConfig: AppRouter.createRouter(),
     );
   }
 }

@@ -8,7 +8,7 @@ void main() {
     tester.view.physicalSize = const Size(1920, 1080);
     tester.view.devicePixelRatio = 1.0;
 
-    await tester.pumpWidget(const app.BracketGeneratorApp());
+    await tester.pumpWidget(const app.TkdTournamentApp());
     await tester.pumpAndSettle();
 
     // Verify Dashboard is shown initially
@@ -17,7 +17,7 @@ void main() {
     expect(find.text('Explore Demo Brackets'), findsOneWidget);
 
     await expectLater(
-      find.byType(app.BracketGeneratorApp),
+      find.byType(app.TkdTournamentApp),
       matchesGoldenFile('dashboard_screen_golden.png'),
     );
 

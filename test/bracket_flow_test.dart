@@ -4,7 +4,7 @@ import 'package:tkd_saas/main.dart' as app;
 
 void main() {
   Future<void> navigateToSetup(WidgetTester tester) async {
-    await tester.pumpWidget(const app.BracketGeneratorApp());
+    await tester.pumpWidget(const app.TkdTournamentApp());
     await tester.pumpAndSettle();
 
     final startBtn = find.text('Start New Tournament');

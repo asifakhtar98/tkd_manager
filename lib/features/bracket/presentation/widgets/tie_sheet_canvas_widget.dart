@@ -95,9 +95,9 @@ class _TieSheetCanvasWidgetState extends State<TieSheetCanvasWidget> {
                 color: Colors.transparent,
                 child: InkWell(
                   borderRadius: BorderRadius.circular(4),
-                  hoverColor: Colors.blueAccent.withOpacity(0.1),
-                  splashColor: Colors.blueAccent.withOpacity(0.2),
-                  highlightColor: Colors.blueAccent.withOpacity(0.1),
+                  hoverColor: Colors.blueAccent.withValues(alpha: 0.1),
+                  splashColor: Colors.blueAccent.withValues(alpha: 0.2),
+                  highlightColor: Colors.blueAccent.withValues(alpha: 0.1),
                   onTap: () => widget.onMatchTap(matchId),
                   child: const Tooltip(
                     message: 'Record Score / Result',

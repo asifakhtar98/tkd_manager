@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-import '../../../core/data/demo_data.dart';
+import 'package:tkd_saas/core/router/app_routes.dart';
+import 'package:tkd_saas/features/core/data/demo_data.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
@@ -14,8 +14,8 @@ class DashboardScreen extends StatelessWidget {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              const Color(0xFF1A237E), // Deep Navy
-              const Color(0xFF1A237E).withOpacity(0.8),
+              const Color(0xFF1A237E),
+              const Color(0xFF1A237E).withValues(alpha: 0.8),
             ],
           ),
         ),
@@ -52,7 +52,7 @@ class DashboardScreen extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFBC02D), // Arena Gold
+                    color: const Color(0xFFFBC02D),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: const Icon(Icons.star, color: Color(0xFF1A237E)),
@@ -74,7 +74,7 @@ class DashboardScreen extends StatelessWidget {
               'Professional tournament management at your fingertips.',
               style: TextStyle(
                 fontSize: 18,
-                color: Colors.white.withOpacity(0.7),
+                color: Colors.white.withValues(alpha: 0.7),
               ),
             ),
           ],
@@ -97,18 +97,19 @@ class DashboardScreen extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         InkWell(
-          onTap: () => context.push('/setup'),
+          onTap: () => const SetupRoute().push(context),
           child: Container(
             width: double.infinity,
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.1),
+              color: Colors.white.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: Colors.white.withOpacity(0.2)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
             ),
             child: Row(
               children: [
-                const Icon(Icons.add_circle_outline, color: Color(0xFFFBC02D), size: 40),
+                const Icon(Icons.add_circle_outline,
+                    color: Color(0xFFFBC02D), size: 40),
                 const SizedBox(width: 20),
                 Expanded(
                   child: Column(
@@ -160,30 +161,12 @@ class DashboardScreen extends StatelessWidget {
           mainAxisSpacing: 16,
           childAspectRatio: 1.5,
           children: [
-            _buildDemoCard(
-              context,
-              'Single Elimination',
-              'Fast & Standard',
-              Icons.account_tree,
-              'Single Elimination',
-              8,
-            ),
-            _buildDemoCard(
-              context,
-              'Double Elimination',
-              'Fair & Robust',
-              Icons.repeat,
-              'Double Elimination',
-              8,
-            ),
-            _buildDemoCard(
-              context,
-              'Large Division',
-              '32 Players Demo',
-              Icons.reorder,
-              'Single Elimination',
-              32,
-            ),
+            _buildDemoCard(context, 'Single Elimination', 'Fast & Standard',
+                Icons.account_tree, 'Single Elimination', 8),
+            _buildDemoCard(context, 'Double Elimination', 'Fair & Robust',
+                Icons.repeat, 'Double Elimination', 8),
+            _buildDemoCard(context, 'Large Division', '32 Players Demo',
+                Icons.reorder, 'Single Elimination', 32),
           ],
         ),
       ],
@@ -199,21 +182,22 @@ class DashboardScreen extends StatelessWidget {
     int playerCount,
   ) {
     return InkWell(
-      onTap: () {
-        context.push('/bracket', extra: {
-          'participants': DemoData.getParticipants(playerCount),
-          'dojangSeparation': true,
-          'format': format,
-          'includeThirdPlaceMatch': true,
-          'tournamentInfo': DemoData.getTournamentInfo(title),
-        });
-      },
+      onTap: () => BracketRoute(
+        $extra: BracketRouteExtra(
+          participants: DemoData.getParticipants(playerCount),
+          dojangSeparation: true,
+          format: format,
+          includeThirdPlaceMatch: true,
+          tournamentInfo: DemoData.getTournamentInfo(title),
+        ),
+      ).push(context),
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.05),
+          color: Colors.white.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.white.withOpacity(0.1)),
+          border:
+              Border.all(color: Colors.white.withValues(alpha: 0.1)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -234,7 +218,8 @@ class DashboardScreen extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   subtitle,
-                  style: const TextStyle(fontSize: 12, color: Colors.white54),
+                  style:
+                      const TextStyle(fontSize: 12, color: Colors.white54),
                 ),
               ],
             ),
