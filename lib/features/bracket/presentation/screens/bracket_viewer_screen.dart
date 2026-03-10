@@ -1,4 +1,6 @@
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:pdf/pdf.dart';
@@ -24,6 +26,7 @@ class BracketViewerScreen extends StatefulWidget {
     required this.format,
     required this.includeThirdPlaceMatch,
     this.tournament,
+    this.isHistoryView = false,
   });
 
   final List<ParticipantEntity> participants;
@@ -31,6 +34,10 @@ class BracketViewerScreen extends StatefulWidget {
   final String format;
   final bool includeThirdPlaceMatch;
   final TournamentEntity? tournament;
+
+  /// When true the bracket is a replay from history — do NOT save a new
+  /// [BracketSnapshot] so the history list stays clean.
+  final bool isHistoryView;
 
   @override
   State<BracketViewerScreen> createState() => _BracketViewerScreenState();
@@ -66,13 +73,77 @@ class _BracketViewerScreenState extends State<BracketViewerScreen>
     super.dispose();
   }
 
+  /// Exports the currently visible bracket tab as a real PDF.
+  ///
+  /// Captures the [RepaintBoundary] for the active tab (winners or losers),
+  /// converts the canvas to a PNG image, and embeds it in a landscape A4 PDF
+  /// page with a header showing the tournament name and format.
   Future<void> _exportPdf(String title) async {
+    // Pick the correct print key based on the active tab.
+    final printKey =
+        _tabController.index == 1 ? _losersPrintKey : _winnersPrintKey;
+
+    pw.ImageProvider? bracketImage;
+    try {
+      final boundary = printKey.currentContext?.findRenderObject()
+          as RenderRepaintBoundary?;
+      if (boundary != null) {
+        final ui.Image image = await boundary.toImage(pixelRatio: 2.0);
+        final byteData =
+            await image.toByteData(format: ui.ImageByteFormat.png);
+        if (byteData != null) {
+          bracketImage =
+              pw.MemoryImage(byteData.buffer.asUint8List());
+        }
+      }
+    } catch (_) {
+      // Capture failed — fall back to text-only export.
+    }
+
     final doc = pw.Document();
     doc.addPage(
       pw.Page(
         pageFormat: PdfPageFormat.a4.landscape,
-        build: (pw.Context ctx) =>
-            pw.Center(child: pw.Text('Tie Sheet: $title')),
+        margin: const pw.EdgeInsets.all(24),
+        build: (pw.Context ctx) {
+          return pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              // Header
+              pw.Text(
+                title,
+                style: pw.TextStyle(
+                  fontSize: 18,
+                  fontWeight: pw.FontWeight.bold,
+                ),
+              ),
+              pw.Text(
+                widget.format,
+                style: const pw.TextStyle(fontSize: 12),
+              ),
+              pw.SizedBox(height: 12),
+              pw.Divider(),
+              pw.SizedBox(height: 12),
+              // Bracket image or fallback
+              if (bracketImage != null)
+                pw.Expanded(
+                  child: pw.Center(
+                    child: pw.Image(bracketImage, fit: pw.BoxFit.contain),
+                  ),
+                )
+              else
+                pw.Expanded(
+                  child: pw.Center(
+                    child: pw.Text(
+                      'Bracket image could not be captured.\n'
+                      'Please try again after the bracket has fully rendered.',
+                      textAlign: pw.TextAlign.center,
+                    ),
+                  ),
+                ),
+            ],
+          );
+        },
       ),
     );
     await Printing.layoutPdf(
@@ -135,7 +206,10 @@ class _BracketViewerScreenState extends State<BracketViewerScreen>
     required String format,
     required bool includeThirdPlaceMatch,
   }) {
-    if (_snapshotSaved || widget.tournament == null) return;
+    // Skip if already saved, no owning tournament, or replaying history.
+    if (_snapshotSaved || widget.tournament == null || widget.isHistoryView) {
+      return;
+    }
     _snapshotSaved = true;
 
     final snapshot = BracketSnapshot(

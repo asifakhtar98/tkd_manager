@@ -55,14 +55,15 @@ extension TournamentEventPatterns on TournamentEvent {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( TournamentCreated value)?  created,TResult Function( TournamentBracketSnapshotAdded value)?  bracketSnapshotAdded,TResult Function( TournamentBracketSnapshotRemoved value)?  bracketSnapshotRemoved,TResult Function( TournamentDeleted value)?  deleted,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( TournamentCreated value)?  created,TResult Function( TournamentBracketSnapshotAdded value)?  bracketSnapshotAdded,TResult Function( TournamentBracketSnapshotRemoved value)?  bracketSnapshotRemoved,TResult Function( TournamentDeleted value)?  deleted,TResult Function( TournamentUpdated value)?  updated,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
 case TournamentCreated() when created != null:
 return created(_that);case TournamentBracketSnapshotAdded() when bracketSnapshotAdded != null:
 return bracketSnapshotAdded(_that);case TournamentBracketSnapshotRemoved() when bracketSnapshotRemoved != null:
 return bracketSnapshotRemoved(_that);case TournamentDeleted() when deleted != null:
-return deleted(_that);case _:
+return deleted(_that);case TournamentUpdated() when updated != null:
+return updated(_that);case _:
   return orElse();
 
 }
@@ -80,14 +81,15 @@ return deleted(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( TournamentCreated value)  created,required TResult Function( TournamentBracketSnapshotAdded value)  bracketSnapshotAdded,required TResult Function( TournamentBracketSnapshotRemoved value)  bracketSnapshotRemoved,required TResult Function( TournamentDeleted value)  deleted,}){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( TournamentCreated value)  created,required TResult Function( TournamentBracketSnapshotAdded value)  bracketSnapshotAdded,required TResult Function( TournamentBracketSnapshotRemoved value)  bracketSnapshotRemoved,required TResult Function( TournamentDeleted value)  deleted,required TResult Function( TournamentUpdated value)  updated,}){
 final _that = this;
 switch (_that) {
 case TournamentCreated():
 return created(_that);case TournamentBracketSnapshotAdded():
 return bracketSnapshotAdded(_that);case TournamentBracketSnapshotRemoved():
 return bracketSnapshotRemoved(_that);case TournamentDeleted():
-return deleted(_that);}
+return deleted(_that);case TournamentUpdated():
+return updated(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -101,14 +103,15 @@ return deleted(_that);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( TournamentCreated value)?  created,TResult? Function( TournamentBracketSnapshotAdded value)?  bracketSnapshotAdded,TResult? Function( TournamentBracketSnapshotRemoved value)?  bracketSnapshotRemoved,TResult? Function( TournamentDeleted value)?  deleted,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( TournamentCreated value)?  created,TResult? Function( TournamentBracketSnapshotAdded value)?  bracketSnapshotAdded,TResult? Function( TournamentBracketSnapshotRemoved value)?  bracketSnapshotRemoved,TResult? Function( TournamentDeleted value)?  deleted,TResult? Function( TournamentUpdated value)?  updated,}){
 final _that = this;
 switch (_that) {
 case TournamentCreated() when created != null:
 return created(_that);case TournamentBracketSnapshotAdded() when bracketSnapshotAdded != null:
 return bracketSnapshotAdded(_that);case TournamentBracketSnapshotRemoved() when bracketSnapshotRemoved != null:
 return bracketSnapshotRemoved(_that);case TournamentDeleted() when deleted != null:
-return deleted(_that);case _:
+return deleted(_that);case TournamentUpdated() when updated != null:
+return updated(_that);case _:
   return null;
 
 }
@@ -125,13 +128,14 @@ return deleted(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( TournamentEntity tournament)?  created,TResult Function( String tournamentId,  BracketSnapshot snapshot)?  bracketSnapshotAdded,TResult Function( String tournamentId,  String snapshotId)?  bracketSnapshotRemoved,TResult Function( String tournamentId)?  deleted,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( TournamentEntity tournament)?  created,TResult Function( String tournamentId,  BracketSnapshot snapshot)?  bracketSnapshotAdded,TResult Function( String tournamentId,  String snapshotId)?  bracketSnapshotRemoved,TResult Function( String tournamentId)?  deleted,TResult Function( TournamentEntity tournament)?  updated,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case TournamentCreated() when created != null:
 return created(_that.tournament);case TournamentBracketSnapshotAdded() when bracketSnapshotAdded != null:
 return bracketSnapshotAdded(_that.tournamentId,_that.snapshot);case TournamentBracketSnapshotRemoved() when bracketSnapshotRemoved != null:
 return bracketSnapshotRemoved(_that.tournamentId,_that.snapshotId);case TournamentDeleted() when deleted != null:
-return deleted(_that.tournamentId);case _:
+return deleted(_that.tournamentId);case TournamentUpdated() when updated != null:
+return updated(_that.tournament);case _:
   return orElse();
 
 }
@@ -149,13 +153,14 @@ return deleted(_that.tournamentId);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( TournamentEntity tournament)  created,required TResult Function( String tournamentId,  BracketSnapshot snapshot)  bracketSnapshotAdded,required TResult Function( String tournamentId,  String snapshotId)  bracketSnapshotRemoved,required TResult Function( String tournamentId)  deleted,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( TournamentEntity tournament)  created,required TResult Function( String tournamentId,  BracketSnapshot snapshot)  bracketSnapshotAdded,required TResult Function( String tournamentId,  String snapshotId)  bracketSnapshotRemoved,required TResult Function( String tournamentId)  deleted,required TResult Function( TournamentEntity tournament)  updated,}) {final _that = this;
 switch (_that) {
 case TournamentCreated():
 return created(_that.tournament);case TournamentBracketSnapshotAdded():
 return bracketSnapshotAdded(_that.tournamentId,_that.snapshot);case TournamentBracketSnapshotRemoved():
 return bracketSnapshotRemoved(_that.tournamentId,_that.snapshotId);case TournamentDeleted():
-return deleted(_that.tournamentId);}
+return deleted(_that.tournamentId);case TournamentUpdated():
+return updated(_that.tournament);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -169,13 +174,14 @@ return deleted(_that.tournamentId);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( TournamentEntity tournament)?  created,TResult? Function( String tournamentId,  BracketSnapshot snapshot)?  bracketSnapshotAdded,TResult? Function( String tournamentId,  String snapshotId)?  bracketSnapshotRemoved,TResult? Function( String tournamentId)?  deleted,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( TournamentEntity tournament)?  created,TResult? Function( String tournamentId,  BracketSnapshot snapshot)?  bracketSnapshotAdded,TResult? Function( String tournamentId,  String snapshotId)?  bracketSnapshotRemoved,TResult? Function( String tournamentId)?  deleted,TResult? Function( TournamentEntity tournament)?  updated,}) {final _that = this;
 switch (_that) {
 case TournamentCreated() when created != null:
 return created(_that.tournament);case TournamentBracketSnapshotAdded() when bracketSnapshotAdded != null:
 return bracketSnapshotAdded(_that.tournamentId,_that.snapshot);case TournamentBracketSnapshotRemoved() when bracketSnapshotRemoved != null:
 return bracketSnapshotRemoved(_that.tournamentId,_that.snapshotId);case TournamentDeleted() when deleted != null:
-return deleted(_that.tournamentId);case _:
+return deleted(_that.tournamentId);case TournamentUpdated() when updated != null:
+return updated(_that.tournament);case _:
   return null;
 
 }
@@ -467,6 +473,81 @@ as String,
 }
 
 
+}
+
+/// @nodoc
+
+
+class TournamentUpdated implements TournamentEvent {
+  const TournamentUpdated(this.tournament);
+  
+
+ final  TournamentEntity tournament;
+
+/// Create a copy of TournamentEvent
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$TournamentUpdatedCopyWith<TournamentUpdated> get copyWith => _$TournamentUpdatedCopyWithImpl<TournamentUpdated>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is TournamentUpdated&&(identical(other.tournament, tournament) || other.tournament == tournament));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,tournament);
+
+@override
+String toString() {
+  return 'TournamentEvent.updated(tournament: $tournament)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $TournamentUpdatedCopyWith<$Res> implements $TournamentEventCopyWith<$Res> {
+  factory $TournamentUpdatedCopyWith(TournamentUpdated value, $Res Function(TournamentUpdated) _then) = _$TournamentUpdatedCopyWithImpl;
+@useResult
+$Res call({
+ TournamentEntity tournament
+});
+
+
+$TournamentEntityCopyWith<$Res> get tournament;
+
+}
+/// @nodoc
+class _$TournamentUpdatedCopyWithImpl<$Res>
+    implements $TournamentUpdatedCopyWith<$Res> {
+  _$TournamentUpdatedCopyWithImpl(this._self, this._then);
+
+  final TournamentUpdated _self;
+  final $Res Function(TournamentUpdated) _then;
+
+/// Create a copy of TournamentEvent
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? tournament = null,}) {
+  return _then(TournamentUpdated(
+null == tournament ? _self.tournament : tournament // ignore: cast_nullable_to_non_nullable
+as TournamentEntity,
+  ));
+}
+
+/// Create a copy of TournamentEvent
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TournamentEntityCopyWith<$Res> get tournament {
+  
+  return $TournamentEntityCopyWith<$Res>(_self.tournament, (value) {
+    return _then(_self.copyWith(tournament: value));
+  });
+}
 }
 
 // dart format on

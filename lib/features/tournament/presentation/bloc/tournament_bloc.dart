@@ -18,6 +18,7 @@ class TournamentBloc extends Bloc<TournamentEvent, TournamentState> {
     on<TournamentBracketSnapshotAdded>(_onBracketAdded);
     on<TournamentBracketSnapshotRemoved>(_onBracketRemoved);
     on<TournamentDeleted>(_onDelete);
+    on<TournamentUpdated>(_onUpdate);
   }
 
   void _onCreate(TournamentCreated event, Emitter<TournamentState> emit) {
@@ -61,6 +62,13 @@ class TournamentBloc extends Bloc<TournamentEvent, TournamentState> {
       tournaments: updatedTournaments,
       bracketsByTournamentId: updatedBrackets,
     ));
+  }
+
+  void _onUpdate(TournamentUpdated event, Emitter<TournamentState> emit) {
+    final updated = state.tournaments.map((t) {
+      return t.id == event.tournament.id ? event.tournament : t;
+    }).toList();
+    emit(state.copyWith(tournaments: updated));
   }
 
   /// Convenience: look up a tournament by ID.

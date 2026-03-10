@@ -269,6 +269,7 @@ class _BracketSnapshotCard extends StatelessWidget {
             format: snapshot.format,
             includeThirdPlaceMatch: snapshot.includeThirdPlaceMatch,
             tournament: tournament,
+            isHistoryView: true,
           ),
         ).push(context),
       ),

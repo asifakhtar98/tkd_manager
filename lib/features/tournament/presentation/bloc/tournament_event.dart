@@ -26,4 +26,8 @@ sealed class TournamentEvent with _$TournamentEvent {
   /// Delete a tournament and all its bracket snapshots.
   const factory TournamentEvent.deleted(String tournamentId) =
       TournamentDeleted;
+
+  /// Replace existing tournament metadata (name, venue, dates, etc.).
+  const factory TournamentEvent.updated(TournamentEntity tournament) =
+      TournamentUpdated;
 }

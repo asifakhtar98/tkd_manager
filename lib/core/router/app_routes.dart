@@ -61,6 +61,7 @@ class BracketRouteExtra {
     required this.format,
     required this.includeThirdPlaceMatch,
     this.tournament,
+    this.isHistoryView = false,
   });
 
   final List<ParticipantEntity> participants;
@@ -70,6 +71,10 @@ class BracketRouteExtra {
 
   /// The owning tournament — null only for demo/legacy paths.
   final TournamentEntity? tournament;
+
+  /// When true, the bracket is being replayed from history — the viewer
+  /// must NOT save a new [BracketSnapshot] so history stays clean.
+  final bool isHistoryView;
 }
 
 @TypedGoRoute<BracketRoute>(path: '/bracket')
@@ -96,6 +101,7 @@ class BracketRoute extends GoRouteData with $BracketRoute {
         format: $extra.format,
         includeThirdPlaceMatch: $extra.includeThirdPlaceMatch,
         tournament: $extra.tournament,
+        isHistoryView: $extra.isHistoryView,
       ),
     );
   }
