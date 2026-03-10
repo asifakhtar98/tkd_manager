@@ -7,165 +7,148 @@ class DashboardScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              const Color(0xFF1A237E),
-              const Color(0xFF1A237E).withValues(alpha: 0.8),
-            ],
-          ),
-        ),
-        child: SafeArea(
-          child: CustomScrollView(
-            slivers: [
-              _buildHeader(context),
-              SliverPadding(
-                padding: const EdgeInsets.all(24.0),
-                sliver: SliverList(
-                  delegate: SliverChildListDelegate([
-                    _buildQuickActions(context),
-                    const SizedBox(height: 40),
-                    _buildDemoSection(context),
-                  ]),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+    final theme = Theme.of(context);
 
-  Widget _buildHeader(BuildContext context) {
-    return SliverToBoxAdapter(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(24, 40, 24, 20),
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('TKD Tournament Manager'),
+        elevation: 0,
+        centerTitle: false,
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(24.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFBC02D),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: const Icon(Icons.star, color: Color(0xFF1A237E)),
-                ),
-                const SizedBox(width: 16),
-                const Text(
-                  'TKD Brackets',
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    letterSpacing: -0.5,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'Professional tournament management at your fingertips.',
-              style: TextStyle(
-                fontSize: 18,
-                color: Colors.white.withValues(alpha: 0.7),
-              ),
-            ),
+            _buildWelcomeHeader(theme),
+            const SizedBox(height: 32),
+            _buildQuickStart(context, theme),
+            const SizedBox(height: 48),
+            _buildDemoSection(context, theme),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildQuickActions(BuildContext context) {
+  void _pushDemo(BuildContext context, String format, int playerCount) {
+    BracketRoute(
+      $extra: BracketRouteExtra(
+        participants: DemoData.getParticipants(playerCount),
+        dojangSeparation: true,
+        format: format,
+        includeThirdPlaceMatch: true,
+        tournamentInfo: DemoData.getTournamentInfo(format),
+      ),
+    ).push(context);
+  }
+
+  Widget _buildWelcomeHeader(ThemeData theme) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Quick Start',
-          style: TextStyle(
-            fontSize: 20,
+        Text(
+          'TKD Tournament Dashboard',
+          style: theme.textTheme.headlineSmall?.copyWith(
             fontWeight: FontWeight.bold,
-            color: Colors.white,
+            color: theme.colorScheme.onSurface,
           ),
         ),
-        const SizedBox(height: 16),
-        InkWell(
-          onTap: () => const SetupRoute().push(context),
-          child: Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.add_circle_outline,
-                    color: Color(0xFFFBC02D), size: 40),
-                const SizedBox(width: 20),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
-                      Text(
-                        'Start New Tournament',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                      SizedBox(height: 4),
-                      Text(
-                        'Import players and generate brackets instantly.',
-                        style: TextStyle(color: Colors.white70),
-                      ),
-                    ],
-                  ),
-                ),
-                const Icon(Icons.chevron_right, color: Colors.white54),
-              ],
-            ),
+        const SizedBox(height: 12),
+        Text(
+          'Create professional TKD brackets or explore demo formats below.',
+          style: theme.textTheme.bodyLarge?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
           ),
         ),
       ],
     );
   }
 
-  Widget _buildDemoSection(BuildContext context) {
+  Widget _buildQuickStart(BuildContext context, ThemeData theme) {
+    return Card(
+      elevation: 0,
+      color: theme.colorScheme.primaryContainer,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(24),
+        onTap: () => const SetupRoute().push(context),
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.onPrimaryContainer,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.add_circle_outline,
+                  color: theme.colorScheme.primaryContainer,
+                  size: 32,
+                ),
+              ),
+              const SizedBox(width: 24),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'New TKD Tournament',
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: theme.colorScheme.onPrimaryContainer,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Import players and generate professional TKD brackets.',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onPrimaryContainer.withValues(alpha: 0.7),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.arrow_forward_ios,
+                color: theme.colorScheme.onPrimaryContainer.withValues(alpha: 0.5),
+                size: 16,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDemoSection(BuildContext context, ThemeData theme) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Explore Demo Brackets',
-          style: TextStyle(
-            fontSize: 20,
+        Text(
+          'TKD Bracket Templates',
+          style: theme.textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.bold,
-            color: Colors.white,
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 20),
         GridView.count(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          crossAxisCount: 2,
+          crossAxisCount: MediaQuery.of(context).size.width > 900 ? 3 : 2,
           crossAxisSpacing: 16,
           mainAxisSpacing: 16,
-          childAspectRatio: 1.5,
+          childAspectRatio: 1.4,
           children: [
-            _buildDemoCard(context, 'Single Elimination', 'Fast & Standard',
-                Icons.account_tree, 'Single Elimination', 8),
-            _buildDemoCard(context, 'Double Elimination', 'Fair & Robust',
+            _buildDemoCard(context, theme, 'Single Elimination', 'Standard 8 Player Division',
+                Icons.account_tree_outlined, 'Single Elimination', 8),
+            _buildDemoCard(context, theme, 'Double Elimination', 'Robust 8 Player Division',
                 Icons.repeat, 'Double Elimination', 8),
-            _buildDemoCard(context, 'Large Division', '32 Players Demo',
+            _buildDemoCard(context, theme, 'Large Division', '32 Player Single Elim',
                 Icons.reorder, 'Single Elimination', 32),
           ],
         ),
@@ -175,55 +158,62 @@ class DashboardScreen extends StatelessWidget {
 
   Widget _buildDemoCard(
     BuildContext context,
+    ThemeData theme,
     String title,
     String subtitle,
     IconData icon,
     String format,
     int playerCount,
   ) {
-    return InkWell(
-      onTap: () => BracketRoute(
-        $extra: BracketRouteExtra(
-          participants: DemoData.getParticipants(playerCount),
-          dojangSeparation: true,
-          format: format,
-          includeThirdPlaceMatch: true,
-          tournamentInfo: DemoData.getTournamentInfo(title),
-        ),
-      ).push(context),
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.05),
-          borderRadius: BorderRadius.circular(20),
-          border:
-              Border.all(color: Colors.white.withValues(alpha: 0.1)),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Icon(icon, color: const Color(0xFFFBC02D)),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(20),
+        onTap: () => _pushDemo(context, format, playerCount),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.secondaryContainer,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  icon,
+                  color: theme.colorScheme.onSecondaryContainer,
+                  size: 24,
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  subtitle,
-                  style:
-                      const TextStyle(fontSize: 12, color: Colors.white54),
-                ),
-              ],
-            ),
-          ],
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -1,25 +1,16 @@
-import 'package:flutter/foundation.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:tkd_saas/features/bracket/domain/entities/bracket_entity.dart';
 import 'package:tkd_saas/features/bracket/domain/entities/match_entity.dart';
+
+part 'bracket_generation_result.freezed.dart';
 
 /// Value object containing the results of a bracket generation
 /// operation. This includes the generated [BracketEntity] and
 /// its associated [MatchEntity] records.
-@immutable
-class BracketGenerationResult {
-  const BracketGenerationResult({required this.bracket, required this.matches});
-
-  final BracketEntity bracket;
-  final List<MatchEntity> matches;
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is BracketGenerationResult &&
-          runtimeType == other.runtimeType &&
-          bracket == other.bracket &&
-          listEquals(matches, other.matches);
-
-  @override
-  int get hashCode => bracket.hashCode ^ matches.hashCode;
+@freezed
+abstract class BracketGenerationResult with _$BracketGenerationResult {
+  const factory BracketGenerationResult({
+    required BracketEntity bracket,
+    required List<MatchEntity> matches,
+  }) = _BracketGenerationResult;
 }

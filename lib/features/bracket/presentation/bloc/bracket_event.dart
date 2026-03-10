@@ -1,28 +1,20 @@
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:tkd_saas/features/participant/domain/entities/participant_entity.dart';
 
+part 'bracket_event.freezed.dart';
+
 /// Base class for all bracket BLoC events.
-sealed class BracketEvent {
-  const BracketEvent();
-}
+@freezed
+sealed class BracketEvent with _$BracketEvent {
+  /// Trigger initial generation. Carries all params required by the engine.
+  const factory BracketEvent.generateRequested({
+    required List<ParticipantEntity> participants,
+    /// 'Single Elimination' | 'Double Elimination'
+    required String format,
+    required bool dojangSeparation,
+    required bool includeThirdPlaceMatch,
+  }) = BracketGenerateRequested;
 
-/// Trigger initial generation. Carries all params required by the engine.
-final class BracketGenerateRequested extends BracketEvent {
-  const BracketGenerateRequested({
-    required this.participants,
-    required this.format,
-    required this.dojangSeparation,
-    required this.includeThirdPlaceMatch,
-  });
-
-  final List<ParticipantEntity> participants;
-
-  /// 'Single Elimination' | 'Double Elimination'
-  final String format;
-  final bool dojangSeparation;
-  final bool includeThirdPlaceMatch;
-}
-
-/// Re-generate using the same params stored from the last [BracketGenerateRequested].
-final class BracketRegenerateRequested extends BracketEvent {
-  const BracketRegenerateRequested();
+  /// Re-generate using the same params stored from the last [BracketGenerateRequested].
+  const factory BracketEvent.regenerateRequested() = BracketRegenerateRequested;
 }

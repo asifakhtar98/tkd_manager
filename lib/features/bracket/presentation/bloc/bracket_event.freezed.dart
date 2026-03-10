@@ -1,0 +1,285 @@
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// coverage:ignore-file
+// ignore_for_file: type=lint
+// ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
+
+part of 'bracket_event.dart';
+
+// **************************************************************************
+// FreezedGenerator
+// **************************************************************************
+
+// dart format off
+T _$identity<T>(T value) => value;
+/// @nodoc
+mixin _$BracketEvent {
+
+
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is BracketEvent);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+  return 'BracketEvent()';
+}
+
+
+}
+
+/// @nodoc
+class $BracketEventCopyWith<$Res>  {
+$BracketEventCopyWith(BracketEvent _, $Res Function(BracketEvent) __);
+}
+
+
+/// Adds pattern-matching-related methods to [BracketEvent].
+extension BracketEventPatterns on BracketEvent {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( BracketGenerateRequested value)?  generateRequested,TResult Function( BracketRegenerateRequested value)?  regenerateRequested,required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case BracketGenerateRequested() when generateRequested != null:
+return generateRequested(_that);case BracketRegenerateRequested() when regenerateRequested != null:
+return regenerateRequested(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( BracketGenerateRequested value)  generateRequested,required TResult Function( BracketRegenerateRequested value)  regenerateRequested,}){
+final _that = this;
+switch (_that) {
+case BracketGenerateRequested():
+return generateRequested(_that);case BracketRegenerateRequested():
+return regenerateRequested(_that);}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( BracketGenerateRequested value)?  generateRequested,TResult? Function( BracketRegenerateRequested value)?  regenerateRequested,}){
+final _that = this;
+switch (_that) {
+case BracketGenerateRequested() when generateRequested != null:
+return generateRequested(_that);case BracketRegenerateRequested() when regenerateRequested != null:
+return regenerateRequested(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( List<ParticipantEntity> participants,  String format,  bool dojangSeparation,  bool includeThirdPlaceMatch)?  generateRequested,TResult Function()?  regenerateRequested,required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case BracketGenerateRequested() when generateRequested != null:
+return generateRequested(_that.participants,_that.format,_that.dojangSeparation,_that.includeThirdPlaceMatch);case BracketRegenerateRequested() when regenerateRequested != null:
+return regenerateRequested();case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( List<ParticipantEntity> participants,  String format,  bool dojangSeparation,  bool includeThirdPlaceMatch)  generateRequested,required TResult Function()  regenerateRequested,}) {final _that = this;
+switch (_that) {
+case BracketGenerateRequested():
+return generateRequested(_that.participants,_that.format,_that.dojangSeparation,_that.includeThirdPlaceMatch);case BracketRegenerateRequested():
+return regenerateRequested();}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( List<ParticipantEntity> participants,  String format,  bool dojangSeparation,  bool includeThirdPlaceMatch)?  generateRequested,TResult? Function()?  regenerateRequested,}) {final _that = this;
+switch (_that) {
+case BracketGenerateRequested() when generateRequested != null:
+return generateRequested(_that.participants,_that.format,_that.dojangSeparation,_that.includeThirdPlaceMatch);case BracketRegenerateRequested() when regenerateRequested != null:
+return regenerateRequested();case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class BracketGenerateRequested implements BracketEvent {
+  const BracketGenerateRequested({required final  List<ParticipantEntity> participants, required this.format, required this.dojangSeparation, required this.includeThirdPlaceMatch}): _participants = participants;
+  
+
+ final  List<ParticipantEntity> _participants;
+ List<ParticipantEntity> get participants {
+  if (_participants is EqualUnmodifiableListView) return _participants;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_participants);
+}
+
+/// 'Single Elimination' | 'Double Elimination'
+ final  String format;
+ final  bool dojangSeparation;
+ final  bool includeThirdPlaceMatch;
+
+/// Create a copy of BracketEvent
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$BracketGenerateRequestedCopyWith<BracketGenerateRequested> get copyWith => _$BracketGenerateRequestedCopyWithImpl<BracketGenerateRequested>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is BracketGenerateRequested&&const DeepCollectionEquality().equals(other._participants, _participants)&&(identical(other.format, format) || other.format == format)&&(identical(other.dojangSeparation, dojangSeparation) || other.dojangSeparation == dojangSeparation)&&(identical(other.includeThirdPlaceMatch, includeThirdPlaceMatch) || other.includeThirdPlaceMatch == includeThirdPlaceMatch));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_participants),format,dojangSeparation,includeThirdPlaceMatch);
+
+@override
+String toString() {
+  return 'BracketEvent.generateRequested(participants: $participants, format: $format, dojangSeparation: $dojangSeparation, includeThirdPlaceMatch: $includeThirdPlaceMatch)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $BracketGenerateRequestedCopyWith<$Res> implements $BracketEventCopyWith<$Res> {
+  factory $BracketGenerateRequestedCopyWith(BracketGenerateRequested value, $Res Function(BracketGenerateRequested) _then) = _$BracketGenerateRequestedCopyWithImpl;
+@useResult
+$Res call({
+ List<ParticipantEntity> participants, String format, bool dojangSeparation, bool includeThirdPlaceMatch
+});
+
+
+
+
+}
+/// @nodoc
+class _$BracketGenerateRequestedCopyWithImpl<$Res>
+    implements $BracketGenerateRequestedCopyWith<$Res> {
+  _$BracketGenerateRequestedCopyWithImpl(this._self, this._then);
+
+  final BracketGenerateRequested _self;
+  final $Res Function(BracketGenerateRequested) _then;
+
+/// Create a copy of BracketEvent
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? participants = null,Object? format = null,Object? dojangSeparation = null,Object? includeThirdPlaceMatch = null,}) {
+  return _then(BracketGenerateRequested(
+participants: null == participants ? _self._participants : participants // ignore: cast_nullable_to_non_nullable
+as List<ParticipantEntity>,format: null == format ? _self.format : format // ignore: cast_nullable_to_non_nullable
+as String,dojangSeparation: null == dojangSeparation ? _self.dojangSeparation : dojangSeparation // ignore: cast_nullable_to_non_nullable
+as bool,includeThirdPlaceMatch: null == includeThirdPlaceMatch ? _self.includeThirdPlaceMatch : includeThirdPlaceMatch // ignore: cast_nullable_to_non_nullable
+as bool,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
+class BracketRegenerateRequested implements BracketEvent {
+  const BracketRegenerateRequested();
+  
+
+
+
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is BracketRegenerateRequested);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+  return 'BracketEvent.regenerateRequested()';
+}
+
+
+}
+
+
+
+
+// dart format on

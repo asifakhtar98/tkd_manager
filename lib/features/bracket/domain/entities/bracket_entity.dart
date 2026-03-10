@@ -1,78 +1,12 @@
 // ignore_for_file: avoid_dynamic_calls
 
-class BracketEntity {
-  final String id;
-  final String divisionId;
-  final BracketType bracketType;
-  final int totalRounds;
-  final DateTime createdAtTimestamp;
-  final DateTime updatedAtTimestamp;
-  final String? poolIdentifier;
-  final bool isFinalized;
-  final DateTime? generatedAtTimestamp;
-  final DateTime? finalizedAtTimestamp;
-  final Map<String, dynamic>? bracketDataJson;
-  final int syncVersion;
-  final bool isDeleted;
-  final DateTime? deletedAtTimestamp;
-  final bool isDemoData;
+import 'package:freezed_annotation/freezed_annotation.dart';
 
-  const BracketEntity({
-    required this.id,
-    required this.divisionId,
-    required this.bracketType,
-    required this.totalRounds,
-    required this.createdAtTimestamp,
-    required this.updatedAtTimestamp,
-    this.poolIdentifier,
-    this.isFinalized = false,
-    this.generatedAtTimestamp,
-    this.finalizedAtTimestamp,
-    this.bracketDataJson,
-    this.syncVersion = 1,
-    this.isDeleted = false,
-    this.deletedAtTimestamp,
-    this.isDemoData = false,
-  });
-
-  BracketEntity copyWith({
-    String? id,
-    String? divisionId,
-    BracketType? bracketType,
-    int? totalRounds,
-    DateTime? createdAtTimestamp,
-    DateTime? updatedAtTimestamp,
-    String? poolIdentifier,
-    bool? isFinalized,
-    DateTime? generatedAtTimestamp,
-    DateTime? finalizedAtTimestamp,
-    Map<String, dynamic>? bracketDataJson,
-    int? syncVersion,
-    bool? isDeleted,
-    DateTime? deletedAtTimestamp,
-    bool? isDemoData,
-  }) {
-    return BracketEntity(
-      id: id ?? this.id,
-      divisionId: divisionId ?? this.divisionId,
-      bracketType: bracketType ?? this.bracketType,
-      totalRounds: totalRounds ?? this.totalRounds,
-      createdAtTimestamp: createdAtTimestamp ?? this.createdAtTimestamp,
-      updatedAtTimestamp: updatedAtTimestamp ?? this.updatedAtTimestamp,
-      poolIdentifier: poolIdentifier ?? this.poolIdentifier,
-      isFinalized: isFinalized ?? this.isFinalized,
-      generatedAtTimestamp: generatedAtTimestamp ?? this.generatedAtTimestamp,
-      finalizedAtTimestamp: finalizedAtTimestamp ?? this.finalizedAtTimestamp,
-      bracketDataJson: bracketDataJson ?? this.bracketDataJson,
-      syncVersion: syncVersion ?? this.syncVersion,
-      isDeleted: isDeleted ?? this.isDeleted,
-      deletedAtTimestamp: deletedAtTimestamp ?? this.deletedAtTimestamp,
-      isDemoData: isDemoData ?? this.isDemoData,
-    );
-  }
-}
+part 'bracket_entity.freezed.dart';
+part 'bracket_entity.g.dart';
 
 /// Bracket type — winners/losers for elimination, pool for round robin.
+@JsonEnum(valueField: 'value')
 enum BracketType {
   winners('winners'),
   losers('losers'),
@@ -80,4 +14,28 @@ enum BracketType {
 
   const BracketType(this.value);
   final String value;
+}
+
+@freezed
+abstract class BracketEntity with _$BracketEntity {
+  const factory BracketEntity({
+    required String id,
+    required String divisionId,
+    required BracketType bracketType,
+    required int totalRounds,
+    required DateTime createdAtTimestamp,
+    required DateTime updatedAtTimestamp,
+    String? poolIdentifier,
+    @Default(false) bool isFinalized,
+    DateTime? generatedAtTimestamp,
+    DateTime? finalizedAtTimestamp,
+    Map<String, dynamic>? bracketDataJson,
+    @Default(1) int syncVersion,
+    @Default(false) bool isDeleted,
+    DateTime? deletedAtTimestamp,
+    @Default(false) bool isDemoData,
+  }) = _BracketEntity;
+
+  factory BracketEntity.fromJson(Map<String, dynamic> json) =>
+      _$BracketEntityFromJson(json);
 }
