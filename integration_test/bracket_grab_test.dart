@@ -6,11 +6,17 @@ import 'package:tkd_saas/main.dart' as app;
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
-  Future<void> addPlayers(WidgetTester tester, List<List<String>> players) async {
+  Future<void> addPlayers(
+    WidgetTester tester,
+    List<List<String>> players,
+  ) async {
     for (final p in players) {
       final firstNameField = find.widgetWithText(TextField, 'First Name');
       final lastNameField = find.widgetWithText(TextField, 'Last Name');
-      final dojangField = find.widgetWithText(TextField, 'Dojang / Club (Optional)');
+      final dojangField = find.widgetWithText(
+        TextField,
+        'Dojang / Club (Optional)',
+      );
 
       await tester.ensureVisible(firstNameField);
       await tester.enterText(firstNameField, p[0]);
@@ -19,7 +25,10 @@ void main() {
         await tester.enterText(dojangField, p[2]);
       }
       if (p.length > 3 && p[3].isNotEmpty) {
-        final regIdField = find.widgetWithText(TextField, 'Registration ID (Optional)');
+        final regIdField = find.widgetWithText(
+          TextField,
+          'Registration ID (Optional)',
+        );
         await tester.enterText(regIdField, p[3]);
       }
 
@@ -37,16 +46,43 @@ void main() {
     await tester.pumpAndSettle(const Duration(seconds: 2));
   }
 
-  testWidgets('Render 14-player bracket and hold for screenshot', (tester) async {
+  testWidgets('Render 14-player bracket and hold for screenshot', (
+    tester,
+  ) async {
     app.main();
     await tester.pumpAndSettle();
+    await tester.pump(const Duration(seconds: 2));
 
-    await tester.enterText(find.widgetWithText(TextField, 'Tournament Name'), '2ND FEDERATION CUP - 2026 (Kyorugi & Poomsae)');
-    await tester.enterText(find.widgetWithText(TextField, 'Date Range'), '18 Jan. to 22 Jan, 2026');
-    await tester.enterText(find.widgetWithText(TextField, 'Venue'), 'SMS Indoor Stadium, Jaipur, Rajasthan');
-    await tester.enterText(find.widgetWithText(TextField, 'Organizer'), 'INDIA TAEKWONDO');
-    await tester.enterText(find.widgetWithText(TextField, 'Category (e.g., JUNIOR)'), 'JUNIOR');
-    await tester.enterText(find.widgetWithText(TextField, 'Division (e.g., BOYS)'), 'BOYS');
+    // Wait for the home screen to appear
+    final startBtn = find.text('Start New Tournament');
+    await tester.ensureVisible(startBtn);
+    await tester.tap(startBtn);
+    await tester.pumpAndSettle();
+
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Tournament Name'),
+      '2ND FEDERATION CUP - 2026 (Kyorugi & Poomsae)',
+    );
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Date Range'),
+      '18 Jan. to 22 Jan, 2026',
+    );
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Venue'),
+      'SMS Indoor Stadium, Jaipur, Rajasthan',
+    );
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Organizer'),
+      'INDIA TAEKWONDO',
+    );
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Category (e.g., JUNIOR)'),
+      'JUNIOR',
+    );
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Division (e.g., BOYS)'),
+      'BOYS',
+    );
     await tester.pumpAndSettle();
 
     await addPlayers(tester, [
@@ -67,7 +103,8 @@ void main() {
     ]);
 
     await tapGenerate(tester);
-    expect(find.textContaining('Tournament Bracket'), findsOneWidget);
+    expect(find.textContaining('Single Elimination'), findsOneWidget);
+    expect(find.textContaining('14 Players'), findsOneWidget);
     await tester.pumpAndSettle(const Duration(seconds: 2));
 
     // Hold for 15 seconds to allow xcrun simctl screenshot

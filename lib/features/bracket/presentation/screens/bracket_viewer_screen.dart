@@ -34,7 +34,7 @@ class BracketViewerScreen extends StatefulWidget {
   State<BracketViewerScreen> createState() => _BracketViewerScreenState();
 }
 
-class _BracketViewerScreenState extends State<BracketViewerScreen> with SingleTickerProviderStateMixin {
+class _BracketViewerScreenState extends State<BracketViewerScreen> with TickerProviderStateMixin {
   dynamic _generationResult;
   late TabController _tabController;
   final TransformationController _transformationController = TransformationController();
