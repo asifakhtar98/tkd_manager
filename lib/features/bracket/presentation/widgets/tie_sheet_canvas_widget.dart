@@ -2,13 +2,13 @@ import 'dart:math';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import '../../domain/entities/match_entity.dart';
-import '../../domain/entities/tournament_info.dart';
+import '../../../tournament/domain/entities/tournament_entity.dart';
 import '../../../participant/domain/entities/participant_entity.dart';
 
 /// A widget that renders a TKD tie sheet using CustomPainter.
 /// Replicates the official World Taekwondo federation bracket format.
 class TieSheetCanvasWidget extends StatefulWidget {
-  final TournamentInfo tournamentInfo;
+  final TournamentEntity tournament;
   final List<MatchEntity> matches;
   final List<ParticipantEntity> participants;
   final String bracketType;
@@ -18,7 +18,7 @@ class TieSheetCanvasWidget extends StatefulWidget {
 
   const TieSheetCanvasWidget({
     super.key,
-    required this.tournamentInfo,
+    required this.tournament,
     required this.matches,
     required this.participants,
     required this.bracketType,
@@ -61,7 +61,7 @@ class _TieSheetCanvasWidgetState extends State<TieSheetCanvasWidget> {
   }
 
   TieSheetPainter _createPainter() => TieSheetPainter(
-    tournamentInfo: widget.tournamentInfo,
+    tournament: widget.tournament,
     matches: widget.matches,
     participants: widget.participants,
     bracketType: widget.bracketType,
@@ -140,7 +140,7 @@ class _TieSheetCanvasWidgetState extends State<TieSheetCanvasWidget> {
 //
 
 class TieSheetPainter extends CustomPainter {
-  final TournamentInfo tournamentInfo;
+  final TournamentEntity tournament;
   final List<MatchEntity> matches;
   final List<ParticipantEntity> participants;
   final String bracketType;
@@ -165,7 +165,7 @@ class TieSheetPainter extends CustomPainter {
   static double get listW => noColW + nameColW + regIdColW;
 
   TieSheetPainter({
-    required this.tournamentInfo,
+    required this.tournament,
     required this.matches,
     required this.participants,
     required this.bracketType,
@@ -310,8 +310,8 @@ class TieSheetPainter extends CustomPainter {
       ..strokeCap = StrokeCap.square
       ..style = PaintingStyle.stroke;
 
-    final nameTitleText = tournamentInfo.divisionLabel.toUpperCase();
-    final divisionTitleText = tournamentInfo.categoryLabel.toUpperCase();
+    final nameTitleText = tournament.divisionLabel.toUpperCase();
+    final divisionTitleText = tournament.categoryLabel.toUpperCase();
 
     double startY = margin;
     startY = _paintHeader(canvas, size, startY, thickPen, divisionTitleText, nameTitleText);
@@ -491,16 +491,16 @@ class TieSheetPainter extends CustomPainter {
 
   double _paintHeader(Canvas canvas, Size size, double startY, Paint thickPen, String divisionTitle, String categoryTitle) {
     var y = startY;
-    final title = (tournamentInfo.tournamentName.isNotEmpty ? tournamentInfo.tournamentName : 'TOURNAMENT NAME').toUpperCase();
-    _drawText(canvas, title, size.width / 2, y, _bold(18), center: true);
-    y += 24;
-    if (tournamentInfo.dateRange.isNotEmpty || tournamentInfo.venue.isNotEmpty) {
-      final sub = [tournamentInfo.dateRange, tournamentInfo.venue].where((s) => s.isNotEmpty).join(', ');
-      _drawText(canvas, sub, size.width / 2, y, _normal(14), center: true);
-      y += 22;
+    final title = (tournament.name.isNotEmpty ? tournament.name : 'TOURNAMENT NAME').toUpperCase();
+    _drawText(canvas, title, size.width / 2, y, _bold(22), center: true);
+    y += 28;
+    if (tournament.dateRange.isNotEmpty || tournament.venue.isNotEmpty) {
+      final sub = [tournament.dateRange, tournament.venue].where((s) => s.isNotEmpty).join(', ');
+      _drawText(canvas, sub.toUpperCase(), size.width / 2, y, _normal(14), center: true);
+      y += 20;
     }
-    if (tournamentInfo.organizer.isNotEmpty) {
-      _drawText(canvas, 'Organised by : ${tournamentInfo.organizer.toUpperCase()}', size.width / 2, y, _bold(16), center: true);
+    if (tournament.organizer.isNotEmpty) {
+      _drawText(canvas, 'Organised by : ${tournament.organizer.toUpperCase()}', size.width / 2, y, _bold(16), center: true);
       y += 24;
     } else {
       y += 20;

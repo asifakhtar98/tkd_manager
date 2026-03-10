@@ -22,6 +22,8 @@ import 'package:tkd_saas/features/bracket/domain/services/single_elimination_bra
     as _i937;
 import 'package:tkd_saas/features/bracket/presentation/bloc/bracket_bloc.dart'
     as _i416;
+import 'package:tkd_saas/features/tournament/presentation/bloc/tournament_bloc.dart'
+    as _i143;
 import 'package:uuid/uuid.dart' as _i706;
 
 extension GetItInjectableX on _i174.GetIt {
@@ -33,6 +35,7 @@ extension GetItInjectableX on _i174.GetIt {
     final gh = _i526.GetItHelper(this, environment, environmentFilter);
     final appModule = _$AppModule();
     gh.lazySingleton<_i706.Uuid>(() => appModule.uuid);
+    gh.lazySingleton<_i143.TournamentBloc>(() => _i143.TournamentBloc());
     gh.lazySingleton<_i937.SingleEliminationBracketGeneratorService>(
       () => _i34.SingleEliminationBracketGeneratorServiceImplementation(
         gh<_i706.Uuid>(),

@@ -6,7 +6,12 @@ part of 'app_routes.dart';
 // GoRouterGenerator
 // **************************************************************************
 
-List<RouteBase> get $appRoutes => [$dashboardRoute, $setupRoute, $bracketRoute];
+List<RouteBase> get $appRoutes => [
+  $dashboardRoute,
+  $setupRoute,
+  $tournamentDetailRoute,
+  $bracketRoute,
+];
 
 RouteBase get $dashboardRoute =>
     GoRouteData.$route(path: '/', factory: $DashboardRoute._fromState);
@@ -36,10 +41,50 @@ RouteBase get $setupRoute =>
     GoRouteData.$route(path: '/setup', factory: $SetupRoute._fromState);
 
 mixin $SetupRoute on GoRouteData {
-  static SetupRoute _fromState(GoRouterState state) => const SetupRoute();
+  static SetupRoute _fromState(GoRouterState state) =>
+      SetupRoute(tournamentId: state.uri.queryParameters['tournament-id']);
+
+  SetupRoute get _self => this as SetupRoute;
 
   @override
-  String get location => GoRouteData.$location('/setup');
+  String get location => GoRouteData.$location(
+    '/setup',
+    queryParams: {
+      if (_self.tournamentId != null) 'tournament-id': _self.tournamentId,
+    },
+  );
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+RouteBase get $tournamentDetailRoute => GoRouteData.$route(
+  path: '/tournament/:tournamentId',
+  factory: $TournamentDetailRoute._fromState,
+);
+
+mixin $TournamentDetailRoute on GoRouteData {
+  static TournamentDetailRoute _fromState(GoRouterState state) =>
+      TournamentDetailRoute(
+        tournamentId: state.pathParameters['tournamentId']!,
+      );
+
+  TournamentDetailRoute get _self => this as TournamentDetailRoute;
+
+  @override
+  String get location => GoRouteData.$location(
+    '/tournament/${Uri.encodeComponent(_self.tournamentId)}',
+  );
 
   @override
   void go(BuildContext context) => context.go(location);

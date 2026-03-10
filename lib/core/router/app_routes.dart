@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:tkd_saas/core/di/injection.dart';
-import 'package:tkd_saas/features/bracket/domain/entities/tournament_info.dart';
 import 'package:tkd_saas/features/bracket/presentation/bloc/bracket_bloc.dart';
 import 'package:tkd_saas/features/bracket/presentation/screens/bracket_viewer_screen.dart';
 import 'package:tkd_saas/features/dashboard/presentation/screens/dashboard_screen.dart';
 import 'package:tkd_saas/features/participant/domain/entities/participant_entity.dart';
 import 'package:tkd_saas/features/participant/presentation/screens/participant_entry_screen.dart';
+import 'package:tkd_saas/features/tournament/domain/entities/tournament_entity.dart';
+import 'package:tkd_saas/features/tournament/presentation/screens/tournament_detail_screen.dart';
 
 part 'app_routes.g.dart';
 
@@ -29,11 +30,26 @@ class DashboardRoute extends GoRouteData with $DashboardRoute {
 @TypedGoRoute<SetupRoute>(path: '/setup')
 @immutable
 class SetupRoute extends GoRouteData with $SetupRoute {
-  const SetupRoute();
+  const SetupRoute({this.tournamentId});
+
+  /// When provided, the participant entry screen pre-selects this tournament.
+  final String? tournamentId;
 
   @override
   Widget build(BuildContext context, GoRouterState state) =>
-      const ParticipantEntryScreen();
+      ParticipantEntryScreen(tournamentId: tournamentId);
+}
+
+@TypedGoRoute<TournamentDetailRoute>(path: '/tournament/:tournamentId')
+@immutable
+class TournamentDetailRoute extends GoRouteData with $TournamentDetailRoute {
+  const TournamentDetailRoute({required this.tournamentId});
+
+  final String tournamentId;
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      TournamentDetailScreen(tournamentId: tournamentId);
 }
 
 /// Extra data passed to the bracket route.
@@ -44,14 +60,16 @@ class BracketRouteExtra {
     required this.dojangSeparation,
     required this.format,
     required this.includeThirdPlaceMatch,
-    this.tournamentInfo,
+    this.tournament,
   });
 
   final List<ParticipantEntity> participants;
   final bool dojangSeparation;
   final String format;
   final bool includeThirdPlaceMatch;
-  final TournamentInfo? tournamentInfo;
+
+  /// The owning tournament — null only for demo/legacy paths.
+  final TournamentEntity? tournament;
 }
 
 @TypedGoRoute<BracketRoute>(path: '/bracket')
@@ -77,7 +95,7 @@ class BracketRoute extends GoRouteData with $BracketRoute {
         dojangSeparation: $extra.dojangSeparation,
         format: $extra.format,
         includeThirdPlaceMatch: $extra.includeThirdPlaceMatch,
-        tournamentInfo: $extra.tournamentInfo,
+        tournament: $extra.tournament,
       ),
     );
   }

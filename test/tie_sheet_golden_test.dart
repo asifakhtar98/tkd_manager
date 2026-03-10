@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:uuid/uuid.dart';
-import 'package:tkd_saas/features/bracket/domain/entities/tournament_info.dart';
+import 'package:tkd_saas/features/tournament/domain/entities/tournament_entity.dart';
 import 'package:tkd_saas/features/bracket/data/services/single_elimination_bracket_generator_service_implementation.dart';
 import 'package:tkd_saas/features/bracket/presentation/widgets/tie_sheet_canvas_widget.dart';
 import 'package:tkd_saas/features/participant/domain/entities/participant_entity.dart';
@@ -10,13 +10,15 @@ void main() {
   const uuid = Uuid();
   final generator = SingleEliminationBracketGeneratorServiceImplementation(uuid);
 
-  final defaultTournament = TournamentInfo(
-    tournamentName: '2ND FEDERATION CUP - 2026 (Kyorugi & Poomsae)',
+  final defaultTournament = TournamentEntity(
+    id: 'golden-test',
+    name: '2ND FEDERATION CUP - 2026 (Kyorugi & Poomsae)',
     dateRange: '18 Jan. to 22 Jan, 2026',
     venue: 'SMS Indoor Stadium, Jaipur, Rajasthan',
     organizer: 'INDIA TAEKWONDO',
     categoryLabel: 'JUNIOR',
     divisionLabel: 'BOYS',
+    createdAt: DateTime(2026),
   );
 
   List<ParticipantEntity> makeParticipants(int count) {
@@ -65,7 +67,7 @@ void main() {
             scrollDirection: Axis.horizontal,
             child: SingleChildScrollView(
               child: TieSheetCanvasWidget(
-                tournamentInfo: defaultTournament,
+                tournament: defaultTournament,
                 matches: result.matches,
                 participants: participants,
                 bracketType: 'Single Elimination',

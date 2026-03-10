@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:tkd_saas/core/di/injection.dart';
 import 'package:tkd_saas/main.dart' as app;
 
 void main() {
+  setUp(configureDependencies);
+  tearDown(getIt.reset);
+
   Future<void> navigateToSetup(WidgetTester tester) async {
     await tester.pumpWidget(const app.TkdTournamentApp());
     await tester.pumpAndSettle();
-    final startBtn = find.text('Start New Tournament');
+    // Dashboard now has a 'New Bracket' FAB instead of the old card button.
+    final startBtn = find.text('New Bracket');
     await tester.ensureVisible(startBtn);
     await tester.tap(startBtn);
     await tester.pumpAndSettle();

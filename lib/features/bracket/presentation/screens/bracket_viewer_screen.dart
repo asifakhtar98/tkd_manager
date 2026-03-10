@@ -4,12 +4,15 @@ import 'package:go_router/go_router.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
+import 'package:uuid/uuid.dart';
 import 'package:tkd_saas/features/bracket/domain/entities/bracket_entity.dart';
 import 'package:tkd_saas/features/bracket/domain/entities/match_entity.dart';
-import 'package:tkd_saas/features/bracket/domain/entities/tournament_info.dart';
 import 'package:tkd_saas/features/bracket/presentation/bloc/bracket_bloc.dart';
 import 'package:tkd_saas/features/bracket/presentation/widgets/tie_sheet_canvas_widget.dart';
 import 'package:tkd_saas/features/participant/domain/entities/participant_entity.dart';
+import 'package:tkd_saas/features/tournament/domain/entities/bracket_snapshot.dart';
+import 'package:tkd_saas/features/tournament/domain/entities/tournament_entity.dart';
+import 'package:tkd_saas/features/tournament/presentation/bloc/tournament_bloc.dart';
 
 /// Bracket viewer — receives route props, broadcasts [BracketGenerateRequested]
 /// via the [BracketBloc] provided by the route (see [BracketRoute]).
@@ -20,14 +23,14 @@ class BracketViewerScreen extends StatefulWidget {
     required this.dojangSeparation,
     required this.format,
     required this.includeThirdPlaceMatch,
-    this.tournamentInfo,
+    this.tournament,
   });
 
   final List<ParticipantEntity> participants;
   final bool dojangSeparation;
   final String format;
   final bool includeThirdPlaceMatch;
-  final TournamentInfo? tournamentInfo;
+  final TournamentEntity? tournament;
 
   @override
   State<BracketViewerScreen> createState() => _BracketViewerScreenState();
@@ -41,6 +44,11 @@ class _BracketViewerScreenState extends State<BracketViewerScreen>
 
   final GlobalKey _winnersPrintKey = GlobalKey();
   final GlobalKey _losersPrintKey = GlobalKey();
+
+  // Tracks whether we have already committed a snapshot for this generation
+  // session, so we don't double-save on rebuilds.
+  bool _snapshotSaved = false;
+  static const _uuid = Uuid();
 
   @override
   void initState() {
@@ -74,7 +82,20 @@ class _BracketViewerScreenState extends State<BracketViewerScreen>
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<BracketBloc, BracketState>(
+    return BlocConsumer<BracketBloc, BracketState>(
+      listenWhen: (_, current) => current is BracketLoadSuccess,
+      listener: (context, state) {
+        if (state case BracketLoadSuccess(:final result, :final participants,
+            :final format, :final includeThirdPlaceMatch)) {
+          _saveSnapshot(
+            context: context,
+            result: result,
+            participants: participants,
+            format: format,
+            includeThirdPlaceMatch: includeThirdPlaceMatch,
+          );
+        }
+      },
       builder: (context, state) {
         return switch (state) {
           BracketInitial() || BracketGenerating() => Scaffold(
@@ -103,6 +124,40 @@ class _BracketViewerScreenState extends State<BracketViewerScreen>
     );
   }
 
+  /// Saves the just-generated bracket as a [BracketSnapshot] under the
+  /// owning tournament in [TournamentBloc]. Only fires once per viewer session
+  /// (guarded by [_snapshotSaved]) and is skipped for demo brackets that have
+  /// no owning tournament.
+  void _saveSnapshot({
+    required BuildContext context,
+    required BracketResult result,
+    required List<ParticipantEntity> participants,
+    required String format,
+    required bool includeThirdPlaceMatch,
+  }) {
+    if (_snapshotSaved || widget.tournament == null) return;
+    _snapshotSaved = true;
+
+    final snapshot = BracketSnapshot(
+      id: _uuid.v4(),
+      label: '$format — ${participants.length} Players',
+      format: format,
+      participantCount: participants.length,
+      includeThirdPlaceMatch: includeThirdPlaceMatch,
+      dojangSeparation: widget.dojangSeparation,
+      generatedAt: DateTime.now(),
+      participants: participants,
+      result: result,
+    );
+
+    context.read<TournamentBloc>().add(
+          TournamentEvent.bracketSnapshotAdded(
+            tournamentId: widget.tournament!.id,
+            snapshot: snapshot,
+          ),
+        );
+  }
+
   Widget _buildViewer({
     required BuildContext context,
     required BracketResult result,
@@ -110,6 +165,7 @@ class _BracketViewerScreenState extends State<BracketViewerScreen>
     required String format,
     required bool includeThirdPlaceMatch,
   }) {
+
     final List<Tab> tabs = [];
     final List<Widget> views = [];
 
@@ -134,8 +190,7 @@ class _BracketViewerScreenState extends State<BracketViewerScreen>
             data.losersBracket, losersMatches, _losersPrintKey));
     }
 
-    final tournamentTitle =
-        widget.tournamentInfo?.tournamentName ?? 'Tournament';
+    final tournamentTitle = widget.tournament?.name ?? 'Tournament';
 
     return Scaffold(
       appBar: AppBar(
@@ -169,6 +224,7 @@ class _BracketViewerScreenState extends State<BracketViewerScreen>
                 ),
               );
               if (confirm == true && context.mounted) {
+                setState(() => _snapshotSaved = false);
                 context
                     .read<BracketBloc>()
                     .add(const BracketRegenerateRequested());
@@ -204,8 +260,12 @@ class _BracketViewerScreenState extends State<BracketViewerScreen>
         child: Padding(
           padding: const EdgeInsets.all(40.0),
           child: TieSheetCanvasWidget(
-            tournamentInfo: widget.tournamentInfo ??
-                const TournamentInfo(tournamentName: 'Demo Tournament'),
+            tournament: widget.tournament ??
+                TournamentEntity(
+                  id: 'demo',
+                  name: 'Demo Tournament',
+                  createdAt: DateTime(2026),
+                ),
             matches: matches,
             participants: widget.participants,
             bracketType: widget.format,

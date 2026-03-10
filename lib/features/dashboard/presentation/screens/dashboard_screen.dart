@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:tkd_saas/core/router/app_routes.dart';
 import 'package:tkd_saas/features/core/data/demo_data.dart';
+import 'package:tkd_saas/features/tournament/domain/entities/tournament_entity.dart';
+import 'package:tkd_saas/features/tournament/presentation/bloc/tournament_bloc.dart';
+import 'package:tkd_saas/features/tournament/presentation/widgets/create_tournament_dialog.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
@@ -15,6 +19,11 @@ class DashboardScreen extends StatelessWidget {
         elevation: 0,
         centerTitle: false,
       ),
+      floatingActionButton: FloatingActionButton.extended(
+        icon: const Icon(Icons.add),
+        label: const Text('New Bracket'),
+        onPressed: () => const SetupRoute().push(context),
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
         child: Column(
@@ -22,7 +31,7 @@ class DashboardScreen extends StatelessWidget {
           children: [
             _buildWelcomeHeader(theme),
             const SizedBox(height: 32),
-            _buildQuickStart(context, theme),
+            _buildTournamentSection(context, theme),
             const SizedBox(height: 48),
             _buildDemoSection(context, theme),
           ],
@@ -38,7 +47,7 @@ class DashboardScreen extends StatelessWidget {
         dojangSeparation: true,
         format: format,
         includeThirdPlaceMatch: true,
-        tournamentInfo: DemoData.getTournamentInfo(format),
+        tournament: DemoData.getTournamentEntity(format),
       ),
     ).push(context);
   }
@@ -65,64 +74,59 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildQuickStart(BuildContext context, ThemeData theme) {
-    return Card(
-      elevation: 0,
-      color: theme.colorScheme.primaryContainer,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(24),
-      ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(24),
-        onTap: () => const SetupRoute().push(context),
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.onPrimaryContainer,
-                  shape: BoxShape.circle,
+  Widget _buildTournamentSection(BuildContext context, ThemeData theme) {
+    return BlocBuilder<TournamentBloc, TournamentState>(
+      builder: (context, state) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text(
+                  'My Tournaments',
+                  style: theme.textTheme.titleLarge
+                      ?.copyWith(fontWeight: FontWeight.bold),
                 ),
-                child: Icon(
-                  Icons.add_circle_outline,
-                  color: theme.colorScheme.primaryContainer,
-                  size: 32,
+                const Spacer(),
+                FilledButton.icon(
+                  icon: const Icon(Icons.add),
+                  label: const Text('New Tournament'),
+                  onPressed: () => _showCreateDialog(context),
                 ),
-              ),
-              const SizedBox(width: 24),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'New TKD Tournament',
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: theme.colorScheme.onPrimaryContainer,
-                      ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            if (state.tournaments.isEmpty)
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(32),
+                  child: Center(
+                    child: Text(
+                      'No tournaments yet. Create one or jump in with a demo below.',
+                      style: TextStyle(color: Colors.grey[600]),
+                      textAlign: TextAlign.center,
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Import players and generate professional TKD brackets.',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onPrimaryContainer.withValues(alpha: 0.7),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
+              )
+            else
+              ...state.tournaments.map(
+                (t) => _TournamentCard(tournament: t),
               ),
-              Icon(
-                Icons.arrow_forward_ios,
-                color: theme.colorScheme.onPrimaryContainer.withValues(alpha: 0.5),
-                size: 16,
-              ),
-            ],
-          ),
-        ),
-      ),
+          ],
+        );
+      },
     );
+  }
+
+  Future<void> _showCreateDialog(BuildContext context) async {
+    final tournament = await showDialog<TournamentEntity>(
+      context: context,
+      builder: (_) => const CreateTournamentDialog(),
+    );
+    if (tournament != null && context.mounted) {
+      context.read<TournamentBloc>().add(TournamentEvent.created(tournament));
+    }
   }
 
   Widget _buildDemoSection(BuildContext context, ThemeData theme) {
@@ -130,89 +134,174 @@ class DashboardScreen extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'TKD Bracket Templates',
-          style: theme.textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.bold,
+          'Demo Brackets',
+          style: theme.textTheme.titleLarge
+              ?.copyWith(fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Preview the bracket viewer with sample data — no setup needed.',
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
           ),
         ),
-        const SizedBox(height: 20),
-        GridView.count(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisCount: MediaQuery.of(context).size.width > 900 ? 3 : 2,
-          crossAxisSpacing: 16,
-          mainAxisSpacing: 16,
-          childAspectRatio: 1.4,
+        const SizedBox(height: 16),
+        Wrap(
+          spacing: 12,
+          runSpacing: 12,
           children: [
-            _buildDemoCard(context, theme, 'Single Elimination', 'Standard 8 Player Division',
-                Icons.account_tree_outlined, 'Single Elimination', 8),
-            _buildDemoCard(context, theme, 'Double Elimination', 'Robust 8 Player Division',
-                Icons.repeat, 'Double Elimination', 8),
-            _buildDemoCard(context, theme, 'Large Division', '32 Player Single Elim',
-                Icons.reorder, 'Single Elimination', 32),
+            _DemoCard(
+              icon: Icons.account_tree_outlined,
+              title: 'Single Elim (8)',
+              subtitle: '8 players, Single Elimination',
+              onTap: () => _pushDemo(context, 'Single Elimination', 8),
+            ),
+            _DemoCard(
+              icon: Icons.account_tree_outlined,
+              title: 'Single Elim (14)',
+              subtitle: '14 players with BYEs',
+              onTap: () => _pushDemo(context, 'Single Elimination', 14),
+            ),
+            _DemoCard(
+              icon: Icons.repeat,
+              title: 'Double Elim (8)',
+              subtitle: '8 players, Double Elimination',
+              onTap: () => _pushDemo(context, 'Double Elimination', 8),
+            ),
           ],
         ),
       ],
     );
   }
+}
 
-  Widget _buildDemoCard(
-    BuildContext context,
-    ThemeData theme,
-    String title,
-    String subtitle,
-    IconData icon,
-    String format,
-    int playerCount,
-  ) {
+// ─────────────────────────────────────────────────────────────────────────────
+// Tournament list card
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _TournamentCard extends StatelessWidget {
+  const _TournamentCard({required this.tournament});
+
+  final TournamentEntity tournament;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final bracketCount = context
+        .read<TournamentBloc>()
+        .state
+        .bracketsFor(tournament.id)
+        .length;
+
     return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-        side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
-      ),
+      margin: const EdgeInsets.only(bottom: 12),
       child: InkWell(
-        borderRadius: BorderRadius.circular(20),
-        onTap: () => _pushDemo(context, format, playerCount),
+        borderRadius: BorderRadius.circular(12),
+        onTap: () =>
+            TournamentDetailRoute(tournamentId: tournament.id).push(context),
         child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+          child: Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(10),
+                padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.secondaryContainer,
+                  color: theme.colorScheme.primaryContainer,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
-                  icon,
-                  color: theme.colorScheme.onSecondaryContainer,
-                  size: 24,
+                  Icons.emoji_events_outlined,
+                  color: theme.colorScheme.onPrimaryContainer,
                 ),
               ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      tournament.name,
+                      style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    subtitle,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
+                    if (tournament.venue.isNotEmpty ||
+                        tournament.dateRange.isNotEmpty)
+                      Text(
+                        [
+                          if (tournament.venue.isNotEmpty) tournament.venue,
+                          if (tournament.dateRange.isNotEmpty)
+                            tournament.dateRange,
+                        ].join(' · '),
+                        style: theme.textTheme.bodySmall,
+                      ),
+                  ],
+                ),
               ),
+              Chip(
+                label: Text(
+                  '$bracketCount ${bracketCount == 1 ? 'bracket' : 'brackets'}',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
+                backgroundColor: theme.colorScheme.primaryContainer,
+              ),
+              const SizedBox(width: 8),
+              const Icon(Icons.chevron_right, color: Colors.grey),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Demo card
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _DemoCard extends StatelessWidget {
+  const _DemoCard({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 220,
+      child: Card(
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(icon, size: 36, color: Colors.blueAccent),
+                const SizedBox(height: 12),
+                Text(
+                  title,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
