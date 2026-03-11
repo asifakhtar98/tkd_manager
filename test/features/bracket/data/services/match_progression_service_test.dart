@@ -46,7 +46,7 @@ void main() {
         expect(m.resultType, MatchResultType.points);
       });
 
-      test('stores score notes when provided', () {
+      test('stores scores as proper fields when provided', () {
         final result = generator.generate(
           divisionId: 'd1',
           participantIds: makeIds(4),
@@ -67,7 +67,8 @@ void main() {
         );
 
         final m = updated.firstWhere((m) => m.id == r1.first.id);
-        expect(m.notes, '10-5');
+        expect(m.blueScore, 10);
+        expect(m.redScore, 5);
       });
 
       test('throws when match not found', () {
@@ -197,11 +198,6 @@ void main() {
           includeThirdPlaceMatch: true,
         );
         // Semi-finals are in round 2 for 8-player bracket
-        final semis = result.matches
-            .where((m) => m.roundNumber == 2)
-            .toList()
-          ..sort(
-              (a, b) => a.matchNumberInRound.compareTo(b.matchNumberInRound));
 
         // To test, we need to play through R1 first
         var matches = result.matches;

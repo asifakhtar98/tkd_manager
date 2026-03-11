@@ -47,7 +47,9 @@ class BracketViewerScreen extends StatefulWidget {
 class _BracketViewerScreenState extends State<BracketViewerScreen>
     with TickerProviderStateMixin {
   late final TabController _tabController;
-  final TransformationController _transformationController =
+  final TransformationController _winnersTransformController =
+      TransformationController();
+  final TransformationController _losersTransformController =
       TransformationController();
 
   final GlobalKey _winnersPrintKey = GlobalKey();
@@ -70,7 +72,8 @@ class _BracketViewerScreenState extends State<BracketViewerScreen>
   @override
   void dispose() {
     _tabController.dispose();
-    _transformationController.dispose();
+    _winnersTransformController.dispose();
+    _losersTransformController.dispose();
     super.dispose();
   }
 
@@ -155,10 +158,24 @@ class _BracketViewerScreenState extends State<BracketViewerScreen>
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<BracketBloc, BracketState>(
-      listenWhen: (_, current) => current is BracketLoadSuccess,
+      listenWhen: (prev, current) => current is BracketLoadSuccess,
       listener: (context, state) {
         if (state case BracketLoadSuccess(:final result, :final participants,
-            :final format, :final includeThirdPlaceMatch)) {
+            :final format, :final includeThirdPlaceMatch, :final errorMessage)) {
+          // Show error as SnackBar without destroying bracket state.
+          if (errorMessage != null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(errorMessage),
+                backgroundColor: Colors.redAccent,
+              ),
+            );
+            // Clear the error so it doesn't re-fire on rebuild.
+            context.read<BracketBloc>().add(
+              const BracketEvent.errorDismissed(),
+            );
+            return;
+          }
           _saveSnapshot(
             context: context,
             result: result,
@@ -270,7 +287,7 @@ class _BracketViewerScreenState extends State<BracketViewerScreen>
       case SingleEliminationResult(:final data):
         tabs.add(const Tab(text: 'Main Bracket'));
         views.add(
-            _buildBracketView(data.bracket, data.matches, _winnersPrintKey, allMatches, participants));
+            _buildBracketView(data.bracket, data.matches, _winnersPrintKey, _winnersTransformController, allMatches, participants));
 
       case DoubleEliminationResult(:final data):
         final winnersMatches = data.allMatches
@@ -282,9 +299,9 @@ class _BracketViewerScreenState extends State<BracketViewerScreen>
         tabs.add(const Tab(text: 'Winners Bracket'));
         tabs.add(const Tab(text: 'Losers Bracket'));
         views.add(_buildBracketView(
-            data.winnersBracket, winnersMatches, _winnersPrintKey, allMatches, participants));
+            data.winnersBracket, winnersMatches, _winnersPrintKey, _winnersTransformController, allMatches, participants));
         views.add(_buildBracketView(
-            data.losersBracket, losersMatches, _losersPrintKey, allMatches, participants));
+            data.losersBracket, losersMatches, _losersPrintKey, _losersTransformController, allMatches, participants));
     }
 
     final tournamentTitle = widget.tournament?.name ?? 'Tournament';
@@ -350,11 +367,12 @@ class _BracketViewerScreenState extends State<BracketViewerScreen>
     BracketEntity bracket,
     List<MatchEntity> matches,
     GlobalKey printKey,
+    TransformationController transformController,
     List<MatchEntity> allMatches,
     List<ParticipantEntity> participants,
   ) {
     return InteractiveViewer(
-      transformationController: _transformationController,
+      transformationController: transformController,
       constrained: false,
       boundaryMargin: const EdgeInsets.all(500),
       minScale: 0.1,

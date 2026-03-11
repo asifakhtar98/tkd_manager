@@ -117,7 +117,7 @@ class _ScoreEntryDialogState extends State<ScoreEntryDialog> {
 
             // ── Result Type ──
             DropdownButtonFormField<MatchResultType>(
-              initialValue: _resultType,
+              value: _resultType,
               decoration: const InputDecoration(
                 labelText: 'Result Type',
                 border: OutlineInputBorder(),

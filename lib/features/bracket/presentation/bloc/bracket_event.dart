@@ -23,8 +23,11 @@ sealed class BracketEvent with _$BracketEvent {
   const factory BracketEvent.matchResultRecorded({
     required String matchId,
     required String winnerId,
-    @Default(MatchResultType.points) MatchResultType resultType,
+    required MatchResultType resultType,
     int? blueScore,
     int? redScore,
   }) = BracketMatchResultRecorded;
+
+  /// Clear the [BracketLoadSuccess.errorMessage] after the UI has shown it.
+  const factory BracketEvent.errorDismissed() = BracketErrorDismissed;
 }

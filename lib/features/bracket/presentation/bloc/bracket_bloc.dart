@@ -25,6 +25,7 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
     on<BracketGenerateRequested>(_onGenerate);
     on<BracketRegenerateRequested>(_onRegenerate);
     on<BracketMatchResultRecorded>(_onMatchResultRecorded);
+    on<BracketErrorDismissed>(_onErrorDismissed);
   }
 
   final SingleEliminationBracketGeneratorService _singleElimService;
@@ -91,12 +92,21 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
         },
       );
 
-      emit(currentState.copyWith(result: updatedResult));
+      emit(currentState.copyWith(result: updatedResult, errorMessage: null));
     } on ArgumentError catch (e) {
-      emit(BracketState.failure(e.message.toString()));
+      emit(currentState.copyWith(errorMessage: e.message.toString()));
     } catch (e) {
-      emit(BracketState.failure(e.toString()));
+      emit(currentState.copyWith(errorMessage: e.toString()));
     }
+  }
+
+  void _onErrorDismissed(
+    BracketErrorDismissed _,
+    Emitter<BracketState> emit,
+  ) {
+    final currentState = state;
+    if (currentState is! BracketLoadSuccess) return;
+    emit(currentState.copyWith(errorMessage: null));
   }
 
   void _generate(BracketGenerateRequested req, Emitter<BracketState> emit) {

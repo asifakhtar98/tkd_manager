@@ -42,7 +42,8 @@ class MatchProgressionServiceImplementation
       status: MatchStatus.completed,
       resultType: resultType,
       completedAtTimestamp: now,
-      notes: _scoreNotes(blueScore, redScore),
+      blueScore: blueScore,
+      redScore: redScore,
     );
 
     // 2. Advance winner to next match.
@@ -196,8 +197,4 @@ class MatchProgressionServiceImplementation
             m.loserAdvancesToMatchId == matchId));
   }
 
-  String? _scoreNotes(int? blueScore, int? redScore) {
-    if (blueScore == null && redScore == null) return null;
-    return '${blueScore ?? 0}-${redScore ?? 0}';
-  }
 }

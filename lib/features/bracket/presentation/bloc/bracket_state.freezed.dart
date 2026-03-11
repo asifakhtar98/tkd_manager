@@ -435,12 +435,12 @@ return failure(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  generating,TResult Function( BracketResult result,  List<ParticipantEntity> participants,  String format,  bool includeThirdPlaceMatch)?  loadSuccess,TResult Function( String message)?  failure,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  generating,TResult Function( BracketResult result,  List<ParticipantEntity> participants,  String format,  bool includeThirdPlaceMatch,  String? errorMessage)?  loadSuccess,TResult Function( String message)?  failure,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case BracketInitial() when initial != null:
 return initial();case BracketGenerating() when generating != null:
 return generating();case BracketLoadSuccess() when loadSuccess != null:
-return loadSuccess(_that.result,_that.participants,_that.format,_that.includeThirdPlaceMatch);case BracketFailure() when failure != null:
+return loadSuccess(_that.result,_that.participants,_that.format,_that.includeThirdPlaceMatch,_that.errorMessage);case BracketFailure() when failure != null:
 return failure(_that.message);case _:
   return orElse();
 
@@ -459,12 +459,12 @@ return failure(_that.message);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  generating,required TResult Function( BracketResult result,  List<ParticipantEntity> participants,  String format,  bool includeThirdPlaceMatch)  loadSuccess,required TResult Function( String message)  failure,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  generating,required TResult Function( BracketResult result,  List<ParticipantEntity> participants,  String format,  bool includeThirdPlaceMatch,  String? errorMessage)  loadSuccess,required TResult Function( String message)  failure,}) {final _that = this;
 switch (_that) {
 case BracketInitial():
 return initial();case BracketGenerating():
 return generating();case BracketLoadSuccess():
-return loadSuccess(_that.result,_that.participants,_that.format,_that.includeThirdPlaceMatch);case BracketFailure():
+return loadSuccess(_that.result,_that.participants,_that.format,_that.includeThirdPlaceMatch,_that.errorMessage);case BracketFailure():
 return failure(_that.message);}
 }
 /// A variant of `when` that fallback to returning `null`
@@ -479,12 +479,12 @@ return failure(_that.message);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  generating,TResult? Function( BracketResult result,  List<ParticipantEntity> participants,  String format,  bool includeThirdPlaceMatch)?  loadSuccess,TResult? Function( String message)?  failure,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  generating,TResult? Function( BracketResult result,  List<ParticipantEntity> participants,  String format,  bool includeThirdPlaceMatch,  String? errorMessage)?  loadSuccess,TResult? Function( String message)?  failure,}) {final _that = this;
 switch (_that) {
 case BracketInitial() when initial != null:
 return initial();case BracketGenerating() when generating != null:
 return generating();case BracketLoadSuccess() when loadSuccess != null:
-return loadSuccess(_that.result,_that.participants,_that.format,_that.includeThirdPlaceMatch);case BracketFailure() when failure != null:
+return loadSuccess(_that.result,_that.participants,_that.format,_that.includeThirdPlaceMatch,_that.errorMessage);case BracketFailure() when failure != null:
 return failure(_that.message);case _:
   return null;
 
@@ -561,7 +561,7 @@ String toString() {
 
 
 class BracketLoadSuccess implements BracketState {
-  const BracketLoadSuccess({required this.result, required final  List<ParticipantEntity> participants, required this.format, required this.includeThirdPlaceMatch}): _participants = participants;
+  const BracketLoadSuccess({required this.result, required final  List<ParticipantEntity> participants, required this.format, required this.includeThirdPlaceMatch, this.errorMessage}): _participants = participants;
   
 
  final  BracketResult result;
@@ -574,6 +574,7 @@ class BracketLoadSuccess implements BracketState {
 
  final  String format;
  final  bool includeThirdPlaceMatch;
+ final  String? errorMessage;
 
 /// Create a copy of BracketState
 /// with the given fields replaced by the non-null parameter values.
@@ -585,16 +586,16 @@ $BracketLoadSuccessCopyWith<BracketLoadSuccess> get copyWith => _$BracketLoadSuc
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is BracketLoadSuccess&&(identical(other.result, result) || other.result == result)&&const DeepCollectionEquality().equals(other._participants, _participants)&&(identical(other.format, format) || other.format == format)&&(identical(other.includeThirdPlaceMatch, includeThirdPlaceMatch) || other.includeThirdPlaceMatch == includeThirdPlaceMatch));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is BracketLoadSuccess&&(identical(other.result, result) || other.result == result)&&const DeepCollectionEquality().equals(other._participants, _participants)&&(identical(other.format, format) || other.format == format)&&(identical(other.includeThirdPlaceMatch, includeThirdPlaceMatch) || other.includeThirdPlaceMatch == includeThirdPlaceMatch)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,result,const DeepCollectionEquality().hash(_participants),format,includeThirdPlaceMatch);
+int get hashCode => Object.hash(runtimeType,result,const DeepCollectionEquality().hash(_participants),format,includeThirdPlaceMatch,errorMessage);
 
 @override
 String toString() {
-  return 'BracketState.loadSuccess(result: $result, participants: $participants, format: $format, includeThirdPlaceMatch: $includeThirdPlaceMatch)';
+  return 'BracketState.loadSuccess(result: $result, participants: $participants, format: $format, includeThirdPlaceMatch: $includeThirdPlaceMatch, errorMessage: $errorMessage)';
 }
 
 
@@ -605,7 +606,7 @@ abstract mixin class $BracketLoadSuccessCopyWith<$Res> implements $BracketStateC
   factory $BracketLoadSuccessCopyWith(BracketLoadSuccess value, $Res Function(BracketLoadSuccess) _then) = _$BracketLoadSuccessCopyWithImpl;
 @useResult
 $Res call({
- BracketResult result, List<ParticipantEntity> participants, String format, bool includeThirdPlaceMatch
+ BracketResult result, List<ParticipantEntity> participants, String format, bool includeThirdPlaceMatch, String? errorMessage
 });
 
 
@@ -622,13 +623,14 @@ class _$BracketLoadSuccessCopyWithImpl<$Res>
 
 /// Create a copy of BracketState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? result = null,Object? participants = null,Object? format = null,Object? includeThirdPlaceMatch = null,}) {
+@pragma('vm:prefer-inline') $Res call({Object? result = null,Object? participants = null,Object? format = null,Object? includeThirdPlaceMatch = null,Object? errorMessage = freezed,}) {
   return _then(BracketLoadSuccess(
 result: null == result ? _self.result : result // ignore: cast_nullable_to_non_nullable
 as BracketResult,participants: null == participants ? _self._participants : participants // ignore: cast_nullable_to_non_nullable
 as List<ParticipantEntity>,format: null == format ? _self.format : format // ignore: cast_nullable_to_non_nullable
 as String,includeThirdPlaceMatch: null == includeThirdPlaceMatch ? _self.includeThirdPlaceMatch : includeThirdPlaceMatch // ignore: cast_nullable_to_non_nullable
-as bool,
+as bool,errorMessage: freezed == errorMessage ? _self.errorMessage : errorMessage // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 

@@ -27,6 +27,7 @@ sealed class BracketState with _$BracketState {
     required List<ParticipantEntity> participants,
     required String format,
     required bool includeThirdPlaceMatch,
+    String? errorMessage,
   }) = BracketLoadSuccess;
   const factory BracketState.failure(String message) = BracketFailure;
 }

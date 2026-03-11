@@ -49,6 +49,8 @@ abstract class MatchEntity with _$MatchEntity {
     @Default(MatchStatus.pending) MatchStatus status,
     MatchResultType? resultType,
     String? notes,
+    int? blueScore,
+    int? redScore,
     DateTime? startedAtTimestamp,
     DateTime? completedAtTimestamp,
     @Default(1) int syncVersion,

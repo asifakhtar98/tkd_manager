@@ -459,11 +459,6 @@ void main() {
         }
 
         // Seeds 1 and 2 must be in different halves (different R2 matches)
-        final r2 = result.matches
-            .where((m) => m.roundNumber == 2)
-            .toList()
-          ..sort((a, b) =>
-              a.matchNumberInRound.compareTo(b.matchNumberInRound));
 
         // Find which R1 match has p1 and which has p2
         final p1R1 = r1.firstWhere((m) =>

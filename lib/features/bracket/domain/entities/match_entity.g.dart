@@ -27,6 +27,8 @@ _MatchEntity _$MatchEntityFromJson(Map<String, dynamic> json) => _MatchEntity(
       MatchStatus.pending,
   resultType: $enumDecodeNullable(_$MatchResultTypeEnumMap, json['resultType']),
   notes: json['notes'] as String?,
+  blueScore: (json['blueScore'] as num?)?.toInt(),
+  redScore: (json['redScore'] as num?)?.toInt(),
   startedAtTimestamp: json['startedAtTimestamp'] == null
       ? null
       : DateTime.parse(json['startedAtTimestamp'] as String),
@@ -59,6 +61,8 @@ Map<String, dynamic> _$MatchEntityToJson(_MatchEntity instance) =>
       'status': _$MatchStatusEnumMap[instance.status]!,
       'resultType': _$MatchResultTypeEnumMap[instance.resultType],
       'notes': instance.notes,
+      'blueScore': instance.blueScore,
+      'redScore': instance.redScore,
       'startedAtTimestamp': instance.startedAtTimestamp?.toIso8601String(),
       'completedAtTimestamp': instance.completedAtTimestamp?.toIso8601String(),
       'syncVersion': instance.syncVersion,

@@ -40,15 +40,20 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
-  void _pushDemo(BuildContext context, String format, int playerCount) {
+  void _pushDemo(
+    BuildContext context, {
+    required String format,
+    required int playerCount,
+    bool includeThirdPlaceMatch = false,
+    bool dojangSeparation = true,
+  }) {
     BracketRoute(
       $extra: BracketRouteExtra(
         participants: DemoData.getParticipants(playerCount),
-        dojangSeparation: true,
+        dojangSeparation: dojangSeparation,
         format: format,
-        includeThirdPlaceMatch: true,
-        // No tournament for demos — must NOT pollute TournamentBloc state.
-        tournament: null,
+        includeThirdPlaceMatch: includeThirdPlaceMatch,
+        tournament: DemoData.demoTournament,
       ),
     ).push(context);
   }
@@ -152,28 +157,103 @@ class DashboardScreen extends StatelessWidget {
             color: theme.colorScheme.onSurfaceVariant,
           ),
         ),
-        const SizedBox(height: 16),
+
+        // ── Single Elimination ──
+        const SizedBox(height: 24),
+        Text(
+          'Single Elimination',
+          style: theme.textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.w600,
+            color: theme.colorScheme.primary,
+          ),
+        ),
+        const SizedBox(height: 12),
         Wrap(
           spacing: 12,
           runSpacing: 12,
           children: [
             _DemoCard(
               icon: Icons.account_tree_outlined,
-              title: 'Single Elim (8)',
-              subtitle: '8 players, Single Elimination',
-              onTap: () => _pushDemo(context, 'Single Elimination', 8),
+              title: '4 Players',
+              subtitle: 'Minimal bracket, no BYEs',
+              accentColor: Colors.blue,
+              onTap: () => _pushDemo(context,
+                  format: 'Single Elimination', playerCount: 4),
             ),
             _DemoCard(
               icon: Icons.account_tree_outlined,
-              title: 'Single Elim (14)',
-              subtitle: '14 players with BYEs',
-              onTap: () => _pushDemo(context, 'Single Elimination', 14),
+              title: '8 Players',
+              subtitle: 'Perfect bracket, no BYEs',
+              accentColor: Colors.blue,
+              onTap: () => _pushDemo(context,
+                  format: 'Single Elimination', playerCount: 8),
+            ),
+            _DemoCard(
+              icon: Icons.account_tree_outlined,
+              title: '5 Players',
+              subtitle: 'BYEs in action',
+              accentColor: Colors.indigo,
+              onTap: () => _pushDemo(context,
+                  format: 'Single Elimination', playerCount: 5),
+            ),
+            _DemoCard(
+              icon: Icons.account_tree_outlined,
+              title: '16 Players',
+              subtitle: 'Large bracket, full draw',
+              accentColor: Colors.blue,
+              onTap: () => _pushDemo(context,
+                  format: 'Single Elimination', playerCount: 16),
+            ),
+            _DemoCard(
+              icon: Icons.emoji_events_outlined,
+              title: '8P + 3rd Place',
+              subtitle: 'Bronze medal match',
+              accentColor: Colors.amber.shade700,
+              onTap: () => _pushDemo(context,
+                  format: 'Single Elimination',
+                  playerCount: 8,
+                  includeThirdPlaceMatch: true),
+            ),
+          ],
+        ),
+
+        // ── Double Elimination ──
+        const SizedBox(height: 32),
+        Text(
+          'Double Elimination',
+          style: theme.textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.w600,
+            color: theme.colorScheme.secondary,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: [
+            _DemoCard(
+              icon: Icons.repeat,
+              title: '4 Players',
+              subtitle: 'Minimal DE bracket',
+              accentColor: Colors.teal,
+              onTap: () => _pushDemo(context,
+                  format: 'Double Elimination', playerCount: 4),
             ),
             _DemoCard(
               icon: Icons.repeat,
-              title: 'Double Elim (8)',
-              subtitle: '8 players, Double Elimination',
-              onTap: () => _pushDemo(context, 'Double Elimination', 8),
+              title: '8 Players',
+              subtitle: 'Standard DE bracket',
+              accentColor: Colors.teal,
+              onTap: () => _pushDemo(context,
+                  format: 'Double Elimination', playerCount: 8),
+            ),
+            _DemoCard(
+              icon: Icons.repeat,
+              title: '6 Players',
+              subtitle: 'DE with BYEs',
+              accentColor: Colors.cyan.shade700,
+              onTap: () => _pushDemo(context,
+                  format: 'Double Elimination', playerCount: 6),
             ),
           ],
         ),
@@ -273,12 +353,14 @@ class _DemoCard extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.onTap,
+    this.accentColor = Colors.blueAccent,
   });
 
   final IconData icon;
   final String title;
   final String subtitle;
   final VoidCallback onTap;
+  final Color accentColor;
 
   @override
   Widget build(BuildContext context) {
@@ -293,7 +375,7 @@ class _DemoCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(icon, size: 36, color: Colors.blueAccent),
+                Icon(icon, size: 36, color: accentColor),
                 const SizedBox(height: 12),
                 Text(
                   title,
