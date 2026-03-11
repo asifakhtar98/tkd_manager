@@ -130,34 +130,41 @@ class _TieSheetCanvasWidgetState extends State<TieSheetCanvasWidget> {
 /// All design-token colours used across the bracket canvas.
 /// Centralising them here means a palette tweak is a one-line edit.
 abstract final class _BracketColors {
-  static const blue    = Color(0xFF3B82F6); // Chung / Blue corner
-  static const red     = Color(0xFFEF4444); // Hong  / Red  corner
-  static const pending = Color(0xFFD1D5DB); // unresolved lines / TBD outlines
-  static const muted   = Color(0xFF9CA3AF); // dashed BYE lines, TBD text
-  static const ink     = Color(0xFF111827); // primary text
-  static const subInk  = Color(0xFF1F2937); // winner / resolved-line stroke
-  static const subtle  = Color(0xFF4B5563); // secondary text
-  static const rowFill = Color(0xFFF9FAFB); // participant row background
-  static const hdrFill = Color(0xFFF1F5F9); // table-header background
-  static const tbdFill = Color(0xFFF3F4F6); // TBD placeholder background
-  static const gold    = Color(0xFFFEF3C7);
-  static const silver  = Color(0xFFF3F4F6);
-  static const bronze     = Color(0xFFFFEDD5);
-  static const goldText   = Color(0xFFB45309); // medal emoji label text
-  static const silverText = Color(0xFF374151);
+  static const blue    = Color(0xFF2563EB); // Chung / Blue corner
+  static const red     = Color(0xFFDC2626); // Hong  / Red  corner
+  static const pending = Color(0xFFCBD5E1); // unresolved lines / TBD outlines
+  static const muted   = Color(0xFF94A3B8); // dashed BYE lines, TBD text
+  static const ink     = Color(0xFF1E293B); // primary text
+
+  static const subtle  = Color(0xFF64748B); // secondary text
+  static const rowFill = Color(0xFFF8FAFC); // participant row background
+  static const hdrFill = Color(0xFFE2E8F0); // table-header background
+  static const tbdFill = Color(0xFFF1F5F9); // TBD placeholder background
+  static const cardBorder   = Color(0xFFCBD5E1); // soft card border
+  static const connector    = Color(0xFF94A3B8); // default connector stroke
+  static const connectorWon = Color(0xFF475569); // resolved connector stroke
+  static const canvasBg     = Color(0xFFFFFEFC); // warm white canvas
+  static const gold    = Color(0xFFFEF9C3);
+  static const silver  = Color(0xFFF1F5F9);
+  static const bronze     = Color(0xFFFED7AA);
+  static const goldText   = Color(0xFF92400E);
+  static const silverText = Color(0xFF475569);
   static const bronzeText = Color(0xFF9A3412);
-  static const wbLabel = Color(0xFF2563EB); // Winners-Bracket label accent
-  static const lbLabel = Color(0xFFDC2626); // Losers-Bracket  label accent
+  static const goldAccent   = Color(0xFFF59E0B);
+  static const silverAccent = Color(0xFF94A3B8);
+  static const bronzeAccent = Color(0xFFF97316);
+  static const wbLabel = Color(0xFF2563EB);
+  static const lbLabel = Color(0xFFDC2626);
+  static const headerBg = Color(0xFF1E293B); // dark header banner
 }
 
-/// Lightweight [Paint] factories for the four recurring stroke/fill profiles.
-/// Avoids repeating identical chained-setter boilerplate across ~20 call-sites.
+/// Lightweight [Paint] factories for recurring stroke/fill profiles.
 abstract final class _Pens {
-  /// Solid stroke, square caps — grid lines and hard outlines.
-  static Paint thick(Color c, {double w = 2.0}) => Paint()
+  /// Solid stroke, round caps — grid lines and outlines.
+  static Paint thick(Color c, {double w = 1.5}) => Paint()
     ..color = c
     ..strokeWidth = w
-    ..strokeCap = StrokeCap.square
+    ..strokeCap = StrokeCap.round
     ..style = PaintingStyle.stroke;
 
   /// 1 px solid stroke — dividers and pending match lines.
@@ -177,33 +184,16 @@ abstract final class _Pens {
   static Paint fill(Color c) => Paint()
     ..color = c
     ..style = PaintingStyle.fill;
+
+  /// Soft shadow paint for card elevation.
+  static Paint shadow({double blur = 6.0, Color color = const Color(0x1A000000)}) => Paint()
+    ..color = color
+    ..maskFilter = MaskFilter.blur(BlurStyle.normal, blur);
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
 // SECTION 3 — PAINTER  (TieSheetPainter)
-//   3a  Layout constants
-//   3b  Data helpers  (_groupByRound, _maxRound, _computeOneSidedHeight)
-//   3c  Canvas size calculation
-//   3d  Paint entry-point
-//   3e  Single-Elimination layout  (_paintSE)
-//   3f  Double-Elimination layout  (_paintDE)
-//   3g  Shared participant / junction painting
-//   3h  Medal table
-//   3i  Text & drawing primitives
 // ══════════════════════════════════════════════════════════════════════════════
-//
-//  Layout reference (single elimination, 14 players):
-//
-//  ┌──┬────────────────────┬──────────────┐
-//  │No│  NAME (bold, caps) │  REG-ID      │──── horizontal line ──→ ┐
-//  ├──┼────────────────────┼──────────────┤                         ├─ junction ─→
-//  │No│  NAME              │  REG-ID      │──── horizontal line ──→ ┘
-//  ├──┤                    │              │          ↑ pairGap ↑
-//  │No│  NAME              │  REG-ID      │──────────────────────→ ┐
-//  ├──┼────────────────────┼──────────────┤                         ├─ junction ─→
-//  │No│  NAME              │  REG-ID      │──────────────────────→ ┘
-//  └──┴────────────────────┴──────────────┘
-//
 
 class TieSheetPainter extends CustomPainter {
   final TournamentEntity tournament;
@@ -218,28 +208,30 @@ class TieSheetPainter extends CustomPainter {
   final Map<String, int> _matchGlobalNumbers = {};
   final Map<String, Offset> _nodeOffsets = {};
 
-  // ── 3a  Layout constants ───────────────────────────────────────────────────
-  static const double rowH        = 48.0;
-  static const double pairGap     = 50.0;
-  static const double noColW      = 36.0;
-  static const double nameColW    = 210.0;
-  static const double regIdColW   = 130.0;
-  static const double roundColW   = 160.0;
-  static const double headerH     = 110.0;
-  static const double subHeaderH  = 24.0;
-  static const double medalH      = 120.0;
-  static const double margin      = 30.0;
-  static const double centerGap   = 160.0;
-  static const double sectionGap  = 60.0;
-  static const double sectionLabelH = 36.0;
+  // ── Layout constants ───────────────────────────────────────────────────────
+  static const double rowH        = 42.0;
+  static const double pairGap     = 36.0;
+  static const double noColW      = 32.0;
+  static const double nameColW    = 200.0;
+  static const double regIdColW   = 120.0;
+  static const double roundColW   = 170.0;
+  static const double headerH     = 100.0;
+  static const double subHeaderH  = 28.0;
+  static const double medalH      = 130.0;
+  static const double margin      = 36.0;
+  static const double centerGap   = 170.0;
+  static const double sectionGap  = 50.0;
+  static const double sectionLabelH = 32.0;
+  static const double _cardRadius = 6.0;
+  static const double _accentStripW = 4.0;
 
   static const double listW = noColW + nameColW + regIdColW;
 
-  // Medal-table dimensions (self-contained, used only in _paintMedalTable).
-  static const double _medalTableW = 420.0;
-  static const double _medalRowH   = 32.0;
-  static const double _medalNameW  = 230.0;
-  static const double _medalLabelW = 70.0;
+  // Medal-table dimensions.
+  static const double _medalTableW = 440.0;
+  static const double _medalRowH   = 36.0;
+  static const double _medalNameW  = 250.0;
+  static const double _medalLabelW = 80.0;
   static const double _medalBlankW = _medalTableW - _medalNameW - _medalLabelW;
 
   TieSheetPainter({
@@ -350,9 +342,9 @@ class TieSheetPainter extends CustomPainter {
     _nodeOffsets.clear();
     _buildGlobalMatchNumbers();
 
-    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), _Pens.fill(Colors.white));
+    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), _Pens.fill(_BracketColors.canvasBg));
 
-    final thickPen = _Pens.thick(Colors.black);
+    final thickPen = _Pens.thick(_BracketColors.cardBorder);
 
     if (_isDouble) {
       _paintDE(canvas, size, thickPen);
@@ -371,8 +363,9 @@ class TieSheetPainter extends CustomPainter {
         tournament.categoryLabel.toUpperCase(),
         tournament.divisionLabel.toUpperCase());
 
-    canvas.drawLine(Offset(margin + listW, startY), Offset(size.width - margin - listW, startY), thickPen);
-    final tableTop = startY + 16;
+    // Subtle separator line between left and right participant tables.
+    _drawDashedLine(canvas, Offset(margin + listW + 20, startY), Offset(size.width - margin - listW - 20, startY), _Pens.thin(_BracketColors.pending), dashWidth: 8, gapWidth: 6);
+    final tableTop = startY + 12;
 
     // Exclude the 3rd-place match from the main bracket tree.
     final seMaxRound  = matches.isNotEmpty ? matches.map((mm) => mm.roundNumber).reduce(max) : 0;
@@ -549,7 +542,7 @@ class TieSheetPainter extends CustomPainter {
 
   void _paintGrandFinalNode(Canvas canvas, MatchEntity match, double x, double topY, double botY, Paint pen, String label) {
     final pendingPen = _Pens.thin(_BracketColors.pending);
-    final winnerPen  = _Pens.round(_BracketColors.subInk);
+    final winnerPen  = _Pens.round(_BracketColors.connectorWon);
     final midY = (topY + botY) / 2;
 
     canvas.drawLine(Offset(x, topY), Offset(x, botY), pen);
@@ -566,7 +559,7 @@ class TieSheetPainter extends CustomPainter {
     _drawBadge(canvas, 'R', _BracketColors.red,  x + 16, botY + 14);
 
     final gNum = _matchGlobalNumbers[match.id];
-    if (gNum != null) _drawText(canvas, '$gNum', x + 18, midY - 7, _bold(11));
+    if (gNum != null) _drawMatchPill(canvas, '$gNum', x + 18, midY);
 
     if (match.winnerId != null) {
       final w = _findP(match.winnerId);
@@ -581,7 +574,7 @@ class TieSheetPainter extends CustomPainter {
     if (match.resultType == MatchResultType.bye) return;
 
     final pendingPen = _Pens.thin(_BracketColors.pending);
-    final winnerPen  = _Pens.round(_BracketColors.subInk);
+    final winnerPen  = _Pens.round(_BracketColors.connectorWon);
     final topPen     = match.participantBlueId != null ? winnerPen : pendingPen;
     final botPen     = match.participantRedId  != null ? winnerPen : pendingPen;
 
@@ -589,8 +582,6 @@ class TieSheetPainter extends CustomPainter {
     final botIn = _resolveInputOffset(match, isTopSlot: false);
     if (topIn == null || botIn == null) return;
 
-    // Enforce a minimum vertical span so the final junction is always visible
-    // (e.g. in a 4-player bracket both inputs land at almost the same Y).
     final rawMidY    = (topIn.dy + botIn.dy) / 2;
     const minSpan    = 60.0;
     final actualSpan = (botIn.dy - topIn.dy).abs();
@@ -598,27 +589,39 @@ class TieSheetPainter extends CustomPainter {
     final topArmY    = rawMidY - halfSpan;
     final botArmY    = rawMidY + halfSpan;
 
-    canvas.drawLine(topIn, Offset(junctionX, topIn.dy), topPen);
-    if ((topIn.dy - topArmY).abs() > 1) {
-      canvas.drawLine(Offset(junctionX, topIn.dy), Offset(junctionX, topArmY), topPen);
-    }
-    canvas.drawLine(botIn, Offset(junctionX, botIn.dy), botPen);
-    if ((botIn.dy - botArmY).abs() > 1) {
-      canvas.drawLine(Offset(junctionX, botIn.dy), Offset(junctionX, botArmY), botPen);
-    }
-    canvas.drawLine(Offset(junctionX, topArmY), Offset(junctionX, botArmY), pen);
+    // ── Smooth Bezier arms instead of hard right-angle lines ──
+    const curveR = 12.0;
+    final topPath = Path()
+      ..moveTo(topIn.dx, topIn.dy)
+      ..lineTo(junctionX - curveR, topIn.dy)
+      ..quadraticBezierTo(junctionX, topIn.dy, junctionX, topIn.dy + curveR)
+      ..lineTo(junctionX, rawMidY);
+    canvas.drawPath(topPath, topPen);
+
+    final botPath = Path()
+      ..moveTo(botIn.dx, botIn.dy)
+      ..lineTo(junctionX + curveR, botIn.dy)
+      ..quadraticBezierTo(junctionX, botIn.dy, junctionX, botIn.dy - curveR)
+      ..lineTo(junctionX, rawMidY);
+    canvas.drawPath(botPath, botPen);
+
+    // ── Vertical merge line ──
+    canvas.drawLine(Offset(junctionX, topArmY), Offset(junctionX, botArmY), _Pens.thin(_BracketColors.connector));
 
     _nodeOffsets[match.id] = Offset(junctionX, rawMidY);
 
-    _drawBadge(canvas, 'B', _BracketColors.blue, junctionX - 24, topArmY - 16);
-    _drawBadge(canvas, 'R', _BracketColors.red,  junctionX + 24, botArmY + 16);
-
+    // ── Match number pill ──
     final gNum = _matchGlobalNumbers[match.id];
-    if (gNum != null) _drawText(canvas, '$gNum', junctionX + 16, rawMidY - 7, _bold(11));
+    if (gNum != null) {
+      _drawMatchPill(canvas, '$gNum', junctionX, rawMidY);
+    }
+
+    _drawBadge(canvas, 'B', _BracketColors.blue, junctionX - 20, topArmY - 14);
+    _drawBadge(canvas, 'R', _BracketColors.red,  junctionX + 20, botArmY + 14);
 
     if (match.winnerId != null) {
       final w = _findP(match.winnerId);
-      if (w != null) _drawText(canvas, _pName(w), junctionX, rawMidY - 18, _bold(10), center: true);
+      if (w != null) _drawText(canvas, _pName(w), junctionX, rawMidY - 20, _bold(9), center: true);
     }
 
     matchHitAreas.add(MapEntry(match.id,
@@ -630,106 +633,141 @@ class TieSheetPainter extends CustomPainter {
     String divisionTitle, String categoryTitle, {bool showRightHeader = true}
   ) {
     var y = startY;
+
+    // ── Dark header banner with tournament info ──
+    final bannerH = 64.0;
+    final bannerRect = RRect.fromLTRBR(margin, y, size.width - margin, y + bannerH, const Radius.circular(8));
+    canvas.drawRRect(bannerRect, _Pens.fill(_BracketColors.headerBg));
+
     final title = (tournament.name.isNotEmpty ? tournament.name : 'TOURNAMENT NAME').toUpperCase();
-    _drawText(canvas, title, size.width / 2, y, _bold(22), center: true);
-    y += 28;
+    _drawText(canvas, title, size.width / 2, y + 12,
+        const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold, fontFamily: 'Roboto', letterSpacing: 1.2), center: true);
+
     if (tournament.dateRange.isNotEmpty || tournament.venue.isNotEmpty) {
-      final sub = [tournament.dateRange, tournament.venue].where((s) => s.isNotEmpty).join(', ');
-      _drawText(canvas, sub.toUpperCase(), size.width / 2, y, _normal(14), center: true);
-      y += 20;
+      final sub = [tournament.dateRange, tournament.venue].where((s) => s.isNotEmpty).join('  •  ');
+      _drawText(canvas, sub.toUpperCase(), size.width / 2, y + 34,
+          TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 11, fontFamily: 'Roboto', letterSpacing: 0.5), center: true);
     }
     if (tournament.organizer.isNotEmpty) {
-      _drawText(canvas, 'Organised by : ${tournament.organizer.toUpperCase()}', size.width / 2, y, _bold(16), center: true);
-      y += 24;
-    } else {
-      y += 20;
+      _drawText(canvas, 'Organised by ${tournament.organizer.toUpperCase()}', size.width / 2, y + 48,
+          TextStyle(color: Colors.white.withValues(alpha: 0.55), fontSize: 10, fontFamily: 'Roboto'), center: true);
     }
+    y += bannerH + 12;
 
+    // ── Table column headers ──
     final headerRowTop    = y;
     final headerRowBottom = y + subHeaderH;
-    final normalPen       = _Pens.thin(thickPen.color);
 
     // Left table header.
     final leftHeaderX = margin;
-    final rRectL = RRect.fromLTRBR(leftHeaderX, headerRowTop, leftHeaderX + listW, headerRowBottom, const Radius.circular(6.0));
+    final rRectL = RRect.fromLTRBR(leftHeaderX, headerRowTop, leftHeaderX + listW, headerRowBottom, const Radius.circular(_cardRadius));
     canvas.drawRRect(rRectL, _Pens.fill(_BracketColors.hdrFill));
-    canvas.drawRRect(rRectL, thickPen);
-    canvas.drawLine(Offset(leftHeaderX + noColW, headerRowTop),          Offset(leftHeaderX + noColW, headerRowBottom),          normalPen);
-    canvas.drawLine(Offset(leftHeaderX + noColW + nameColW, headerRowTop), Offset(leftHeaderX + noColW + nameColW, headerRowBottom), normalPen);
+    canvas.drawRRect(rRectL, _Pens.thin(_BracketColors.cardBorder));
+    canvas.drawLine(Offset(leftHeaderX + noColW, headerRowTop), Offset(leftHeaderX + noColW, headerRowBottom), _Pens.thin(_BracketColors.pending));
+    canvas.drawLine(Offset(leftHeaderX + noColW + nameColW, headerRowTop), Offset(leftHeaderX + noColW + nameColW, headerRowBottom), _Pens.thin(_BracketColors.pending));
 
-    _drawText(canvas, 'No.',                                                leftHeaderX + noColW / 2,                     headerRowTop + 14, _normal(13), center: true);
-    _drawText(canvas, divisionTitle.isEmpty ? 'JUNIOR' : divisionTitle,     leftHeaderX + noColW + nameColW / 2,           headerRowTop + 14, _normal(13), center: true);
-    _drawText(canvas, categoryTitle.isEmpty ? 'BOYS'   : categoryTitle,     leftHeaderX + noColW + nameColW + regIdColW / 2, headerRowTop + 14, _normal(13), center: true);
+    final hdrTextY = headerRowTop + subHeaderH / 2 - 6;
+    _drawText(canvas, '#', leftHeaderX + noColW / 2, hdrTextY, _normal(11), center: true);
+    _drawText(canvas, divisionTitle.isEmpty ? 'DIVISION' : divisionTitle, leftHeaderX + noColW + nameColW / 2, hdrTextY, _normal(11), center: true);
+    _drawText(canvas, categoryTitle.isEmpty ? 'CATEGORY' : categoryTitle, leftHeaderX + noColW + nameColW + regIdColW / 2, hdrTextY, _normal(11), center: true);
 
     // Right table header (mirrored) — only for two-sided SE brackets.
     if (showRightHeader) {
       final rightHeaderX = size.width - margin - listW;
-      final rRectR = RRect.fromLTRBR(rightHeaderX, headerRowTop, rightHeaderX + listW, headerRowBottom, const Radius.circular(6.0));
+      final rRectR = RRect.fromLTRBR(rightHeaderX, headerRowTop, rightHeaderX + listW, headerRowBottom, const Radius.circular(_cardRadius));
       canvas.drawRRect(rRectR, _Pens.fill(_BracketColors.hdrFill));
-      canvas.drawRRect(rRectR, thickPen);
-      canvas.drawLine(Offset(rightHeaderX + regIdColW, headerRowTop),            Offset(rightHeaderX + regIdColW, headerRowBottom),            normalPen);
-      canvas.drawLine(Offset(rightHeaderX + regIdColW + nameColW, headerRowTop), Offset(rightHeaderX + regIdColW + nameColW, headerRowBottom), normalPen);
+      canvas.drawRRect(rRectR, _Pens.thin(_BracketColors.cardBorder));
+      canvas.drawLine(Offset(rightHeaderX + regIdColW, headerRowTop), Offset(rightHeaderX + regIdColW, headerRowBottom), _Pens.thin(_BracketColors.pending));
+      canvas.drawLine(Offset(rightHeaderX + regIdColW + nameColW, headerRowTop), Offset(rightHeaderX + regIdColW + nameColW, headerRowBottom), _Pens.thin(_BracketColors.pending));
 
-      _drawText(canvas, categoryTitle.isEmpty ? 'BOYS'   : categoryTitle,     rightHeaderX + regIdColW / 2,              headerRowTop + 14, _normal(13), center: true);
-      _drawText(canvas, divisionTitle.isEmpty ? 'JUNIOR' : divisionTitle,     rightHeaderX + regIdColW + nameColW / 2,   headerRowTop + 14, _normal(13), center: true);
-      _drawText(canvas, 'No.',                                                 rightHeaderX + listW - noColW / 2,         headerRowTop + 14, _normal(13), center: true);
+      _drawText(canvas, categoryTitle.isEmpty ? 'CATEGORY' : categoryTitle, rightHeaderX + regIdColW / 2, hdrTextY, _normal(11), center: true);
+      _drawText(canvas, divisionTitle.isEmpty ? 'DIVISION' : divisionTitle, rightHeaderX + regIdColW + nameColW / 2, hdrTextY, _normal(11), center: true);
+      _drawText(canvas, '#', rightHeaderX + listW - noColW / 2, hdrTextY, _normal(11), center: true);
     }
 
-    return headerRowBottom + 10;
+    return headerRowBottom + 12;
   }
 
   void _paintParticipantRow(Canvas canvas, int idx, ParticipantEntity p, double x, double y, Paint pen, {required bool mirrored}) {
-    final right     = x + listW;
-    final normalPen = _Pens.thin(pen.color);
+    final right = x + listW;
+    final connectorPen = _Pens.round(_BracketColors.connector, w: 1.5);
 
     if (!mirrored) {
-      final boxLeft = x + noColW;
-      final rectL   = RRect.fromLTRBR(boxLeft, y, right, y + rowH, const Radius.circular(6.0));
-      canvas.drawRRect(rectL, _Pens.fill(_BracketColors.rowFill));
-      canvas.drawRRect(rectL, pen);
-      canvas.drawLine(Offset(boxLeft + nameColW, y), Offset(boxLeft + nameColW, y + rowH), normalPen);
+      // ── Card with shadow ──
+      final cardRect = RRect.fromLTRBR(x, y + 1, right, y + rowH - 1, const Radius.circular(_cardRadius));
+      canvas.drawRRect(cardRect.shift(const Offset(1, 2)), _Pens.shadow(blur: 4));
+      canvas.drawRRect(cardRect, _Pens.fill(_BracketColors.rowFill));
+      canvas.drawRRect(cardRect, _Pens.thin(_BracketColors.cardBorder));
 
-      _drawText(canvas, '$idx', x + noColW / 2,  y + rowH / 2 - 6, _bold(12), center: true);
-      _drawText(canvas, _pName(p), boxLeft + 6,  y + rowH / 2 - 6, _bold(11));
+      // ── Blue accent strip on left edge ──
+      final accentRect = RRect.fromLTRBAndCorners(x, y + 1, x + _accentStripW, y + rowH - 1,
+          topLeft: const Radius.circular(_cardRadius), bottomLeft: const Radius.circular(_cardRadius));
+      canvas.drawRRect(accentRect, _Pens.fill(_BracketColors.blue));
+
+      // ── Column divider ──
+      canvas.drawLine(Offset(x + noColW, y + 4), Offset(x + noColW, y + rowH - 4), _Pens.thin(_BracketColors.pending));
+      canvas.drawLine(Offset(x + noColW + nameColW, y + 4), Offset(x + noColW + nameColW, y + rowH - 4), _Pens.thin(_BracketColors.pending));
+
+      // ── Text ──
+      final textY = y + rowH / 2 - 6;
+      _drawText(canvas, '$idx', x + noColW / 2, textY, _normal(10), center: true);
+      _drawText(canvas, _pName(p), x + noColW + 8, textY, _bold(10));
       if (p.registrationId != null && p.registrationId!.isNotEmpty) {
-        _drawText(canvas, p.registrationId!, right - 6, y + rowH / 2 - 6, _bold(11), alignRight: true);
+        _drawText(canvas, p.registrationId!, right - 8, textY, _normal(9), alignRight: true);
       }
 
-      canvas.drawLine(Offset(right, y + rowH / 2), Offset(right + roundColW, y + rowH / 2), pen);
+      // ── Connector arm ──
+      canvas.drawLine(Offset(right, y + rowH / 2), Offset(right + roundColW, y + rowH / 2), connectorPen);
     } else {
-      // Mirrored layout: [REG-ID | NAME | No.] with arm extending left.
-      final boxRight = right - noColW;
-      final rectR    = RRect.fromLTRBR(x, y, boxRight, y + rowH, const Radius.circular(6.0));
-      canvas.drawRRect(rectR, _Pens.fill(_BracketColors.rowFill));
-      canvas.drawRRect(rectR, pen);
-      canvas.drawLine(Offset(x + regIdColW, y), Offset(x + regIdColW, y + rowH), normalPen);
+      // ── Mirrored card with shadow ──
+      final cardRect = RRect.fromLTRBR(x, y + 1, right, y + rowH - 1, const Radius.circular(_cardRadius));
+      canvas.drawRRect(cardRect.shift(const Offset(-1, 2)), _Pens.shadow(blur: 4));
+      canvas.drawRRect(cardRect, _Pens.fill(_BracketColors.rowFill));
+      canvas.drawRRect(cardRect, _Pens.thin(_BracketColors.cardBorder));
 
+      // ── Blue accent strip on right edge ──
+      final accentRect = RRect.fromLTRBAndCorners(right - _accentStripW, y + 1, right, y + rowH - 1,
+          topRight: const Radius.circular(_cardRadius), bottomRight: const Radius.circular(_cardRadius));
+      canvas.drawRRect(accentRect, _Pens.fill(_BracketColors.blue));
+
+      // ── Column divider ──
+      canvas.drawLine(Offset(x + regIdColW, y + 4), Offset(x + regIdColW, y + rowH - 4), _Pens.thin(_BracketColors.pending));
+      canvas.drawLine(Offset(x + regIdColW + nameColW, y + 4), Offset(x + regIdColW + nameColW, y + rowH - 4), _Pens.thin(_BracketColors.pending));
+
+      // ── Text ──
+      final textY = y + rowH / 2 - 6;
       if (p.registrationId != null && p.registrationId!.isNotEmpty) {
-        _drawText(canvas, p.registrationId!, x + 6,      y + rowH / 2 - 6, _bold(11));
+        _drawText(canvas, p.registrationId!, x + 8, textY, _normal(9));
       }
-      _drawText(canvas, _pName(p), boxRight - 6,     y + rowH / 2 - 6, _bold(11), alignRight: true);
-      _drawText(canvas, '$idx',    right - noColW / 2, y + rowH / 2 - 6, _bold(12), center: true);
+      _drawText(canvas, _pName(p), x + regIdColW + nameColW - 8, textY, _bold(10), alignRight: true);
+      _drawText(canvas, '$idx', right - noColW / 2, textY, _normal(10), center: true);
 
-      canvas.drawLine(Offset(x, y + rowH / 2), Offset(x - roundColW, y + rowH / 2), pen);
+      // ── Connector arm ──
+      canvas.drawLine(Offset(x, y + rowH / 2), Offset(x - roundColW, y + rowH / 2), connectorPen);
     }
   }
 
   /// Paints a placeholder row for a bracket slot with no assigned participant.
   void _paintTbdRow(Canvas canvas, int idx, double x, double y) {
-    final right  = x + listW;
-    final tbdPen = _Pens.thin(_BracketColors.pending);
+    final right = x + listW;
+    final connectorPen = _Pens.thin(_BracketColors.pending);
 
-    final boxLeft = x + noColW;
-    final rect    = RRect.fromLTRBR(boxLeft, y, right, y + rowH, const Radius.circular(6.0));
-    canvas.drawRRect(rect, _Pens.fill(_BracketColors.tbdFill));
-    canvas.drawRRect(rect, tbdPen);
+    final cardRect = RRect.fromLTRBR(x, y + 1, right, y + rowH - 1, const Radius.circular(_cardRadius));
+    canvas.drawRRect(cardRect, _Pens.fill(_BracketColors.tbdFill));
+    canvas.drawRRect(cardRect, _Pens.thin(_BracketColors.pending));
 
-    _drawText(canvas, '$idx', x + noColW / 2, y + rowH / 2 - 6,
-        const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: _BracketColors.muted), center: true);
-    _drawText(canvas, 'TBD', boxLeft + 6, y + rowH / 2 - 6,
-        const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, fontStyle: FontStyle.italic, color: _BracketColors.muted));
+    // ── Gray accent strip ──
+    final accentRect = RRect.fromLTRBAndCorners(x, y + 1, x + _accentStripW, y + rowH - 1,
+        topLeft: const Radius.circular(_cardRadius), bottomLeft: const Radius.circular(_cardRadius));
+    canvas.drawRRect(accentRect, _Pens.fill(_BracketColors.muted));
 
-    canvas.drawLine(Offset(right, y + rowH / 2), Offset(right + roundColW, y + rowH / 2), tbdPen);
+    final textY = y + rowH / 2 - 6;
+    _drawText(canvas, '$idx', x + noColW / 2, textY,
+        const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: _BracketColors.muted), center: true);
+    _drawText(canvas, 'TBD', x + noColW + 8, textY,
+        const TextStyle(fontSize: 10, fontWeight: FontWeight.w600, fontStyle: FontStyle.italic, color: _BracketColors.muted));
+
+    canvas.drawLine(Offset(right, y + rowH / 2), Offset(right + roundColW, y + rowH / 2), connectorPen);
   }
 
   /// Renders a flat R1 participant table, writing [_nodeOffsets] for each slot
@@ -772,7 +810,7 @@ class TieSheetPainter extends CustomPainter {
 
   void _paintJunction(Canvas canvas, MatchEntity match, double junctionX, Paint pen, {required bool mirrored}) {
     final pendingPen = _Pens.thin(_BracketColors.pending);
-    final winnerPen  = _Pens.round(_BracketColors.subInk);
+    final winnerPen  = _Pens.round(_BracketColors.connectorWon);
 
     final topPen = match.participantBlueId != null ? winnerPen : pendingPen;
     final botPen = match.participantRedId  != null ? winnerPen : pendingPen;
@@ -837,20 +875,16 @@ class TieSheetPainter extends CustomPainter {
     canvas.drawLine(output, Offset(nextJunctionX, midY), outPen);
 
     if (!mirrored) {
-      _drawBadge(canvas, 'B', _BracketColors.blue, junctionX - 24, effectiveTop.dy - 16);
-      _drawBadge(canvas, 'R', _BracketColors.red,  junctionX - 24, effectiveBot.dy + 16);
+      _drawBadge(canvas, 'B', _BracketColors.blue, junctionX - 20, effectiveTop.dy - 14);
+      _drawBadge(canvas, 'R', _BracketColors.red,  junctionX - 20, effectiveBot.dy + 14);
     } else {
-      _drawBadge(canvas, 'B', _BracketColors.blue, junctionX + 24, effectiveTop.dy - 16);
-      _drawBadge(canvas, 'R', _BracketColors.red,  junctionX + 24, effectiveBot.dy + 16);
+      _drawBadge(canvas, 'B', _BracketColors.blue, junctionX + 20, effectiveTop.dy - 14);
+      _drawBadge(canvas, 'R', _BracketColors.red,  junctionX + 20, effectiveBot.dy + 14);
     }
 
     final gNum = _matchGlobalNumbers[match.id];
     if (gNum != null) {
-      if (!mirrored) {
-        _drawText(canvas, '$gNum', junctionX + 14,  midY - 7, _bold(11));
-      } else {
-        _drawText(canvas, '$gNum', junctionX - 14,  midY - 7, _bold(11), alignRight: true);
-      }
+      _drawMatchPill(canvas, '$gNum', junctionX, midY);
     }
 
     if (match.winnerId != null) {
@@ -924,32 +958,47 @@ class TieSheetPainter extends CustomPainter {
     final x = (size.width - _medalTableW) / 2;
     final y = size.height - medalH - margin + 10;
 
-    final normalPen = _Pens.thin(_BracketColors.pending);
-    final fills     = [_Pens.fill(_BracketColors.gold), _Pens.fill(_BracketColors.silver), _Pens.fill(_BracketColors.bronze)];
+    final accentColors = [_BracketColors.goldAccent, _BracketColors.silverAccent, _BracketColors.bronzeAccent];
+    final fills = [_Pens.fill(_BracketColors.gold), _Pens.fill(_BracketColors.silver), _Pens.fill(_BracketColors.bronze)];
 
     for (var row = 0; row < 3; row++) {
-      final rY = y + row * _medalRowH;
+      final rY = y + row * (_medalRowH + 4);
 
-      final labelRect = Rect.fromLTWH(x + _medalBlankW + _medalNameW, rY, _medalLabelW, _medalRowH);
-      canvas.drawRRect(
-          RRect.fromRectAndCorners(labelRect, topRight: const Radius.circular(6), bottomRight: const Radius.circular(6)),
-          fills[row]);
+      // ── Shadow + Card ──
+      final fullRect = RRect.fromLTRBR(x + _medalBlankW, rY, x + _medalTableW, rY + _medalRowH, const Radius.circular(_cardRadius));
+      canvas.drawRRect(fullRect.shift(const Offset(1, 2)), _Pens.shadow(blur: 3));
 
-      final nameRect = Rect.fromLTWH(x + _medalBlankW, rY, _medalNameW, _medalRowH);
-      canvas.drawRRect(
-          RRect.fromRectAndCorners(nameRect, topLeft: const Radius.circular(6), bottomLeft: const Radius.circular(6)),
-          _Pens.fill(Colors.white));
+      // Name area
+      final nameRect = RRect.fromLTRBAndCorners(x + _medalBlankW, rY, x + _medalBlankW + _medalNameW, rY + _medalRowH,
+          topLeft: const Radius.circular(_cardRadius), bottomLeft: const Radius.circular(_cardRadius));
+      canvas.drawRRect(nameRect, _Pens.fill(_BracketColors.rowFill));
 
-      canvas.drawRRect(
-          RRect.fromRectAndRadius(Rect.fromLTWH(x + _medalBlankW, rY, _medalNameW + _medalLabelW, _medalRowH), const Radius.circular(6)),
-          normalPen);
-      canvas.drawLine(Offset(x + _medalBlankW + _medalNameW, rY), Offset(x + _medalBlankW + _medalNameW, rY + _medalRowH), normalPen);
+      // Label area
+      final labelRect = RRect.fromLTRBAndCorners(x + _medalBlankW + _medalNameW, rY, x + _medalTableW, rY + _medalRowH,
+          topRight: const Radius.circular(_cardRadius), bottomRight: const Radius.circular(_cardRadius));
+      canvas.drawRRect(labelRect, fills[row]);
+
+      // Border
+      canvas.drawRRect(fullRect, _Pens.thin(_BracketColors.cardBorder));
+      canvas.drawLine(Offset(x + _medalBlankW + _medalNameW, rY), Offset(x + _medalBlankW + _medalNameW, rY + _medalRowH), _Pens.thin(_BracketColors.pending));
+
+      // ── Accent strip ──
+      final accentRect = RRect.fromLTRBAndCorners(x + _medalBlankW, rY, x + _medalBlankW + _accentStripW, rY + _medalRowH,
+          topLeft: const Radius.circular(_cardRadius), bottomLeft: const Radius.circular(_cardRadius));
+      canvas.drawRRect(accentRect, _Pens.fill(accentColors[row]));
     }
 
     final labelX = x + _medalBlankW + _medalNameW + _medalLabelW / 2;
-    _drawText(canvas, '🥇 Gold',   labelX, y + 8,                  const TextStyle(color: _BracketColors.goldText,   fontSize: 13, fontWeight: FontWeight.bold, fontFamily: 'Roboto'), center: true);
-    _drawText(canvas, '🥈 Silver', labelX, y + _medalRowH + 8,     const TextStyle(color: _BracketColors.silverText, fontSize: 13, fontWeight: FontWeight.bold, fontFamily: 'Roboto'), center: true);
-    _drawText(canvas, '🥉 Bronze', labelX, y + _medalRowH * 2 + 8, const TextStyle(color: _BracketColors.bronzeText, fontSize: 13, fontWeight: FontWeight.bold, fontFamily: 'Roboto'), center: true);
+    final textStyles = [
+      const TextStyle(color: _BracketColors.goldText,   fontSize: 12, fontWeight: FontWeight.bold, fontFamily: 'Roboto'),
+      const TextStyle(color: _BracketColors.silverText, fontSize: 12, fontWeight: FontWeight.bold, fontFamily: 'Roboto'),
+      const TextStyle(color: _BracketColors.bronzeText, fontSize: 12, fontWeight: FontWeight.bold, fontFamily: 'Roboto'),
+    ];
+    final labels = ['Gold', 'Silver', 'Bronze'];
+    for (var row = 0; row < 3; row++) {
+      final rY = y + row * (_medalRowH + 4);
+      _drawText(canvas, labels[row], labelX, rY + _medalRowH / 2 - 7, textStyles[row], center: true);
+    }
 
     final allRounds = matches.map((m) => m.roundNumber).reduce(max);
     final finals    = matches.where((m) => m.roundNumber == allRounds && m.matchNumberInRound == 1).firstOrNull;
@@ -957,13 +1006,13 @@ class TieSheetPainter extends CustomPainter {
       final gold     = _findP(finals.winnerId);
       final silverId = finals.winnerId == finals.participantRedId ? finals.participantBlueId : finals.participantRedId;
       final silver   = _findP(silverId);
-      if (gold   != null) _drawText(canvas, _pName(gold),   x + _medalBlankW + 12, y + 8,            _bold(12));
-      if (silver != null) _drawText(canvas, _pName(silver), x + _medalBlankW + 12, y + _medalRowH + 8, _bold(12));
+      if (gold   != null) _drawText(canvas, _pName(gold),   x + _medalBlankW + 14, y + _medalRowH / 2 - 7, _bold(11));
+      if (silver != null) _drawText(canvas, _pName(silver), x + _medalBlankW + 14, y + (_medalRowH + 4) + _medalRowH / 2 - 7, _bold(11));
     }
     final thirdM = matches.where((m) => m.roundNumber == allRounds && m.matchNumberInRound == 2).firstOrNull;
     if (thirdM?.winnerId != null) {
       final bronze = _findP(thirdM!.winnerId);
-      if (bronze != null) _drawText(canvas, _pName(bronze), x + _medalBlankW + 12, y + _medalRowH * 2 + 8, _bold(12));
+      if (bronze != null) _drawText(canvas, _pName(bronze), x + _medalBlankW + 14, y + 2 * (_medalRowH + 4) + _medalRowH / 2 - 7, _bold(11));
     }
   }
 
@@ -978,9 +1027,20 @@ class TieSheetPainter extends CustomPainter {
   TextStyle _normal(double size) => TextStyle(color: _BracketColors.subtle, fontSize: size, fontFamily: 'Roboto');
 
   void _drawBadge(Canvas canvas, String text, Color color, double cx, double cy) {
-    canvas.drawCircle(Offset(cx, cy), 8.0, _Pens.fill(color));
+    canvas.drawCircle(Offset(cx, cy), 10.0, _Pens.fill(color));
+    canvas.drawCircle(Offset(cx, cy), 10.0, _Pens.thin(color.withValues(alpha: 0.3)));
+    _drawText(canvas, text, cx, cy - 5,
+        const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold, fontFamily: 'Roboto'), center: true);
+  }
+
+  /// Match number display as a small rounded pill.
+  void _drawMatchPill(Canvas canvas, String text, double cx, double cy) {
+    final pillRect = RRect.fromLTRBR(cx - 16, cy - 11, cx + 16, cy + 11, const Radius.circular(11));
+    canvas.drawRRect(pillRect.shift(const Offset(0.5, 1)), _Pens.shadow(blur: 2));
+    canvas.drawRRect(pillRect, _Pens.fill(Colors.white));
+    canvas.drawRRect(pillRect, _Pens.thin(_BracketColors.connector));
     _drawText(canvas, text, cx, cy - 6,
-        const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold), center: true);
+        const TextStyle(color: _BracketColors.ink, fontSize: 10, fontWeight: FontWeight.bold, fontFamily: 'Roboto'), center: true);
   }
 
   void _drawText(Canvas canvas, String text, double x, double y, TextStyle style, {bool center = false, bool alignRight = false}) {
