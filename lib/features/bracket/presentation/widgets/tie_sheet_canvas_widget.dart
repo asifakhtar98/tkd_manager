@@ -172,44 +172,7 @@ class TieSheetPainter extends CustomPainter {
     required this.includeThirdPlaceMatch,
   });
 
-  bool get _isDouble => bracketType.contains('Double');
 
-  List<MatchEntity> _getWinnersMatches() {
-    if (!_isDouble) {
-      return matches.where((m) {
-        final winRounds = matches.map((mm) => mm.roundNumber).reduce(max);
-        return !(m.roundNumber == winRounds && m.matchNumberInRound == 2);
-      }).toList();
-    }
-    final losersIds = _traceLosersIds();
-    return matches.where((m) => !losersIds.contains(m.id)).toList();
-  }
-
-  List<MatchEntity> _getLosersMatches() {
-    if (!_isDouble) return [];
-    return matches.where((m) => _traceLosersIds().contains(m.id)).toList();
-  }
-
-  Set<String> _traceLosersIds() {
-    final loserTargetIds = <String>{};
-    for (final m in matches) {
-      if (m.loserAdvancesToMatchId != null) {
-        loserTargetIds.add(m.loserAdvancesToMatchId!);
-      }
-    }
-    final result = <String>{};
-    final queue = loserTargetIds.toList();
-    while (queue.isNotEmpty) {
-      final id = queue.removeLast();
-      if (result.add(id)) {
-        final m = matches.where((match) => match.id == id).firstOrNull;
-        if (m != null && m.winnerAdvancesToMatchId != null) {
-          queue.add(m.winnerAdvancesToMatchId!);
-        }
-      }
-    }
-    return result;
-  }
 
   int _maxRound(List<MatchEntity> ms) {
     if (ms.isEmpty) return 1;
@@ -227,15 +190,6 @@ class TieSheetPainter extends CustomPainter {
     return map;
   }
 
-  double _participantY(int i, double tableTop) {
-    final pairIdx = i ~/ 2;
-    return tableTop + (i * rowH) + (pairIdx * pairGap);
-  }
-
-  double _participantCenterY(int i, double tableTop) {
-    return _participantY(i, tableTop) + rowH / 2;
-  }
-
 
   /// Compute the total height for a side's participant table using match-grouped spacing.
   double _computeMatchGroupedHeight(List<MatchEntity> r1Matches) {
@@ -251,33 +205,24 @@ class TieSheetPainter extends CustomPainter {
   }
 
   Size calculateCanvasSize() {
-    final winnersMatches = _getWinnersMatches();
-    final winRounds = _maxRound(winnersMatches);
+    // Filter out the 3rd-place match for layout computation
+    final mainMatches = matches.where((m) {
+      final maxRound = matches.map((mm) => mm.roundNumber).reduce(max);
+      return !(m.roundNumber == maxRound && m.matchNumberInRound == 2);
+    }).toList();
+    final winRounds = _maxRound(mainMatches);
 
-    double width = margin * 2 + listW + (max(0, winRounds - 1) * roundColW) * 2 + centerGap + listW;
+    final width = margin * 2 + listW + (max(0, winRounds - 1) * roundColW) * 2 + centerGap + listW;
 
-    if (_isDouble) {
-      final losersMatches = _getLosersMatches();
-      final lRounds = _maxRound(losersMatches);
-      width = margin * 2 + listW + (winRounds * roundColW) + centerGap + (lRounds * roundColW) + listW;
-    }
-
-    double tableH;
-    if (_isDouble) {
-      final nLeft = (participants.length + 1) ~/ 2;
-      final maxRows = max(2, nLeft);
-      tableH = _participantY(maxRows, 0) + rowH;
-    } else {
-      // Match-grouped height: each match contributes 1 or 2 rows, with gaps between matches
-      final winByRound = _groupByRound(winnersMatches);
-      final r1Matches = winByRound[1] ?? [];
-      final r1Count = r1Matches.length;
-      final leftR1 = r1Matches.where((m) => m.matchNumberInRound <= (r1Count + 1) ~/ 2).toList();
-      final rightR1 = r1Matches.where((m) => m.matchNumberInRound > (r1Count + 1) ~/ 2).toList();
-      final leftH = _computeMatchGroupedHeight(leftR1);
-      final rightH = _computeMatchGroupedHeight(rightR1);
-      tableH = max(leftH, rightH);
-    }
+    // Match-grouped height: each match contributes 1 or 2 rows, with gaps between matches
+    final byRound = _groupByRound(mainMatches);
+    final r1Matches = byRound[1] ?? [];
+    final r1Count = r1Matches.length;
+    final leftR1 = r1Matches.where((m) => m.matchNumberInRound <= (r1Count + 1) ~/ 2).toList();
+    final rightR1 = r1Matches.where((m) => m.matchNumberInRound > (r1Count + 1) ~/ 2).toList();
+    final leftH = _computeMatchGroupedHeight(leftR1);
+    final rightH = _computeMatchGroupedHeight(rightR1);
+    final tableH = max(leftH, rightH);
 
     final height = margin + headerH + tableH + 60 + medalH + margin;
     return Size(max(width, 700), max(height, 500));
@@ -320,43 +265,21 @@ class TieSheetPainter extends CustomPainter {
     canvas.drawLine(Offset(margin + listW, startY), Offset(size.width - margin - listW, startY), thickPen);
     final tableTop = startY + 16; // Generous gap between header and participant table
 
-    final wMatches = _getWinnersMatches();
-    final winRounds = _maxRound(wMatches);
-    final winByRound = _groupByRound(wMatches);
+    // Filter out 3rd-place match from the main bracket
+    final mainMatches = matches.where((m) {
+      final maxRound = matches.map((mm) => mm.roundNumber).reduce(max);
+      return !(m.roundNumber == maxRound && m.matchNumberInRound == 2);
+    }).toList();
 
-    if (_isDouble) {
-      // Original Double Elimination logic (Single sided winners)
-      for (var i = 0; i < participants.length; i++) {
-        _paintParticipantRow(canvas, i + 1, participants[i], margin, _participantY(i, tableTop), thickPen, mirrored: false);
-        _nodeOffsets[participants[i].id] = Offset(margin + listW, _participantCenterY(i, tableTop));
-      }
-      for (var r = 1; r <= winRounds; r++) {
-        final roundMatches = winByRound[r] ?? [];
-        final junctionX = margin + listW + (r * roundColW);
-        for (final match in roundMatches) {
-          _paintJunction(canvas, match, junctionX, thickPen, mirrored: false);
-        }
-      }
-      final lMatches = _getLosersMatches();
-      final lByRound = _groupByRound(lMatches);
-      final lRounds = _maxRound(lMatches);
-      final rightEdge = size.width - margin;
-      _paintRightSideLabels(canvas, lByRound, rightEdge, tableTop, thickPen, tableTop);
-      for (var r = 1; r <= lRounds; r++) {
-        final roundMatches = lByRound[r] ?? [];
-        final junctionX = rightEdge - (r * roundColW);
-        for (final match in roundMatches) {
-          _paintJunction(canvas, match, junctionX, thickPen, mirrored: true);
-        }
-      }
-    } else {
-      // TWO-SIDED SINGLE ELIMINATION
-      // Split R1 matches into left and right halves (match-grouped layout)
-      final r1Matches = winByRound[1] ?? [];
-      final r1Count = r1Matches.length;
-      final leftHalfCount = (r1Count + 1) ~/ 2; // integer ceil division
-      final rightEdge = size.width - margin;
-      final rightTableLeft = rightEdge - listW;
+    final winRounds = _maxRound(mainMatches);
+    final winByRound = _groupByRound(mainMatches);
+
+    // TWO-SIDED BRACKET — left half and right half meet at center final
+    final r1Matches = winByRound[1] ?? [];
+    final r1Count = r1Matches.length;
+    final leftHalfCount = (r1Count + 1) ~/ 2;
+    final rightEdge = size.width - margin;
+    final rightTableLeft = rightEdge - listW;
 
       // Special case: 2 players (1 match = direct final)
       // Put Blue participant on left, Red on right
@@ -440,10 +363,10 @@ class TieSheetPainter extends CustomPainter {
       }
       
       if (includeThirdPlaceMatch) {
-         final thirdMatch = matches.where((m) => m.roundNumber == winRounds && m.matchNumberInRound == 2).firstOrNull;
+         final maxRound = matches.map((mm) => mm.roundNumber).reduce(max);
+         final thirdMatch = matches.where((m) => m.roundNumber == maxRound && m.matchNumberInRound == 2).firstOrNull;
          if (thirdMatch != null) _paint3rdPlaceMatch(canvas, thirdMatch, thickPen, tableTop);
       }
-    }
 
     _paintMedalTable(canvas, size, thickPen);
   }
@@ -527,8 +450,8 @@ class TieSheetPainter extends CustomPainter {
     _drawText(canvas, divisionTitle.isEmpty ? 'JUNIOR' : divisionTitle, leftHeaderX + noColW + nameColW / 2, headerRowTop + 14, _normal(13), center: true);
     _drawText(canvas, categoryTitle.isEmpty ? 'BOYS' : categoryTitle, leftHeaderX + noColW + nameColW + regIdColW / 2, headerRowTop + 14, _normal(13), center: true);
 
-    // If double elimination, we could draw right side header, but currently layout assumes symmetry only if single.
-    if (!_isDouble) {
+    // Right-side header (mirrored)
+    {
       final rightHeaderX = size.width - margin - listW;
       final rRectR = RRect.fromLTRBR(rightHeaderX, headerRowTop, rightHeaderX + listW, headerRowBottom, const Radius.circular(6.0));
       canvas.drawRRect(rRectR, Paint()..color = const Color(0xFFF1F5F9)..style = PaintingStyle.fill);
@@ -700,36 +623,6 @@ class TieSheetPainter extends CustomPainter {
     matchHitAreas.add(MapEntry(match.id, Rect.fromCenter(center: output, width: roundColW * 0.6, height: max(35, (effectiveBot.dy - effectiveTop.dy).abs() + 10))));
   }
 
-  void _paintRightSideLabels(Canvas canvas, Map<int, List<MatchEntity>> losByRound, double rightEdge, double tableTop, Paint pen, double subY) {
-    // Keep double elimination right labels unmodified
-    final x = rightEdge - nameColW;
-    final bgPaint = Paint()..color = Colors.grey[200]!..style = PaintingStyle.fill;
-    canvas.drawRect(Rect.fromLTWH(x, subY, nameColW, subHeaderH), bgPaint);
-    canvas.drawRect(Rect.fromLTWH(x, subY, nameColW, subHeaderH), pen);
-    _drawText(canvas, 'NAME', x + nameColW / 2, subY + 4, _bold(10), center: true);
-
-    final r1Matches = losByRound[1] ?? [];
-    final seenIds = <String>{};
-    var idx = 0;
-
-    for (final m in r1Matches) {
-      for (final pId in [m.participantRedId, m.participantBlueId]) {
-        if (pId != null && seenIds.add(pId)) {
-          final p = _findP(pId);
-          if (p != null) {
-            final rowY = _participantY(idx, tableTop);
-            final rx = rightEdge - nameColW;
-            canvas.drawRect(Rect.fromLTWH(rx, rowY, nameColW, rowH), pen);
-            _drawText(canvas, _pName(p), rightEdge - 6, rowY + rowH / 2 - 6, _bold(11), alignRight: true);
-            final lineY = rowY + rowH / 2;
-            canvas.drawLine(Offset(rx - roundColW, lineY), Offset(rx, lineY), pen);
-            _nodeOffsets['right_${p.id}'] = Offset(rx - roundColW, lineY);
-            idx++;
-          }
-        }
-      }
-    }
-  }
 
   Offset? _resolveInputOffset(MatchEntity match, {required bool isTopSlot}) {
     // In WT Brackets: Top slot is Chung (Blue) and Bottom slot is Hong (Red).

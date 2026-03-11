@@ -298,10 +298,14 @@ class _BracketViewerScreenState extends State<BracketViewerScreen>
             .toList();
         tabs.add(const Tab(text: 'Winners Bracket'));
         tabs.add(const Tab(text: 'Losers Bracket'));
+        // Each tab renders an independent bracket tree using the standard
+        // two-sided SE layout — the viewer already splits WB/LB into tabs.
         views.add(_buildBracketView(
-            data.winnersBracket, winnersMatches, _winnersPrintKey, _winnersTransformController, allMatches, participants));
+            data.winnersBracket, winnersMatches, _winnersPrintKey, _winnersTransformController, allMatches, participants,
+            bracketTypeOverride: 'Single Elimination'));
         views.add(_buildBracketView(
-            data.losersBracket, losersMatches, _losersPrintKey, _losersTransformController, allMatches, participants));
+            data.losersBracket, losersMatches, _losersPrintKey, _losersTransformController, allMatches, participants,
+            bracketTypeOverride: 'Single Elimination'));
     }
 
     final tournamentTitle = widget.tournament?.name ?? 'Tournament';
@@ -369,8 +373,9 @@ class _BracketViewerScreenState extends State<BracketViewerScreen>
     GlobalKey printKey,
     TransformationController transformController,
     List<MatchEntity> allMatches,
-    List<ParticipantEntity> participants,
-  ) {
+    List<ParticipantEntity> participants, {
+    String? bracketTypeOverride,
+  }) {
     return InteractiveViewer(
       transformationController: transformController,
       constrained: false,
@@ -389,7 +394,7 @@ class _BracketViewerScreenState extends State<BracketViewerScreen>
                 ),
             matches: matches,
             participants: widget.participants,
-            bracketType: widget.format,
+            bracketType: bracketTypeOverride ?? widget.format,
             onMatchTap: (matchId) => _handleMatchTap(
               context,
               matchId,
