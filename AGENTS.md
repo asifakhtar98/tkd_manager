@@ -3,3 +3,4 @@ Do unit test for business logic.
 Do golden widget tests for ui.
 Always do exhaustive validation of code and files.
 i dont want any backwrd compatibility because this software is not realeased yet.
+Use verbose nomenclature everywhere for better readability.
