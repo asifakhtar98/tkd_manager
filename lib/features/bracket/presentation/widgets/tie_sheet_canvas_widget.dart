@@ -210,14 +210,15 @@ class TieSheetPainter extends CustomPainter {
 
   // ── Layout constants ───────────────────────────────────────────────────────
   static const double rowH        = 42.0;
-  static const double pairGap     = 36.0;
+  static const double rowGap      = 35.0;
+  static const double pairGap     = 100.0;
   static const double noColW      = 32.0;
   static const double nameColW    = 200.0;
   static const double regIdColW   = 120.0;
   static const double roundColW   = 170.0;
   static const double headerH     = 100.0;
   static const double subHeaderH  = 28.0;
-  static const double medalH      = 130.0;
+  static const double medalH      = 170.0;
   static const double margin      = 36.0;
   static const double centerGap   = 170.0;
   static const double sectionGap  = 50.0;
@@ -269,7 +270,9 @@ class TieSheetPainter extends CustomPainter {
     double h = 0;
     for (var i = 0; i < r1Matches.length; i++) {
       final m = r1Matches[i];
-      h += ((m.participantBlueId != null ? 1 : 0) + (m.participantRedId != null ? 1 : 0)) * rowH;
+      final rowCount = (m.participantBlueId != null ? 1 : 0) + (m.participantRedId != null ? 1 : 0);
+      h += rowCount * rowH;
+      if (rowCount == 2) h += rowGap; // gap between blue & red within the pair
       if (i < r1Matches.length - 1) h += pairGap;
     }
     return h;
@@ -797,6 +800,7 @@ class TieSheetPainter extends CustomPainter {
         _paintParticipantRow(canvas, idx, b, x, y, pen, mirrored: mirrored);
         _nodeOffsets[b.id] = Offset(nodeX, y + rowH / 2);
         y += rowH;
+        if (r != null) y += rowGap; // intra-pair gap between blue & red rows
       }
       if (r != null) {
         idx++;
@@ -958,10 +962,10 @@ class TieSheetPainter extends CustomPainter {
     final x = (size.width - _medalTableW) / 2;
     final y = size.height - medalH - margin + 10;
 
-    final accentColors = [_BracketColors.goldAccent, _BracketColors.silverAccent, _BracketColors.bronzeAccent];
-    final fills = [_Pens.fill(_BracketColors.gold), _Pens.fill(_BracketColors.silver), _Pens.fill(_BracketColors.bronze)];
+    final accentColors = [_BracketColors.goldAccent, _BracketColors.silverAccent, _BracketColors.bronzeAccent, _BracketColors.bronzeAccent];
+    final fills = [_Pens.fill(_BracketColors.gold), _Pens.fill(_BracketColors.silver), _Pens.fill(_BracketColors.bronze), _Pens.fill(_BracketColors.bronze)];
 
-    for (var row = 0; row < 3; row++) {
+    for (var row = 0; row < 4; row++) {
       final rY = y + row * (_medalRowH + 4);
 
       // ── Shadow + Card ──
@@ -993,13 +997,15 @@ class TieSheetPainter extends CustomPainter {
       const TextStyle(color: _BracketColors.goldText,   fontSize: 12, fontWeight: FontWeight.bold, fontFamily: 'Roboto'),
       const TextStyle(color: _BracketColors.silverText, fontSize: 12, fontWeight: FontWeight.bold, fontFamily: 'Roboto'),
       const TextStyle(color: _BracketColors.bronzeText, fontSize: 12, fontWeight: FontWeight.bold, fontFamily: 'Roboto'),
+      const TextStyle(color: _BracketColors.bronzeText, fontSize: 12, fontWeight: FontWeight.bold, fontFamily: 'Roboto'),
     ];
-    final labels = ['Gold', 'Silver', 'Bronze'];
-    for (var row = 0; row < 3; row++) {
+    final labels = ['Gold', 'Silver', 'Bronze', 'Bronze'];
+    for (var row = 0; row < 4; row++) {
       final rY = y + row * (_medalRowH + 4);
       _drawText(canvas, labels[row], labelX, rY + _medalRowH / 2 - 7, textStyles[row], center: true);
     }
 
+    // ── Populate winner names ──
     final allRounds = matches.map((m) => m.roundNumber).reduce(max);
     final finals    = matches.where((m) => m.roundNumber == allRounds && m.matchNumberInRound == 1).firstOrNull;
     if (finals != null && finals.winnerId != null) {
@@ -1009,10 +1015,18 @@ class TieSheetPainter extends CustomPainter {
       if (gold   != null) _drawText(canvas, _pName(gold),   x + _medalBlankW + 14, y + _medalRowH / 2 - 7, _bold(11));
       if (silver != null) _drawText(canvas, _pName(silver), x + _medalBlankW + 14, y + (_medalRowH + 4) + _medalRowH / 2 - 7, _bold(11));
     }
+    // 3rd-place match: winner = Bronze 1, loser = Bronze 2
     final thirdM = matches.where((m) => m.roundNumber == allRounds && m.matchNumberInRound == 2).firstOrNull;
-    if (thirdM?.winnerId != null) {
-      final bronze = _findP(thirdM!.winnerId);
-      if (bronze != null) _drawText(canvas, _pName(bronze), x + _medalBlankW + 14, y + 2 * (_medalRowH + 4) + _medalRowH / 2 - 7, _bold(11));
+    if (thirdM != null) {
+      if (thirdM.winnerId != null) {
+        final bronze1 = _findP(thirdM.winnerId);
+        if (bronze1 != null) _drawText(canvas, _pName(bronze1), x + _medalBlankW + 14, y + 2 * (_medalRowH + 4) + _medalRowH / 2 - 7, _bold(11));
+      }
+      final loserId = thirdM.winnerId == thirdM.participantRedId ? thirdM.participantBlueId : thirdM.participantRedId;
+      if (loserId != null) {
+        final bronze2 = _findP(loserId);
+        if (bronze2 != null) _drawText(canvas, _pName(bronze2), x + _medalBlankW + 14, y + 3 * (_medalRowH + 4) + _medalRowH / 2 - 7, _bold(11));
+      }
     }
   }
 
