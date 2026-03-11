@@ -32,6 +32,14 @@ class MatchProgressionServiceImplementation
       throw ArgumentError('Match $matchId is already completed');
     }
 
+    // F5: Validate winnerId belongs to this match.
+    if (winnerId != target.participantBlueId &&
+        winnerId != target.participantRedId) {
+      throw ArgumentError(
+        'Winner $winnerId is not a participant in match $matchId',
+      );
+    }
+
     // Determine loser.
     final loserId = _loserId(target, winnerId);
 
@@ -91,6 +99,11 @@ class MatchProgressionServiceImplementation
   /// - If the source fed the "top" input → Blue slot.
   /// - If the source fed the "bottom" input → Red slot.
   /// - Fallback: fill whichever slot is empty.
+  /// Places [participantId] into the correct slot of [intoMatchId].
+  ///
+  /// F4 fix: Uses compound sort key (roundNumber, matchNumberInRound) and
+  /// detects whether the source fed via winnerAdvancesToMatchId or
+  /// loserAdvancesToMatchId for cross-bracket routing in DE.
   void _placeParticipant({
     required Map<String, MatchEntity> byId,
     required String intoMatchId,
@@ -106,13 +119,17 @@ class MatchProgressionServiceImplementation
             m.winnerAdvancesToMatchId == intoMatchId ||
             m.loserAdvancesToMatchId == intoMatchId)
         .toList()
-      ..sort((a, b) =>
-          a.matchNumberInRound.compareTo(b.matchNumberInRound));
+      ..sort((a, b) {
+        // F4: compound sort by (roundNumber, matchNumberInRound)
+        final rCmp = a.roundNumber.compareTo(b.roundNumber);
+        if (rCmp != 0) return rCmp;
+        return a.matchNumberInRound.compareTo(b.matchNumberInRound);
+      });
 
     // Determine slot based on feeder ordering.
     bool isBlue;
     if (feeders.length >= 2) {
-      // First feeder (lower matchNumber) → Blue, second → Red.
+      // First feeder (earlier round or lower matchNumber) → Blue.
       isBlue = feeders.first.id == sourceMatchId;
     } else {
       // Single feeder or fallback: fill whichever slot is empty.
@@ -128,6 +145,11 @@ class MatchProgressionServiceImplementation
 
   /// Recursively auto-advances matches where one participant faces a bye
   /// (i.e., only one slot is filled and no feeder can provide the other).
+  ///
+  /// F3 fix: Also handles loser routing — a bye winner's "loser" slot is
+  /// phantom, so we don't route a real participant to LB but we do need the
+  /// feeder to be marked completed so downstream `_hasPendingFeeder` checks
+  /// can resolve. This is handled naturally since we mark the match completed.
   void _autoAdvanceByes(Map<String, MatchEntity> byId, {required int depth}) {
     if (depth >= _maxByeDepth) return;
 
@@ -136,14 +158,22 @@ class MatchProgressionServiceImplementation
       final m = byId[matchId]!;
       if (m.status == MatchStatus.completed) continue;
 
-      // Check if both inputs are now "decided" (all feeders completed).
       final hasBlue = m.participantBlueId != null;
       final hasRed = m.participantRedId != null;
 
+      // Both slots empty + no pending feeders → phantom match, mark completed.
+      if (!hasBlue && !hasRed && !_hasPendingFeeder(byId, matchId)) {
+        byId[matchId] = m.copyWith(
+          status: MatchStatus.completed,
+          resultType: MatchResultType.bye,
+          completedAtTimestamp: DateTime.now(),
+        );
+        changed = true;
+        continue;
+      }
+
       if (hasBlue && !hasRed) {
-        // Check if the red slot can still be filled by a pending feeder.
         if (!_hasPendingFeeder(byId, matchId)) {
-          // Auto-advance blue as winner.
           final now = DateTime.now();
           byId[matchId] = m.copyWith(
             winnerId: m.participantBlueId,
@@ -151,7 +181,6 @@ class MatchProgressionServiceImplementation
             resultType: MatchResultType.bye,
             completedAtTimestamp: now,
           );
-          // Advance to next.
           if (m.winnerAdvancesToMatchId != null) {
             _placeParticipant(
               byId: byId,
@@ -160,6 +189,8 @@ class MatchProgressionServiceImplementation
               sourceMatchId: matchId,
             );
           }
+          // F3: loserAdvancesToMatchId is not routed (no real loser in a bye)
+          // but marking this match completed resolves downstream pending checks.
           changed = true;
         }
       } else if (!hasBlue && hasRed) {

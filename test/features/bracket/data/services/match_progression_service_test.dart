@@ -372,5 +372,117 @@ void main() {
         expect(r2.participantRedId, isNotNull);
       });
     });
+
+    // ─────────────────────────────────────────────────────────────
+    // F5: winnerId validation
+    // ─────────────────────────────────────────────────────────────
+    group('winnerId validation (F5)', () {
+      test('throws when winnerId is not a participant in the match', () {
+        final result = generator.generate(
+          divisionId: 'd1',
+          participantIds: makeIds(4),
+          bracketId: 'b1',
+        );
+        final r1 = result.matches
+            .where((m) => m.roundNumber == 1)
+            .toList()
+          ..sort(
+              (a, b) => a.matchNumberInRound.compareTo(b.matchNumberInRound));
+        final match = r1.first; // p1 vs p4
+
+        expect(
+          () => service.recordResult(
+            matches: result.matches,
+            matchId: match.id,
+            winnerId: 'p999', // Not in this match
+          ),
+          throwsA(isA<ArgumentError>().having(
+            (e) => e.message.toString(),
+            'message',
+            contains('not a participant'),
+          )),
+        );
+      });
+
+      test('succeeds when winnerId is a valid participant', () {
+        final result = generator.generate(
+          divisionId: 'd1',
+          participantIds: makeIds(4),
+          bracketId: 'b1',
+        );
+        final r1 = result.matches
+            .where((m) => m.roundNumber == 1)
+            .toList()
+          ..sort(
+              (a, b) => a.matchNumberInRound.compareTo(b.matchNumberInRound));
+        final match = r1.first; // p1 vs p4
+
+        final updated = service.recordResult(
+          matches: result.matches,
+          matchId: match.id,
+          winnerId: match.participantRedId!,
+        );
+
+        final m = updated.firstWhere((m) => m.id == match.id);
+        expect(m.winnerId, match.participantRedId);
+      });
+    });
+
+    // ─────────────────────────────────────────────────────────────
+    // F3: phantom auto-advance (empty slot matches)
+    // ─────────────────────────────────────────────────────────────
+    group('phantom auto-advance (F3)', () {
+      test('auto-completes a match with both slots empty and no pending feeders', () {
+        final now = DateTime.now();
+        // Create a minimal match chain: R1 completed bye → R2 has one slot
+        // + an unreachable second feeder → should auto-advance
+        final matches = [
+          MatchEntity(
+            id: 'm1',
+            bracketId: 'b',
+            roundNumber: 1,
+            matchNumberInRound: 1,
+            createdAtTimestamp: now,
+            updatedAtTimestamp: now,
+            status: MatchStatus.completed,
+            resultType: MatchResultType.bye,
+            winnerId: 'p1',
+            participantBlueId: 'p1',
+            winnerAdvancesToMatchId: 'm3',
+          ),
+          MatchEntity(
+            id: 'm2',
+            bracketId: 'b',
+            roundNumber: 1,
+            matchNumberInRound: 2,
+            createdAtTimestamp: now,
+            updatedAtTimestamp: now,
+            participantBlueId: 'p2',
+            participantRedId: 'p3',
+            winnerAdvancesToMatchId: 'm3',
+          ),
+          MatchEntity(
+            id: 'm3',
+            bracketId: 'b',
+            roundNumber: 2,
+            matchNumberInRound: 1,
+            createdAtTimestamp: now,
+            updatedAtTimestamp: now,
+            participantBlueId: 'p1', // From m1 bye
+          ),
+        ];
+
+        // Score m2 → should advance winner to m3
+        final updated = service.recordResult(
+          matches: matches,
+          matchId: 'm2',
+          winnerId: 'p2',
+        );
+
+        final m3 = updated.firstWhere((m) => m.id == 'm3');
+        expect(m3.participantBlueId, 'p1');
+        expect(m3.participantRedId, 'p2');
+      });
+    });
   });
 }

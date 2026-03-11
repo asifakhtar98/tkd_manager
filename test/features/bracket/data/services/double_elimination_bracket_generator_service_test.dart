@@ -920,5 +920,100 @@ void main() {
         expect(lbByRound[6], 1);
       });
     });
+
+    // ─────────────────────────────────────────────────────────────
+    // F1: Grand Finals bracketId isolation
+    // ─────────────────────────────────────────────────────────────
+    group('grand finals bracketId (F1)', () {
+      test('GF match has bracketId distinct from WB and LB', () {
+        final result = service.generate(
+          divisionId: 'd1',
+          participantIds: makeIds(4),
+          winnersBracketId: 'wb1',
+          losersBracketId: 'lb1',
+        );
+        final gf = result.grandFinalsMatch;
+        expect(gf.bracketId, isNot('wb1'));
+        expect(gf.bracketId, isNot('lb1'));
+        expect(gf.bracketId, startsWith('gf_'));
+      });
+
+      test('Reset match has same bracketId as grand finals', () {
+        final result = service.generate(
+          divisionId: 'd1',
+          participantIds: makeIds(4),
+          winnersBracketId: 'wb1',
+          losersBracketId: 'lb1',
+          includeResetMatch: true,
+        );
+        expect(result.resetMatch, isNotNull);
+        expect(result.resetMatch!.bracketId, result.grandFinalsMatch.bracketId);
+      });
+
+      test('GF/Reset are not counted as WB or LB matches by bracketId filter', () {
+        final result = service.generate(
+          divisionId: 'd1',
+          participantIds: makeIds(8),
+          winnersBracketId: 'wb1',
+          losersBracketId: 'lb1',
+        );
+
+        final wbMatches = result.allMatches
+            .where((m) => m.bracketId == 'wb1')
+            .toList();
+        final lbMatches = result.allMatches
+            .where((m) => m.bracketId == 'lb1')
+            .toList();
+        final gfMatches = result.allMatches
+            .where((m) => m.bracketId != 'wb1' && m.bracketId != 'lb1')
+            .toList();
+
+        // GF matches should only be grand finals + optional reset
+        expect(gfMatches.length, greaterThanOrEqualTo(1));
+        expect(gfMatches.length, lessThanOrEqualTo(2));
+
+        // WB + LB + GF should equal total
+        expect(wbMatches.length + lbMatches.length + gfMatches.length,
+            result.allMatches.length);
+      });
+    });
+
+    // ─────────────────────────────────────────────────────────────
+    // Edge case: n=3
+    // ─────────────────────────────────────────────────────────────
+    group('3 players', () {
+      test('generates valid bracket structure', () {
+        final result = service.generate(
+          divisionId: 'd1',
+          participantIds: makeIds(3),
+          winnersBracketId: 'wb1',
+          losersBracketId: 'lb1',
+        );
+        expect(result.winnersBracket.totalRounds, 2);
+        expect(result.losersBracket.totalRounds, 2);
+        // Should have WB, LB, and GF matches
+        expect(result.allMatches.length, greaterThan(3));
+      });
+
+      test('seeding assigns participants correctly with 1 bye', () {
+        final result = service.generate(
+          divisionId: 'd1',
+          participantIds: makeIds(3),
+          winnersBracketId: 'wb1',
+          losersBracketId: 'lb1',
+        );
+
+        final r1 = result.allMatches
+            .where((m) => m.bracketId == 'wb1' && m.roundNumber == 1)
+            .toList();
+
+        // Should have 2 R1 matches, one with a bye
+        expect(r1.length, 2);
+
+        final byeMatches = r1.where(
+            (m) => m.resultType == MatchResultType.bye).toList();
+        expect(byeMatches.length, 1);
+      });
+    });
   });
 }

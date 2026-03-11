@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tkd_saas/core/di/injection.dart';
+import 'package:tkd_saas/features/bracket/presentation/widgets/tie_sheet_canvas_widget.dart';
 import 'package:tkd_saas/main.dart' as app;
 
 void main() {
@@ -166,13 +167,14 @@ void main() {
       await addPlayers(tester, fourPlayers);
       await tapGenerate(tester);
       expect(find.textContaining('Double Elimination'), findsOneWidget);
-      expect(find.text('Winners Bracket'), findsOneWidget);
-      expect(find.text('Losers Bracket'), findsOneWidget);
+      // Single-canvas layout: WB/LB labels painted on canvas, not Text widgets.
+      // Verify TieSheetCanvasWidget is rendered.
+      expect(find.byType(TieSheetCanvasWidget), findsOneWidget);
 
       await goBack(tester);
     });
 
-    testWidgets('2b. Tab switching between Winners and Losers brackets', (
+    testWidgets('2b. Single-canvas DE bracket renders with InteractiveViewer', (
       tester,
     ) async {
       await navigateToSetup(tester);
@@ -189,12 +191,9 @@ void main() {
       await addPlayers(tester, fourPlayers);
       await tapGenerate(tester);
 
-      expect(find.text('Winners Bracket'), findsOneWidget);
-      expect(find.text('Losers Bracket'), findsOneWidget);
-
-      final losersTab = find.text('Losers Bracket');
-      await tester.tap(losersTab);
-      await tester.pumpAndSettle();
+      // DE uses single-canvas layout with no tabs.
+      expect(find.byType(TieSheetCanvasWidget), findsOneWidget);
+      expect(find.byType(InteractiveViewer), findsOneWidget);
 
       await goBack(tester);
     });
@@ -514,7 +513,8 @@ void main() {
         await tapGenerate(tester);
 
         expect(find.textContaining('Double Elimination'), findsOneWidget);
-        expect(find.text('Winners Bracket'), findsOneWidget);
+        // Single-canvas layout: WB/LB labels painted on canvas, verify widget.
+        expect(find.byType(TieSheetCanvasWidget), findsOneWidget);
 
         final refreshButton = find.byIcon(Icons.refresh);
         await tester.tap(refreshButton);

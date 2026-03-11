@@ -15,6 +15,8 @@ class TieSheetCanvasWidget extends StatefulWidget {
   final void Function(String matchId) onMatchTap;
   final GlobalKey printKey;
   final bool includeThirdPlaceMatch;
+  final String? winnersBracketId;
+  final String? losersBracketId;
 
   const TieSheetCanvasWidget({
     super.key,
@@ -25,6 +27,8 @@ class TieSheetCanvasWidget extends StatefulWidget {
     required this.onMatchTap,
     required this.printKey,
     required this.includeThirdPlaceMatch,
+    this.winnersBracketId,
+    this.losersBracketId,
   });
 
   @override
@@ -66,6 +70,8 @@ class _TieSheetCanvasWidgetState extends State<TieSheetCanvasWidget> {
     participants: widget.participants,
     bracketType: widget.bracketType,
     includeThirdPlaceMatch: widget.includeThirdPlaceMatch,
+    winnersBracketId: widget.winnersBracketId,
+    losersBracketId: widget.losersBracketId,
   );
 
   @override
@@ -145,22 +151,26 @@ class TieSheetPainter extends CustomPainter {
   final List<ParticipantEntity> participants;
   final String bracketType;
   final bool includeThirdPlaceMatch;
+  final String? winnersBracketId;
+  final String? losersBracketId;
 
   final List<MapEntry<String, Rect>> matchHitAreas = [];
   final Map<String, int> _matchGlobalNumbers = {};
   final Map<String, Offset> _nodeOffsets = {};
 
   static const double rowH = 48.0;
-  static const double pairGap = 42.0;
+  static const double pairGap = 50.0;
   static const double noColW = 36.0;
   static const double nameColW = 210.0;
   static const double regIdColW = 130.0;
-  static const double roundColW = 150.0;
+  static const double roundColW = 160.0;
   static const double headerH = 110.0;
   static const double subHeaderH = 24.0;
   static const double medalH = 120.0;
   static const double margin = 30.0;
-  static const double centerGap = 80.0;
+  static const double centerGap = 160.0;
+  static const double sectionGap = 60.0;
+  static const double sectionLabelH = 36.0;
 
   static double get listW => noColW + nameColW + regIdColW;
 
@@ -170,9 +180,11 @@ class TieSheetPainter extends CustomPainter {
     required this.participants,
     required this.bracketType,
     required this.includeThirdPlaceMatch,
+    this.winnersBracketId,
+    this.losersBracketId,
   });
 
-
+  bool get _isDouble => winnersBracketId != null && losersBracketId != null;
 
   int _maxRound(List<MatchEntity> ms) {
     if (ms.isEmpty) return 1;
@@ -191,8 +203,8 @@ class TieSheetPainter extends CustomPainter {
   }
 
 
-  /// Compute the total height for a side's participant table using match-grouped spacing.
-  double _computeMatchGroupedHeight(List<MatchEntity> r1Matches) {
+  /// Compute one-sided height: all R1 matches stacked vertically.
+  double _computeOneSidedHeight(List<MatchEntity> r1Matches) {
     double h = 0;
     for (var i = 0; i < r1Matches.length; i++) {
       final m = r1Matches[i];
@@ -205,6 +217,11 @@ class TieSheetPainter extends CustomPainter {
   }
 
   Size calculateCanvasSize() {
+    if (_isDouble) return _calculateDECanvasSize();
+    return _calculateSECanvasSize();
+  }
+
+  Size _calculateSECanvasSize() {
     // Filter out the 3rd-place match for layout computation
     final mainMatches = matches.where((m) {
       final maxRound = matches.map((mm) => mm.roundNumber).reduce(max);
@@ -214,17 +231,42 @@ class TieSheetPainter extends CustomPainter {
 
     final width = margin * 2 + listW + (max(0, winRounds - 1) * roundColW) * 2 + centerGap + listW;
 
-    // Match-grouped height: each match contributes 1 or 2 rows, with gaps between matches
+    // Match-grouped height
     final byRound = _groupByRound(mainMatches);
     final r1Matches = byRound[1] ?? [];
     final r1Count = r1Matches.length;
     final leftR1 = r1Matches.where((m) => m.matchNumberInRound <= (r1Count + 1) ~/ 2).toList();
     final rightR1 = r1Matches.where((m) => m.matchNumberInRound > (r1Count + 1) ~/ 2).toList();
-    final leftH = _computeMatchGroupedHeight(leftR1);
-    final rightH = _computeMatchGroupedHeight(rightR1);
+    final leftH = _computeOneSidedHeight(leftR1);
+    final rightH = _computeOneSidedHeight(rightR1);
     final tableH = max(leftH, rightH);
 
     final height = margin + headerH + tableH + 60 + medalH + margin;
+    return Size(max(width, 700), max(height, 500));
+  }
+
+  Size _calculateDECanvasSize() {
+    final wbMatches = matches.where((m) => m.bracketId == winnersBracketId).toList();
+    final lbMatches = matches.where((m) => m.bracketId == losersBracketId).toList();
+    final gfMatches = matches.where((m) => m.bracketId != winnersBracketId && m.bracketId != losersBracketId).toList();
+    final wbRounds = _maxRound(wbMatches);
+    final lbRounds = _maxRound(lbMatches);
+
+    final maxRounds = max(wbRounds, lbRounds);
+    // One-sided: participants on left, tree flows right, GF + Reset at far right
+    final gfColumns = gfMatches.isEmpty ? 0 : gfMatches.length; // 1 for GF, 2 if Reset
+    final width = margin * 2 + listW + (maxRounds * roundColW) + (gfColumns * roundColW) + 100;
+
+    final wbByRound = _groupByRound(wbMatches);
+    final lbByRound = _groupByRound(lbMatches);
+    final wbR1 = wbByRound[1] ?? [];
+    final lbR1 = lbByRound[1] ?? [];
+    final wbH = _computeOneSidedHeight(wbR1);
+    // LB R1 participants are unknown at generation time (they drop in from WB).
+    // Use match count × 2 rows to allocate space for empty slots.
+    final lbH = lbR1.isEmpty ? 80 : (lbR1.length * 2 * rowH + (lbR1.length - 1) * pairGap);
+
+    final height = margin + headerH + sectionLabelH + wbH + sectionGap + sectionLabelH + lbH + 60 + medalH + margin;
     return Size(max(width, 700), max(height, 500));
   }
 
@@ -255,15 +297,28 @@ class TieSheetPainter extends CustomPainter {
       ..strokeCap = StrokeCap.square
       ..style = PaintingStyle.stroke;
 
+    if (_isDouble) {
+      _paintDE(canvas, size, thickPen);
+    } else {
+      _paintSE(canvas, size, thickPen);
+    }
+
+    _paintMedalTable(canvas, size, thickPen);
+  }
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // SINGLE ELIMINATION — Two-sided bracket (left/right → center final)
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  void _paintSE(Canvas canvas, Size size, Paint thickPen) {
     final nameTitleText = tournament.divisionLabel.toUpperCase();
     final divisionTitleText = tournament.categoryLabel.toUpperCase();
 
     double startY = margin;
     startY = _paintHeader(canvas, size, startY, thickPen, divisionTitleText, nameTitleText);
 
-    // Draw a connecting horizontal line below the header
     canvas.drawLine(Offset(margin + listW, startY), Offset(size.width - margin - listW, startY), thickPen);
-    final tableTop = startY + 16; // Generous gap between header and participant table
+    final tableTop = startY + 16;
 
     // Filter out 3rd-place match from the main bracket
     final mainMatches = matches.where((m) {
@@ -274,145 +329,339 @@ class TieSheetPainter extends CustomPainter {
     final winRounds = _maxRound(mainMatches);
     final winByRound = _groupByRound(mainMatches);
 
-    // TWO-SIDED BRACKET — left half and right half meet at center final
     final r1Matches = winByRound[1] ?? [];
     final r1Count = r1Matches.length;
     final leftHalfCount = (r1Count + 1) ~/ 2;
     final rightEdge = size.width - margin;
     final rightTableLeft = rightEdge - listW;
 
-      // Special case: 2 players (1 match = direct final)
-      // Put Blue participant on left, Red on right
-      if (r1Count == 1 && winRounds == 1) {
-        final match = r1Matches.first;
-        final b = _findP(match.participantBlueId);
-        final r = _findP(match.participantRedId);
+    // Special case: 2 players (1 match = direct final)
+    if (r1Count == 1 && winRounds == 1) {
+      final match = r1Matches.first;
+      final b = _findP(match.participantBlueId);
+      final r = _findP(match.participantRedId);
+      if (b != null) {
+        _paintParticipantRow(canvas, 1, b, margin, tableTop, thickPen, mirrored: false);
+        _nodeOffsets[b.id] = Offset(margin + listW, tableTop + rowH / 2);
+      }
+      if (r != null) {
+        _paintParticipantRow(canvas, 1, r, rightTableLeft, tableTop, thickPen, mirrored: true);
+        _nodeOffsets[r.id] = Offset(rightTableLeft, tableTop + rowH / 2);
+      }
+    } else {
+      final leftR1Matches = r1Matches.where((m) => m.matchNumberInRound <= leftHalfCount).toList();
+      final rightR1Matches = r1Matches.where((m) => m.matchNumberInRound > leftHalfCount).toList();
+
+      // Left participant table
+      var leftIdx = 0;
+      double leftY = tableTop;
+      for (final m in leftR1Matches) {
+        final b = _findP(m.participantBlueId);
+        final r = _findP(m.participantRedId);
         if (b != null) {
-          _paintParticipantRow(canvas, 1, b, margin, tableTop, thickPen, mirrored: false);
-          _nodeOffsets[b.id] = Offset(margin + listW, tableTop + rowH / 2);
+          leftIdx++;
+          _paintParticipantRow(canvas, leftIdx, b, margin, leftY, thickPen, mirrored: false);
+          _nodeOffsets[b.id] = Offset(margin + listW, leftY + rowH / 2);
+          leftY += rowH;
         }
         if (r != null) {
-          _paintParticipantRow(canvas, 1, r, rightTableLeft, tableTop, thickPen, mirrored: true);
-          _nodeOffsets[r.id] = Offset(rightTableLeft, tableTop + rowH / 2);
+          leftIdx++;
+          _paintParticipantRow(canvas, leftIdx, r, margin, leftY, thickPen, mirrored: false);
+          _nodeOffsets[r.id] = Offset(margin + listW, leftY + rowH / 2);
+          leftY += rowH;
         }
+        leftY += pairGap;
+      }
+
+      // Right participant table
+      var rightIdx = 0;
+      double rightY = tableTop;
+      for (final m in rightR1Matches) {
+        final b = _findP(m.participantBlueId);
+        final r = _findP(m.participantRedId);
+        if (b != null) {
+          rightIdx++;
+          _paintParticipantRow(canvas, rightIdx, b, rightTableLeft, rightY, thickPen, mirrored: true);
+          _nodeOffsets[b.id] = Offset(rightTableLeft, rightY + rowH / 2);
+          rightY += rowH;
+        }
+        if (r != null) {
+          rightIdx++;
+          _paintParticipantRow(canvas, rightIdx, r, rightTableLeft, rightY, thickPen, mirrored: true);
+          _nodeOffsets[r.id] = Offset(rightTableLeft, rightY + rowH / 2);
+          rightY += rowH;
+        }
+        rightY += pairGap;
+      }
+    }
+
+    // Draw tree
+    for (var r = 1; r <= winRounds; r++) {
+      final roundMatches = winByRound[r] ?? [];
+      final c = roundMatches.length;
+      for (final match in roundMatches) {
+        if (r == winRounds) {
+          final junctionX = size.width / 2;
+          _paintCenterFinalJunction(canvas, match, junctionX, thickPen);
+        } else {
+          bool isLeft = match.matchNumberInRound <= (c + 1) ~/ 2;
+          final junctionX = isLeft
+              ? margin + listW + (r * roundColW)
+              : rightEdge - listW - (r * roundColW);
+          _paintJunction(canvas, match, junctionX, thickPen, mirrored: !isLeft);
+        }
+      }
+    }
+
+    if (includeThirdPlaceMatch) {
+      final maxRound = matches.map((mm) => mm.roundNumber).reduce(max);
+      final thirdMatch = matches.where((m) => m.roundNumber == maxRound && m.matchNumberInRound == 2).firstOrNull;
+      if (thirdMatch != null) _paint3rdPlaceMatch(canvas, thirdMatch, thickPen, tableTop);
+    }
+  }
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // DOUBLE ELIMINATION — WB on top, LB below, Grand Finals at far right
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  void _paintDE(Canvas canvas, Size size, Paint thickPen) {
+    final nameTitleText = tournament.divisionLabel.toUpperCase();
+    final divisionTitleText = tournament.categoryLabel.toUpperCase();
+
+    double startY = margin;
+    startY = _paintHeader(canvas, size, startY, thickPen, divisionTitleText, nameTitleText, showRightHeader: false);
+
+    final wbMatches = matches.where((m) => m.bracketId == winnersBracketId).toList();
+    final lbMatches = matches.where((m) => m.bracketId == losersBracketId).toList();
+    // Grand Finals = matches that belong to neither WB nor LB
+    final gfMatches = matches.where((m) => m.bracketId != winnersBracketId && m.bracketId != losersBracketId).toList();
+
+    final wbRounds = _maxRound(wbMatches);
+    final lbRounds = _maxRound(lbMatches);
+    final wbByRound = _groupByRound(wbMatches);
+    final lbByRound = _groupByRound(lbMatches);
+
+    // ── WINNERS BRACKET SECTION ──
+    _paintSectionLabel(canvas, 'WINNERS BRACKET', margin, startY, size.width - margin * 2, thickPen, const Color(0xFF2563EB));
+    var wbTableTop = startY + sectionLabelH + 8;
+
+    // Paint WB participants (one-sided, left to right)
+    final wbR1 = wbByRound[1] ?? [];
+    var wbIdx = 0;
+    double wbY = wbTableTop;
+    for (final m in wbR1) {
+      final b = _findP(m.participantBlueId);
+      final r = _findP(m.participantRedId);
+      if (b != null) {
+        wbIdx++;
+        _paintParticipantRow(canvas, wbIdx, b, margin, wbY, thickPen, mirrored: false);
+        _nodeOffsets[b.id] = Offset(margin + listW, wbY + rowH / 2);
+        wbY += rowH;
+      }
+      if (r != null) {
+        wbIdx++;
+        _paintParticipantRow(canvas, wbIdx, r, margin, wbY, thickPen, mirrored: false);
+        _nodeOffsets[r.id] = Offset(margin + listW, wbY + rowH / 2);
+        wbY += rowH;
+      }
+      wbY += pairGap;
+    }
+
+    // Paint WB tree
+    for (var r = 1; r <= wbRounds; r++) {
+      final roundMatches = wbByRound[r] ?? [];
+      final junctionX = margin + listW + (r * roundColW);
+      for (final match in roundMatches) {
+        _paintJunction(canvas, match, junctionX, thickPen, mirrored: false);
+      }
+    }
+
+    // ── LOSERS BRACKET SECTION ──
+    final wbH = _computeOneSidedHeight(wbR1);
+    final lbSectionTop = wbTableTop + wbH + sectionGap;
+    _paintSectionLabel(canvas, 'LOSERS BRACKET', margin, lbSectionTop, size.width - margin * 2, thickPen, const Color(0xFFDC2626));
+    var lbTableTop = lbSectionTop + sectionLabelH + 8;
+
+    // Paint LB participants (one-sided, left to right)
+    // LB R1 slots are often empty at generation time (participants drop in from WB).
+    // Render TBD placeholder rows for empty slots.
+    final lbR1 = lbByRound[1] ?? [];
+    var lbIdx = 0;
+    double lbY = lbTableTop;
+    for (final m in lbR1) {
+      final b = _findP(m.participantBlueId);
+      final r = _findP(m.participantRedId);
+
+      // Blue slot
+      lbIdx++;
+      if (b != null) {
+        _paintParticipantRow(canvas, lbIdx, b, margin, lbY, thickPen, mirrored: false);
+        _nodeOffsets[b.id] = Offset(margin + listW, lbY + rowH / 2);
       } else {
-        final leftR1Matches = r1Matches.where((m) => m.matchNumberInRound <= leftHalfCount).toList();
-        final rightR1Matches = r1Matches.where((m) => m.matchNumberInRound > leftHalfCount).toList();
-
-        // Draw Left Participant Table — grouped by match, Blue (top) then Red (bottom)
-        var leftIdx = 0;
-        double leftY = tableTop;
-        for (final m in leftR1Matches) {
-          final b = _findP(m.participantBlueId);
-          final r = _findP(m.participantRedId);
-          if (b != null) {
-            leftIdx++;
-            _paintParticipantRow(canvas, leftIdx, b, margin, leftY, thickPen, mirrored: false);
-            _nodeOffsets[b.id] = Offset(margin + listW, leftY + rowH / 2);
-            leftY += rowH;
-          }
-          if (r != null) {
-            leftIdx++;
-            _paintParticipantRow(canvas, leftIdx, r, margin, leftY, thickPen, mirrored: false);
-            _nodeOffsets[r.id] = Offset(margin + listW, leftY + rowH / 2);
-            leftY += rowH;
-          }
-          leftY += pairGap;
-        }
-
-        // Draw Right Participant Table — grouped by match, Blue (top) then Red (bottom)
-        var rightIdx = 0;
-        double rightY = tableTop;
-        for (final m in rightR1Matches) {
-          final b = _findP(m.participantBlueId);
-          final r = _findP(m.participantRedId);
-          if (b != null) {
-            rightIdx++;
-            _paintParticipantRow(canvas, rightIdx, b, rightTableLeft, rightY, thickPen, mirrored: true);
-            _nodeOffsets[b.id] = Offset(rightTableLeft, rightY + rowH / 2);
-            rightY += rowH;
-          }
-          if (r != null) {
-            rightIdx++;
-            _paintParticipantRow(canvas, rightIdx, r, rightTableLeft, rightY, thickPen, mirrored: true);
-            _nodeOffsets[r.id] = Offset(rightTableLeft, rightY + rowH / 2);
-            rightY += rowH;
-          }
-          rightY += pairGap;
-        }
+        _paintTbdRow(canvas, lbIdx, margin, lbY, thickPen);
+        // Store a node offset keyed by match-blue so junctions can connect
+        _nodeOffsets['${m.id}_blue'] = Offset(margin + listW, lbY + rowH / 2);
       }
+      lbY += rowH;
 
-      // Draw Tree
-      for (var r = 1; r <= winRounds; r++) {
-        final roundMatches = winByRound[r] ?? [];
-        final c = roundMatches.length;
-
-        for (final match in roundMatches) {
-          if (r == winRounds) {
-            // Final Match is in the center
-            final junctionX = size.width / 2;
-            _paintCenterFinalJunction(canvas, match, junctionX, thickPen);
-          } else {
-            bool isLeft = match.matchNumberInRound <= (c + 1) ~/ 2;
-            final junctionX = isLeft 
-               ? margin + listW + (r * roundColW)
-               : rightEdge - listW - (r * roundColW);
-            _paintJunction(canvas, match, junctionX, thickPen, mirrored: !isLeft);
-          }
-        }
+      // Red slot
+      lbIdx++;
+      if (r != null) {
+        _paintParticipantRow(canvas, lbIdx, r, margin, lbY, thickPen, mirrored: false);
+        _nodeOffsets[r.id] = Offset(margin + listW, lbY + rowH / 2);
+      } else {
+        _paintTbdRow(canvas, lbIdx, margin, lbY, thickPen);
+        _nodeOffsets['${m.id}_red'] = Offset(margin + listW, lbY + rowH / 2);
       }
-      
-      if (includeThirdPlaceMatch) {
-         final maxRound = matches.map((mm) => mm.roundNumber).reduce(max);
-         final thirdMatch = matches.where((m) => m.roundNumber == maxRound && m.matchNumberInRound == 2).firstOrNull;
-         if (thirdMatch != null) _paint3rdPlaceMatch(canvas, thirdMatch, thickPen, tableTop);
-      }
+      lbY += rowH;
 
-    _paintMedalTable(canvas, size, thickPen);
+      lbY += pairGap;
+    }
+
+    // Paint LB tree
+    for (var r = 1; r <= lbRounds; r++) {
+      final roundMatches = lbByRound[r] ?? [];
+      final junctionX = margin + listW + (r * roundColW);
+      for (final match in roundMatches) {
+        _paintJunction(canvas, match, junctionX, thickPen, mirrored: false);
+      }
+    }
+
+    // ── GRAND FINALS ──
+    if (gfMatches.isNotEmpty) {
+      final gfX = margin + listW + (max(wbRounds, lbRounds) * roundColW) + roundColW;
+      // Grand Final Game 1
+      final gf1 = gfMatches.first;
+      final wbChampOffset = _nodeOffsets[gf1.participantBlueId] ?? _nodeOffsets[gf1.id];
+      final lbChampOffset = _nodeOffsets[gf1.participantRedId] ?? _nodeOffsets[gf1.id];
+
+      final gfTopY = wbChampOffset?.dy ?? (wbTableTop + wbH / 2);
+      final gfBotY = lbChampOffset?.dy ?? (lbTableTop + 50);
+      final gfMidY = (gfTopY + gfBotY) / 2;
+
+      _nodeOffsets[gf1.id] = Offset(gfX, gfMidY);
+      _paintGrandFinalNode(canvas, gf1, gfX, gfTopY, gfBotY, thickPen, 'GRAND FINAL');
+
+      // Reset Match (Game 2) if present
+      if (gfMatches.length > 1) {
+        final gf2 = gfMatches[1];
+        final resetX = gfX + roundColW;
+        final resetMidY = gfMidY;
+        _nodeOffsets[gf2.id] = Offset(resetX, resetMidY);
+        // Output line from GF1 to reset
+        canvas.drawLine(Offset(gfX, gfMidY), Offset(resetX, resetMidY), thickPen);
+        _paintGrandFinalNode(canvas, gf2, resetX, gfMidY - 25, gfMidY + 25, thickPen, 'RESET');
+      }
+    }
+  }
+
+  void _paintSectionLabel(Canvas canvas, String label, double x, double y, double width, Paint pen, Color color) {
+    final rect = RRect.fromLTRBR(x, y, x + width, y + sectionLabelH, const Radius.circular(6));
+    canvas.drawRRect(rect, Paint()..color = color.withValues(alpha: 0.1)..style = PaintingStyle.fill);
+    canvas.drawRRect(rect, Paint()..color = color..strokeWidth = 1.5..style = PaintingStyle.stroke);
+    _drawText(canvas, label, x + width / 2, y + 8, TextStyle(color: color, fontSize: 14, fontWeight: FontWeight.bold, fontFamily: 'Roboto'), center: true);
+  }
+
+  void _paintGrandFinalNode(Canvas canvas, MatchEntity match, double x, double topY, double botY, Paint pen, String label) {
+    final pendingPen = Paint()..color = const Color(0xFFD1D5DB)..strokeWidth = 1.0..style = PaintingStyle.stroke;
+    final winnerPen = Paint()..color = const Color(0xFF1F2937)..strokeWidth = 2.0..strokeCap = StrokeCap.round..style = PaintingStyle.stroke;
+    final midY = (topY + botY) / 2;
+
+    // Vertical connecting bar
+    canvas.drawLine(Offset(x, topY), Offset(x, botY), pen);
+    // Horizontal arms from tree outputs
+    final topIn = _resolveInputOffset(match, isTopSlot: true);
+    final botIn = _resolveInputOffset(match, isTopSlot: false);
+    if (topIn != null) canvas.drawLine(topIn, Offset(x, topY), (match.participantBlueId != null) ? winnerPen : pendingPen);
+    if (botIn != null) canvas.drawLine(botIn, Offset(x, botY), (match.participantRedId != null) ? winnerPen : pendingPen);
+
+    // Output line
+    canvas.drawLine(Offset(x, midY), Offset(x + 40, midY), (match.winnerId != null) ? winnerPen : pendingPen);
+
+    // Label
+    _drawText(canvas, label, x, topY - 20, _bold(10), center: true);
+    _drawBadge(canvas, 'B', const Color(0xFF3B82F6), x + 16, topY - 6);
+    _drawBadge(canvas, 'R', const Color(0xFFEF4444), x + 16, botY + 14);
+
+    final gNum = _matchGlobalNumbers[match.id];
+    if (gNum != null) {
+      _drawText(canvas, '$gNum', x + 18, midY - 7, _bold(11));
+    }
+
+    if (match.winnerId != null) {
+      final w = _findP(match.winnerId);
+      if (w != null) _drawText(canvas, _pName(w), x + 45, midY - 6, _bold(9));
+    }
+
+    matchHitAreas.add(MapEntry(match.id, Rect.fromCenter(center: Offset(x, midY), width: roundColW * 0.6, height: max(35, (botY - topY).abs() + 10))));
   }
   
   void _paintCenterFinalJunction(Canvas canvas, MatchEntity match, double junctionX, Paint pen) {
     if (match.resultType == MatchResultType.bye) return;
 
+    final pendingPen = Paint()..color = const Color(0xFFD1D5DB)..strokeWidth = 1.0..style = PaintingStyle.stroke;
+    final winnerPen = Paint()..color = const Color(0xFF1F2937)..strokeWidth = 2.0..strokeCap = StrokeCap.round..style = PaintingStyle.stroke;
+
     final topIn = _resolveInputOffset(match, isTopSlot: true);
     final botIn = _resolveInputOffset(match, isTopSlot: false);
 
     if (topIn != null && botIn != null) {
-      // Draw from Left to Center
-      canvas.drawLine(topIn, Offset(junctionX, topIn.dy), pen);
-      // Draw from Right to Center
-      canvas.drawLine(botIn, Offset(junctionX, botIn.dy), pen);
-      
-      // Vertical bar connecting them at the center
-      final minY = min(topIn.dy, botIn.dy);
-      final maxY = max(topIn.dy, botIn.dy);
-      canvas.drawLine(Offset(junctionX, minY), Offset(junctionX, maxY), pen);
-      
-      // Output pointing UP or DOWN? WT finals usually just have a box or text in center
-      final midY = (minY + maxY) / 2;
-      _nodeOffsets[match.id] = Offset(junctionX, midY);
+      final topPen = (match.participantBlueId != null) ? winnerPen : pendingPen;
+      final botPen = (match.participantRedId != null) ? winnerPen : pendingPen;
 
-      // Label B / R — topIn = Blue slot (Chung), botIn = Red slot (Hong)
-      _drawBadge(canvas, 'B', const Color(0xFF3B82F6), junctionX - 16, topIn.dy - 14);
-      _drawBadge(canvas, 'R', const Color(0xFFEF4444), junctionX + 16, botIn.dy - 14);
+      // Enforce a minimum vertical span so the junction is visible even when
+      // both inputs are at the same Y (e.g. 4-player bracket).
+      final rawMidY = (topIn.dy + botIn.dy) / 2;
+      const minSpan = 60.0;
+      final actualSpan = (botIn.dy - topIn.dy).abs();
+      final halfSpan = max(actualSpan, minSpan) / 2;
+      final topArmY = rawMidY - halfSpan;
+      final botArmY = rawMidY + halfSpan;
+      final midY = rawMidY;
 
-      final gNum = _matchGlobalNumbers[match.id];
-      if (gNum != null) {
-        _drawText(canvas, '$gNum', junctionX + 16, midY + 4, _bold(10));
+      // --- Draw the bracket arms ---
+      // Left (Blue/top) input: horizontal → vertical to midpoint
+      canvas.drawLine(topIn, Offset(junctionX, topIn.dy), topPen);
+      if ((topIn.dy - topArmY).abs() > 1) {
+        // Vertical segment from input Y to junction arm Y
+        canvas.drawLine(Offset(junctionX, topIn.dy), Offset(junctionX, topArmY), topPen);
       }
 
+      // Right (Red/bottom) input: horizontal → vertical to midpoint
+      canvas.drawLine(botIn, Offset(junctionX, botIn.dy), botPen);
+      if ((botIn.dy - botArmY).abs() > 1) {
+        canvas.drawLine(Offset(junctionX, botIn.dy), Offset(junctionX, botArmY), botPen);
+      }
+
+      // Vertical bar connecting top arm to bottom arm
+      canvas.drawLine(Offset(junctionX, topArmY), Offset(junctionX, botArmY), pen);
+
+      _nodeOffsets[match.id] = Offset(junctionX, midY);
+
+      // B badge above the top arm
+      _drawBadge(canvas, 'B', const Color(0xFF3B82F6), junctionX - 24, topArmY - 16);
+      // R badge below the bottom arm
+      _drawBadge(canvas, 'R', const Color(0xFFEF4444), junctionX + 24, botArmY + 16);
+
+      // Match number centered at midpoint
+      final gNum = _matchGlobalNumbers[match.id];
+      if (gNum != null) {
+        _drawText(canvas, '$gNum', junctionX + 16, midY - 7, _bold(11));
+      }
+
+      // Winner name above the midpoint
       if (match.winnerId != null) {
         final w = _findP(match.winnerId);
         if (w != null) {
-          _drawText(canvas, _pName(w), junctionX, midY - 14, _bold(12), center: true);
+          _drawText(canvas, _pName(w), junctionX, midY - 18, _bold(10), center: true);
         }
       }
 
-      matchHitAreas.add(MapEntry(match.id, Rect.fromCenter(center: Offset(junctionX, midY), width: 60, height: max(35, maxY - minY + 10))));
+      matchHitAreas.add(MapEntry(match.id, Rect.fromCenter(center: Offset(junctionX, midY), width: 80, height: max(50, botArmY - topArmY + 30))));
     }
   }
 
-  double _paintHeader(Canvas canvas, Size size, double startY, Paint thickPen, String divisionTitle, String categoryTitle) {
+  double _paintHeader(Canvas canvas, Size size, double startY, Paint thickPen, String divisionTitle, String categoryTitle, {bool showRightHeader = true}) {
     var y = startY;
     final title = (tournament.name.isNotEmpty ? tournament.name : 'TOURNAMENT NAME').toUpperCase();
     _drawText(canvas, title, size.width / 2, y, _bold(22), center: true);
@@ -450,8 +699,8 @@ class TieSheetPainter extends CustomPainter {
     _drawText(canvas, divisionTitle.isEmpty ? 'JUNIOR' : divisionTitle, leftHeaderX + noColW + nameColW / 2, headerRowTop + 14, _normal(13), center: true);
     _drawText(canvas, categoryTitle.isEmpty ? 'BOYS' : categoryTitle, leftHeaderX + noColW + nameColW + regIdColW / 2, headerRowTop + 14, _normal(13), center: true);
 
-    // Right-side header (mirrored)
-    {
+    // Right-side header (mirrored) — only for two-sided SE brackets
+    if (showRightHeader) {
       final rightHeaderX = size.width - margin - listW;
       final rRectR = RRect.fromLTRBR(rightHeaderX, headerRowTop, rightHeaderX + listW, headerRowBottom, const Radius.circular(6.0));
       canvas.drawRRect(rRectR, Paint()..color = const Color(0xFFF1F5F9)..style = PaintingStyle.fill);
@@ -511,6 +760,28 @@ class TieSheetPainter extends CustomPainter {
     }
   }
 
+  /// Paints a placeholder "TBD" row for an unassigned bracket slot.
+  void _paintTbdRow(Canvas canvas, int idx, double x, double y, Paint pen) {
+    final right = x + listW;
+    final tbdPen = Paint()
+      ..color = const Color(0xFFD1D5DB)
+      ..strokeWidth = 1.0
+      ..style = PaintingStyle.stroke;
+
+    final boxLeft = x + noColW;
+    final rect = RRect.fromLTRBR(boxLeft, y, right, y + rowH, const Radius.circular(6.0));
+    canvas.drawRRect(rect, Paint()..color = const Color(0xFFF3F4F6)..style = PaintingStyle.fill);
+    canvas.drawRRect(rect, tbdPen);
+
+    _drawText(canvas, '$idx', x + noColW / 2, y + rowH / 2 - 6,
+        const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF9CA3AF)), center: true);
+    _drawText(canvas, 'TBD', boxLeft + 6, y + rowH / 2 - 6,
+        const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, fontStyle: FontStyle.italic, color: Color(0xFF9CA3AF)));
+
+    final lineY = y + rowH / 2;
+    canvas.drawLine(Offset(right, lineY), Offset(right + roundColW, lineY), tbdPen);
+  }
+
   void _paintJunction(Canvas canvas, MatchEntity match, double junctionX, Paint pen, {required bool mirrored}) {
     final pendingPen = Paint()..color = const Color(0xFFD1D5DB)..strokeWidth = 1.0..style = PaintingStyle.stroke;
     final winnerPen = Paint()..color = const Color(0xFF1F2937)..strokeWidth = 2.0..strokeCap = StrokeCap.round..style = PaintingStyle.stroke;
@@ -524,23 +795,15 @@ class TieSheetPainter extends CustomPainter {
     if (isBye) {
       final topIn = _resolveInputOffset(match, isTopSlot: true);
       if (topIn != null) {
+        // BYE: straight pass-through line with dashed output
         canvas.drawLine(topIn, Offset(junctionX, topIn.dy), topPen);
         final nextJunctionX = mirrored ? junctionX - roundColW : junctionX + roundColW;
-        canvas.drawLine(Offset(junctionX, topIn.dy), Offset(nextJunctionX, topIn.dy), outPen);
+        // Dashed pass-through line to indicate BYE advancement
+        final byeLinePen = Paint()..color = const Color(0xFF9CA3AF)..strokeWidth = 1.5..style = PaintingStyle.stroke;
+        _drawDashedLine(canvas, Offset(junctionX, topIn.dy), Offset(nextJunctionX, topIn.dy), byeLinePen);
         
-        _nodeOffsets[match.id] = Offset(junctionX, topIn.dy);
+        _nodeOffsets[match.id] = Offset(nextJunctionX, topIn.dy);
 
-        if (match.winnerId != null) {
-          final winner = _findP(match.winnerId);
-          if (winner != null) {
-            final wName = _pName(winner);
-            if (!mirrored) {
-              _drawText(canvas, wName, junctionX + roundColW * 0.15, topIn.dy - 14, _bold(9));
-            } else {
-              _drawText(canvas, wName, junctionX - roundColW * 0.15, topIn.dy - 14, _bold(9), alignRight: true);
-            }
-          }
-        }
         matchHitAreas.add(MapEntry(match.id, Rect.fromCenter(center: Offset(junctionX, topIn.dy), width: roundColW * 0.6, height: 35)));
       }
       return;
@@ -593,20 +856,22 @@ class TieSheetPainter extends CustomPainter {
     final blueColor = const Color(0xFF3B82F6);
     final redColor = const Color(0xFFEF4444);
 
+    // Place B badge on the input side of the top arm, R badge on input side of bottom arm
     if (!mirrored) {
-      _drawBadge(canvas, 'B', blueColor, junctionX + 16, effectiveTop.dy - 16);
-      _drawBadge(canvas, 'R', redColor, junctionX + 16, effectiveBot.dy + 16);
+      _drawBadge(canvas, 'B', blueColor, junctionX - 24, effectiveTop.dy - 16);
+      _drawBadge(canvas, 'R', redColor, junctionX - 24, effectiveBot.dy + 16);
     } else {
-      _drawBadge(canvas, 'B', blueColor, junctionX - 16, effectiveTop.dy - 16);
-      _drawBadge(canvas, 'R', redColor, junctionX - 16, effectiveBot.dy + 16);
+      _drawBadge(canvas, 'B', blueColor, junctionX + 24, effectiveTop.dy - 16);
+      _drawBadge(canvas, 'R', redColor, junctionX + 24, effectiveBot.dy + 16);
     }
 
+    // Match number on the output side of the junction
     final gNum = _matchGlobalNumbers[match.id];
     if (gNum != null) {
       if (!mirrored) {
-        _drawText(canvas, '$gNum', junctionX + 18, midY - 7, _bold(11));
+        _drawText(canvas, '$gNum', junctionX + 14, midY - 7, _bold(11));
       } else {
-        _drawText(canvas, '$gNum', junctionX - 28, midY - 7, _bold(11));
+        _drawText(canvas, '$gNum', junctionX - 14, midY - 7, _bold(11), alignRight: true);
       }
     }
 
@@ -620,7 +885,7 @@ class TieSheetPainter extends CustomPainter {
         }
       }
     }
-    matchHitAreas.add(MapEntry(match.id, Rect.fromCenter(center: output, width: roundColW * 0.6, height: max(35, (effectiveBot.dy - effectiveTop.dy).abs() + 10))));
+    matchHitAreas.add(MapEntry(match.id, Rect.fromCenter(center: output, width: roundColW * 0.6, height: max(40, (effectiveBot.dy - effectiveTop.dy).abs() + 20))));
   }
 
 
@@ -747,6 +1012,25 @@ class TieSheetPainter extends CustomPainter {
     if (center) drawX -= tp.width / 2;
     if (alignRight) drawX -= tp.width;
     tp.paint(canvas, Offset(drawX, y));
+  }
+
+  /// Draws a dashed line between two points using the given paint.
+  void _drawDashedLine(Canvas canvas, Offset from, Offset to, Paint paint, {double dashWidth = 6, double gapWidth = 4}) {
+    final dx = to.dx - from.dx;
+    final dy = to.dy - from.dy;
+    final distance = sqrt(dx * dx + dy * dy);
+    final stepX = dx / distance;
+    final stepY = dy / distance;
+    var drawn = 0.0;
+    var x = from.dx;
+    var y = from.dy;
+    while (drawn < distance) {
+      final end = min(drawn + dashWidth, distance);
+      canvas.drawLine(Offset(x, y), Offset(from.dx + stepX * end, from.dy + stepY * end), paint);
+      drawn = end + gapWidth;
+      x = from.dx + stepX * drawn;
+      y = from.dy + stepY * drawn;
+    }
   }
 
   @override

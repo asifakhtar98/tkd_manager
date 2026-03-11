@@ -120,11 +120,14 @@ class DoubleEliminationBracketGeneratorServiceImplementation
     }
 
     // Step 6: Create Grand Finals and Reset slots
+    // GF matches use a dedicated bracketId so the painter can distinguish
+    // them from regular WB matches (F1 fix).
+    final grandFinalsBracketId = 'gf_$winnersBracketId';
     MatchEntity? resetMatch;
 
     var grandFinalsMatch = MatchEntity(
       id: matchIds[matchIdIdx++],
-      bracketId: winnersBracketId,
+      bracketId: grandFinalsBracketId,
       roundNumber: wRounds + 1,
       matchNumberInRound: 1,
       createdAtTimestamp: now,
@@ -135,7 +138,7 @@ class DoubleEliminationBracketGeneratorServiceImplementation
     if (includeResetMatch) {
       resetMatch = MatchEntity(
         id: matchIds[matchIdIdx++],
-        bracketId: winnersBracketId,
+        bracketId: grandFinalsBracketId,
         roundNumber: wRounds + 2,
         matchNumberInRound: 1,
         createdAtTimestamp: now,
@@ -336,8 +339,7 @@ class DoubleEliminationBracketGeneratorServiceImplementation
       if (inputs.length == 2) {
         final phantomCount = inputs.where((i) => i == 'PHANTOM').length;
         if (phantomCount > 0) {
-           // We mark this universally as a phantom bye.
-           // For WB R1, we know the real player immediately, so we can complete it.
+           // For WB R1, we know the real player immediately, so complete it.
            if (m.roundNumber == 1 && m.bracketId == winnersBracketId) {
               final winnerId = (m.participantBlueId != null) ? m.participantBlueId : m.participantRedId;
               allMatchesMap[matchId] = m.copyWith(
@@ -347,17 +349,15 @@ class DoubleEliminationBracketGeneratorServiceImplementation
                 winnerId: winnerId,
                 loserAdvancesToMatchId: null, // WB R1 bye loser doesn't drop
               );
-           } else {
-              // For LB matches or others, the real player is unknown until runtime.
-              // Mark it so runtime auto-declares them winner. Use 'notes' since MatchEntity doesn't have custom JSON.
+           } else if (phantomCount == 2) {
+              // Both slots are phantom → permanent ghost match, mark completed.
               allMatchesMap[matchId] = m.copyWith(
-                 notes: 'PHANTOM_BYE_$phantomCount',
-                 // Leave status as pending. Once the real player arrives, runtime fires _declareWinner.
-                 // If phantomCount == 2, it's a permanent ghost match, mark it completed.
-                 status: phantomCount == 2 ? MatchStatus.completed : MatchStatus.pending,
-                 resultType: phantomCount == 2 ? MatchResultType.bye : null,
+                 status: MatchStatus.completed,
+                 resultType: MatchResultType.bye,
+                 completedAtTimestamp: now,
               );
            }
+           // phantomCount == 1 in non-R1: leave pending for runtime auto-advance.
         }
       }
     }

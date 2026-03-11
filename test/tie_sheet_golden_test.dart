@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:uuid/uuid.dart';
 import 'package:tkd_saas/features/tournament/domain/entities/tournament_entity.dart';
 import 'package:tkd_saas/features/bracket/data/services/single_elimination_bracket_generator_service_implementation.dart';
+import 'package:tkd_saas/features/bracket/data/services/double_elimination_bracket_generator_service_implementation.dart';
 import 'package:tkd_saas/features/bracket/presentation/widgets/tie_sheet_canvas_widget.dart';
 import 'package:tkd_saas/features/participant/domain/entities/participant_entity.dart';
 
@@ -147,5 +148,91 @@ void main() {
   // 14 players with 3rd place match
   testWidgets('14-player bracket with 3rd place', (tester) async {
     await runGoldenTest(tester, 14, '14_player_3rd_place_golden.png', include3rd: true);
+  });
+
+  // ─────────────────────────────────────────────────────────────
+  // DOUBLE ELIMINATION GOLDENS
+  // ─────────────────────────────────────────────────────────────
+
+  final deGenerator = DoubleEliminationBracketGeneratorServiceImplementation(uuid);
+
+  Future<void> runDEGoldenTest(WidgetTester tester, int playerCount, String goldenFileName) async {
+    final participants = makeParticipants(playerCount);
+    final result = deGenerator.generate(
+      divisionId: 'div1',
+      participantIds: participants.map((p) => p.id).toList(),
+      winnersBracketId: 'wb-golden',
+      losersBracketId: 'lb-golden',
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: SingleChildScrollView(
+              child: TieSheetCanvasWidget(
+                tournament: defaultTournament,
+                matches: result.allMatches,
+                participants: participants,
+                bracketType: 'Double Elimination',
+                onMatchTap: (_) {},
+                printKey: GlobalKey(),
+                includeThirdPlaceMatch: false,
+                winnersBracketId: 'wb-golden',
+                losersBracketId: 'lb-golden',
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byType(CustomPaint), findsWidgets);
+    await expectLater(
+      find.byType(TieSheetCanvasWidget),
+      matchesGoldenFile(goldenFileName),
+    );
+
+    // Print match info for debugging
+    debugPrint('=== DE $playerCount PLAYER MATCH INFO ===');
+    debugPrint('Total matches: ${result.allMatches.length}');
+    final wbMatches = result.allMatches.where((m) => m.bracketId == 'wb-golden').toList();
+    final lbMatches = result.allMatches.where((m) => m.bracketId == 'lb-golden').toList();
+    final gfMatches = result.allMatches.where((m) => m.bracketId != 'wb-golden' && m.bracketId != 'lb-golden').toList();
+    debugPrint('WB matches: ${wbMatches.length}, LB matches: ${lbMatches.length}, GF matches: ${gfMatches.length}');
+    for (final m in result.allMatches) {
+      final red = m.participantRedId != null
+          ? participants.where((p) => p.id == m.participantRedId).firstOrNull
+          : null;
+      final blue = m.participantBlueId != null
+          ? participants.where((p) => p.id == m.participantBlueId).firstOrNull
+          : null;
+      debugPrint('Bracket=${m.bracketId == 'wb-golden' ? 'WB' : m.bracketId == 'lb-golden' ? 'LB' : 'GF'} '
+          'R${m.roundNumber} M${m.matchNumberInRound}: '
+          'Blue=${blue?.lastName ?? "TBD"} Red=${red?.lastName ?? "TBD"} '
+          'Status=${m.status} Result=${m.resultType}');
+    }
+  }
+
+  // DE 2 players: simplest — 1 WB match + GF
+  testWidgets('DE 2-player bracket', (tester) async {
+    await runDEGoldenTest(tester, 2, 'de_2_player_golden.png');
+  });
+
+  // DE 4 players: small complete bracket
+  testWidgets('DE 4-player bracket', (tester) async {
+    await runDEGoldenTest(tester, 4, 'de_4_player_golden.png');
+  });
+
+  // DE 5 players: 3 BYEs, asymmetric with phantom LB matches
+  testWidgets('DE 5-player bracket', (tester) async {
+    await runDEGoldenTest(tester, 5, 'de_5_player_golden.png');
+  });
+
+  // DE 8 players: full symmetric bracket, no BYEs
+  testWidgets('DE 8-player bracket', (tester) async {
+    await runDEGoldenTest(tester, 8, 'de_8_player_golden.png');
   });
 }

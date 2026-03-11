@@ -7,7 +7,6 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:uuid/uuid.dart';
-import 'package:tkd_saas/features/bracket/domain/entities/bracket_entity.dart';
 import 'package:tkd_saas/features/bracket/domain/entities/match_entity.dart';
 import 'package:tkd_saas/features/bracket/presentation/bloc/bracket_bloc.dart';
 import 'package:tkd_saas/features/bracket/presentation/widgets/score_entry_dialog.dart';
@@ -44,16 +43,10 @@ class BracketViewerScreen extends StatefulWidget {
   State<BracketViewerScreen> createState() => _BracketViewerScreenState();
 }
 
-class _BracketViewerScreenState extends State<BracketViewerScreen>
-    with TickerProviderStateMixin {
-  late final TabController _tabController;
-  final TransformationController _winnersTransformController =
+class _BracketViewerScreenState extends State<BracketViewerScreen> {
+  final TransformationController _transformController =
       TransformationController();
-  final TransformationController _losersTransformController =
-      TransformationController();
-
-  final GlobalKey _winnersPrintKey = GlobalKey();
-  final GlobalKey _losersPrintKey = GlobalKey();
+  final GlobalKey _printKey = GlobalKey();
 
   // Tracks whether we have already committed a snapshot for this generation
   // session, so we don't double-save on rebuilds.
@@ -61,19 +54,8 @@ class _BracketViewerScreenState extends State<BracketViewerScreen>
   static const _uuid = Uuid();
 
   @override
-  void initState() {
-    super.initState();
-    // Tab count is known from format at construction time — no need to wait
-    // for BloC state to initialise the controller.
-    final tabCount = widget.format == 'Double Elimination' ? 2 : 1;
-    _tabController = TabController(length: tabCount, vsync: this);
-  }
-
-  @override
   void dispose() {
-    _tabController.dispose();
-    _winnersTransformController.dispose();
-    _losersTransformController.dispose();
+    _transformController.dispose();
     super.dispose();
   }
 
@@ -83,13 +65,9 @@ class _BracketViewerScreenState extends State<BracketViewerScreen>
   /// converts the canvas to a PNG image, and embeds it in a landscape A4 PDF
   /// page with a header showing the tournament name and format.
   Future<void> _exportPdf(String title) async {
-    // Pick the correct print key based on the active tab.
-    final printKey =
-        _tabController.index == 1 ? _losersPrintKey : _winnersPrintKey;
-
     pw.ImageProvider? bracketImage;
     try {
-      final boundary = printKey.currentContext?.findRenderObject()
+      final boundary = _printKey.currentContext?.findRenderObject()
           as RenderRepaintBoundary?;
       if (boundary != null) {
         final ui.Image image = await boundary.toImage(pixelRatio: 2.0);
@@ -274,39 +252,26 @@ class _BracketViewerScreenState extends State<BracketViewerScreen>
     required bool includeThirdPlaceMatch,
   }) {
 
-    final List<Tab> tabs = [];
-    final List<Widget> views = [];
-
     // Gather all matches for the score entry handler.
     final List<MatchEntity> allMatches = switch (result) {
       SingleEliminationResult(:final data) => data.matches,
       DoubleEliminationResult(:final data) => data.allMatches,
     };
 
-    switch (result) {
-      case SingleEliminationResult(:final data):
-        tabs.add(const Tab(text: 'Main Bracket'));
-        views.add(
-            _buildBracketView(data.bracket, data.matches, _winnersPrintKey, _winnersTransformController, allMatches, participants));
-
-      case DoubleEliminationResult(:final data):
-        final winnersMatches = data.allMatches
-            .where((m) => m.bracketId == data.winnersBracket.id)
-            .toList();
-        final losersMatches = data.allMatches
-            .where((m) => m.bracketId == data.losersBracket.id)
-            .toList();
-        tabs.add(const Tab(text: 'Winners Bracket'));
-        tabs.add(const Tab(text: 'Losers Bracket'));
-        // Each tab renders an independent bracket tree using the standard
-        // two-sided SE layout — the viewer already splits WB/LB into tabs.
-        views.add(_buildBracketView(
-            data.winnersBracket, winnersMatches, _winnersPrintKey, _winnersTransformController, allMatches, participants,
-            bracketTypeOverride: 'Single Elimination'));
-        views.add(_buildBracketView(
-            data.losersBracket, losersMatches, _losersPrintKey, _losersTransformController, allMatches, participants,
-            bracketTypeOverride: 'Single Elimination'));
+    // Both SE and DE render a single canvas — no tabs.
+    String? winnersBracketId;
+    String? losersBracketId;
+    if (result case DoubleEliminationResult(:final data)) {
+      winnersBracketId = data.winnersBracket.id;
+      losersBracketId = data.losersBracket.id;
     }
+
+    final view = _buildBracketView(
+      allMatches,
+      participants,
+      winnersBracketId: winnersBracketId,
+      losersBracketId: losersBracketId,
+    );
 
     final tournamentTitle = widget.tournament?.name ?? 'Tournament';
 
@@ -317,9 +282,6 @@ class _BracketViewerScreenState extends State<BracketViewerScreen>
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
         ),
-        bottom: tabs.length > 1
-            ? TabBar(controller: _tabController, tabs: tabs)
-            : null,
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -342,8 +304,6 @@ class _BracketViewerScreenState extends State<BracketViewerScreen>
                 ),
               );
               if (confirm == true && context.mounted) {
-                // Only reset the snapshot guard if this is NOT a history replay.
-                // In history view we never want to create a new snapshot.
                 if (!widget.isHistoryView) {
                   setState(() => _snapshotSaved = false);
                 }
@@ -360,24 +320,18 @@ class _BracketViewerScreenState extends State<BracketViewerScreen>
           ),
         ],
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: views,
-      ),
+      body: view,
     );
   }
 
   Widget _buildBracketView(
-    BracketEntity bracket,
     List<MatchEntity> matches,
-    GlobalKey printKey,
-    TransformationController transformController,
-    List<MatchEntity> allMatches,
     List<ParticipantEntity> participants, {
-    String? bracketTypeOverride,
+    String? winnersBracketId,
+    String? losersBracketId,
   }) {
     return InteractiveViewer(
-      transformationController: transformController,
+      transformationController: _transformController,
       constrained: false,
       boundaryMargin: const EdgeInsets.all(500),
       minScale: 0.1,
@@ -394,15 +348,17 @@ class _BracketViewerScreenState extends State<BracketViewerScreen>
                 ),
             matches: matches,
             participants: widget.participants,
-            bracketType: bracketTypeOverride ?? widget.format,
+            bracketType: widget.format,
             onMatchTap: (matchId) => _handleMatchTap(
               context,
               matchId,
-              allMatches,
+              matches,
               participants,
             ),
-            printKey: printKey,
+            printKey: _printKey,
             includeThirdPlaceMatch: widget.includeThirdPlaceMatch,
+            winnersBracketId: winnersBracketId,
+            losersBracketId: losersBracketId,
           ),
         ),
       ),
@@ -426,6 +382,15 @@ class _BracketViewerScreenState extends State<BracketViewerScreen>
     if (match.status == MatchStatus.completed) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('This match is already completed.')),
+      );
+      return;
+    }
+
+    // Don't allow scoring cancelled or bye matches.
+    if (match.status == MatchStatus.cancelled ||
+        match.resultType == MatchResultType.bye) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('This match cannot be scored.')),
       );
       return;
     }
