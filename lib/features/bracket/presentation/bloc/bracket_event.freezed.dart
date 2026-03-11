@@ -55,12 +55,13 @@ extension BracketEventPatterns on BracketEvent {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( BracketGenerateRequested value)?  generateRequested,TResult Function( BracketRegenerateRequested value)?  regenerateRequested,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( BracketGenerateRequested value)?  generateRequested,TResult Function( BracketRegenerateRequested value)?  regenerateRequested,TResult Function( BracketMatchResultRecorded value)?  matchResultRecorded,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
 case BracketGenerateRequested() when generateRequested != null:
 return generateRequested(_that);case BracketRegenerateRequested() when regenerateRequested != null:
-return regenerateRequested(_that);case _:
+return regenerateRequested(_that);case BracketMatchResultRecorded() when matchResultRecorded != null:
+return matchResultRecorded(_that);case _:
   return orElse();
 
 }
@@ -78,12 +79,13 @@ return regenerateRequested(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( BracketGenerateRequested value)  generateRequested,required TResult Function( BracketRegenerateRequested value)  regenerateRequested,}){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( BracketGenerateRequested value)  generateRequested,required TResult Function( BracketRegenerateRequested value)  regenerateRequested,required TResult Function( BracketMatchResultRecorded value)  matchResultRecorded,}){
 final _that = this;
 switch (_that) {
 case BracketGenerateRequested():
 return generateRequested(_that);case BracketRegenerateRequested():
-return regenerateRequested(_that);}
+return regenerateRequested(_that);case BracketMatchResultRecorded():
+return matchResultRecorded(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -97,12 +99,13 @@ return regenerateRequested(_that);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( BracketGenerateRequested value)?  generateRequested,TResult? Function( BracketRegenerateRequested value)?  regenerateRequested,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( BracketGenerateRequested value)?  generateRequested,TResult? Function( BracketRegenerateRequested value)?  regenerateRequested,TResult? Function( BracketMatchResultRecorded value)?  matchResultRecorded,}){
 final _that = this;
 switch (_that) {
 case BracketGenerateRequested() when generateRequested != null:
 return generateRequested(_that);case BracketRegenerateRequested() when regenerateRequested != null:
-return regenerateRequested(_that);case _:
+return regenerateRequested(_that);case BracketMatchResultRecorded() when matchResultRecorded != null:
+return matchResultRecorded(_that);case _:
   return null;
 
 }
@@ -119,11 +122,12 @@ return regenerateRequested(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( List<ParticipantEntity> participants,  String format,  bool dojangSeparation,  bool includeThirdPlaceMatch)?  generateRequested,TResult Function()?  regenerateRequested,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( List<ParticipantEntity> participants,  String format,  bool dojangSeparation,  bool includeThirdPlaceMatch)?  generateRequested,TResult Function()?  regenerateRequested,TResult Function( String matchId,  String winnerId,  MatchResultType resultType,  int? blueScore,  int? redScore)?  matchResultRecorded,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case BracketGenerateRequested() when generateRequested != null:
 return generateRequested(_that.participants,_that.format,_that.dojangSeparation,_that.includeThirdPlaceMatch);case BracketRegenerateRequested() when regenerateRequested != null:
-return regenerateRequested();case _:
+return regenerateRequested();case BracketMatchResultRecorded() when matchResultRecorded != null:
+return matchResultRecorded(_that.matchId,_that.winnerId,_that.resultType,_that.blueScore,_that.redScore);case _:
   return orElse();
 
 }
@@ -141,11 +145,12 @@ return regenerateRequested();case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( List<ParticipantEntity> participants,  String format,  bool dojangSeparation,  bool includeThirdPlaceMatch)  generateRequested,required TResult Function()  regenerateRequested,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( List<ParticipantEntity> participants,  String format,  bool dojangSeparation,  bool includeThirdPlaceMatch)  generateRequested,required TResult Function()  regenerateRequested,required TResult Function( String matchId,  String winnerId,  MatchResultType resultType,  int? blueScore,  int? redScore)  matchResultRecorded,}) {final _that = this;
 switch (_that) {
 case BracketGenerateRequested():
 return generateRequested(_that.participants,_that.format,_that.dojangSeparation,_that.includeThirdPlaceMatch);case BracketRegenerateRequested():
-return regenerateRequested();}
+return regenerateRequested();case BracketMatchResultRecorded():
+return matchResultRecorded(_that.matchId,_that.winnerId,_that.resultType,_that.blueScore,_that.redScore);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -159,11 +164,12 @@ return regenerateRequested();}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( List<ParticipantEntity> participants,  String format,  bool dojangSeparation,  bool includeThirdPlaceMatch)?  generateRequested,TResult? Function()?  regenerateRequested,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( List<ParticipantEntity> participants,  String format,  bool dojangSeparation,  bool includeThirdPlaceMatch)?  generateRequested,TResult? Function()?  regenerateRequested,TResult? Function( String matchId,  String winnerId,  MatchResultType resultType,  int? blueScore,  int? redScore)?  matchResultRecorded,}) {final _that = this;
 switch (_that) {
 case BracketGenerateRequested() when generateRequested != null:
 return generateRequested(_that.participants,_that.format,_that.dojangSeparation,_that.includeThirdPlaceMatch);case BracketRegenerateRequested() when regenerateRequested != null:
-return regenerateRequested();case _:
+return regenerateRequested();case BracketMatchResultRecorded() when matchResultRecorded != null:
+return matchResultRecorded(_that.matchId,_that.winnerId,_that.resultType,_that.blueScore,_that.redScore);case _:
   return null;
 
 }
@@ -281,5 +287,79 @@ String toString() {
 
 
 
+
+/// @nodoc
+
+
+class BracketMatchResultRecorded implements BracketEvent {
+  const BracketMatchResultRecorded({required this.matchId, required this.winnerId, this.resultType = MatchResultType.points, this.blueScore, this.redScore});
+  
+
+ final  String matchId;
+ final  String winnerId;
+@JsonKey() final  MatchResultType resultType;
+ final  int? blueScore;
+ final  int? redScore;
+
+/// Create a copy of BracketEvent
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$BracketMatchResultRecordedCopyWith<BracketMatchResultRecorded> get copyWith => _$BracketMatchResultRecordedCopyWithImpl<BracketMatchResultRecorded>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is BracketMatchResultRecorded&&(identical(other.matchId, matchId) || other.matchId == matchId)&&(identical(other.winnerId, winnerId) || other.winnerId == winnerId)&&(identical(other.resultType, resultType) || other.resultType == resultType)&&(identical(other.blueScore, blueScore) || other.blueScore == blueScore)&&(identical(other.redScore, redScore) || other.redScore == redScore));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,matchId,winnerId,resultType,blueScore,redScore);
+
+@override
+String toString() {
+  return 'BracketEvent.matchResultRecorded(matchId: $matchId, winnerId: $winnerId, resultType: $resultType, blueScore: $blueScore, redScore: $redScore)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $BracketMatchResultRecordedCopyWith<$Res> implements $BracketEventCopyWith<$Res> {
+  factory $BracketMatchResultRecordedCopyWith(BracketMatchResultRecorded value, $Res Function(BracketMatchResultRecorded) _then) = _$BracketMatchResultRecordedCopyWithImpl;
+@useResult
+$Res call({
+ String matchId, String winnerId, MatchResultType resultType, int? blueScore, int? redScore
+});
+
+
+
+
+}
+/// @nodoc
+class _$BracketMatchResultRecordedCopyWithImpl<$Res>
+    implements $BracketMatchResultRecordedCopyWith<$Res> {
+  _$BracketMatchResultRecordedCopyWithImpl(this._self, this._then);
+
+  final BracketMatchResultRecorded _self;
+  final $Res Function(BracketMatchResultRecorded) _then;
+
+/// Create a copy of BracketEvent
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? matchId = null,Object? winnerId = null,Object? resultType = null,Object? blueScore = freezed,Object? redScore = freezed,}) {
+  return _then(BracketMatchResultRecorded(
+matchId: null == matchId ? _self.matchId : matchId // ignore: cast_nullable_to_non_nullable
+as String,winnerId: null == winnerId ? _self.winnerId : winnerId // ignore: cast_nullable_to_non_nullable
+as String,resultType: null == resultType ? _self.resultType : resultType // ignore: cast_nullable_to_non_nullable
+as MatchResultType,blueScore: freezed == blueScore ? _self.blueScore : blueScore // ignore: cast_nullable_to_non_nullable
+as int?,redScore: freezed == redScore ? _self.redScore : redScore // ignore: cast_nullable_to_non_nullable
+as int?,
+  ));
+}
+
+
+}
 
 // dart format on

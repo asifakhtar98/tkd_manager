@@ -10,6 +10,7 @@ import 'package:uuid/uuid.dart';
 import 'package:tkd_saas/features/bracket/domain/entities/bracket_entity.dart';
 import 'package:tkd_saas/features/bracket/domain/entities/match_entity.dart';
 import 'package:tkd_saas/features/bracket/presentation/bloc/bracket_bloc.dart';
+import 'package:tkd_saas/features/bracket/presentation/widgets/score_entry_dialog.dart';
 import 'package:tkd_saas/features/bracket/presentation/widgets/tie_sheet_canvas_widget.dart';
 import 'package:tkd_saas/features/participant/domain/entities/participant_entity.dart';
 import 'package:tkd_saas/features/tournament/domain/entities/bracket_snapshot.dart';
@@ -259,11 +260,17 @@ class _BracketViewerScreenState extends State<BracketViewerScreen>
     final List<Tab> tabs = [];
     final List<Widget> views = [];
 
+    // Gather all matches for the score entry handler.
+    final List<MatchEntity> allMatches = switch (result) {
+      SingleEliminationResult(:final data) => data.matches,
+      DoubleEliminationResult(:final data) => data.allMatches,
+    };
+
     switch (result) {
       case SingleEliminationResult(:final data):
         tabs.add(const Tab(text: 'Main Bracket'));
         views.add(
-            _buildBracketView(data.bracket, data.matches, _winnersPrintKey));
+            _buildBracketView(data.bracket, data.matches, _winnersPrintKey, allMatches, participants));
 
       case DoubleEliminationResult(:final data):
         final winnersMatches = data.allMatches
@@ -275,9 +282,9 @@ class _BracketViewerScreenState extends State<BracketViewerScreen>
         tabs.add(const Tab(text: 'Winners Bracket'));
         tabs.add(const Tab(text: 'Losers Bracket'));
         views.add(_buildBracketView(
-            data.winnersBracket, winnersMatches, _winnersPrintKey));
+            data.winnersBracket, winnersMatches, _winnersPrintKey, allMatches, participants));
         views.add(_buildBracketView(
-            data.losersBracket, losersMatches, _losersPrintKey));
+            data.losersBracket, losersMatches, _losersPrintKey, allMatches, participants));
     }
 
     final tournamentTitle = widget.tournament?.name ?? 'Tournament';
@@ -343,6 +350,8 @@ class _BracketViewerScreenState extends State<BracketViewerScreen>
     BracketEntity bracket,
     List<MatchEntity> matches,
     GlobalKey printKey,
+    List<MatchEntity> allMatches,
+    List<ParticipantEntity> participants,
   ) {
     return InteractiveViewer(
       transformationController: _transformationController,
@@ -363,11 +372,12 @@ class _BracketViewerScreenState extends State<BracketViewerScreen>
             matches: matches,
             participants: widget.participants,
             bracketType: widget.format,
-            onMatchTap: (matchId) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Tapped Match ID: $matchId')),
-              );
-            },
+            onMatchTap: (matchId) => _handleMatchTap(
+              context,
+              matchId,
+              allMatches,
+              participants,
+            ),
             printKey: printKey,
             includeThirdPlaceMatch: widget.includeThirdPlaceMatch,
           ),
@@ -375,4 +385,64 @@ class _BracketViewerScreenState extends State<BracketViewerScreen>
       ),
     );
   }
+
+  /// Opens the [ScoreEntryDialog] for the tapped match. If the user confirms
+  /// a result, dispatches [BracketMatchResultRecorded] to the BLoC.
+  void _handleMatchTap(
+    BuildContext context,
+    String matchId,
+    List<MatchEntity> allMatches,
+    List<ParticipantEntity> participants,
+  ) {
+    final match = allMatches.firstWhere(
+      (m) => m.id == matchId,
+      orElse: () => throw StateError('Match $matchId not found'),
+    );
+
+    // Don't allow re-scoring a completed match.
+    if (match.status == MatchStatus.completed) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('This match is already completed.')),
+      );
+      return;
+    }
+
+    // Both participants must be assigned before scoring.
+    if (match.participantBlueId == null || match.participantRedId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Both participants must be assigned first.')),
+      );
+      return;
+    }
+
+    final blueName = _participantName(match.participantBlueId!, participants);
+    final redName = _participantName(match.participantRedId!, participants);
+
+    ScoreEntryDialog.show(
+      context: context,
+      match: match,
+      blueParticipantName: blueName,
+      redParticipantName: redName,
+    ).then((result) {
+      if (result != null && context.mounted) {
+        context.read<BracketBloc>().add(
+              BracketEvent.matchResultRecorded(
+                matchId: matchId,
+                winnerId: result.winnerId,
+                resultType: result.resultType,
+                blueScore: result.blueScore,
+                redScore: result.redScore,
+              ),
+            );
+      }
+    });
+  }
+
+  String _participantName(String id, List<ParticipantEntity> participants) {
+    final p = participants.where((p) => p.id == id);
+    if (p.isEmpty) return 'Unknown';
+    return '${p.first.firstName} ${p.first.lastName}'.trim();
+  }
 }
+

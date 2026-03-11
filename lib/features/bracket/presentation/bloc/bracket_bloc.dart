@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 import 'package:tkd_saas/features/bracket/domain/services/double_elimination_bracket_generator_service.dart';
+import 'package:tkd_saas/features/bracket/domain/services/match_progression_service.dart';
 import 'package:tkd_saas/features/bracket/domain/services/single_elimination_bracket_generator_service.dart';
 import 'package:tkd_saas/features/bracket/presentation/bloc/bracket_event.dart';
 import 'package:tkd_saas/features/bracket/presentation/bloc/bracket_state.dart';
@@ -14,17 +15,21 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
   BracketBloc({
     required SingleEliminationBracketGeneratorService singleElimService,
     required DoubleEliminationBracketGeneratorService doubleElimService,
+    required MatchProgressionService matchProgressionService,
     required Uuid uuid,
   })  : _singleElimService = singleElimService,
         _doubleElimService = doubleElimService,
+        _matchProgressionService = matchProgressionService,
         _uuid = uuid,
         super(const BracketState.initial()) {
     on<BracketGenerateRequested>(_onGenerate);
     on<BracketRegenerateRequested>(_onRegenerate);
+    on<BracketMatchResultRecorded>(_onMatchResultRecorded);
   }
 
   final SingleEliminationBracketGeneratorService _singleElimService;
   final DoubleEliminationBracketGeneratorService _doubleElimService;
+  final MatchProgressionService _matchProgressionService;
   final Uuid _uuid;
 
   /// Cached params for re-generation support.
@@ -47,6 +52,51 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
     if (req == null) return;
     emit(const BracketState.generating());
     _generate(req, emit);
+  }
+
+  void _onMatchResultRecorded(
+    BracketMatchResultRecorded event,
+    Emitter<BracketState> emit,
+  ) {
+    final currentState = state;
+    if (currentState is! BracketLoadSuccess) return;
+
+    try {
+      final updatedResult = currentState.result.map(
+        singleElimination: (se) {
+          final updated = _matchProgressionService.recordResult(
+            matches: se.data.matches,
+            matchId: event.matchId,
+            winnerId: event.winnerId,
+            resultType: event.resultType,
+            blueScore: event.blueScore,
+            redScore: event.redScore,
+          );
+          return BracketResult.singleElimination(
+            se.data.copyWith(matches: updated),
+          );
+        },
+        doubleElimination: (de) {
+          final updated = _matchProgressionService.recordResult(
+            matches: de.data.allMatches,
+            matchId: event.matchId,
+            winnerId: event.winnerId,
+            resultType: event.resultType,
+            blueScore: event.blueScore,
+            redScore: event.redScore,
+          );
+          return BracketResult.doubleElimination(
+            de.data.copyWith(allMatches: updated),
+          );
+        },
+      );
+
+      emit(currentState.copyWith(result: updatedResult));
+    } on ArgumentError catch (e) {
+      emit(BracketState.failure(e.message.toString()));
+    } catch (e) {
+      emit(BracketState.failure(e.toString()));
+    }
   }
 
   void _generate(BracketGenerateRequested req, Emitter<BracketState> emit) {
@@ -90,3 +140,4 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
     }
   }
 }
+

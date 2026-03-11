@@ -14,10 +14,14 @@ import 'package:injectable/injectable.dart' as _i526;
 import 'package:tkd_saas/core/di/injection_module.dart' as _i256;
 import 'package:tkd_saas/features/bracket/data/services/double_elimination_bracket_generator_service_implementation.dart'
     as _i82;
+import 'package:tkd_saas/features/bracket/data/services/match_progression_service_implementation.dart'
+    as _i1018;
 import 'package:tkd_saas/features/bracket/data/services/single_elimination_bracket_generator_service_implementation.dart'
     as _i34;
 import 'package:tkd_saas/features/bracket/domain/services/double_elimination_bracket_generator_service.dart'
     as _i1044;
+import 'package:tkd_saas/features/bracket/domain/services/match_progression_service.dart'
+    as _i707;
 import 'package:tkd_saas/features/bracket/domain/services/single_elimination_bracket_generator_service.dart'
     as _i937;
 import 'package:tkd_saas/features/bracket/presentation/bloc/bracket_bloc.dart'
@@ -36,6 +40,9 @@ extension GetItInjectableX on _i174.GetIt {
     final appModule = _$AppModule();
     gh.lazySingleton<_i706.Uuid>(() => appModule.uuid);
     gh.lazySingleton<_i143.TournamentBloc>(() => _i143.TournamentBloc());
+    gh.lazySingleton<_i707.MatchProgressionService>(
+      () => _i1018.MatchProgressionServiceImplementation(),
+    );
     gh.lazySingleton<_i937.SingleEliminationBracketGeneratorService>(
       () => _i34.SingleEliminationBracketGeneratorServiceImplementation(
         gh<_i706.Uuid>(),
@@ -51,6 +58,7 @@ extension GetItInjectableX on _i174.GetIt {
         singleElimService: gh<_i937.SingleEliminationBracketGeneratorService>(),
         doubleElimService:
             gh<_i1044.DoubleEliminationBracketGeneratorService>(),
+        matchProgressionService: gh<_i707.MatchProgressionService>(),
         uuid: gh<_i706.Uuid>(),
       ),
     );

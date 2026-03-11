@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:tkd_saas/features/bracket/domain/entities/match_entity.dart';
 import 'package:tkd_saas/features/participant/domain/entities/participant_entity.dart';
 
 part 'bracket_event.freezed.dart';
@@ -17,4 +18,13 @@ sealed class BracketEvent with _$BracketEvent {
 
   /// Re-generate using the same params stored from the last [BracketGenerateRequested].
   const factory BracketEvent.regenerateRequested() = BracketRegenerateRequested;
+
+  /// Record a match result (winner, optional scores).
+  const factory BracketEvent.matchResultRecorded({
+    required String matchId,
+    required String winnerId,
+    @Default(MatchResultType.points) MatchResultType resultType,
+    int? blueScore,
+    int? redScore,
+  }) = BracketMatchResultRecorded;
 }
