@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tkd_saas/core/di/injection.dart';
+import 'package:tkd_saas/core/router/app_routes.dart';
 import 'package:tkd_saas/features/bracket/presentation/widgets/tie_sheet_canvas_widget.dart';
 import 'package:tkd_saas/main.dart' as app;
 
@@ -154,9 +155,8 @@ void main() {
       await navigateToSetup(tester);
       await selectCreateNewTournament(tester);
 
-      // Format dropdown is the second DropdownButton<String> (index 1);
-      // index 0 is the tournament selector.
-      final formatDropdown = find.byType(DropdownButton<String>).at(1);
+      // Format dropdown now uses BracketFormat enum type.
+      final formatDropdown = find.byType(DropdownButton<BracketFormat>).first;
       await tester.ensureVisible(formatDropdown);
       await tester.tap(formatDropdown);
       await tester.pumpAndSettle();
@@ -180,7 +180,7 @@ void main() {
       await navigateToSetup(tester);
       await selectCreateNewTournament(tester);
 
-      final formatDropdown = find.byType(DropdownButton<String>).at(1);
+      final formatDropdown = find.byType(DropdownButton<BracketFormat>).first;
       await tester.ensureVisible(formatDropdown);
       await tester.tap(formatDropdown);
       await tester.pumpAndSettle();
@@ -368,7 +368,7 @@ void main() {
       await navigateToSetup(tester);
 
       // Format dropdown is at index 1 (tournament selector is at index 0).
-      final formatDropdown = find.byType(DropdownButton<String>).at(1);
+      final formatDropdown = find.byType(DropdownButton<BracketFormat>).first;
       await tester.ensureVisible(formatDropdown);
       await tester.tap(formatDropdown);
       await tester.pumpAndSettle();
@@ -384,7 +384,7 @@ void main() {
     ) async {
       await navigateToSetup(tester);
 
-      final formatDropdown = find.byType(DropdownButton<String>).at(1);
+      final formatDropdown = find.byType(DropdownButton<BracketFormat>).first;
       await tester.ensureVisible(formatDropdown);
       await tester.tap(formatDropdown);
       await tester.pumpAndSettle();
@@ -503,7 +503,7 @@ void main() {
 
         await addPlayers(tester, fourPlayers);
 
-        final formatDropdown = find.byType(DropdownButton<String>).at(1);
+        final formatDropdown = find.byType(DropdownButton<BracketFormat>).first;
         await tester.ensureVisible(formatDropdown);
         await tester.tap(formatDropdown);
         await tester.pumpAndSettle();

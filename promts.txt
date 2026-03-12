@@ -26,3 +26,5 @@ Feature parity with the PRD must be preserved at all times. No feature may be re
 Ensure each iteration improves reliability, clarity, completeness, and architectural correctness without reducing scope or violating design intent.
 
 The loop stops only when all completed epics are fully usable and testable in real workflows with their full intended functionality intact. By the end of the day i want real user journey from my code. Also you can bypass certain external requirements in development mode to test each features quickly
+
+-Enhance dx experience, refractoring across all modules and features. Like a senior dev. No user pov change . Use skill when needed@beautifulMention . Create solid verbose implementation plan. Delete orphans at the end (dont delete any non code files)

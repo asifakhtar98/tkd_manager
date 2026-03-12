@@ -125,10 +125,10 @@ return errorDismissed(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( List<ParticipantEntity> participants,  String format,  bool dojangSeparation,  bool includeThirdPlaceMatch)?  generateRequested,TResult Function()?  regenerateRequested,TResult Function( String matchId,  String winnerId,  MatchResultType resultType,  int? blueScore,  int? redScore)?  matchResultRecorded,TResult Function()?  errorDismissed,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( List<ParticipantEntity> participants,  BracketFormat bracketFormat,  bool dojangSeparation,  bool includeThirdPlaceMatch)?  generateRequested,TResult Function()?  regenerateRequested,TResult Function( String matchId,  String winnerId,  MatchResultType resultType,  int? blueScore,  int? redScore)?  matchResultRecorded,TResult Function()?  errorDismissed,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case BracketGenerateRequested() when generateRequested != null:
-return generateRequested(_that.participants,_that.format,_that.dojangSeparation,_that.includeThirdPlaceMatch);case BracketRegenerateRequested() when regenerateRequested != null:
+return generateRequested(_that.participants,_that.bracketFormat,_that.dojangSeparation,_that.includeThirdPlaceMatch);case BracketRegenerateRequested() when regenerateRequested != null:
 return regenerateRequested();case BracketMatchResultRecorded() when matchResultRecorded != null:
 return matchResultRecorded(_that.matchId,_that.winnerId,_that.resultType,_that.blueScore,_that.redScore);case BracketErrorDismissed() when errorDismissed != null:
 return errorDismissed();case _:
@@ -149,10 +149,10 @@ return errorDismissed();case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( List<ParticipantEntity> participants,  String format,  bool dojangSeparation,  bool includeThirdPlaceMatch)  generateRequested,required TResult Function()  regenerateRequested,required TResult Function( String matchId,  String winnerId,  MatchResultType resultType,  int? blueScore,  int? redScore)  matchResultRecorded,required TResult Function()  errorDismissed,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( List<ParticipantEntity> participants,  BracketFormat bracketFormat,  bool dojangSeparation,  bool includeThirdPlaceMatch)  generateRequested,required TResult Function()  regenerateRequested,required TResult Function( String matchId,  String winnerId,  MatchResultType resultType,  int? blueScore,  int? redScore)  matchResultRecorded,required TResult Function()  errorDismissed,}) {final _that = this;
 switch (_that) {
 case BracketGenerateRequested():
-return generateRequested(_that.participants,_that.format,_that.dojangSeparation,_that.includeThirdPlaceMatch);case BracketRegenerateRequested():
+return generateRequested(_that.participants,_that.bracketFormat,_that.dojangSeparation,_that.includeThirdPlaceMatch);case BracketRegenerateRequested():
 return regenerateRequested();case BracketMatchResultRecorded():
 return matchResultRecorded(_that.matchId,_that.winnerId,_that.resultType,_that.blueScore,_that.redScore);case BracketErrorDismissed():
 return errorDismissed();}
@@ -169,10 +169,10 @@ return errorDismissed();}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( List<ParticipantEntity> participants,  String format,  bool dojangSeparation,  bool includeThirdPlaceMatch)?  generateRequested,TResult? Function()?  regenerateRequested,TResult? Function( String matchId,  String winnerId,  MatchResultType resultType,  int? blueScore,  int? redScore)?  matchResultRecorded,TResult? Function()?  errorDismissed,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( List<ParticipantEntity> participants,  BracketFormat bracketFormat,  bool dojangSeparation,  bool includeThirdPlaceMatch)?  generateRequested,TResult? Function()?  regenerateRequested,TResult? Function( String matchId,  String winnerId,  MatchResultType resultType,  int? blueScore,  int? redScore)?  matchResultRecorded,TResult? Function()?  errorDismissed,}) {final _that = this;
 switch (_that) {
 case BracketGenerateRequested() when generateRequested != null:
-return generateRequested(_that.participants,_that.format,_that.dojangSeparation,_that.includeThirdPlaceMatch);case BracketRegenerateRequested() when regenerateRequested != null:
+return generateRequested(_that.participants,_that.bracketFormat,_that.dojangSeparation,_that.includeThirdPlaceMatch);case BracketRegenerateRequested() when regenerateRequested != null:
 return regenerateRequested();case BracketMatchResultRecorded() when matchResultRecorded != null:
 return matchResultRecorded(_that.matchId,_that.winnerId,_that.resultType,_that.blueScore,_that.redScore);case BracketErrorDismissed() when errorDismissed != null:
 return errorDismissed();case _:
@@ -187,7 +187,7 @@ return errorDismissed();case _:
 
 
 class BracketGenerateRequested implements BracketEvent {
-  const BracketGenerateRequested({required final  List<ParticipantEntity> participants, required this.format, required this.dojangSeparation, required this.includeThirdPlaceMatch}): _participants = participants;
+  const BracketGenerateRequested({required final  List<ParticipantEntity> participants, required this.bracketFormat, required this.dojangSeparation, required this.includeThirdPlaceMatch}): _participants = participants;
   
 
  final  List<ParticipantEntity> _participants;
@@ -197,8 +197,9 @@ class BracketGenerateRequested implements BracketEvent {
   return EqualUnmodifiableListView(_participants);
 }
 
-/// 'Single Elimination' | 'Double Elimination'
- final  String format;
+/// The elimination format to generate.
+ final  BracketFormat bracketFormat;
+/// Whether to apply dojang (gym) separation seeding.
  final  bool dojangSeparation;
  final  bool includeThirdPlaceMatch;
 
@@ -212,16 +213,16 @@ $BracketGenerateRequestedCopyWith<BracketGenerateRequested> get copyWith => _$Br
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is BracketGenerateRequested&&const DeepCollectionEquality().equals(other._participants, _participants)&&(identical(other.format, format) || other.format == format)&&(identical(other.dojangSeparation, dojangSeparation) || other.dojangSeparation == dojangSeparation)&&(identical(other.includeThirdPlaceMatch, includeThirdPlaceMatch) || other.includeThirdPlaceMatch == includeThirdPlaceMatch));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is BracketGenerateRequested&&const DeepCollectionEquality().equals(other._participants, _participants)&&(identical(other.bracketFormat, bracketFormat) || other.bracketFormat == bracketFormat)&&(identical(other.dojangSeparation, dojangSeparation) || other.dojangSeparation == dojangSeparation)&&(identical(other.includeThirdPlaceMatch, includeThirdPlaceMatch) || other.includeThirdPlaceMatch == includeThirdPlaceMatch));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_participants),format,dojangSeparation,includeThirdPlaceMatch);
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_participants),bracketFormat,dojangSeparation,includeThirdPlaceMatch);
 
 @override
 String toString() {
-  return 'BracketEvent.generateRequested(participants: $participants, format: $format, dojangSeparation: $dojangSeparation, includeThirdPlaceMatch: $includeThirdPlaceMatch)';
+  return 'BracketEvent.generateRequested(participants: $participants, bracketFormat: $bracketFormat, dojangSeparation: $dojangSeparation, includeThirdPlaceMatch: $includeThirdPlaceMatch)';
 }
 
 
@@ -232,7 +233,7 @@ abstract mixin class $BracketGenerateRequestedCopyWith<$Res> implements $Bracket
   factory $BracketGenerateRequestedCopyWith(BracketGenerateRequested value, $Res Function(BracketGenerateRequested) _then) = _$BracketGenerateRequestedCopyWithImpl;
 @useResult
 $Res call({
- List<ParticipantEntity> participants, String format, bool dojangSeparation, bool includeThirdPlaceMatch
+ List<ParticipantEntity> participants, BracketFormat bracketFormat, bool dojangSeparation, bool includeThirdPlaceMatch
 });
 
 
@@ -249,11 +250,11 @@ class _$BracketGenerateRequestedCopyWithImpl<$Res>
 
 /// Create a copy of BracketEvent
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? participants = null,Object? format = null,Object? dojangSeparation = null,Object? includeThirdPlaceMatch = null,}) {
+@pragma('vm:prefer-inline') $Res call({Object? participants = null,Object? bracketFormat = null,Object? dojangSeparation = null,Object? includeThirdPlaceMatch = null,}) {
   return _then(BracketGenerateRequested(
 participants: null == participants ? _self._participants : participants // ignore: cast_nullable_to_non_nullable
-as List<ParticipantEntity>,format: null == format ? _self.format : format // ignore: cast_nullable_to_non_nullable
-as String,dojangSeparation: null == dojangSeparation ? _self.dojangSeparation : dojangSeparation // ignore: cast_nullable_to_non_nullable
+as List<ParticipantEntity>,bracketFormat: null == bracketFormat ? _self.bracketFormat : bracketFormat // ignore: cast_nullable_to_non_nullable
+as BracketFormat,dojangSeparation: null == dojangSeparation ? _self.dojangSeparation : dojangSeparation // ignore: cast_nullable_to_non_nullable
 as bool,includeThirdPlaceMatch: null == includeThirdPlaceMatch ? _self.includeThirdPlaceMatch : includeThirdPlaceMatch // ignore: cast_nullable_to_non_nullable
 as bool,
   ));

@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:tkd_saas/core/router/app_routes.dart';
 import 'package:tkd_saas/features/bracket/domain/entities/bracket_generation_result.dart';
 import 'package:tkd_saas/features/bracket/domain/entities/double_elimination_bracket_generation_result.dart';
 import 'package:tkd_saas/features/participant/domain/entities/participant_entity.dart';
@@ -25,7 +26,10 @@ sealed class BracketState with _$BracketState {
   const factory BracketState.loadSuccess({
     required BracketResult result,
     required List<ParticipantEntity> participants,
-    required String format,
+
+    /// The elimination format that was used to generate this bracket.
+    required BracketFormat format,
+
     required bool includeThirdPlaceMatch,
     String? errorMessage,
   }) = BracketLoadSuccess;

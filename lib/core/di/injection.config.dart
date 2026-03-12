@@ -55,11 +55,10 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i416.BracketBloc>(
       () => _i416.BracketBloc(
-        singleElimService: gh<_i937.SingleEliminationBracketGeneratorService>(),
-        doubleElimService:
-            gh<_i1044.DoubleEliminationBracketGeneratorService>(),
-        matchProgressionService: gh<_i707.MatchProgressionService>(),
-        uuid: gh<_i706.Uuid>(),
+        gh<_i937.SingleEliminationBracketGeneratorService>(),
+        gh<_i1044.DoubleEliminationBracketGeneratorService>(),
+        gh<_i707.MatchProgressionService>(),
+        gh<_i706.Uuid>(),
       ),
     );
     return this;

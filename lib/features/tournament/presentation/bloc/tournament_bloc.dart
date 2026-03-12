@@ -14,69 +14,80 @@ export 'tournament_state.dart';
 @lazySingleton
 class TournamentBloc extends Bloc<TournamentEvent, TournamentState> {
   TournamentBloc() : super(const TournamentState()) {
-    on<TournamentCreated>(_onCreate);
-    on<TournamentBracketSnapshotAdded>(_onBracketAdded);
-    on<TournamentBracketSnapshotRemoved>(_onBracketRemoved);
-    on<TournamentDeleted>(_onDelete);
-    on<TournamentUpdated>(_onUpdate);
+    on<TournamentCreated>(_handleTournamentCreated);
+    on<TournamentBracketSnapshotAdded>(_handleBracketSnapshotAdded);
+    on<TournamentBracketSnapshotRemoved>(_handleBracketSnapshotRemoved);
+    on<TournamentDeleted>(_handleTournamentDeleted);
+    on<TournamentUpdated>(_handleTournamentUpdated);
   }
 
-  void _onCreate(TournamentCreated event, Emitter<TournamentState> emit) {
-    final updated = [event.tournament, ...state.tournaments];
-    emit(state.copyWith(tournaments: updated));
+  void _handleTournamentCreated(
+    TournamentCreated event,
+    Emitter<TournamentState> emit,
+  ) {
+    final updatedTournamentList = [event.tournament, ...state.tournaments];
+    emit(state.copyWith(tournaments: updatedTournamentList));
   }
 
-  void _onBracketAdded(
+  void _handleBracketSnapshotAdded(
     TournamentBracketSnapshotAdded event,
     Emitter<TournamentState> emit,
   ) {
-    final existing = state.bracketsByTournamentId[event.tournamentId] ?? [];
-    final updated = Map<String, List<BracketSnapshot>>.from(
+    final existingSnapshots =
+        state.bracketsByTournamentId[event.tournamentId] ?? [];
+    final updatedBracketsMap = Map<String, List<BracketSnapshot>>.from(
       state.bracketsByTournamentId,
-    )..[event.tournamentId] = [event.snapshot, ...existing];
-    emit(state.copyWith(bracketsByTournamentId: updated));
+    )..[event.tournamentId] = [event.snapshot, ...existingSnapshots];
+    emit(state.copyWith(bracketsByTournamentId: updatedBracketsMap));
   }
 
-  void _onBracketRemoved(
+  void _handleBracketSnapshotRemoved(
     TournamentBracketSnapshotRemoved event,
     Emitter<TournamentState> emit,
   ) {
-    final existing = state.bracketsByTournamentId[event.tournamentId] ?? [];
-    final filtered = existing
-        .where((s) => s.id != event.snapshotId)
+    final existingSnapshots =
+        state.bracketsByTournamentId[event.tournamentId] ?? [];
+    final filteredSnapshots = existingSnapshots
+        .where((snapshot) => snapshot.id != event.snapshotId)
         .toList();
-    final updated = Map<String, List<BracketSnapshot>>.from(
+    final updatedBracketsMap = Map<String, List<BracketSnapshot>>.from(
       state.bracketsByTournamentId,
-    )..[event.tournamentId] = filtered;
-    emit(state.copyWith(bracketsByTournamentId: updated));
+    )..[event.tournamentId] = filteredSnapshots;
+    emit(state.copyWith(bracketsByTournamentId: updatedBracketsMap));
   }
 
-  void _onDelete(TournamentDeleted event, Emitter<TournamentState> emit) {
-    final updatedTournaments = state.tournaments
-        .where((t) => t.id != event.tournamentId)
+  void _handleTournamentDeleted(
+    TournamentDeleted event,
+    Emitter<TournamentState> emit,
+  ) {
+    final updatedTournamentList = state.tournaments
+        .where((tournament) => tournament.id != event.tournamentId)
         .toList();
-    final updatedBrackets = Map<String, List<BracketSnapshot>>.from(
+    final updatedBracketsMap = Map<String, List<BracketSnapshot>>.from(
       state.bracketsByTournamentId,
     )..remove(event.tournamentId);
     emit(state.copyWith(
-      tournaments: updatedTournaments,
-      bracketsByTournamentId: updatedBrackets,
+      tournaments: updatedTournamentList,
+      bracketsByTournamentId: updatedBracketsMap,
     ));
   }
 
-  void _onUpdate(TournamentUpdated event, Emitter<TournamentState> emit) {
-    final updated = state.tournaments.map((t) {
-      return t.id == event.tournament.id ? event.tournament : t;
+  void _handleTournamentUpdated(
+    TournamentUpdated event,
+    Emitter<TournamentState> emit,
+  ) {
+    final updatedTournamentList = state.tournaments.map((tournament) {
+      return tournament.id == event.tournament.id ? event.tournament : tournament;
     }).toList();
-    emit(state.copyWith(tournaments: updated));
+    emit(state.copyWith(tournaments: updatedTournamentList));
   }
 
-  /// Convenience: look up a tournament by ID.
-  TournamentEntity? findById(String id) {
-    try {
-      return state.tournaments.firstWhere((t) => t.id == id);
-    } catch (_) {
-      return null;
-    }
+  /// Convenience: look up a tournament by its unique identifier.
+  ///
+  /// Returns `null` if no tournament with the given [tournamentId] exists.
+  TournamentEntity? findById(String tournamentId) {
+    return state.tournaments
+        .where((tournament) => tournament.id == tournamentId)
+        .firstOrNull;
   }
 }

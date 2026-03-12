@@ -7,7 +7,16 @@ import 'package:tkd_saas/features/bracket/domain/entities/match_entity.dart';
 import 'package:tkd_saas/features/bracket/domain/services/single_elimination_bracket_generator_service.dart';
 import 'package:uuid/uuid.dart';
 
+/// Minimum number of participants required for a valid bracket.
+const int _minimumParticipantCount = 2;
+
+/// Returns `2^exponent` as an integer.
+int _powerOfTwo(int exponent) => pow(2, exponent).toInt();
+
 /// Implementation of [SingleEliminationBracketGeneratorService].
+///
+/// Generates a complete single-elimination bracket with proper seeding,
+/// BYE handling, and optional 3rd-place match support.
 @LazySingleton(as: SingleEliminationBracketGeneratorService)
 class SingleEliminationBracketGeneratorServiceImplementation
     implements SingleEliminationBracketGeneratorService {
@@ -22,192 +31,271 @@ class SingleEliminationBracketGeneratorServiceImplementation
     required String bracketId,
     bool includeThirdPlaceMatch = false,
   }) {
-    final n = participantIds.length;
-    if (n < 2) {
+    final participantCount = participantIds.length;
+    if (participantCount < _minimumParticipantCount) {
       throw ArgumentError(
-        'At least 2 participants are required '
+        'At least $_minimumParticipantCount participants are required '
         'to generate a single elimination bracket.',
       );
     }
-    final totalRounds = (log(n) / ln2).ceil();
-    final bracketSize = pow(2, totalRounds).toInt();
+
+    final numberOfRounds = (log(participantCount) / ln2).ceil();
+    final bracketSize = _powerOfTwo(numberOfRounds);
     final now = DateTime.now();
 
-    // Calculate total matches (excluding 3rd place for now)
-    final tournamentMatches = bracketSize - 1;
-    final totalMatches =
-        tournamentMatches +
-        (includeThirdPlaceMatch && totalRounds >= 2 ? 1 : 0);
+    // Total matches: bracketSize - 1 (standard) + optional 3rd place
+    final standardMatchCount = bracketSize - 1;
+    final hasThirdPlaceMatch = includeThirdPlaceMatch && numberOfRounds >= 2;
+    final totalMatchCount = standardMatchCount + (hasThirdPlaceMatch ? 1 : 0);
 
-    // Generate ALL match IDs upfront
-    final matchIds = List.generate(totalMatches, (_) => _uuid.v4());
+    // Pre-generate all match IDs upfront for deterministic linking.
+    final matchIds = List.generate(totalMatchCount, (_) => _uuid.v4());
 
-    final matches = <MatchEntity>[];
-
-    // Create the bracket entity
     final bracket = BracketEntity(
       id: bracketId,
       divisionId: divisionId,
       bracketType: BracketType.winners,
-      totalRounds: totalRounds,
+      totalRounds: numberOfRounds,
       createdAtTimestamp: now,
       updatedAtTimestamp: now,
       generatedAtTimestamp: now,
       bracketDataJson: {
         'includeThirdPlaceMatch': includeThirdPlaceMatch,
-        'participantCount': n,
+        'participantCount': participantCount,
       },
     );
 
-    // Map to keep track of match by round and index (1-indexed)
-    final matchMap = <int, Map<int, MatchEntity>>{};
+    // 1. Create all match slots, indexed by round and position.
+    final matchesByRoundAndPosition =
+        _createMatchSlots(bracketId, numberOfRounds, bracketSize, matchIds, now);
 
-    // 1. Create all match slots
-    var matchIdIdx = 0;
-    for (var r = 1; r <= totalRounds; r++) {
-      matchMap[r] = {};
-      final matchesInRound = bracketSize ~/ pow(2, r);
-      for (var m = 1; m <= matchesInRound; m++) {
-        final matchId = matchIds[matchIdIdx++];
-        final match = MatchEntity(
-          id: matchId,
+    // 2. Link winner-advancement paths between rounds.
+    _linkMatchAdvancements(matchesByRoundAndPosition, numberOfRounds);
+
+    // 3. Assign participants to Round 1 using standard WT seeding.
+    _assignParticipantsToFirstRound(
+      matchesByRoundAndPosition: matchesByRoundAndPosition,
+      participantIds: participantIds,
+      participantCount: participantCount,
+      numberOfRounds: numberOfRounds,
+      now: now,
+    );
+
+    // 4. Create and link 3rd-place match if requested.
+    MatchEntity? thirdPlaceMatch;
+    if (hasThirdPlaceMatch) {
+      thirdPlaceMatch = _createThirdPlaceMatch(
+        matchesByRoundAndPosition: matchesByRoundAndPosition,
+        matchId: matchIds.last,
+        bracketId: bracketId,
+        numberOfRounds: numberOfRounds,
+        now: now,
+      );
+    }
+
+    // 5. Advance BYE winners into Round 2.
+    if (numberOfRounds >= 2) {
+      _advanceByeWinnersToNextRound(matchesByRoundAndPosition);
+    }
+
+    // Flatten into a single list.
+    final allMatches = <MatchEntity>[
+      for (final roundMatches in matchesByRoundAndPosition.values)
+        ...roundMatches.values,
+      ?thirdPlaceMatch,
+    ];
+
+    return BracketGenerationResult(bracket: bracket, matches: allMatches);
+  }
+
+  // ─────────────────────────────────────────
+  // Private Helpers
+  // ─────────────────────────────────────────
+
+  /// Creates all match slots for every round, returning a map of
+  /// `round → { matchPosition → MatchEntity }`.
+  Map<int, Map<int, MatchEntity>> _createMatchSlots(
+    String bracketId,
+    int numberOfRounds,
+    int bracketSize,
+    List<String> matchIds,
+    DateTime now,
+  ) {
+    final matchesByRoundAndPosition = <int, Map<int, MatchEntity>>{};
+    var matchIdIndex = 0;
+
+    for (var roundNumber = 1; roundNumber <= numberOfRounds; roundNumber++) {
+      matchesByRoundAndPosition[roundNumber] = {};
+      final matchCountInRound = bracketSize ~/ _powerOfTwo(roundNumber);
+
+      for (var matchPosition = 1;
+          matchPosition <= matchCountInRound;
+          matchPosition++) {
+        matchesByRoundAndPosition[roundNumber]![matchPosition] = MatchEntity(
+          id: matchIds[matchIdIndex++],
           bracketId: bracketId,
-          roundNumber: r,
-          matchNumberInRound: m,
+          roundNumber: roundNumber,
+          matchNumberInRound: matchPosition,
           createdAtTimestamp: now,
           updatedAtTimestamp: now,
           status: MatchStatus.pending,
         );
-        matchMap[r]![m] = match;
       }
     }
 
-    // 2. Link matches (advancement)
-    for (var r = 1; r < totalRounds; r++) {
-      final matchesInRound = matchMap[r]!.length;
-      for (var m = 1; m <= matchesInRound; m++) {
-        final nextMatchNum = (m + 1) ~/ 2;
-        final nextMatch = matchMap[r + 1]![nextMatchNum]!;
-        matchMap[r]![m] = matchMap[r]![m]!.copyWith(
-          winnerAdvancesToMatchId: nextMatch.id,
+    return matchesByRoundAndPosition;
+  }
+
+  /// Links each match's winner to the next round's corresponding match slot.
+  void _linkMatchAdvancements(
+    Map<int, Map<int, MatchEntity>> matchesByRoundAndPosition,
+    int numberOfRounds,
+  ) {
+    for (var roundNumber = 1; roundNumber < numberOfRounds; roundNumber++) {
+      final currentRoundMatches = matchesByRoundAndPosition[roundNumber]!;
+      for (var matchPosition = 1;
+          matchPosition <= currentRoundMatches.length;
+          matchPosition++) {
+        final nextRoundMatchPosition = (matchPosition + 1) ~/ 2;
+        final nextRoundMatch =
+            matchesByRoundAndPosition[roundNumber + 1]![nextRoundMatchPosition]!;
+
+        currentRoundMatches[matchPosition] =
+            currentRoundMatches[matchPosition]!.copyWith(
+          winnerAdvancesToMatchId: nextRoundMatch.id,
         );
       }
     }
+  }
 
-    // 3. Assign participants to Round 1 (Standard WT Seeding)
-    final r1Matches = matchMap[1]!;
-    final r1Count = r1Matches.length;
+  /// Assigns participants to Round 1 using standard WT bracket seeding.
+  /// Automatically marks single-entrant (BYE) slots as completed.
+  void _assignParticipantsToFirstRound({
+    required Map<int, Map<int, MatchEntity>> matchesByRoundAndPosition,
+    required List<String> participantIds,
+    required int participantCount,
+    required int numberOfRounds,
+    required DateTime now,
+  }) {
+    final firstRoundMatches = matchesByRoundAndPosition[1]!;
+    final seedingOrder = _generateSeedingOrder(numberOfRounds);
 
-    List<int> generateSeeding(int rounds) {
-      if (rounds == 1) return [1, 2];
-      final prev = generateSeeding(rounds - 1);
-      final result = <int>[];
-      final nextSum = (1 << rounds) + 1;
-      for (final p in prev) {
-        result.add(p);
-        result.add(nextSum - p);
-      }
-      return result;
-    }
+    for (var matchPosition = 1;
+        matchPosition <= firstRoundMatches.length;
+        matchPosition++) {
+      final blueSeedNumber = seedingOrder[(matchPosition - 1) * 2];
+      final redSeedNumber = seedingOrder[(matchPosition - 1) * 2 + 1];
 
-    final seeding = generateSeeding(totalRounds);
-    
-    for (var m = 1; m <= r1Count; m++) {
-      final seedBlue = seeding[(m - 1) * 2]; // Top slot (Blue)
-      final seedRed = seeding[(m - 1) * 2 + 1]; // Bottom slot (Red)
+      final blueParticipantId =
+          blueSeedNumber <= participantCount ? participantIds[blueSeedNumber - 1] : null;
+      final redParticipantId =
+          redSeedNumber <= participantCount ? participantIds[redSeedNumber - 1] : null;
 
-      String? blueId;
-      String? redId;
-
-      if (seedBlue <= n) {
-        blueId = participantIds[seedBlue - 1];
-      }
-      if (seedRed <= n) {
-        redId = participantIds[seedRed - 1];
-      }
-
-      var match = r1Matches[m]!;
-      match = match.copyWith(
-        participantBlueId: blueId,
-        participantRedId: redId,
+      var currentMatch = firstRoundMatches[matchPosition]!.copyWith(
+        participantBlueId: blueParticipantId,
+        participantRedId: redParticipantId,
       );
 
-      // Handle BYE Status/Result
-      if (blueId != null && redId == null) {
-        match = match.copyWith(
+      // Auto-complete BYE matches.
+      if (blueParticipantId != null && redParticipantId == null) {
+        currentMatch = currentMatch.copyWith(
           status: MatchStatus.completed,
           resultType: MatchResultType.bye,
           completedAtTimestamp: now,
-          winnerId: blueId,
+          winnerId: blueParticipantId,
         );
-      } else if (blueId == null && redId != null) {
-        match = match.copyWith(
+      } else if (blueParticipantId == null && redParticipantId != null) {
+        currentMatch = currentMatch.copyWith(
           status: MatchStatus.completed,
           resultType: MatchResultType.bye,
           completedAtTimestamp: now,
-          winnerId: redId,
+          winnerId: redParticipantId,
         );
       }
-      r1Matches[m] = match;
+
+      firstRoundMatches[matchPosition] = currentMatch;
     }
+  }
 
-    // 4. Handle 3rd place match
-    MatchEntity? thirdPlaceMatch;
-    if (includeThirdPlaceMatch && totalRounds >= 2) {
-      final matchId = matchIds.last;
-      thirdPlaceMatch = MatchEntity(
-        id: matchId,
-        bracketId: bracketId,
-        roundNumber: totalRounds,
-        matchNumberInRound: 2, // Final is 1
-        createdAtTimestamp: now,
-        updatedAtTimestamp: now,
-        status: MatchStatus.pending,
-      );
+  /// Recursively builds the standard WT seeding order for a given round count.
+  ///
+  /// For 3 rounds (8 slots): [1, 8, 5, 4, 3, 6, 7, 2]
+  List<int> _generateSeedingOrder(int roundCount) {
+    if (roundCount == 1) return [1, 2];
+    final previousSeeding = _generateSeedingOrder(roundCount - 1);
+    final totalPositions = 1 << roundCount; // 2^roundCount
+    final complementSum = totalPositions + 1;
+    final seedingOrder = <int>[];
+    for (final seedPosition in previousSeeding) {
+      seedingOrder.add(seedPosition);
+      seedingOrder.add(complementSum - seedPosition);
+    }
+    return seedingOrder;
+  }
 
-      // Link semi-final losers to 3rd place
-      final semiRound = totalRounds - 1;
-      final semiMatches = matchMap[semiRound]!;
-      if (semiMatches.containsKey(1)) {
-        semiMatches[1] = semiMatches[1]!.copyWith(
+  /// Creates the 3rd-place match and links semi-final losers to it.
+  MatchEntity _createThirdPlaceMatch({
+    required Map<int, Map<int, MatchEntity>> matchesByRoundAndPosition,
+    required String matchId,
+    required String bracketId,
+    required int numberOfRounds,
+    required DateTime now,
+  }) {
+    final thirdPlaceMatch = MatchEntity(
+      id: matchId,
+      bracketId: bracketId,
+      roundNumber: numberOfRounds,
+      matchNumberInRound: 2, // Final is position 1
+      createdAtTimestamp: now,
+      updatedAtTimestamp: now,
+      status: MatchStatus.pending,
+    );
+
+    // Link semi-final losers to the 3rd-place match.
+    final semiFinalsRoundNumber = numberOfRounds - 1;
+    final semiFinalsMatches = matchesByRoundAndPosition[semiFinalsRoundNumber]!;
+
+    for (final semiPosition in [1, 2]) {
+      if (semiFinalsMatches.containsKey(semiPosition)) {
+        semiFinalsMatches[semiPosition] =
+            semiFinalsMatches[semiPosition]!.copyWith(
           loserAdvancesToMatchId: thirdPlaceMatch.id,
         );
       }
-      if (semiMatches.containsKey(2)) {
-        semiMatches[2] = semiMatches[2]!.copyWith(
-          loserAdvancesToMatchId: thirdPlaceMatch.id,
-        );
+    }
+
+    return thirdPlaceMatch;
+  }
+
+  /// Advances BYE winners from Round 1 into their Round 2 slots.
+  void _advanceByeWinnersToNextRound(
+    Map<int, Map<int, MatchEntity>> matchesByRoundAndPosition,
+  ) {
+    final firstRoundMatches = matchesByRoundAndPosition[1]!;
+    final secondRoundMatches = matchesByRoundAndPosition[2]!;
+
+    for (var matchPosition = 1;
+        matchPosition <= firstRoundMatches.length;
+        matchPosition++) {
+      final firstRoundMatch = firstRoundMatches[matchPosition]!;
+      if (firstRoundMatch.resultType != MatchResultType.bye ||
+          firstRoundMatch.winnerId == null) {
+        continue;
       }
-    }
 
-    // 5. Advance bye winners to Round 2
-    if (totalRounds >= 2) {
-      final r2Matches = matchMap[2]!;
-      for (var m = 1; m <= r1Count; m++) {
-        final match = r1Matches[m]!;
-        if (match.resultType == MatchResultType.bye && match.winnerId != null) {
-          final nextMatchNum = (m + 1) ~/ 2;
-          var nextMatch = r2Matches[nextMatchNum]!;
+      final nextRoundMatchPosition = (matchPosition + 1) ~/ 2;
+      var nextRoundMatch = secondRoundMatches[nextRoundMatchPosition]!;
 
-          if (m % 2 != 0) {
-            nextMatch = nextMatch.copyWith(participantBlueId: match.winnerId);
-          } else {
-            nextMatch = nextMatch.copyWith(participantRedId: match.winnerId);
-          }
-          r2Matches[nextMatchNum] = nextMatch;
-        }
+      // Odd matches feed blue (top), even matches feed red (bottom).
+      if (matchPosition % 2 != 0) {
+        nextRoundMatch =
+            nextRoundMatch.copyWith(participantBlueId: firstRoundMatch.winnerId);
+      } else {
+        nextRoundMatch =
+            nextRoundMatch.copyWith(participantRedId: firstRoundMatch.winnerId);
       }
-    }
 
-    // Flatten matchMap to list
-    for (final roundMatches in matchMap.values) {
-      matches.addAll(roundMatches.values);
+      secondRoundMatches[nextRoundMatchPosition] = nextRoundMatch;
     }
-
-    if (thirdPlaceMatch != null) {
-      matches.add(thirdPlaceMatch);
-    }
-
-    return BracketGenerationResult(bracket: bracket, matches: matches);
   }
 }

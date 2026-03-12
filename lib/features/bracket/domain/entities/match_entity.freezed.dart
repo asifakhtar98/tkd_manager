@@ -15,7 +15,31 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$MatchEntity {
 
- String get id; String get bracketId; int get roundNumber; int get matchNumberInRound; DateTime get createdAtTimestamp; DateTime get updatedAtTimestamp; String? get participantRedId; String? get participantBlueId; String? get winnerId; String? get winnerAdvancesToMatchId; String? get loserAdvancesToMatchId; int? get scheduledRingNumber; DateTime? get scheduledTime; MatchStatus get status; MatchResultType? get resultType; String? get notes; int? get blueScore; int? get redScore; DateTime? get startedAtTimestamp; DateTime? get completedAtTimestamp; int get syncVersion; bool get isDeleted; DateTime? get deletedAtTimestamp; bool get isDemoData;
+/// Unique identifier for this match (UUID v4).
+ String get id;/// The bracket this match belongs to.
+ String get bracketId;/// 1-based round number within the bracket.
+ int get roundNumber;/// 1-based position of this match within its round.
+ int get matchNumberInRound;/// Timestamp when the match record was created.
+ DateTime get createdAtTimestamp;/// Timestamp of the most recent update.
+ DateTime get updatedAtTimestamp;/// ID of the participant in the red corner (null if unassigned / BYE).
+ String? get participantRedId;/// ID of the participant in the blue corner (null if unassigned / BYE).
+ String? get participantBlueId;/// ID of the victorious participant (null until result is recorded).
+ String? get winnerId;/// Match ID to which the winner advances (null for final match).
+ String? get winnerAdvancesToMatchId;/// Match ID to which the loser drops (only in double-elimination).
+ String? get loserAdvancesToMatchId;/// Assigned ring / mat number for the match.
+ int? get scheduledRingNumber;/// Scheduled start time.
+ DateTime? get scheduledTime;/// Current lifecycle status of the match.
+ MatchStatus get status;/// How the match was decided (null if not yet completed).
+ MatchResultType? get resultType;/// Free-form notes attached to the match.
+ String? get notes;/// Score awarded to the blue-corner participant.
+ int? get blueScore;/// Score awarded to the red-corner participant.
+ int? get redScore;/// Timestamp when the match started.
+ DateTime? get startedAtTimestamp;/// Timestamp when the match was completed.
+ DateTime? get completedAtTimestamp;/// Optimistic concurrency version counter.
+ int get syncVersion;/// Soft-delete flag.
+ bool get isDeleted;/// Timestamp of soft deletion, if applicable.
+ DateTime? get deletedAtTimestamp;/// Whether this match was created from demo/sample data.
+ bool get isDemoData;
 /// Create a copy of MatchEntity
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -231,33 +255,57 @@ return $default(_that.id,_that.bracketId,_that.roundNumber,_that.matchNumberInRo
 /// @nodoc
 @JsonSerializable()
 
-class _MatchEntity implements MatchEntity {
-  const _MatchEntity({required this.id, required this.bracketId, required this.roundNumber, required this.matchNumberInRound, required this.createdAtTimestamp, required this.updatedAtTimestamp, this.participantRedId, this.participantBlueId, this.winnerId, this.winnerAdvancesToMatchId, this.loserAdvancesToMatchId, this.scheduledRingNumber, this.scheduledTime, this.status = MatchStatus.pending, this.resultType, this.notes, this.blueScore, this.redScore, this.startedAtTimestamp, this.completedAtTimestamp, this.syncVersion = 1, this.isDeleted = false, this.deletedAtTimestamp, this.isDemoData = false});
+class _MatchEntity extends MatchEntity {
+  const _MatchEntity({required this.id, required this.bracketId, required this.roundNumber, required this.matchNumberInRound, required this.createdAtTimestamp, required this.updatedAtTimestamp, this.participantRedId, this.participantBlueId, this.winnerId, this.winnerAdvancesToMatchId, this.loserAdvancesToMatchId, this.scheduledRingNumber, this.scheduledTime, this.status = MatchStatus.pending, this.resultType, this.notes, this.blueScore, this.redScore, this.startedAtTimestamp, this.completedAtTimestamp, this.syncVersion = 1, this.isDeleted = false, this.deletedAtTimestamp, this.isDemoData = false}): super._();
   factory _MatchEntity.fromJson(Map<String, dynamic> json) => _$MatchEntityFromJson(json);
 
+/// Unique identifier for this match (UUID v4).
 @override final  String id;
+/// The bracket this match belongs to.
 @override final  String bracketId;
+/// 1-based round number within the bracket.
 @override final  int roundNumber;
+/// 1-based position of this match within its round.
 @override final  int matchNumberInRound;
+/// Timestamp when the match record was created.
 @override final  DateTime createdAtTimestamp;
+/// Timestamp of the most recent update.
 @override final  DateTime updatedAtTimestamp;
+/// ID of the participant in the red corner (null if unassigned / BYE).
 @override final  String? participantRedId;
+/// ID of the participant in the blue corner (null if unassigned / BYE).
 @override final  String? participantBlueId;
+/// ID of the victorious participant (null until result is recorded).
 @override final  String? winnerId;
+/// Match ID to which the winner advances (null for final match).
 @override final  String? winnerAdvancesToMatchId;
+/// Match ID to which the loser drops (only in double-elimination).
 @override final  String? loserAdvancesToMatchId;
+/// Assigned ring / mat number for the match.
 @override final  int? scheduledRingNumber;
+/// Scheduled start time.
 @override final  DateTime? scheduledTime;
+/// Current lifecycle status of the match.
 @override@JsonKey() final  MatchStatus status;
+/// How the match was decided (null if not yet completed).
 @override final  MatchResultType? resultType;
+/// Free-form notes attached to the match.
 @override final  String? notes;
+/// Score awarded to the blue-corner participant.
 @override final  int? blueScore;
+/// Score awarded to the red-corner participant.
 @override final  int? redScore;
+/// Timestamp when the match started.
 @override final  DateTime? startedAtTimestamp;
+/// Timestamp when the match was completed.
 @override final  DateTime? completedAtTimestamp;
+/// Optimistic concurrency version counter.
 @override@JsonKey() final  int syncVersion;
+/// Soft-delete flag.
 @override@JsonKey() final  bool isDeleted;
+/// Timestamp of soft deletion, if applicable.
 @override final  DateTime? deletedAtTimestamp;
+/// Whether this match was created from demo/sample data.
 @override@JsonKey() final  bool isDemoData;
 
 /// Create a copy of MatchEntity

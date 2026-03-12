@@ -15,7 +15,22 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$BracketEntity {
 
- String get id; String get divisionId; BracketType get bracketType; int get totalRounds; DateTime get createdAtTimestamp; DateTime get updatedAtTimestamp; String? get poolIdentifier; bool get isFinalized; DateTime? get generatedAtTimestamp; DateTime? get finalizedAtTimestamp; Map<String, dynamic>? get bracketDataJson; int get syncVersion; bool get isDeleted; DateTime? get deletedAtTimestamp; bool get isDemoData;
+/// Unique identifier (UUID v4).
+ String get id;/// The division this bracket belongs to.
+ String get divisionId;/// Role of this bracket (winners, losers, or pool).
+ BracketType get bracketType;/// Total number of rounds in this bracket.
+ int get totalRounds;/// Record creation timestamp.
+ DateTime get createdAtTimestamp;/// Most recent update timestamp.
+ DateTime get updatedAtTimestamp;/// Pool letter identifier (only used for round-robin brackets).
+ String? get poolIdentifier;/// Whether bracket results have been finalized.
+ bool get isFinalized;/// Timestamp when the bracket structure was generated.
+ DateTime? get generatedAtTimestamp;/// Timestamp when the bracket was finalized.
+ DateTime? get finalizedAtTimestamp;/// Raw JSON payload for the bracket structure (legacy / export).
+ Map<String, dynamic>? get bracketDataJson;/// Optimistic concurrency version counter.
+ int get syncVersion;/// Soft-delete flag.
+ bool get isDeleted;/// Timestamp of soft deletion, if applicable.
+ DateTime? get deletedAtTimestamp;/// Whether this bracket was created from demo/sample data.
+ bool get isDemoData;
 /// Create a copy of BracketEntity
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -226,17 +241,29 @@ class _BracketEntity implements BracketEntity {
   const _BracketEntity({required this.id, required this.divisionId, required this.bracketType, required this.totalRounds, required this.createdAtTimestamp, required this.updatedAtTimestamp, this.poolIdentifier, this.isFinalized = false, this.generatedAtTimestamp, this.finalizedAtTimestamp, final  Map<String, dynamic>? bracketDataJson, this.syncVersion = 1, this.isDeleted = false, this.deletedAtTimestamp, this.isDemoData = false}): _bracketDataJson = bracketDataJson;
   factory _BracketEntity.fromJson(Map<String, dynamic> json) => _$BracketEntityFromJson(json);
 
+/// Unique identifier (UUID v4).
 @override final  String id;
+/// The division this bracket belongs to.
 @override final  String divisionId;
+/// Role of this bracket (winners, losers, or pool).
 @override final  BracketType bracketType;
+/// Total number of rounds in this bracket.
 @override final  int totalRounds;
+/// Record creation timestamp.
 @override final  DateTime createdAtTimestamp;
+/// Most recent update timestamp.
 @override final  DateTime updatedAtTimestamp;
+/// Pool letter identifier (only used for round-robin brackets).
 @override final  String? poolIdentifier;
+/// Whether bracket results have been finalized.
 @override@JsonKey() final  bool isFinalized;
+/// Timestamp when the bracket structure was generated.
 @override final  DateTime? generatedAtTimestamp;
+/// Timestamp when the bracket was finalized.
 @override final  DateTime? finalizedAtTimestamp;
+/// Raw JSON payload for the bracket structure (legacy / export).
  final  Map<String, dynamic>? _bracketDataJson;
+/// Raw JSON payload for the bracket structure (legacy / export).
 @override Map<String, dynamic>? get bracketDataJson {
   final value = _bracketDataJson;
   if (value == null) return null;
@@ -245,9 +272,13 @@ class _BracketEntity implements BracketEntity {
   return EqualUnmodifiableMapView(value);
 }
 
+/// Optimistic concurrency version counter.
 @override@JsonKey() final  int syncVersion;
+/// Soft-delete flag.
 @override@JsonKey() final  bool isDeleted;
+/// Timestamp of soft deletion, if applicable.
 @override final  DateTime? deletedAtTimestamp;
+/// Whether this bracket was created from demo/sample data.
 @override@JsonKey() final  bool isDemoData;
 
 /// Create a copy of BracketEntity

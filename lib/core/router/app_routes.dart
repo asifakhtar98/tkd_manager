@@ -13,6 +13,30 @@ import 'package:tkd_saas/features/tournament/presentation/screens/tournament_det
 part 'app_routes.g.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Bracket format — type-safe enum replacing raw 'Single Elimination' /
+// 'Double Elimination' strings throughout the codebase.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// The elimination format used to generate a bracket.
+///
+/// Every bracket-related screen, BLoC event, and snapshot references this enum
+/// instead of a raw string, giving compile-time safety and a single source of
+/// truth for display labels.
+enum BracketFormat {
+  /// Standard single-elimination (knockout) tournament.
+  singleElimination('Single Elimination'),
+
+  /// Double-elimination tournament with winners / losers brackets and grand
+  /// finals.
+  doubleElimination('Double Elimination');
+
+  const BracketFormat(this.displayLabel);
+
+  /// Human-readable label used in UI text, PDF headers, and snapshot labels.
+  final String displayLabel;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Route definitions — annotated for go_router_builder code generation.
 // Run: dart run build_runner build --delete-conflicting-outputs
 // ─────────────────────────────────────────────────────────────────────────────
@@ -53,12 +77,13 @@ class TournamentDetailRoute extends GoRouteData with $TournamentDetailRoute {
 }
 
 /// Extra data passed to the bracket route.
+///
 /// Bundles all complex objects so go_router_builder can route via `$extra`.
 class BracketRouteExtra {
   const BracketRouteExtra({
     required this.participants,
     required this.dojangSeparation,
-    required this.format,
+    required this.bracketFormat,
     required this.includeThirdPlaceMatch,
     this.tournament,
     this.isHistoryView = false,
@@ -66,7 +91,10 @@ class BracketRouteExtra {
 
   final List<ParticipantEntity> participants;
   final bool dojangSeparation;
-  final String format;
+
+  /// The elimination format for this bracket.
+  final BracketFormat bracketFormat;
+
   final bool includeThirdPlaceMatch;
 
   /// The owning tournament — null only for demo/legacy paths.
@@ -91,14 +119,14 @@ class BracketRoute extends GoRouteData with $BracketRoute {
       create: (_) => getIt<BracketBloc>()
         ..add(BracketGenerateRequested(
           participants: $extra.participants,
-          format: $extra.format,
+          bracketFormat: $extra.bracketFormat,
           dojangSeparation: $extra.dojangSeparation,
           includeThirdPlaceMatch: $extra.includeThirdPlaceMatch,
         )),
       child: BracketViewerScreen(
         participants: $extra.participants,
         dojangSeparation: $extra.dojangSeparation,
-        format: $extra.format,
+        bracketFormat: $extra.bracketFormat,
         includeThirdPlaceMatch: $extra.includeThirdPlaceMatch,
         tournament: $extra.tournament,
         isHistoryView: $extra.isHistoryView,

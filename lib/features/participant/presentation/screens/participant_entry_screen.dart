@@ -35,9 +35,7 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
   final Uuid _uuid = const Uuid();
   bool _dojangSeparation = true;
   bool _includeThirdPlaceMatch = false;
-  static const String _formatSingle = 'Single Elimination';
-  static const String _formatDouble = 'Double Elimination';
-  String _format = _formatSingle;
+  BracketFormat _selectedBracketFormat = BracketFormat.singleElimination;
 
   // Tournament selector state
   // null = nothing selected yet; _createNewSentinel = user chose "Create New"
@@ -88,7 +86,7 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
       return null;
     }
     return state.tournaments
-        .where((t) => t.id == _selectedTournamentId)
+        .where((tournament) => tournament.id == _selectedTournamentId)
         .firstOrNull;
   }
 
@@ -111,7 +109,7 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
     return _existingTournament(state);
   }
 
-  void _addParticipant() {
+  void _addParticipantFromFormFields() {
     if (_firstNameController.text.trim().isEmpty) return;
     setState(() {
       _participants.add(ParticipantEntity(
@@ -134,12 +132,12 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
     });
   }
 
-  void _importCsv(String csvData) {
+  void _importParticipantsFromCsvData(String csvData) {
     if (csvData.trim().isEmpty) return;
     final lines = csvData.trim().split('\n');
     setState(() {
-      for (var l in lines) {
-        final parts = l.split(',');
+      for (var csvLine in lines) {
+        final parts = csvLine.split(',');
         if (parts.isNotEmpty && parts[0].trim().isNotEmpty) {
           _participants.add(ParticipantEntity(
             id: _uuid.v4(),
@@ -163,7 +161,7 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
   void _removeParticipant(int index) =>
       setState(() => _participants.removeAt(index));
 
-  Future<void> _onGenerate(BuildContext context, TournamentState state) async {
+  Future<void> _handleGenerateBracketRequested(BuildContext context, TournamentState state) async {
     final bloc = context.read<TournamentBloc>();
 
     TournamentEntity? tournament = _resolveTournament(state);
@@ -183,7 +181,7 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
       $extra: BracketRouteExtra(
         participants: List<ParticipantEntity>.from(_participants),
         dojangSeparation: _dojangSeparation,
-        format: _format,
+        bracketFormat: _selectedBracketFormat,
         includeThirdPlaceMatch: _includeThirdPlaceMatch,
         tournament: tournament,
       ),
@@ -230,7 +228,7 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                           canGenerate ? Colors.white : Colors.grey,
                     ),
                     onPressed: canGenerate
-                        ? () => _onGenerate(context, state)
+                        ? () => _handleGenerateBracketRequested(context, state)
                         : null,
                   ),
                 ),
@@ -458,16 +456,16 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                DropdownButton<String>(
-                  value: _format,
+                DropdownButton<BracketFormat>(
+                  value: _selectedBracketFormat,
                   isExpanded: true,
-                  items: [_formatSingle, _formatDouble]
+                  items: BracketFormat.values
                       .map(
-                        (f) => DropdownMenuItem(value: f, child: Text(f)),
+                        (f) => DropdownMenuItem(value: f, child: Text(f.displayLabel)),
                       )
                       .toList(),
                   onChanged: (val) {
-                    if (val != null) setState(() => _format = val);
+                    if (val != null) setState(() => _selectedBracketFormat = val);
                   },
                 ),
                 const SizedBox(height: 16),
@@ -478,7 +476,7 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                   onChanged: (val) =>
                       setState(() => _dojangSeparation = val),
                 ),
-                if (_format == _formatSingle)
+                if (_selectedBracketFormat == BracketFormat.singleElimination)
                   SwitchListTile(
                     title: const Text('3rd Place Match'),
                     subtitle: const Text('Bronze medal match for semi losers'),
@@ -516,14 +514,14 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                   controller: _firstNameController,
                   decoration: const InputDecoration(labelText: 'First Name'),
                   textInputAction: TextInputAction.next,
-                  onSubmitted: (_) => _addParticipant(),
+                  onSubmitted: (_) => _addParticipantFromFormFields(),
                 ),
                 const SizedBox(height: 8),
                 TextField(
                   controller: _lastNameController,
                   decoration: const InputDecoration(labelText: 'Last Name'),
                   textInputAction: TextInputAction.next,
-                  onSubmitted: (_) => _addParticipant(),
+                  onSubmitted: (_) => _addParticipantFromFormFields(),
                 ),
                 const SizedBox(height: 8),
                 TextField(
@@ -532,7 +530,7 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                     labelText: 'Dojang / Club (Optional)',
                   ),
                   textInputAction: TextInputAction.next,
-                  onSubmitted: (_) => _addParticipant(),
+                  onSubmitted: (_) => _addParticipantFromFormFields(),
                 ),
                 const SizedBox(height: 8),
                 TextField(
@@ -541,7 +539,7 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                     labelText: 'Registration ID (Optional)',
                   ),
                   textInputAction: TextInputAction.done,
-                  onSubmitted: (_) => _addParticipant(),
+                  onSubmitted: (_) => _addParticipantFromFormFields(),
                 ),
                 const SizedBox(height: 16),
                 SizedBox(
@@ -549,7 +547,7 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                   child: ElevatedButton.icon(
                     icon: const Icon(Icons.add),
                     label: const Text('Add Participant'),
-                    onPressed: _addParticipant,
+                    onPressed: _addParticipantFromFormFields,
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -583,7 +581,7 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                           );
                         },
                       );
-                      if (text != null && text.isNotEmpty) _importCsv(text);
+                      if (text != null && text.isNotEmpty) _importParticipantsFromCsvData(text);
                     },
                   ),
                 ),

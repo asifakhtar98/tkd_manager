@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:tkd_saas/core/router/app_routes.dart';
 import 'package:tkd_saas/features/bracket/presentation/bloc/bracket_bloc.dart';
 import 'package:tkd_saas/features/participant/domain/entities/participant_entity.dart';
 
@@ -15,8 +16,8 @@ abstract class BracketSnapshot with _$BracketSnapshot {
     /// Display label, e.g. "Single Elim — 8 Players".
     required String label,
 
-    /// 'Single Elimination' | 'Double Elimination'
-    required String format,
+    /// The elimination format used for this bracket generation.
+    required BracketFormat format,
 
     required int participantCount,
     required bool includeThirdPlaceMatch,

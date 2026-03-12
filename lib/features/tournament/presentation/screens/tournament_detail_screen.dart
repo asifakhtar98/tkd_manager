@@ -284,7 +284,7 @@ class _BracketSnapshotCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(
-            snapshot.format == 'Double Elimination'
+            snapshot.format == BracketFormat.doubleElimination
                 ? Icons.repeat
                 : Icons.account_tree_outlined,
             color: theme.colorScheme.onSecondaryContainer,
@@ -314,7 +314,7 @@ class _BracketSnapshotCard extends StatelessWidget {
           $extra: BracketRouteExtra(
             participants: snapshot.participants,
             dojangSeparation: snapshot.dojangSeparation,
-            format: snapshot.format,
+            bracketFormat: snapshot.format,
             includeThirdPlaceMatch: snapshot.includeThirdPlaceMatch,
             tournament: tournament,
             isHistoryView: true,

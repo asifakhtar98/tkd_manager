@@ -117,7 +117,7 @@ class _ScoreEntryDialogState extends State<ScoreEntryDialog> {
 
             // ── Result Type ──
             DropdownButtonFormField<MatchResultType>(
-              value: _resultType,
+              initialValue: _resultType,
               decoration: const InputDecoration(
                 labelText: 'Result Type',
                 border: OutlineInputBorder(),
@@ -145,8 +145,8 @@ class _ScoreEntryDialogState extends State<ScoreEntryDialog> {
                   child: Text('Referee Decision'),
                 ),
               ],
-              onChanged: (v) {
-                if (v != null) setState(() => _resultType = v);
+              onChanged: (selectedResultType) {
+                if (selectedResultType != null) setState(() => _resultType = selectedResultType);
               },
             ),
             const SizedBox(height: 16),

@@ -16,8 +16,8 @@ mixin _$BracketSnapshot {
 
 /// Unique ID for this snapshot (UUID v4).
  String get id;/// Display label, e.g. "Single Elim — 8 Players".
- String get label;/// 'Single Elimination' | 'Double Elimination'
- String get format; int get participantCount; bool get includeThirdPlaceMatch; bool get dojangSeparation;/// Wall-clock time when the bracket was generated.
+ String get label;/// The elimination format used for this bracket generation.
+ BracketFormat get format; int get participantCount; bool get includeThirdPlaceMatch; bool get dojangSeparation;/// Wall-clock time when the bracket was generated.
  DateTime get generatedAt;/// Full participant list at the time of generation.
  List<ParticipantEntity> get participants;/// The generated bracket data (single or double elimination union).
  BracketResult get result;
@@ -51,7 +51,7 @@ abstract mixin class $BracketSnapshotCopyWith<$Res>  {
   factory $BracketSnapshotCopyWith(BracketSnapshot value, $Res Function(BracketSnapshot) _then) = _$BracketSnapshotCopyWithImpl;
 @useResult
 $Res call({
- String id, String label, String format, int participantCount, bool includeThirdPlaceMatch, bool dojangSeparation, DateTime generatedAt, List<ParticipantEntity> participants, BracketResult result
+ String id, String label, BracketFormat format, int participantCount, bool includeThirdPlaceMatch, bool dojangSeparation, DateTime generatedAt, List<ParticipantEntity> participants, BracketResult result
 });
 
 
@@ -73,7 +73,7 @@ class _$BracketSnapshotCopyWithImpl<$Res>
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,label: null == label ? _self.label : label // ignore: cast_nullable_to_non_nullable
 as String,format: null == format ? _self.format : format // ignore: cast_nullable_to_non_nullable
-as String,participantCount: null == participantCount ? _self.participantCount : participantCount // ignore: cast_nullable_to_non_nullable
+as BracketFormat,participantCount: null == participantCount ? _self.participantCount : participantCount // ignore: cast_nullable_to_non_nullable
 as int,includeThirdPlaceMatch: null == includeThirdPlaceMatch ? _self.includeThirdPlaceMatch : includeThirdPlaceMatch // ignore: cast_nullable_to_non_nullable
 as bool,dojangSeparation: null == dojangSeparation ? _self.dojangSeparation : dojangSeparation // ignore: cast_nullable_to_non_nullable
 as bool,generatedAt: null == generatedAt ? _self.generatedAt : generatedAt // ignore: cast_nullable_to_non_nullable
@@ -173,7 +173,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String label,  String format,  int participantCount,  bool includeThirdPlaceMatch,  bool dojangSeparation,  DateTime generatedAt,  List<ParticipantEntity> participants,  BracketResult result)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String label,  BracketFormat format,  int participantCount,  bool includeThirdPlaceMatch,  bool dojangSeparation,  DateTime generatedAt,  List<ParticipantEntity> participants,  BracketResult result)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _BracketSnapshot() when $default != null:
 return $default(_that.id,_that.label,_that.format,_that.participantCount,_that.includeThirdPlaceMatch,_that.dojangSeparation,_that.generatedAt,_that.participants,_that.result);case _:
@@ -194,7 +194,7 @@ return $default(_that.id,_that.label,_that.format,_that.participantCount,_that.i
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String label,  String format,  int participantCount,  bool includeThirdPlaceMatch,  bool dojangSeparation,  DateTime generatedAt,  List<ParticipantEntity> participants,  BracketResult result)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String label,  BracketFormat format,  int participantCount,  bool includeThirdPlaceMatch,  bool dojangSeparation,  DateTime generatedAt,  List<ParticipantEntity> participants,  BracketResult result)  $default,) {final _that = this;
 switch (_that) {
 case _BracketSnapshot():
 return $default(_that.id,_that.label,_that.format,_that.participantCount,_that.includeThirdPlaceMatch,_that.dojangSeparation,_that.generatedAt,_that.participants,_that.result);case _:
@@ -214,7 +214,7 @@ return $default(_that.id,_that.label,_that.format,_that.participantCount,_that.i
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String label,  String format,  int participantCount,  bool includeThirdPlaceMatch,  bool dojangSeparation,  DateTime generatedAt,  List<ParticipantEntity> participants,  BracketResult result)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String label,  BracketFormat format,  int participantCount,  bool includeThirdPlaceMatch,  bool dojangSeparation,  DateTime generatedAt,  List<ParticipantEntity> participants,  BracketResult result)?  $default,) {final _that = this;
 switch (_that) {
 case _BracketSnapshot() when $default != null:
 return $default(_that.id,_that.label,_that.format,_that.participantCount,_that.includeThirdPlaceMatch,_that.dojangSeparation,_that.generatedAt,_that.participants,_that.result);case _:
@@ -236,8 +236,8 @@ class _BracketSnapshot implements BracketSnapshot {
 @override final  String id;
 /// Display label, e.g. "Single Elim — 8 Players".
 @override final  String label;
-/// 'Single Elimination' | 'Double Elimination'
-@override final  String format;
+/// The elimination format used for this bracket generation.
+@override final  BracketFormat format;
 @override final  int participantCount;
 @override final  bool includeThirdPlaceMatch;
 @override final  bool dojangSeparation;
@@ -285,7 +285,7 @@ abstract mixin class _$BracketSnapshotCopyWith<$Res> implements $BracketSnapshot
   factory _$BracketSnapshotCopyWith(_BracketSnapshot value, $Res Function(_BracketSnapshot) _then) = __$BracketSnapshotCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String label, String format, int participantCount, bool includeThirdPlaceMatch, bool dojangSeparation, DateTime generatedAt, List<ParticipantEntity> participants, BracketResult result
+ String id, String label, BracketFormat format, int participantCount, bool includeThirdPlaceMatch, bool dojangSeparation, DateTime generatedAt, List<ParticipantEntity> participants, BracketResult result
 });
 
 
@@ -307,7 +307,7 @@ class __$BracketSnapshotCopyWithImpl<$Res>
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,label: null == label ? _self.label : label // ignore: cast_nullable_to_non_nullable
 as String,format: null == format ? _self.format : format // ignore: cast_nullable_to_non_nullable
-as String,participantCount: null == participantCount ? _self.participantCount : participantCount // ignore: cast_nullable_to_non_nullable
+as BracketFormat,participantCount: null == participantCount ? _self.participantCount : participantCount // ignore: cast_nullable_to_non_nullable
 as int,includeThirdPlaceMatch: null == includeThirdPlaceMatch ? _self.includeThirdPlaceMatch : includeThirdPlaceMatch // ignore: cast_nullable_to_non_nullable
 as bool,dojangSeparation: null == dojangSeparation ? _self.dojangSeparation : dojangSeparation // ignore: cast_nullable_to_non_nullable
 as bool,generatedAt: null == generatedAt ? _self.generatedAt : generatedAt // ignore: cast_nullable_to_non_nullable

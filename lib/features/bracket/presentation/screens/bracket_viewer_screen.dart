@@ -8,6 +8,7 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:uuid/uuid.dart';
 import 'package:tkd_saas/features/bracket/domain/entities/match_entity.dart';
+import 'package:tkd_saas/core/router/app_routes.dart';
 import 'package:tkd_saas/features/bracket/presentation/bloc/bracket_bloc.dart';
 import 'package:tkd_saas/features/bracket/presentation/widgets/score_entry_dialog.dart';
 import 'package:tkd_saas/features/bracket/presentation/widgets/tie_sheet_canvas_widget.dart';
@@ -23,7 +24,7 @@ class BracketViewerScreen extends StatefulWidget {
     super.key,
     required this.participants,
     required this.dojangSeparation,
-    required this.format,
+    required this.bracketFormat,
     required this.includeThirdPlaceMatch,
     this.tournament,
     this.isHistoryView = false,
@@ -31,7 +32,9 @@ class BracketViewerScreen extends StatefulWidget {
 
   final List<ParticipantEntity> participants;
   final bool dojangSeparation;
-  final String format;
+
+  /// The elimination format used for this bracket.
+  final BracketFormat bracketFormat;
   final bool includeThirdPlaceMatch;
   final TournamentEntity? tournament;
 
@@ -100,7 +103,7 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
                 ),
               ),
               pw.Text(
-                widget.format,
+                widget.bracketFormat.displayLabel,
                 style: const pw.TextStyle(fontSize: 12),
               ),
               pw.SizedBox(height: 12),
@@ -168,7 +171,7 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
           BracketInitial() || BracketGenerating() => Scaffold(
               appBar: AppBar(
                   title: Text(
-                      '${widget.format} — ${widget.participants.length} Players')),
+                      '${widget.bracketFormat.displayLabel} — ${widget.participants.length} Players')),
               body: const Center(child: CircularProgressIndicator()),
             ),
           BracketFailure(:final message) => Scaffold(
@@ -215,7 +218,7 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
     required BuildContext context,
     required BracketResult result,
     required List<ParticipantEntity> participants,
-    required String format,
+    required BracketFormat format,
     required bool includeThirdPlaceMatch,
   }) {
     // Skip if already saved, no owning tournament, or replaying history.
@@ -226,7 +229,7 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
 
     final snapshot = BracketSnapshot(
       id: _uuid.v4(),
-      label: '$format — ${participants.length} Players',
+      label: '${format.displayLabel} — ${participants.length} Players',
       format: format,
       participantCount: participants.length,
       includeThirdPlaceMatch: includeThirdPlaceMatch,
@@ -248,10 +251,9 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
     required BuildContext context,
     required BracketResult result,
     required List<ParticipantEntity> participants,
-    required String format,
+    required BracketFormat format,
     required bool includeThirdPlaceMatch,
   }) {
-
     // Gather all matches for the score entry handler.
     final List<MatchEntity> allMatches = switch (result) {
       SingleEliminationResult(:final data) => data.matches,
@@ -277,7 +279,7 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('$format — ${participants.length} Players'),
+        title: Text('${format.displayLabel} — ${participants.length} Players'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
@@ -348,7 +350,7 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
                 ),
             matches: matches,
             participants: widget.participants,
-            bracketType: widget.format,
+            bracketType: widget.bracketFormat.displayLabel,
             onMatchTap: (matchId) => _handleMatchTap(
               context,
               matchId,
@@ -374,7 +376,7 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
     List<ParticipantEntity> participants,
   ) {
     final match = allMatches.firstWhere(
-      (m) => m.id == matchId,
+      (matchEntity) => matchEntity.id == matchId,
       orElse: () => throw StateError('Match $matchId not found'),
     );
 
@@ -428,9 +430,10 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
   }
 
   String _participantName(String id, List<ParticipantEntity> participants) {
-    final p = participants.where((p) => p.id == id);
-    if (p.isEmpty) return 'Unknown';
-    return '${p.first.firstName} ${p.first.lastName}'.trim();
+    final matchingParticipants = participants.where(
+      (participant) => participant.id == id,
+    );
+    if (matchingParticipants.isEmpty) return 'Unknown';
+    return '${matchingParticipants.first.firstName} ${matchingParticipants.first.lastName}'.trim();
   }
 }
-

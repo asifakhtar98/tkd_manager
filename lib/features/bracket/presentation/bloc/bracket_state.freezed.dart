@@ -435,7 +435,7 @@ return failure(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  generating,TResult Function( BracketResult result,  List<ParticipantEntity> participants,  String format,  bool includeThirdPlaceMatch,  String? errorMessage)?  loadSuccess,TResult Function( String message)?  failure,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  generating,TResult Function( BracketResult result,  List<ParticipantEntity> participants,  BracketFormat format,  bool includeThirdPlaceMatch,  String? errorMessage)?  loadSuccess,TResult Function( String message)?  failure,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case BracketInitial() when initial != null:
 return initial();case BracketGenerating() when generating != null:
@@ -459,7 +459,7 @@ return failure(_that.message);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  generating,required TResult Function( BracketResult result,  List<ParticipantEntity> participants,  String format,  bool includeThirdPlaceMatch,  String? errorMessage)  loadSuccess,required TResult Function( String message)  failure,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  generating,required TResult Function( BracketResult result,  List<ParticipantEntity> participants,  BracketFormat format,  bool includeThirdPlaceMatch,  String? errorMessage)  loadSuccess,required TResult Function( String message)  failure,}) {final _that = this;
 switch (_that) {
 case BracketInitial():
 return initial();case BracketGenerating():
@@ -479,7 +479,7 @@ return failure(_that.message);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  generating,TResult? Function( BracketResult result,  List<ParticipantEntity> participants,  String format,  bool includeThirdPlaceMatch,  String? errorMessage)?  loadSuccess,TResult? Function( String message)?  failure,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  generating,TResult? Function( BracketResult result,  List<ParticipantEntity> participants,  BracketFormat format,  bool includeThirdPlaceMatch,  String? errorMessage)?  loadSuccess,TResult? Function( String message)?  failure,}) {final _that = this;
 switch (_that) {
 case BracketInitial() when initial != null:
 return initial();case BracketGenerating() when generating != null:
@@ -572,7 +572,8 @@ class BracketLoadSuccess implements BracketState {
   return EqualUnmodifiableListView(_participants);
 }
 
- final  String format;
+/// The elimination format that was used to generate this bracket.
+ final  BracketFormat format;
  final  bool includeThirdPlaceMatch;
  final  String? errorMessage;
 
@@ -606,7 +607,7 @@ abstract mixin class $BracketLoadSuccessCopyWith<$Res> implements $BracketStateC
   factory $BracketLoadSuccessCopyWith(BracketLoadSuccess value, $Res Function(BracketLoadSuccess) _then) = _$BracketLoadSuccessCopyWithImpl;
 @useResult
 $Res call({
- BracketResult result, List<ParticipantEntity> participants, String format, bool includeThirdPlaceMatch, String? errorMessage
+ BracketResult result, List<ParticipantEntity> participants, BracketFormat format, bool includeThirdPlaceMatch, String? errorMessage
 });
 
 
@@ -628,7 +629,7 @@ class _$BracketLoadSuccessCopyWithImpl<$Res>
 result: null == result ? _self.result : result // ignore: cast_nullable_to_non_nullable
 as BracketResult,participants: null == participants ? _self._participants : participants // ignore: cast_nullable_to_non_nullable
 as List<ParticipantEntity>,format: null == format ? _self.format : format // ignore: cast_nullable_to_non_nullable
-as String,includeThirdPlaceMatch: null == includeThirdPlaceMatch ? _self.includeThirdPlaceMatch : includeThirdPlaceMatch // ignore: cast_nullable_to_non_nullable
+as BracketFormat,includeThirdPlaceMatch: null == includeThirdPlaceMatch ? _self.includeThirdPlaceMatch : includeThirdPlaceMatch // ignore: cast_nullable_to_non_nullable
 as bool,errorMessage: freezed == errorMessage ? _self.errorMessage : errorMessage // ignore: cast_nullable_to_non_nullable
 as String?,
   ));

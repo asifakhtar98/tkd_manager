@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:tkd_saas/core/router/app_routes.dart';
 import 'package:tkd_saas/features/bracket/domain/entities/match_entity.dart';
 import 'package:tkd_saas/features/participant/domain/entities/participant_entity.dart';
 
@@ -7,11 +8,12 @@ part 'bracket_event.freezed.dart';
 /// Base class for all bracket BLoC events.
 @freezed
 sealed class BracketEvent with _$BracketEvent {
-  /// Trigger initial generation. Carries all params required by the engine.
+  /// Request initial bracket generation with participant list and config.
   const factory BracketEvent.generateRequested({
     required List<ParticipantEntity> participants,
-    /// 'Single Elimination' | 'Double Elimination'
-    required String format,
+    /// The elimination format to generate.
+    required BracketFormat bracketFormat,
+    /// Whether to apply dojang (gym) separation seeding.
     required bool dojangSeparation,
     required bool includeThirdPlaceMatch,
   }) = BracketGenerateRequested;

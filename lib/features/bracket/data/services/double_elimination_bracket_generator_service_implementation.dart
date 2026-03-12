@@ -7,6 +7,12 @@ import 'package:tkd_saas/features/bracket/domain/entities/match_entity.dart';
 import 'package:tkd_saas/features/bracket/domain/services/double_elimination_bracket_generator_service.dart';
 import 'package:uuid/uuid.dart';
 
+/// Minimum number of participants required for a valid bracket.
+const int _minimumParticipantCount = 2;
+
+/// Returns `2^exponent` as an integer.
+int _powerOfTwo(int exponent) => pow(2, exponent).toInt();
+
 /// Implementation of [DoubleEliminationBracketGeneratorService].
 @LazySingleton(as: DoubleEliminationBracketGeneratorService)
 class DoubleEliminationBracketGeneratorServiceImplementation
@@ -23,43 +29,43 @@ class DoubleEliminationBracketGeneratorServiceImplementation
     required String losersBracketId,
     bool includeResetMatch = true,
   }) {
-    final n = participantIds.length;
-    if (n < 2) {
+    final participantCount = participantIds.length;
+    if (participantCount < _minimumParticipantCount) {
       throw ArgumentError(
-        'At least 2 participants are required '
+        'At least $_minimumParticipantCount participants are required '
         'to generate a double elimination bracket.',
       );
     }
-    final wRounds = (log(n) / ln2).ceil();
-    final bracketSize = pow(2, wRounds).toInt();
-    // Losers bracket has 2 * (wRounds - 1) rounds (for n >= 4)
-    // For n=2, wRounds=1, lRounds=0
-    final lRounds = max(0, 2 * (wRounds - 1));
+    final winnersRoundCount = (log(participantCount) / ln2).ceil();
+    final bracketSize = _powerOfTwo(winnersRoundCount);
+    // Losers bracket has 2 * (winnersRoundCount - 1) rounds (for n >= 4)
+    // For n=2, winnersRoundCount=1, losersRoundCount=0
+    final losersRoundCount = max(0, 2 * (winnersRoundCount - 1));
     final now = DateTime.now();
 
     // Step 1: Calculate total matches and pre-generate all IDs
-    final wMatchesCount = bracketSize - 1;
-    final lMatchesCount = max(0, bracketSize - 2);
+    final winnersMatchCount = bracketSize - 1;
+    final losersMatchCount = max(0, bracketSize - 2);
     const grandFinalsCount = 1;
     final resetCount = includeResetMatch ? 1 : 0;
-    final totalMatches =
-        wMatchesCount + lMatchesCount + grandFinalsCount + resetCount;
-    final matchIds = List.generate(totalMatches, (_) => _uuid.v4());
+    final totalMatchCount =
+        winnersMatchCount + losersMatchCount + grandFinalsCount + resetCount;
+    final matchIds = List.generate(totalMatchCount, (_) => _uuid.v4());
 
-    var matchIdIdx = 0;
+    var matchIdIndex = 0;
 
     // Step 2: Create winners bracket entity
     final winnersBracket = BracketEntity(
       id: winnersBracketId,
       divisionId: divisionId,
       bracketType: BracketType.winners,
-      totalRounds: wRounds,
+      totalRounds: winnersRoundCount,
       createdAtTimestamp: now,
       updatedAtTimestamp: now,
       generatedAtTimestamp: now,
       bracketDataJson: {
         'doubleElimination': true,
-        'participantCount': n,
+        'participantCount': participantCount,
         'includeResetMatch': includeResetMatch,
       },
     );
@@ -69,31 +75,31 @@ class DoubleEliminationBracketGeneratorServiceImplementation
       id: losersBracketId,
       divisionId: divisionId,
       bracketType: BracketType.losers,
-      totalRounds: lRounds,
+      totalRounds: losersRoundCount,
       createdAtTimestamp: now,
       updatedAtTimestamp: now,
       generatedAtTimestamp: now,
       bracketDataJson: {
         'doubleElimination': true,
-        'participantCount': n,
+        'participantCount': participantCount,
         'includeResetMatch': includeResetMatch,
       },
     );
 
     // Maps to store matches by round and match number
-    final wbMatchMap = <int, Map<int, MatchEntity>>{};
-    final lbMatchMap = <int, Map<int, MatchEntity>>{};
+    final winnersBracketMatches = <int, Map<int, MatchEntity>>{};
+    final losersBracketMatches = <int, Map<int, MatchEntity>>{};
 
     // Step 4: Build winners bracket match slots
-    for (var r = 1; r <= wRounds; r++) {
-      wbMatchMap[r] = {};
-      final matchesInRound = bracketSize ~/ pow(2, r);
-      for (var m = 1; m <= matchesInRound; m++) {
-        wbMatchMap[r]![m] = MatchEntity(
-          id: matchIds[matchIdIdx++],
+    for (var roundNumber = 1; roundNumber <= winnersRoundCount; roundNumber++) {
+      winnersBracketMatches[roundNumber] = {};
+      final matchCountInRound = bracketSize ~/ _powerOfTwo(roundNumber);
+      for (var matchPosition = 1; matchPosition <= matchCountInRound; matchPosition++) {
+        winnersBracketMatches[roundNumber]![matchPosition] = MatchEntity(
+          id: matchIds[matchIdIndex++],
           bracketId: winnersBracketId,
-          roundNumber: r,
-          matchNumberInRound: m,
+          roundNumber: roundNumber,
+          matchNumberInRound: matchPosition,
           createdAtTimestamp: now,
           updatedAtTimestamp: now,
           status: MatchStatus.pending,
@@ -102,16 +108,16 @@ class DoubleEliminationBracketGeneratorServiceImplementation
     }
 
     // Step 5: Build losers bracket match slots
-    for (var r = 1; r <= lRounds; r++) {
-      lbMatchMap[r] = {};
-      final pairIndex = (r + 1) ~/ 2;
-      final matchesInRound = bracketSize ~/ pow(2, pairIndex + 1);
-      for (var m = 1; m <= matchesInRound; m++) {
-        lbMatchMap[r]![m] = MatchEntity(
-          id: matchIds[matchIdIdx++],
+    for (var roundNumber = 1; roundNumber <= losersRoundCount; roundNumber++) {
+      losersBracketMatches[roundNumber] = {};
+      final pairIndex = (roundNumber + 1) ~/ 2;
+      final matchCountInRound = bracketSize ~/ _powerOfTwo(pairIndex + 1);
+      for (var matchPosition = 1; matchPosition <= matchCountInRound; matchPosition++) {
+        losersBracketMatches[roundNumber]![matchPosition] = MatchEntity(
+          id: matchIds[matchIdIndex++],
           bracketId: losersBracketId,
-          roundNumber: r,
-          matchNumberInRound: m,
+          roundNumber: roundNumber,
+          matchNumberInRound: matchPosition,
           createdAtTimestamp: now,
           updatedAtTimestamp: now,
           status: MatchStatus.pending,
@@ -126,9 +132,9 @@ class DoubleEliminationBracketGeneratorServiceImplementation
     MatchEntity? resetMatch;
 
     var grandFinalsMatch = MatchEntity(
-      id: matchIds[matchIdIdx++],
+      id: matchIds[matchIdIndex++],
       bracketId: grandFinalsBracketId,
-      roundNumber: wRounds + 1,
+      roundNumber: winnersRoundCount + 1,
       matchNumberInRound: 1,
       createdAtTimestamp: now,
       updatedAtTimestamp: now,
@@ -137,9 +143,9 @@ class DoubleEliminationBracketGeneratorServiceImplementation
 
     if (includeResetMatch) {
       resetMatch = MatchEntity(
-        id: matchIds[matchIdIdx++],
+        id: matchIds[matchIdIndex++],
         bracketId: grandFinalsBracketId,
-        roundNumber: wRounds + 2,
+        roundNumber: winnersRoundCount + 2,
         matchNumberInRound: 1,
         createdAtTimestamp: now,
         updatedAtTimestamp: now,
@@ -151,129 +157,117 @@ class DoubleEliminationBracketGeneratorServiceImplementation
     }
 
     // Step 7: Link intra-Winners advancement
-    for (var r = 1; r < wRounds; r++) {
-      for (var m = 1; m <= wbMatchMap[r]!.length; m++) {
-        final nextMatchNum = (m + 1) ~/ 2;
-        wbMatchMap[r]![m] = wbMatchMap[r]![m]!.copyWith(
-          winnerAdvancesToMatchId: wbMatchMap[r + 1]![nextMatchNum]!.id,
+    for (var roundNumber = 1; roundNumber < winnersRoundCount; roundNumber++) {
+      for (var matchPosition = 1; matchPosition <= winnersBracketMatches[roundNumber]!.length; matchPosition++) {
+        final nextMatchPosition = (matchPosition + 1) ~/ 2;
+        winnersBracketMatches[roundNumber]![matchPosition] = winnersBracketMatches[roundNumber]![matchPosition]!.copyWith(
+          winnerAdvancesToMatchId: winnersBracketMatches[roundNumber + 1]![nextMatchPosition]!.id,
         );
       }
     }
     // Winners Final winner advances to Grand Finals
-    wbMatchMap[wRounds]![1] = wbMatchMap[wRounds]![1]!.copyWith(
+    winnersBracketMatches[winnersRoundCount]![1] = winnersBracketMatches[winnersRoundCount]![1]!.copyWith(
       winnerAdvancesToMatchId: grandFinalsMatch.id,
     );
 
     // Step 8: Link intra-Losers advancement
-    for (var r = 1; r < lRounds; r++) {
-      final currentRoundMatches = lbMatchMap[r]!;
-      final nextRoundMatches = lbMatchMap[r + 1]!;
-      if (r.isOdd) {
+    for (var roundNumber = 1; roundNumber < losersRoundCount; roundNumber++) {
+      final currentRoundMatches = losersBracketMatches[roundNumber]!;
+      final nextRoundMatches = losersBracketMatches[roundNumber + 1]!;
+      if (roundNumber.isOdd) {
         // Elimination round -> next is drop-down (same count)
-        for (var m = 1; m <= currentRoundMatches.length; m++) {
-          lbMatchMap[r]![m] = lbMatchMap[r]![m]!.copyWith(
-            winnerAdvancesToMatchId: nextRoundMatches[m]!.id,
+        for (var matchPosition = 1; matchPosition <= currentRoundMatches.length; matchPosition++) {
+          losersBracketMatches[roundNumber]![matchPosition] = losersBracketMatches[roundNumber]![matchPosition]!.copyWith(
+            winnerAdvancesToMatchId: nextRoundMatches[matchPosition]!.id,
           );
         }
       } else {
         // Drop-down round -> next is elimination (half count)
-        for (var m = 1; m <= currentRoundMatches.length; m++) {
-          final nextMatchNum = (m + 1) ~/ 2;
-          lbMatchMap[r]![m] = lbMatchMap[r]![m]!.copyWith(
-            winnerAdvancesToMatchId: nextRoundMatches[nextMatchNum]!.id,
+        for (var matchPosition = 1; matchPosition <= currentRoundMatches.length; matchPosition++) {
+          final nextMatchPosition = (matchPosition + 1) ~/ 2;
+          losersBracketMatches[roundNumber]![matchPosition] = losersBracketMatches[roundNumber]![matchPosition]!.copyWith(
+            winnerAdvancesToMatchId: nextRoundMatches[nextMatchPosition]!.id,
           );
         }
       }
     }
     // Losers Final winner advances to Grand Finals
-    if (lRounds > 0) {
-      lbMatchMap[lRounds]![1] = lbMatchMap[lRounds]![1]!.copyWith(
+    if (losersRoundCount > 0) {
+      losersBracketMatches[losersRoundCount]![1] = losersBracketMatches[losersRoundCount]![1]!.copyWith(
         winnerAdvancesToMatchId: grandFinalsMatch.id,
       );
     }
 
     // Step 9: Link cross-bracket routing (WB losers -> LB)
     // WB R1 losers -> LB R1
-    for (var m = 1; m <= wbMatchMap[1]!.length; m++) {
-      final lbMatchNum = (m + 1) ~/ 2;
-      if (lRounds >= 1) {
-        wbMatchMap[1]![m] = wbMatchMap[1]![m]!.copyWith(
-          loserAdvancesToMatchId: lbMatchMap[1]![lbMatchNum]!.id,
+    for (var matchPosition = 1; matchPosition <= winnersBracketMatches[1]!.length; matchPosition++) {
+      final losersMatchPosition = (matchPosition + 1) ~/ 2;
+      if (losersRoundCount >= 1) {
+        winnersBracketMatches[1]![matchPosition] = winnersBracketMatches[1]![matchPosition]!.copyWith(
+          loserAdvancesToMatchId: losersBracketMatches[1]![losersMatchPosition]!.id,
         );
       } else {
         // Special case n=2: WB loser goes to GF
-        wbMatchMap[1]![m] = wbMatchMap[1]![m]!.copyWith(
+        winnersBracketMatches[1]![matchPosition] = winnersBracketMatches[1]![matchPosition]!.copyWith(
           loserAdvancesToMatchId: grandFinalsMatch.id,
         );
       }
     }
 
     // WB Round R (R>=2) losers -> LB Round 2*(R-1)
-    for (var r = 2; r <= wRounds; r++) {
-      final lbTargetRound = 2 * (r - 1);
-      final wbMatches = wbMatchMap[r]!;
-      final lbMatches = lbMatchMap[lbTargetRound];
-      if (lbMatches != null) {
-        for (var m = 1; m <= wbMatches.length; m++) {
+    for (var roundNumber = 2; roundNumber <= winnersRoundCount; roundNumber++) {
+      final losersTargetRound = 2 * (roundNumber - 1);
+      final winnersRoundMatches = winnersBracketMatches[roundNumber]!;
+      final losersRoundMatches = losersBracketMatches[losersTargetRound];
+      if (losersRoundMatches != null) {
+        for (var matchPosition = 1; matchPosition <= winnersRoundMatches.length; matchPosition++) {
           // Reverse order for fairness
-          final lbMatchNum = lbMatches.length - m + 1;
-          wbMatchMap[r]![m] = wbMatchMap[r]![m]!.copyWith(
-            loserAdvancesToMatchId: lbMatches[lbMatchNum]!.id,
+          final losersMatchPosition = losersRoundMatches.length - matchPosition + 1;
+          winnersBracketMatches[roundNumber]![matchPosition] = winnersBracketMatches[roundNumber]![matchPosition]!.copyWith(
+            loserAdvancesToMatchId: losersRoundMatches[losersMatchPosition]!.id,
           );
         }
       }
     }
 
     // Step 10: Assign participants to WB Round 1 (Standard WT Seeding)
-    final r1Matches = wbMatchMap[1]!;
-    final r1Count = r1Matches.length;
+    final winnersFirstRoundMatches = winnersBracketMatches[1]!;
+    final winnersFirstRoundMatchCount = winnersFirstRoundMatches.length;
 
-    List<int> generateSeeding(int rounds) {
-      if (rounds <= 1) return [1, 2];
-      final prev = generateSeeding(rounds - 1);
-      final result = <int>[];
-      final nextSum = (1 << rounds) + 1;
-      for (final p in prev) {
-        result.add(p);
-        result.add(nextSum - p);
+    final seedingOrder = _generateSeedingOrder(max(1, winnersRoundCount));
+
+    for (var matchPosition = 1; matchPosition <= winnersFirstRoundMatchCount; matchPosition++) {
+      final blueSeedNumber = seedingOrder[(matchPosition - 1) * 2]; // Top slot (Blue)
+      final redSeedNumber = seedingOrder[(matchPosition - 1) * 2 + 1]; // Bottom slot (Red)
+
+      String? blueParticipantId;
+      String? redParticipantId;
+
+      if (blueSeedNumber <= participantCount) {
+        blueParticipantId = participantIds[blueSeedNumber - 1];
       }
-      return result;
-    }
-
-    final seeding = generateSeeding(max(1, wRounds));
-
-    for (var m = 1; m <= r1Count; m++) {
-      final seedBlue = seeding[(m - 1) * 2]; // Top slot (Blue)
-      final seedRed = seeding[(m - 1) * 2 + 1]; // Bottom slot (Red)
-
-      String? blueId;
-      String? redId;
-
-      if (seedBlue <= n) {
-        blueId = participantIds[seedBlue - 1];
-      }
-      if (seedRed <= n) {
-        redId = participantIds[seedRed - 1];
+      if (redSeedNumber <= participantCount) {
+        redParticipantId = participantIds[redSeedNumber - 1];
       }
 
-      var match = r1Matches[m]!;
-      match = match.copyWith(
-        participantBlueId: blueId,
-        participantRedId: redId,
+      var currentMatch = winnersFirstRoundMatches[matchPosition]!;
+      currentMatch = currentMatch.copyWith(
+        participantBlueId: blueParticipantId,
+        participantRedId: redParticipantId,
       );
-      r1Matches[m] = match;
+      winnersFirstRoundMatches[matchPosition] = currentMatch;
     }
 
     // Flatten all matches into a map for topological processing
     final allMatchesMap = <String, MatchEntity>{};
-    for (final roundMatches in wbMatchMap.values) {
-      for (final m in roundMatches.values) {
-        allMatchesMap[m.id] = m;
+    for (final roundMatches in winnersBracketMatches.values) {
+      for (final matchEntity in roundMatches.values) {
+        allMatchesMap[matchEntity.id] = matchEntity;
       }
     }
-    for (final roundMatches in lbMatchMap.values) {
-      for (final m in roundMatches.values) {
-        allMatchesMap[m.id] = m;
+    for (final roundMatches in losersBracketMatches.values) {
+      for (final matchEntity in roundMatches.values) {
+        allMatchesMap[matchEntity.id] = matchEntity;
       }
     }
     allMatchesMap[grandFinalsMatch.id] = grandFinalsMatch;
@@ -281,127 +275,127 @@ class DoubleEliminationBracketGeneratorServiceImplementation
 
     // Evaluate phantom paths
     final matchInputs = <String, List<String>>{};
-    for (final m in allMatchesMap.values) {
-      matchInputs[m.id] = [];
+    for (final matchEntity in allMatchesMap.values) {
+      matchInputs[matchEntity.id] = [];
     }
 
     // Initialize WB R1 inputs
-    for (var m = 1; m <= r1Count; m++) {
-      final seedBlue = seeding[(m - 1) * 2];
-      final seedRed = seeding[(m - 1) * 2 + 1];
-      matchInputs[wbMatchMap[1]![m]!.id]!.add(seedBlue <= n ? 'REAL' : 'PHANTOM');
-      matchInputs[wbMatchMap[1]![m]!.id]!.add(seedRed <= n ? 'REAL' : 'PHANTOM');
+    for (var matchPosition = 1; matchPosition <= winnersFirstRoundMatchCount; matchPosition++) {
+      final blueSeedNumber = seedingOrder[(matchPosition - 1) * 2];
+      final redSeedNumber = seedingOrder[(matchPosition - 1) * 2 + 1];
+      matchInputs[winnersBracketMatches[1]![matchPosition]!.id]!.add(blueSeedNumber <= participantCount ? 'REAL' : 'PHANTOM');
+      matchInputs[winnersBracketMatches[1]![matchPosition]!.id]!.add(redSeedNumber <= participantCount ? 'REAL' : 'PHANTOM');
     }
 
-    final evaluatedMatches = <String>{};
-    bool changed = true;
-    while(changed) {
-       changed = false;
-       for (final matchId in allMatchesMap.keys) {
-          if (evaluatedMatches.contains(matchId)) continue;
-          final inputs = matchInputs[matchId]!;
-          if (inputs.length == 2) {
-             final phantomCount = inputs.where((i) => i == 'PHANTOM').length;
-             
-             String winnerOutput;
-             String loserOutput;
+    final evaluatedMatchIds = <String>{};
+    bool hasChanges = true;
+    while (hasChanges) {
+      hasChanges = false;
+      for (final matchId in allMatchesMap.keys) {
+        if (evaluatedMatchIds.contains(matchId)) continue;
+        final inputs = matchInputs[matchId]!;
+        if (inputs.length == 2) {
+          final phantomInputCount = inputs.where((input) => input == 'PHANTOM').length;
 
-             if (phantomCount == 2) {
-                winnerOutput = 'PHANTOM';
-                loserOutput = 'PHANTOM';
-             } else if (phantomCount == 1) {
-                winnerOutput = 'REAL'; 
-                loserOutput = 'PHANTOM'; 
-             } else {
-                winnerOutput = 'REAL';
-                loserOutput = 'REAL';
-             }
+          String winnerOutput;
+          String loserOutput;
 
-             // Push outputs down the graph
-             final m = allMatchesMap[matchId]!;
-             if (m.winnerAdvancesToMatchId != null) {
-                matchInputs[m.winnerAdvancesToMatchId!]!.add(winnerOutput);
-             }
-             if (m.loserAdvancesToMatchId != null) {
-                matchInputs[m.loserAdvancesToMatchId!]!.add(loserOutput);
-             }
-
-             evaluatedMatches.add(matchId);
-             changed = true;
+          if (phantomInputCount == 2) {
+            winnerOutput = 'PHANTOM';
+            loserOutput = 'PHANTOM';
+          } else if (phantomInputCount == 1) {
+            winnerOutput = 'REAL';
+            loserOutput = 'PHANTOM';
+          } else {
+            winnerOutput = 'REAL';
+            loserOutput = 'REAL';
           }
-       }
+
+          // Push outputs down the graph
+          final currentMatch = allMatchesMap[matchId]!;
+          if (currentMatch.winnerAdvancesToMatchId != null) {
+            matchInputs[currentMatch.winnerAdvancesToMatchId!]!.add(winnerOutput);
+          }
+          if (currentMatch.loserAdvancesToMatchId != null) {
+            matchInputs[currentMatch.loserAdvancesToMatchId!]!.add(loserOutput);
+          }
+
+          evaluatedMatchIds.add(matchId);
+          hasChanges = true;
+        }
+      }
     }
 
     // Apply phantom status to the matches
     for (final matchId in allMatchesMap.keys) {
-      final m = allMatchesMap[matchId]!;
+      final currentMatch = allMatchesMap[matchId]!;
       final inputs = matchInputs[matchId]!;
       if (inputs.length == 2) {
-        final phantomCount = inputs.where((i) => i == 'PHANTOM').length;
-        if (phantomCount > 0) {
-           // For WB R1, we know the real player immediately, so complete it.
-           if (m.roundNumber == 1 && m.bracketId == winnersBracketId) {
-              final winnerId = (m.participantBlueId != null) ? m.participantBlueId : m.participantRedId;
-              allMatchesMap[matchId] = m.copyWith(
-                status: MatchStatus.completed,
-                resultType: MatchResultType.bye,
-                completedAtTimestamp: now,
-                winnerId: winnerId,
-                loserAdvancesToMatchId: null, // WB R1 bye loser doesn't drop
-              );
-           } else if (phantomCount == 2) {
-              // Both slots are phantom → permanent ghost match, mark completed.
-              allMatchesMap[matchId] = m.copyWith(
-                 status: MatchStatus.completed,
-                 resultType: MatchResultType.bye,
-                 completedAtTimestamp: now,
-              );
-           }
-           // phantomCount == 1 in non-R1: leave pending for runtime auto-advance.
+        final phantomInputCount = inputs.where((input) => input == 'PHANTOM').length;
+        if (phantomInputCount > 0) {
+          // For WB R1, we know the real player immediately, so complete it.
+          if (currentMatch.roundNumber == 1 && currentMatch.bracketId == winnersBracketId) {
+            final byeWinnerId = currentMatch.participantBlueId ?? currentMatch.participantRedId;
+            allMatchesMap[matchId] = currentMatch.copyWith(
+              status: MatchStatus.completed,
+              resultType: MatchResultType.bye,
+              completedAtTimestamp: now,
+              winnerId: byeWinnerId,
+              loserAdvancesToMatchId: null, // WB R1 bye loser doesn't drop
+            );
+          } else if (phantomInputCount == 2) {
+            // Both slots are phantom → permanent ghost match, mark completed.
+            allMatchesMap[matchId] = currentMatch.copyWith(
+              status: MatchStatus.completed,
+              resultType: MatchResultType.bye,
+              completedAtTimestamp: now,
+            );
+          }
+          // phantomInputCount == 1 in non-R1: leave pending for runtime auto-advance.
         }
       }
     }
 
     // Re-pack match maps if needed, or just use allMatchesMap values
     // But Step 11 expects wbMatchMap to be updated!
-    for (int r = 1; r <= wRounds; r++) {
-       for (final key in wbMatchMap[r]!.keys.toList()) {
-          wbMatchMap[r]![key] = allMatchesMap[wbMatchMap[r]![key]!.id]!;
-       }
+    for (int roundNumber = 1; roundNumber <= winnersRoundCount; roundNumber++) {
+      for (final key in winnersBracketMatches[roundNumber]!.keys.toList()) {
+        winnersBracketMatches[roundNumber]![key] = allMatchesMap[winnersBracketMatches[roundNumber]![key]!.id]!;
+      }
     }
-    for (int r = 1; r <= lRounds; r++) {
-       for (final key in lbMatchMap[r]!.keys.toList()) {
-          lbMatchMap[r]![key] = allMatchesMap[lbMatchMap[r]![key]!.id]!;
-       }
+    for (int roundNumber = 1; roundNumber <= losersRoundCount; roundNumber++) {
+      for (final key in losersBracketMatches[roundNumber]!.keys.toList()) {
+        losersBracketMatches[roundNumber]![key] = allMatchesMap[losersBracketMatches[roundNumber]![key]!.id]!;
+      }
     }
     grandFinalsMatch = allMatchesMap[grandFinalsMatch.id]!;
     if (resetMatch != null) resetMatch = allMatchesMap[resetMatch.id]!;
 
     // Step 11: Advance bye winners in Winners Bracket
-    if (wRounds >= 2) {
-      final r1Matches = wbMatchMap[1]!;
-      final r1Count = r1Matches.length;
-      for (var m = 1; m <= r1Count; m++) {
-        final match = r1Matches[m]!;
-        if (match.resultType == MatchResultType.bye && match.winnerId != null) {
-          final nextMatchNum = (m + 1) ~/ 2;
-          var nextMatch = wbMatchMap[2]![nextMatchNum]!;
-          if (m % 2 != 0) {
-            nextMatch = nextMatch.copyWith(participantBlueId: match.winnerId);
+    if (winnersRoundCount >= 2) {
+      final firstRoundMatches = winnersBracketMatches[1]!;
+      final firstRoundCount = firstRoundMatches.length;
+      for (var matchPosition = 1; matchPosition <= firstRoundCount; matchPosition++) {
+        final currentMatch = firstRoundMatches[matchPosition]!;
+        if (currentMatch.resultType == MatchResultType.bye && currentMatch.winnerId != null) {
+          final nextMatchPosition = (matchPosition + 1) ~/ 2;
+          var nextRoundMatch = winnersBracketMatches[2]![nextMatchPosition]!;
+          if (matchPosition % 2 != 0) {
+            nextRoundMatch = nextRoundMatch.copyWith(participantBlueId: currentMatch.winnerId);
           } else {
-            nextMatch = nextMatch.copyWith(participantRedId: match.winnerId);
+            nextRoundMatch = nextRoundMatch.copyWith(participantRedId: currentMatch.winnerId);
           }
-          wbMatchMap[2]![nextMatchNum] = nextMatch;
+          winnersBracketMatches[2]![nextMatchPosition] = nextRoundMatch;
         }
       }
     }
 
     // Flatten matches
     final allMatches = <MatchEntity>[];
-    for (final roundMatches in wbMatchMap.values) {
+    for (final roundMatches in winnersBracketMatches.values) {
       allMatches.addAll(roundMatches.values);
     }
-    for (final roundMatches in lbMatchMap.values) {
+    for (final roundMatches in losersBracketMatches.values) {
       allMatches.addAll(roundMatches.values);
     }
     allMatches.add(grandFinalsMatch);
@@ -416,5 +410,19 @@ class DoubleEliminationBracketGeneratorServiceImplementation
       resetMatch: resetMatch,
       allMatches: allMatches,
     );
+  }
+
+  /// Recursively builds the standard WT seeding order for a given round count.
+  List<int> _generateSeedingOrder(int roundCount) {
+    if (roundCount <= 1) return [1, 2];
+    final previousSeeding = _generateSeedingOrder(roundCount - 1);
+    final totalPositions = 1 << roundCount;
+    final complementSum = totalPositions + 1;
+    final seedingOrder = <int>[];
+    for (final seedPosition in previousSeeding) {
+      seedingOrder.add(seedPosition);
+      seedingOrder.add(complementSum - seedPosition);
+    }
+    return seedingOrder;
   }
 }

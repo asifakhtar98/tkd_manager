@@ -35,13 +35,13 @@ class _CreateTournamentDialogState extends State<CreateTournamentDialog> {
   @override
   void initState() {
     super.initState();
-    final e = widget.existing;
-    _nameController = TextEditingController(text: e?.name ?? '');
-    _dateRangeController = TextEditingController(text: e?.dateRange ?? '');
-    _venueController = TextEditingController(text: e?.venue ?? '');
-    _organizerController = TextEditingController(text: e?.organizer ?? '');
-    _categoryController = TextEditingController(text: e?.categoryLabel ?? '');
-    _divisionController = TextEditingController(text: e?.divisionLabel ?? '');
+    final existingTournament = widget.existing;
+    _nameController = TextEditingController(text: existingTournament?.name ?? '');
+    _dateRangeController = TextEditingController(text: existingTournament?.dateRange ?? '');
+    _venueController = TextEditingController(text: existingTournament?.venue ?? '');
+    _organizerController = TextEditingController(text: existingTournament?.organizer ?? '');
+    _categoryController = TextEditingController(text: existingTournament?.categoryLabel ?? '');
+    _divisionController = TextEditingController(text: existingTournament?.divisionLabel ?? '');
   }
 
   @override
@@ -55,20 +55,20 @@ class _CreateTournamentDialogState extends State<CreateTournamentDialog> {
     super.dispose();
   }
 
-  void _submit() {
+  void _submitTournamentForm() {
     if (!_formKey.currentState!.validate()) return;
 
-    final existing = widget.existing;
+    final existingTournament = widget.existing;
     final tournament = TournamentEntity(
       // Preserve original id and createdAt when editing.
-      id: existing?.id ?? _uuid.v4(),
+      id: existingTournament?.id ?? _uuid.v4(),
       name: _nameController.text.trim(),
       dateRange: _dateRangeController.text.trim(),
       venue: _venueController.text.trim(),
       organizer: _organizerController.text.trim(),
       categoryLabel: _categoryController.text.trim(),
       divisionLabel: _divisionController.text.trim(),
-      createdAt: existing?.createdAt ?? DateTime.now(),
+      createdAt: existingTournament?.createdAt ?? DateTime.now(),
     );
 
     Navigator.pop(context, tournament);
@@ -90,8 +90,8 @@ class _CreateTournamentDialogState extends State<CreateTournamentDialog> {
                   controller: _nameController,
                   decoration: const InputDecoration(labelText: 'Tournament Name *'),
                   textInputAction: TextInputAction.next,
-                  validator: (v) =>
-                      (v == null || v.trim().isEmpty) ? 'Required' : null,
+                  validator: (value) =>
+                      (value == null || value.trim().isEmpty) ? 'Required' : null,
                   autofocus: true,
                 ),
                 const SizedBox(height: 12),
@@ -125,7 +125,7 @@ class _CreateTournamentDialogState extends State<CreateTournamentDialog> {
                   decoration:
                       const InputDecoration(labelText: 'Division (e.g., BOYS)'),
                   textInputAction: TextInputAction.done,
-                  onSubmitted: (_) => _submit(),
+                  onSubmitted: (_) => _submitTournamentForm(),
                 ),
               ],
             ),
@@ -138,7 +138,7 @@ class _CreateTournamentDialogState extends State<CreateTournamentDialog> {
           child: const Text('Cancel'),
         ),
         ElevatedButton(
-          onPressed: _submit,
+          onPressed: _submitTournamentForm,
           child: Text(_isEditing ? 'Save' : 'Create'),
         ),
       ],
