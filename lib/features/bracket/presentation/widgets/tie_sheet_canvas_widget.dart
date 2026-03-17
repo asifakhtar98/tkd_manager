@@ -811,7 +811,6 @@ class TieSheetPainter extends CustomPainter {
 
     final topPen = match.participantBlueId != null ? winnerPen : pendingPen;
     final botPen = match.participantRedId  != null ? winnerPen : pendingPen;
-    final outPen = match.winnerId          != null ? winnerPen : pendingPen;
 
     final isBye = match.resultType == MatchResultType.bye;
     if (isBye) {
@@ -868,8 +867,6 @@ class TieSheetPainter extends CustomPainter {
       ..lineTo(junctionX, midY);
     canvas.drawPath(pathB, botPen);
 
-    final nextJunctionX = mirrored ? junctionX - roundColW : junctionX + roundColW;
-    canvas.drawLine(output, Offset(nextJunctionX, midY), outPen);
 
     if (!mirrored) {
       _drawBadge(canvas, 'B', _BracketColors.blue, junctionX - 20, effectiveTop.dy - 14);
@@ -885,12 +882,23 @@ class TieSheetPainter extends CustomPainter {
     }
 
     if (match.winnerId != null) {
+      final winnerPen  = _Pens.round(_BracketColors.connectorWon);
+      final nextJunctionX = mirrored ? junctionX - roundColW : junctionX + roundColW;
+
+      // Winner advancement arm from junction center outward.
+      canvas.drawLine(output, Offset(nextJunctionX, midY), winnerPen);
+
+      // Override winner's node offset so the next round's junction
+      // connects FROM this junction, not from the R1 participant row.
+      _nodeOffsets[match.winnerId!] = output;
+
       final winner = _findP(match.winnerId);
       if (winner != null) {
+        final winnerLabel = '✓ ${_pName(winner)}';
         if (!mirrored) {
-          _drawText(canvas, _pName(winner), junctionX + roundColW * 0.15, midY - 14, _bold(9));
+          _drawText(canvas, winnerLabel, junctionX + 20, midY - 14, _bold(9));
         } else {
-          _drawText(canvas, _pName(winner), junctionX - roundColW * 0.15, midY - 14, _bold(9), alignRight: true);
+          _drawText(canvas, winnerLabel, junctionX - 20, midY - 14, _bold(9), alignRight: true);
         }
       }
     }
