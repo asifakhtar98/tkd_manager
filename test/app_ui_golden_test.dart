@@ -18,13 +18,11 @@ void main() {
   }
 
   Future<void> addPlayers(WidgetTester tester, List<List<String>> players) async {
-    final firstInput = find.widgetWithText(TextField, 'First Name');
-    final lastInput = find.widgetWithText(TextField, 'Last Name');
+    final fullNameInput = find.widgetWithText(TextField, 'Full Name');
     final addButton = find.text('Add Participant');
 
     for (final p in players) {
-      await tester.enterText(firstInput, p[0]);
-      await tester.enterText(lastInput, p[1]);
+      await tester.enterText(fullNameInput, p[0]);
       await tester.tap(addButton);
       await tester.pumpAndSettle();
     }
@@ -41,8 +39,8 @@ void main() {
   testWidgets('Participant entry screen with players golden', (tester) async {
     await navigateToSetup(tester);
     await addPlayers(tester, [
-      ['John', 'Doe', 'Eagle TKD'],
-      ['Jane', 'Smith', 'Tiger TKD'],
+      ['John Doe'],
+      ['Jane Smith'],
     ]);
 
     await expectLater(

@@ -362,9 +362,7 @@ class TieSheetPainter extends CustomPainter {
 
   void _paintSE(Canvas canvas, Size size, Paint thickPen) {
     double startY = margin;
-    startY = _paintHeader(canvas, size, startY, thickPen,
-        tournament.categoryLabel.toUpperCase(),
-        tournament.divisionLabel.toUpperCase());
+    startY = _paintHeader(canvas, size, startY, thickPen);
 
     // Subtle separator line between left and right participant tables.
     _drawDashedLine(canvas, Offset(margin + listW + 20, startY), Offset(size.width - margin - listW - 20, startY), _Pens.thin(_BracketColors.pending), dashWidth: 8, gapWidth: 6);
@@ -433,10 +431,7 @@ class TieSheetPainter extends CustomPainter {
 
   void _paintDE(Canvas canvas, Size size, Paint thickPen) {
     double startY = margin;
-    startY = _paintHeader(canvas, size, startY, thickPen,
-        tournament.categoryLabel.toUpperCase(),
-        tournament.divisionLabel.toUpperCase(),
-        showRightHeader: false);
+    startY = _paintHeader(canvas, size, startY, thickPen);
 
     final wbMatches = matches.where((m) => m.bracketId == winnersBracketId).toList();
     final lbMatches = matches.where((m) => m.bracketId == losersBracketId).toList();
@@ -633,7 +628,6 @@ class TieSheetPainter extends CustomPainter {
 
   double _paintHeader(
     Canvas canvas, Size size, double startY, Paint thickPen,
-    String divisionTitle, String categoryTitle, {bool showRightHeader = true}
   ) {
     var y = startY;
 
@@ -657,38 +651,37 @@ class TieSheetPainter extends CustomPainter {
     }
     y += bannerH + 12;
 
-    // ── Table column headers ──
-    final headerRowTop    = y;
-    final headerRowBottom = y + subHeaderH;
+    // ── Single full-width tournament info row (table-style) ──
+    final infoRowTop    = y;
+    final infoRowBottom = y + subHeaderH;
+    final infoLeft  = margin;
+    final infoRight = size.width - margin;
+    final infoRect = RRect.fromLTRBR(infoLeft, infoRowTop, infoRight, infoRowBottom, const Radius.circular(_cardRadius));
+    canvas.drawRRect(infoRect, _Pens.fill(_BracketColors.hdrFill));
+    canvas.drawRRect(infoRect, _Pens.thin(_BracketColors.cardBorder));
 
-    // Left table header.
-    final leftHeaderX = margin;
-    final rRectL = RRect.fromLTRBR(leftHeaderX, headerRowTop, leftHeaderX + listW, headerRowBottom, const Radius.circular(_cardRadius));
-    canvas.drawRRect(rRectL, _Pens.fill(_BracketColors.hdrFill));
-    canvas.drawRRect(rRectL, _Pens.thin(_BracketColors.cardBorder));
-    canvas.drawLine(Offset(leftHeaderX + noColW, headerRowTop), Offset(leftHeaderX + noColW, headerRowBottom), _Pens.thin(_BracketColors.pending));
-    canvas.drawLine(Offset(leftHeaderX + noColW + nameColW, headerRowTop), Offset(leftHeaderX + noColW + nameColW, headerRowBottom), _Pens.thin(_BracketColors.pending));
+    final category = tournament.categoryLabel.isNotEmpty ? tournament.categoryLabel.toUpperCase() : 'CATEGORY';
+    final division = tournament.divisionLabel.isNotEmpty ? tournament.divisionLabel.toUpperCase() : 'DIVISION';
+    final weightClass = tournament.weightClassLabel.isNotEmpty ? tournament.weightClassLabel.toUpperCase() : 'WEIGHT CLASS';
+    final infoTextY = infoRowTop + subHeaderH / 2 - 6;
 
-    final hdrTextY = headerRowTop + subHeaderH / 2 - 6;
-    _drawText(canvas, '#', leftHeaderX + noColW / 2, hdrTextY, _normal(11), center: true);
-    _drawText(canvas, divisionTitle.isEmpty ? 'DIVISION' : divisionTitle, leftHeaderX + noColW + nameColW / 2, hdrTextY, _normal(11), center: true);
-    _drawText(canvas, categoryTitle.isEmpty ? 'CATEGORY' : categoryTitle, leftHeaderX + noColW + nameColW + regIdColW / 2, hdrTextY, _normal(11), center: true);
+    // Column layout: No. | Category | Division | Weight Class
+    final infoColNoW = noColW;
+    final remainingW = (infoRight - infoLeft) - infoColNoW;
+    final infoColW = remainingW / 3;
 
-    // Right table header (mirrored) — only for two-sided SE brackets.
-    if (showRightHeader) {
-      final rightHeaderX = size.width - margin - listW;
-      final rRectR = RRect.fromLTRBR(rightHeaderX, headerRowTop, rightHeaderX + listW, headerRowBottom, const Radius.circular(_cardRadius));
-      canvas.drawRRect(rRectR, _Pens.fill(_BracketColors.hdrFill));
-      canvas.drawRRect(rRectR, _Pens.thin(_BracketColors.cardBorder));
-      canvas.drawLine(Offset(rightHeaderX + regIdColW, headerRowTop), Offset(rightHeaderX + regIdColW, headerRowBottom), _Pens.thin(_BracketColors.pending));
-      canvas.drawLine(Offset(rightHeaderX + regIdColW + nameColW, headerRowTop), Offset(rightHeaderX + regIdColW + nameColW, headerRowBottom), _Pens.thin(_BracketColors.pending));
+    // Column dividers
+    canvas.drawLine(Offset(infoLeft + infoColNoW, infoRowTop + 3), Offset(infoLeft + infoColNoW, infoRowBottom - 3), _Pens.thin(_BracketColors.pending));
+    canvas.drawLine(Offset(infoLeft + infoColNoW + infoColW, infoRowTop + 3), Offset(infoLeft + infoColNoW + infoColW, infoRowBottom - 3), _Pens.thin(_BracketColors.pending));
+    canvas.drawLine(Offset(infoLeft + infoColNoW + infoColW * 2, infoRowTop + 3), Offset(infoLeft + infoColNoW + infoColW * 2, infoRowBottom - 3), _Pens.thin(_BracketColors.pending));
 
-      _drawText(canvas, categoryTitle.isEmpty ? 'CATEGORY' : categoryTitle, rightHeaderX + regIdColW / 2, hdrTextY, _normal(11), center: true);
-      _drawText(canvas, divisionTitle.isEmpty ? 'DIVISION' : divisionTitle, rightHeaderX + regIdColW + nameColW / 2, hdrTextY, _normal(11), center: true);
-      _drawText(canvas, '#', rightHeaderX + listW - noColW / 2, hdrTextY, _normal(11), center: true);
-    }
+    // Column text
+    _drawText(canvas, 'No.', infoLeft + infoColNoW / 2, infoTextY, _bold(11), center: true);
+    _drawText(canvas, category, infoLeft + infoColNoW + infoColW / 2, infoTextY, _bold(11), center: true);
+    _drawText(canvas, division, infoLeft + infoColNoW + infoColW + infoColW / 2, infoTextY, _bold(11), center: true);
+    _drawText(canvas, weightClass, infoLeft + infoColNoW + infoColW * 2 + infoColW / 2, infoTextY, _bold(11), center: true);
 
-    return headerRowBottom + 12;
+    return infoRowBottom + 12;
   }
 
   void _paintParticipantRow(Canvas canvas, int idx, ParticipantEntity p, double x, double y, Paint pen, {required bool mirrored}) {
@@ -1035,7 +1028,7 @@ class TieSheetPainter extends CustomPainter {
   ParticipantEntity? _findP(String? id) =>
       id == null ? null : participants.where((p) => p.id == id).firstOrNull;
 
-  String _pName(ParticipantEntity p) => '${p.firstName} ${p.lastName}'.toUpperCase();
+  String _pName(ParticipantEntity p) => p.fullName.toUpperCase();
 
   TextStyle _bold(double size)   => TextStyle(color: _BracketColors.ink,    fontSize: size, fontWeight: FontWeight.bold, fontFamily: 'Roboto');
   TextStyle _normal(double size) => TextStyle(color: _BracketColors.subtle, fontSize: size, fontFamily: 'Roboto');

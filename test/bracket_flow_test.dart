@@ -44,8 +44,7 @@ void main() {
     WidgetTester tester,
     List<List<String>> players,
   ) async {
-    final firstInput = find.widgetWithText(TextField, 'First Name');
-    final lastInput = find.widgetWithText(TextField, 'Last Name');
+    final fullNameInput = find.widgetWithText(TextField, 'Full Name');
     final dojangInput = find.widgetWithText(
       TextField,
       'Dojang / Club (Optional)',
@@ -53,15 +52,14 @@ void main() {
     final addButton = find.text('Add Participant');
 
     for (final p in players) {
-      await tester.ensureVisible(firstInput);
-      await tester.enterText(firstInput, p[0]);
+      await tester.ensureVisible(fullNameInput);
+      await tester.enterText(fullNameInput, p[0]);
       await tester.pump();
-      await tester.ensureVisible(lastInput);
-      await tester.enterText(lastInput, p[1]);
-      await tester.pump();
-      await tester.ensureVisible(dojangInput);
-      await tester.enterText(dojangInput, p[2]);
-      await tester.pump();
+      if (p.length > 1 && p[1].isNotEmpty) {
+        await tester.ensureVisible(dojangInput);
+        await tester.enterText(dojangInput, p[1]);
+        await tester.pump();
+      }
       await tester.ensureVisible(addButton);
       await tester.tap(addButton);
       await tester.pumpAndSettle();
@@ -89,11 +87,12 @@ void main() {
     }
   }
 
+  // Each player entry is [Full Name, Dojang]
   const fourPlayers = [
-    ['John', 'Doe', 'Eagle TKD'],
-    ['Jane', 'Smith', 'Tiger TKD'],
-    ['Mike', 'Lee', 'Eagle TKD'],
-    ['Sarah', 'Connor', 'Dragon TKD'],
+    ['John Doe', 'Eagle TKD'],
+    ['Jane Smith', 'Tiger TKD'],
+    ['Mike Lee', 'Eagle TKD'],
+    ['Sarah Connor', 'Dragon TKD'],
   ];
 
   group('1. Single Elimination Bracket Generation', () {
@@ -114,9 +113,9 @@ void main() {
       await selectCreateNewTournament(tester);
 
       await addPlayers(tester, [
-        ['Alice', 'Kim', 'Dojang A'],
-        ['Bob', 'Park', 'Dojang B'],
-        ['Charlie', 'Choi', 'Dojang C'],
+        ['Alice Kim', 'Dojang A'],
+        ['Bob Park', 'Dojang B'],
+        ['Charlie Choi', 'Dojang C'],
       ]);
 
       await tapGenerate(tester);
@@ -130,14 +129,14 @@ void main() {
       await selectCreateNewTournament(tester);
 
       await addPlayers(tester, [
-        ['Player', '1', 'Club A'],
-        ['Player', '2', 'Club B'],
-        ['Player', '3', 'Club C'],
-        ['Player', '4', 'Club D'],
-        ['Player', '5', 'Club E'],
-        ['Player', '6', 'Club F'],
-        ['Player', '7', 'Club G'],
-        ['Player', '8', 'Club H'],
+        ['Player 1', 'Club A'],
+        ['Player 2', 'Club B'],
+        ['Player 3', 'Club C'],
+        ['Player 4', 'Club D'],
+        ['Player 5', 'Club E'],
+        ['Player 6', 'Club F'],
+        ['Player 7', 'Club G'],
+        ['Player 8', 'Club H'],
       ]);
 
       await tapGenerate(tester);
@@ -232,7 +231,7 @@ void main() {
       await navigateToSetup(tester);
       await selectCreateNewTournament(tester);
 
-      final csvBtn = find.text('Paste CSV (First,Last,Dojang,RegID)');
+      final csvBtn = find.text('Paste CSV (Name,Dojang,RegID)');
       await tester.ensureVisible(csvBtn);
       await tester.tap(csvBtn);
       await tester.pumpAndSettle();
@@ -240,7 +239,7 @@ void main() {
       final csvField = find.byType(TextField).last;
       await tester.enterText(
         csvField,
-        'Kim,Park,Eagle TKD,REG123\nLee,Jung,Tiger TKD,REG456',
+        'Kim Park,Eagle TKD,REG123\nLee Jung,Tiger TKD,REG456',
       );
       await tester.pumpAndSettle();
 
@@ -256,8 +255,8 @@ void main() {
       await selectCreateNewTournament(tester);
 
       await addPlayers(tester, [
-        ['Alice', 'Kim', 'Dojang A'],
-        ['Bob', 'Park', 'Dojang B'],
+        ['Alice Kim', 'Dojang A'],
+        ['Bob Park', 'Dojang B'],
       ]);
 
       expect(find.textContaining('ALICE'), findsOneWidget);
@@ -278,9 +277,9 @@ void main() {
       await selectCreateNewTournament(tester);
 
       await addPlayers(tester, [
-        ['Alice', 'Kim', 'Dojang A'],
-        ['Bob', 'Park', 'Dojang B'],
-        ['Charlie', 'Lee', 'Dojang C'],
+        ['Alice Kim', 'Dojang A'],
+        ['Bob Park', 'Dojang B'],
+        ['Charlie Lee', 'Dojang C'],
       ]);
 
       expect(find.text('1'), findsOneWidget);
@@ -296,7 +295,7 @@ void main() {
       await selectCreateNewTournament(tester);
 
       await addPlayers(tester, [
-        ['John', 'Doe', 'Eagle TKD'],
+        ['John Doe', 'Eagle TKD'],
       ]);
 
       expect(find.textContaining('JOHN DOE'), findsOneWidget);
@@ -534,13 +533,13 @@ void main() {
       await navigateToSetup(tester);
       await selectCreateNewTournament(tester);
 
-      final csvBtn = find.text('Paste CSV (First,Last,Dojang,RegID)');
+      final csvBtn = find.text('Paste CSV (Name,Dojang,RegID)');
       await tester.ensureVisible(csvBtn);
       await tester.tap(csvBtn);
       await tester.pumpAndSettle();
 
       final csvField = find.byType(TextField).last;
-      await tester.enterText(csvField, 'A,B,C,1\nD,E,F,2\nG,H,I,3\nJ,K,L,4');
+      await tester.enterText(csvField, 'A B,C,1\nD E,F,2\nG H,I,3\nJ K,L,4');
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Import'));

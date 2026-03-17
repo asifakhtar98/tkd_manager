@@ -18,6 +18,7 @@ abstract class TournamentEntity with _$TournamentEntity {
     @Default('') String organizer,
     @Default('') String categoryLabel,
     @Default('') String divisionLabel,
+    @Default('') String weightClassLabel,
 
     /// Wall-clock time when this tournament was first created in-memory.
     required DateTime createdAt,

@@ -10,8 +10,7 @@ _ParticipantEntity _$ParticipantEntityFromJson(Map<String, dynamic> json) =>
     _ParticipantEntity(
       id: json['id'] as String,
       divisionId: json['divisionId'] as String,
-      firstName: json['firstName'] as String,
-      lastName: json['lastName'] as String,
+      fullName: json['fullName'] as String,
       schoolOrDojangName: json['schoolOrDojangName'] as String?,
       beltRank: json['beltRank'] as String?,
       registrationId: json['registrationId'] as String?,
@@ -23,8 +22,7 @@ Map<String, dynamic> _$ParticipantEntityToJson(_ParticipantEntity instance) =>
     <String, dynamic>{
       'id': instance.id,
       'divisionId': instance.divisionId,
-      'firstName': instance.firstName,
-      'lastName': instance.lastName,
+      'fullName': instance.fullName,
       'schoolOrDojangName': instance.schoolOrDojangName,
       'beltRank': instance.beltRank,
       'registrationId': instance.registrationId,

@@ -27,48 +27,30 @@ class DemoData {
         organizer: 'TKD Brackets',
         categoryLabel: 'Demo Category',
         divisionLabel: 'Demo Division',
+        weightClassLabel: 'Under 59',
         createdAt: DateTime(2026, 3, 10),
       );
 
   // ── Participants ───────────────────────────────────────────────────────
 
-  /// Korean-inspired demo names for realistic bracket previews.
-  static const _firstNames = [
-    'Jimin',
-    'Seoyeon',
-    'Taeyang',
-    'Hana',
-    'Minho',
-    'Yuna',
-    'Jisoo',
-    'Donghyun',
-    'Soojin',
-    'Hyunjin',
-    'Yeji',
-    'Wooyoung',
-    'Dahyun',
-    'Jaehyun',
-    'Sana',
-    'Jungkook',
-  ];
-
-  static const _lastNames = [
-    'Park',
-    'Kim',
-    'Lee',
-    'Choi',
-    'Jung',
-    'Kang',
-    'Yoon',
-    'Shin',
-    'Han',
-    'Oh',
-    'Seo',
-    'Jang',
-    'Hwang',
-    'Baek',
-    'Kwon',
-    'Im',
+  /// Korean-inspired demo full names for realistic bracket previews.
+  static const _fullNames = [
+    'Jimin Park',
+    'Seoyeon Kim',
+    'Taeyang Lee',
+    'Hana Choi',
+    'Minho Jung',
+    'Yuna Kang',
+    'Jisoo Yoon',
+    'Donghyun Shin',
+    'Soojin Han',
+    'Hyunjin Oh',
+    'Yeji Seo',
+    'Wooyoung Jang',
+    'Dahyun Hwang',
+    'Jaehyun Baek',
+    'Sana Kwon',
+    'Jungkook Im',
   ];
 
   static const _schools = [
@@ -89,8 +71,7 @@ class DemoData {
       return ParticipantEntity(
         id: 'demo-p-$count-${i + 1}',
         divisionId: 'demo_division',
-        firstName: _firstNames[i % _firstNames.length],
-        lastName: _lastNames[i % _lastNames.length],
+        fullName: _fullNames[i % _fullNames.length],
         schoolOrDojangName: _schools[i % _schools.length],
         registrationId: 'DEMO-${1000 + i}',
         seedNumber: i + 1,

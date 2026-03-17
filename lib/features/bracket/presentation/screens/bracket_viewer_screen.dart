@@ -434,6 +434,6 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
       (participant) => participant.id == id,
     );
     if (matchingParticipants.isEmpty) return 'Unknown';
-    return '${matchingParticipants.first.firstName} ${matchingParticipants.first.lastName}'.trim();
+    return matchingParticipants.first.fullName;
   }
 }

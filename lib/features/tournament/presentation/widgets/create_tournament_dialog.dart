@@ -29,6 +29,7 @@ class _CreateTournamentDialogState extends State<CreateTournamentDialog> {
   late final TextEditingController _organizerController;
   late final TextEditingController _categoryController;
   late final TextEditingController _divisionController;
+  late final TextEditingController _weightClassController;
 
   bool get _isEditing => widget.existing != null;
 
@@ -42,6 +43,7 @@ class _CreateTournamentDialogState extends State<CreateTournamentDialog> {
     _organizerController = TextEditingController(text: existingTournament?.organizer ?? '');
     _categoryController = TextEditingController(text: existingTournament?.categoryLabel ?? '');
     _divisionController = TextEditingController(text: existingTournament?.divisionLabel ?? '');
+    _weightClassController = TextEditingController(text: existingTournament?.weightClassLabel ?? '');
   }
 
   @override
@@ -52,6 +54,7 @@ class _CreateTournamentDialogState extends State<CreateTournamentDialog> {
     _organizerController.dispose();
     _categoryController.dispose();
     _divisionController.dispose();
+    _weightClassController.dispose();
     super.dispose();
   }
 
@@ -68,6 +71,7 @@ class _CreateTournamentDialogState extends State<CreateTournamentDialog> {
       organizer: _organizerController.text.trim(),
       categoryLabel: _categoryController.text.trim(),
       divisionLabel: _divisionController.text.trim(),
+      weightClassLabel: _weightClassController.text.trim(),
       createdAt: existingTournament?.createdAt ?? DateTime.now(),
     );
 
@@ -124,6 +128,13 @@ class _CreateTournamentDialogState extends State<CreateTournamentDialog> {
                   controller: _divisionController,
                   decoration:
                       const InputDecoration(labelText: 'Division (e.g., BOYS)'),
+                  textInputAction: TextInputAction.next,
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _weightClassController,
+                  decoration:
+                      const InputDecoration(labelText: 'Weight Class (e.g., UNDER 59)'),
                   textInputAction: TextInputAction.done,
                   onSubmitted: (_) => _submitTournamentForm(),
                 ),

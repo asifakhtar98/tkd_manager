@@ -47,10 +47,10 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
   final _organizerController = TextEditingController();
   final _categoryController = TextEditingController();
   final _divisionController = TextEditingController();
+  final _weightClassController = TextEditingController();
 
   // Participant entry controllers
-  final _firstNameController = TextEditingController();
-  final _lastNameController = TextEditingController();
+  final _fullNameController = TextEditingController();
   final _dojangController = TextEditingController();
   final _registrationIdController = TextEditingController();
 
@@ -71,8 +71,8 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
     _organizerController.dispose();
     _categoryController.dispose();
     _divisionController.dispose();
-    _firstNameController.dispose();
-    _lastNameController.dispose();
+    _weightClassController.dispose();
+    _fullNameController.dispose();
     _dojangController.dispose();
     _registrationIdController.dispose();
     super.dispose();
@@ -103,6 +103,7 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
         organizer: _organizerController.text.trim(),
         categoryLabel: _categoryController.text.trim(),
         divisionLabel: _divisionController.text.trim(),
+        weightClassLabel: _weightClassController.text.trim(),
         createdAt: DateTime.now(),
       );
     }
@@ -110,13 +111,12 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
   }
 
   void _addParticipantFromFormFields() {
-    if (_firstNameController.text.trim().isEmpty) return;
+    if (_fullNameController.text.trim().isEmpty) return;
     setState(() {
       _participants.add(ParticipantEntity(
         id: _uuid.v4(),
         divisionId: 'manual_division',
-        firstName: _firstNameController.text.trim(),
-        lastName: _lastNameController.text.trim(),
+        fullName: _fullNameController.text.trim(),
         schoolOrDojangName: _dojangController.text.trim().isNotEmpty
             ? _dojangController.text.trim()
             : null,
@@ -125,8 +125,7 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
             : null,
         seedNumber: _participants.length + 1,
       ));
-      _firstNameController.clear();
-      _lastNameController.clear();
+      _fullNameController.clear();
       _dojangController.clear();
       _registrationIdController.clear();
     });
@@ -142,14 +141,13 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
           _participants.add(ParticipantEntity(
             id: _uuid.v4(),
             divisionId: 'manual_division',
-            firstName: parts[0].trim(),
-            lastName: parts.length > 1 ? parts[1].trim() : '',
+            fullName: parts[0].trim(),
             schoolOrDojangName:
-                parts.length > 2 && parts[2].trim().isNotEmpty
-                    ? parts[2].trim()
+                parts.length > 1 && parts[1].trim().isNotEmpty
+                    ? parts[1].trim()
                     : null,
-            registrationId: parts.length > 3 && parts[3].trim().isNotEmpty
-                ? parts[3].trim()
+            registrationId: parts.length > 2 && parts[2].trim().isNotEmpty
+                ? parts[2].trim()
                 : null,
             seedNumber: _participants.length + 1,
           ));
@@ -351,6 +349,7 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                             _organizerController.clear();
                             _categoryController.clear();
                             _divisionController.clear();
+                            _weightClassController.clear();
                           }
                         });
                       },
@@ -402,6 +401,14 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                     decoration: const InputDecoration(
                       labelText: 'Division (e.g., BOYS)',
                     ),
+                    textInputAction: TextInputAction.next,
+                  ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: _weightClassController,
+                    decoration: const InputDecoration(
+                      labelText: 'Weight Class (e.g., UNDER 59)',
+                    ),
                     textInputAction: TextInputAction.done,
                   ),
                 ] else if (existing != null) ...[
@@ -427,6 +434,11 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                     _ReadOnlyField(
                       label: 'Division',
                       value: existing.divisionLabel,
+                    ),
+                  if (existing.weightClassLabel.isNotEmpty)
+                    _ReadOnlyField(
+                      label: 'Weight Class',
+                      value: existing.weightClassLabel,
                     ),
                 ],
               ],
@@ -511,15 +523,8 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
             child: Column(
               children: [
                 TextField(
-                  controller: _firstNameController,
-                  decoration: const InputDecoration(labelText: 'First Name'),
-                  textInputAction: TextInputAction.next,
-                  onSubmitted: (_) => _addParticipantFromFormFields(),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: _lastNameController,
-                  decoration: const InputDecoration(labelText: 'Last Name'),
+                  controller: _fullNameController,
+                  decoration: const InputDecoration(labelText: 'Full Name'),
                   textInputAction: TextInputAction.next,
                   onSubmitted: (_) => _addParticipantFromFormFields(),
                 ),
@@ -555,7 +560,7 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                   width: double.infinity,
                   child: OutlinedButton.icon(
                     icon: const Icon(Icons.paste),
-                    label: const Text('Paste CSV (First,Last,Dojang,RegID)'),
+                    label: const Text('Paste CSV (Name,Dojang,RegID)'),
                     onPressed: () async {
                       final text = await showDialog<String>(
                         context: context,
@@ -686,7 +691,7 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                           child: Text('${index + 1}'),
                         ),
                         title: Text(
-                          '${p.firstName.toUpperCase()} ${p.lastName.toUpperCase()}',
+                          p.fullName.toUpperCase(),
                           style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
                         subtitle: Text([

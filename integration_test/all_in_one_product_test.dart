@@ -45,19 +45,17 @@ void main() {
 
   Future<void> addPlayers(WidgetTester tester, List<List<String>> players) async {
     for (final p in players) {
-      final firstNameField = find.widgetWithText(TextField, 'First Name');
-      final lastNameField = find.widgetWithText(TextField, 'Last Name');
+      final fullNameField = find.widgetWithText(TextField, 'Full Name');
       final dojangField = find.widgetWithText(TextField, 'Dojang / Club (Optional)');
 
-      await tester.ensureVisible(firstNameField);
-      await tester.enterText(firstNameField, p[0]);
-      await tester.enterText(lastNameField, p[1]);
-      if (p.length > 2 && p[2].isNotEmpty) {
-        await tester.enterText(dojangField, p[2]);
+      await tester.ensureVisible(fullNameField);
+      await tester.enterText(fullNameField, p[0]);
+      if (p.length > 1 && p[1].isNotEmpty) {
+        await tester.enterText(dojangField, p[1]);
       }
-      if (p.length > 3 && p[3].isNotEmpty) {
+      if (p.length > 2 && p[2].isNotEmpty) {
         final regIdField = find.widgetWithText(TextField, 'Registration ID (Optional)');
-        await tester.enterText(regIdField, p[3]);
+        await tester.enterText(regIdField, p[2]);
       }
 
       final addButton = find.text('Add Participant');
@@ -107,27 +105,27 @@ void main() {
     return btnWidget.onPressed != null;
   }
 
-  // Common player sets
+  // Common player sets — each entry is [Full Name, Dojang (opt), RegID (opt)]
   final playerSets = {
-    2: [['Alpha', 'One', 'Gym A'], ['Beta', 'Two', 'Gym B']],
-    3: [['Alice', 'Kim', 'Dojang A'], ['Bob', 'Park', 'Dojang B'], ['Charlie', 'Choi', 'Dojang C']],
+    2: [['Alpha One', 'Gym A'], ['Beta Two', 'Gym B']],
+    3: [['Alice Kim', 'Dojang A'], ['Bob Park', 'Dojang B'], ['Charlie Choi', 'Dojang C']],
     4: [
-      ['John', 'Doe', 'Eagle TKD', 'DL012025-22514'],
-      ['Jane', 'Smith', 'Tiger TKD', 'TN012024-14083'],
-      ['Mike', 'Lee', 'Eagle TKD', 'HR172026-26123'],
-      ['Sarah', 'Connor', 'Dragon TKD', 'TN222026-26267']
+      ['John Doe', 'Eagle TKD', 'DL012025-22514'],
+      ['Jane Smith', 'Tiger TKD', 'TN012024-14083'],
+      ['Mike Lee', 'Eagle TKD', 'HR172026-26123'],
+      ['Sarah Connor', 'Dragon TKD', 'TN222026-26267']
     ],
-    5: [['P1', 'O', 'A'], ['P2', 'T', 'B'], ['P3', 'Th', 'C'], ['P4', 'F', 'D'], ['P5', 'Fi', 'E']],
-    7: [['P1', 'O', 'A'], ['P2', 'T', 'B'], ['P3', 'Th', 'C'], ['P4', 'F', 'D'], ['P5', 'Fi', 'E'], ['P6', 'S', 'F'], ['P7', 'Se', 'G']],
+    5: [['P1', 'A'], ['P2', 'B'], ['P3', 'C'], ['P4', 'D'], ['P5', 'E']],
+    7: [['P1', 'A'], ['P2', 'B'], ['P3', 'C'], ['P4', 'D'], ['P5', 'E'], ['P6', 'F'], ['P7', 'G']],
     8: [
-      ['P1', 'One', 'Gym A'], ['P2', 'Two', 'Gym B'], ['P3', 'Three', 'Gym C'], ['P4', 'Four', 'Gym D'],
-      ['P5', 'Five', 'Gym E'], ['P6', 'Six', 'Gym F'], ['P7', 'Seven', 'Gym G'], ['P8', 'Eight', 'Gym H']
+      ['P1 One', 'Gym A'], ['P2 Two', 'Gym B'], ['P3 Three', 'Gym C'], ['P4 Four', 'Gym D'],
+      ['P5 Five', 'Gym E'], ['P6 Six', 'Gym F'], ['P7 Seven', 'Gym G'], ['P8 Eight', 'Gym H']
     ],
     14: [
-      ['Saiansh', 'M', 'DL'], ['R.S.', 'V', 'TN'], ['Shashi', 'K', 'HR'], ['J.', 'V', 'TN'],
-      ['Aarush', 'B', 'CH'], ['Asad', 'K', 'UP'], ['Arsalan', 'K', 'MH'], ['Ayush', 'K', 'UP'],
-      ['Lakshay', 'G', 'RJ'], ['Akash', 'K', 'UP'], ['Gedajit', 'I', 'MN'], ['Pranjit', 'S', 'AS'],
-      ['Rajat', 'S', 'RJ'], ['Jay', 'S', 'MH']
+      ['Saiansh M', 'DL'], ['R.S. V', 'TN'], ['Shashi K', 'HR'], ['J. V', 'TN'],
+      ['Aarush B', 'CH'], ['Asad K', 'UP'], ['Arsalan K', 'MH'], ['Ayush K', 'UP'],
+      ['Lakshay G', 'RJ'], ['Akash K', 'UP'], ['Gedajit I', 'MN'], ['Pranjit S', 'AS'],
+      ['Rajat S', 'RJ'], ['Jay S', 'MH']
     ]
   };
 
@@ -246,13 +244,13 @@ void main() {
       await tester.enterText(find.widgetWithText(TextField, 'Venue'), 'SMS Indoor Stadium');
 
       // Add player with Reg ID.
-      await addPlayers(tester, [['Test', 'Player', 'Gym', 'REG-12345']]);
+      await addPlayers(tester, [['Test Player', 'Gym', 'REG-12345']]);
       
       // The roster should show REG-12345 in subtitle.
       expect(find.textContaining('REG-12345'), findsOneWidget);
 
       // We need 2 players to generate.
-      await addPlayers(tester, [['Second', 'Player', 'Gym']]);
+      await addPlayers(tester, [['Second Player', 'Gym']]);
       
       await tapGenerate(tester);
 
@@ -305,7 +303,7 @@ void main() {
       expect(find.text('Paste CSV'), findsOneWidget);
 
       final csvField = find.byType(TextField).last;
-      await tester.enterText(csvField, 'Kim,Park,Eagle TKD,REG001\nLee,Jung,Tiger TKD,REG002\nChoi,Han,Dragon TKD,REG003');
+      await tester.enterText(csvField, 'Kim Park,Eagle TKD,REG001\nLee Jung,Tiger TKD,REG002\nChoi Han,Dragon TKD,REG003');
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Import'));
@@ -318,7 +316,7 @@ void main() {
     testWidgets('4c. Participant names shown in UPPERCASE', (tester) async {
       await startAppAndNavigateToSetup(tester);
       await selectCreateNewTournament(tester);
-      await addPlayers(tester, [['john', 'doe', 'Eagle TKD']]);
+      await addPlayers(tester, [['john doe', 'Eagle TKD']]);
       expect(find.text('JOHN DOE'), findsOneWidget);
     });
   });

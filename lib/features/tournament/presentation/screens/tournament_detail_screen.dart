@@ -181,6 +181,8 @@ class _TournamentHeader extends StatelessWidget {
         _InfoRow(Icons.category_outlined, tournament.categoryLabel),
       if (tournament.divisionLabel.isNotEmpty)
         _InfoRow(Icons.group_outlined, tournament.divisionLabel),
+      if (tournament.weightClassLabel.isNotEmpty)
+        _InfoRow(Icons.fitness_center_outlined, tournament.weightClassLabel),
     ];
 
     return Card(

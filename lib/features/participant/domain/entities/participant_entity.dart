@@ -8,8 +8,7 @@ abstract class ParticipantEntity with _$ParticipantEntity {
   const factory ParticipantEntity({
     required String id,
     required String divisionId,
-    required String firstName,
-    required String lastName,
+    required String fullName,
     String? schoolOrDojangName,
     String? beltRank,
     String? registrationId,

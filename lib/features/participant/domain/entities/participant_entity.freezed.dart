@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$ParticipantEntity {
 
- String get id; String get divisionId; String get firstName; String get lastName; String? get schoolOrDojangName; String? get beltRank; String? get registrationId; int? get seedNumber; bool get isBye;
+ String get id; String get divisionId; String get fullName; String? get schoolOrDojangName; String? get beltRank; String? get registrationId; int? get seedNumber; bool get isBye;
 /// Create a copy of ParticipantEntity
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $ParticipantEntityCopyWith<ParticipantEntity> get copyWith => _$ParticipantEntit
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ParticipantEntity&&(identical(other.id, id) || other.id == id)&&(identical(other.divisionId, divisionId) || other.divisionId == divisionId)&&(identical(other.firstName, firstName) || other.firstName == firstName)&&(identical(other.lastName, lastName) || other.lastName == lastName)&&(identical(other.schoolOrDojangName, schoolOrDojangName) || other.schoolOrDojangName == schoolOrDojangName)&&(identical(other.beltRank, beltRank) || other.beltRank == beltRank)&&(identical(other.registrationId, registrationId) || other.registrationId == registrationId)&&(identical(other.seedNumber, seedNumber) || other.seedNumber == seedNumber)&&(identical(other.isBye, isBye) || other.isBye == isBye));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ParticipantEntity&&(identical(other.id, id) || other.id == id)&&(identical(other.divisionId, divisionId) || other.divisionId == divisionId)&&(identical(other.fullName, fullName) || other.fullName == fullName)&&(identical(other.schoolOrDojangName, schoolOrDojangName) || other.schoolOrDojangName == schoolOrDojangName)&&(identical(other.beltRank, beltRank) || other.beltRank == beltRank)&&(identical(other.registrationId, registrationId) || other.registrationId == registrationId)&&(identical(other.seedNumber, seedNumber) || other.seedNumber == seedNumber)&&(identical(other.isBye, isBye) || other.isBye == isBye));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,divisionId,firstName,lastName,schoolOrDojangName,beltRank,registrationId,seedNumber,isBye);
+int get hashCode => Object.hash(runtimeType,id,divisionId,fullName,schoolOrDojangName,beltRank,registrationId,seedNumber,isBye);
 
 @override
 String toString() {
-  return 'ParticipantEntity(id: $id, divisionId: $divisionId, firstName: $firstName, lastName: $lastName, schoolOrDojangName: $schoolOrDojangName, beltRank: $beltRank, registrationId: $registrationId, seedNumber: $seedNumber, isBye: $isBye)';
+  return 'ParticipantEntity(id: $id, divisionId: $divisionId, fullName: $fullName, schoolOrDojangName: $schoolOrDojangName, beltRank: $beltRank, registrationId: $registrationId, seedNumber: $seedNumber, isBye: $isBye)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $ParticipantEntityCopyWith<$Res>  {
   factory $ParticipantEntityCopyWith(ParticipantEntity value, $Res Function(ParticipantEntity) _then) = _$ParticipantEntityCopyWithImpl;
 @useResult
 $Res call({
- String id, String divisionId, String firstName, String lastName, String? schoolOrDojangName, String? beltRank, String? registrationId, int? seedNumber, bool isBye
+ String id, String divisionId, String fullName, String? schoolOrDojangName, String? beltRank, String? registrationId, int? seedNumber, bool isBye
 });
 
 
@@ -65,12 +65,11 @@ class _$ParticipantEntityCopyWithImpl<$Res>
 
 /// Create a copy of ParticipantEntity
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? divisionId = null,Object? firstName = null,Object? lastName = null,Object? schoolOrDojangName = freezed,Object? beltRank = freezed,Object? registrationId = freezed,Object? seedNumber = freezed,Object? isBye = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? divisionId = null,Object? fullName = null,Object? schoolOrDojangName = freezed,Object? beltRank = freezed,Object? registrationId = freezed,Object? seedNumber = freezed,Object? isBye = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,divisionId: null == divisionId ? _self.divisionId : divisionId // ignore: cast_nullable_to_non_nullable
-as String,firstName: null == firstName ? _self.firstName : firstName // ignore: cast_nullable_to_non_nullable
-as String,lastName: null == lastName ? _self.lastName : lastName // ignore: cast_nullable_to_non_nullable
+as String,fullName: null == fullName ? _self.fullName : fullName // ignore: cast_nullable_to_non_nullable
 as String,schoolOrDojangName: freezed == schoolOrDojangName ? _self.schoolOrDojangName : schoolOrDojangName // ignore: cast_nullable_to_non_nullable
 as String?,beltRank: freezed == beltRank ? _self.beltRank : beltRank // ignore: cast_nullable_to_non_nullable
 as String?,registrationId: freezed == registrationId ? _self.registrationId : registrationId // ignore: cast_nullable_to_non_nullable
@@ -161,10 +160,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String divisionId,  String firstName,  String lastName,  String? schoolOrDojangName,  String? beltRank,  String? registrationId,  int? seedNumber,  bool isBye)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String divisionId,  String fullName,  String? schoolOrDojangName,  String? beltRank,  String? registrationId,  int? seedNumber,  bool isBye)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ParticipantEntity() when $default != null:
-return $default(_that.id,_that.divisionId,_that.firstName,_that.lastName,_that.schoolOrDojangName,_that.beltRank,_that.registrationId,_that.seedNumber,_that.isBye);case _:
+return $default(_that.id,_that.divisionId,_that.fullName,_that.schoolOrDojangName,_that.beltRank,_that.registrationId,_that.seedNumber,_that.isBye);case _:
   return orElse();
 
 }
@@ -182,10 +181,10 @@ return $default(_that.id,_that.divisionId,_that.firstName,_that.lastName,_that.s
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String divisionId,  String firstName,  String lastName,  String? schoolOrDojangName,  String? beltRank,  String? registrationId,  int? seedNumber,  bool isBye)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String divisionId,  String fullName,  String? schoolOrDojangName,  String? beltRank,  String? registrationId,  int? seedNumber,  bool isBye)  $default,) {final _that = this;
 switch (_that) {
 case _ParticipantEntity():
-return $default(_that.id,_that.divisionId,_that.firstName,_that.lastName,_that.schoolOrDojangName,_that.beltRank,_that.registrationId,_that.seedNumber,_that.isBye);case _:
+return $default(_that.id,_that.divisionId,_that.fullName,_that.schoolOrDojangName,_that.beltRank,_that.registrationId,_that.seedNumber,_that.isBye);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -202,10 +201,10 @@ return $default(_that.id,_that.divisionId,_that.firstName,_that.lastName,_that.s
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String divisionId,  String firstName,  String lastName,  String? schoolOrDojangName,  String? beltRank,  String? registrationId,  int? seedNumber,  bool isBye)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String divisionId,  String fullName,  String? schoolOrDojangName,  String? beltRank,  String? registrationId,  int? seedNumber,  bool isBye)?  $default,) {final _that = this;
 switch (_that) {
 case _ParticipantEntity() when $default != null:
-return $default(_that.id,_that.divisionId,_that.firstName,_that.lastName,_that.schoolOrDojangName,_that.beltRank,_that.registrationId,_that.seedNumber,_that.isBye);case _:
+return $default(_that.id,_that.divisionId,_that.fullName,_that.schoolOrDojangName,_that.beltRank,_that.registrationId,_that.seedNumber,_that.isBye);case _:
   return null;
 
 }
@@ -217,13 +216,12 @@ return $default(_that.id,_that.divisionId,_that.firstName,_that.lastName,_that.s
 @JsonSerializable()
 
 class _ParticipantEntity implements ParticipantEntity {
-  const _ParticipantEntity({required this.id, required this.divisionId, required this.firstName, required this.lastName, this.schoolOrDojangName, this.beltRank, this.registrationId, this.seedNumber, this.isBye = false});
+  const _ParticipantEntity({required this.id, required this.divisionId, required this.fullName, this.schoolOrDojangName, this.beltRank, this.registrationId, this.seedNumber, this.isBye = false});
   factory _ParticipantEntity.fromJson(Map<String, dynamic> json) => _$ParticipantEntityFromJson(json);
 
 @override final  String id;
 @override final  String divisionId;
-@override final  String firstName;
-@override final  String lastName;
+@override final  String fullName;
 @override final  String? schoolOrDojangName;
 @override final  String? beltRank;
 @override final  String? registrationId;
@@ -243,16 +241,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ParticipantEntity&&(identical(other.id, id) || other.id == id)&&(identical(other.divisionId, divisionId) || other.divisionId == divisionId)&&(identical(other.firstName, firstName) || other.firstName == firstName)&&(identical(other.lastName, lastName) || other.lastName == lastName)&&(identical(other.schoolOrDojangName, schoolOrDojangName) || other.schoolOrDojangName == schoolOrDojangName)&&(identical(other.beltRank, beltRank) || other.beltRank == beltRank)&&(identical(other.registrationId, registrationId) || other.registrationId == registrationId)&&(identical(other.seedNumber, seedNumber) || other.seedNumber == seedNumber)&&(identical(other.isBye, isBye) || other.isBye == isBye));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ParticipantEntity&&(identical(other.id, id) || other.id == id)&&(identical(other.divisionId, divisionId) || other.divisionId == divisionId)&&(identical(other.fullName, fullName) || other.fullName == fullName)&&(identical(other.schoolOrDojangName, schoolOrDojangName) || other.schoolOrDojangName == schoolOrDojangName)&&(identical(other.beltRank, beltRank) || other.beltRank == beltRank)&&(identical(other.registrationId, registrationId) || other.registrationId == registrationId)&&(identical(other.seedNumber, seedNumber) || other.seedNumber == seedNumber)&&(identical(other.isBye, isBye) || other.isBye == isBye));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,divisionId,firstName,lastName,schoolOrDojangName,beltRank,registrationId,seedNumber,isBye);
+int get hashCode => Object.hash(runtimeType,id,divisionId,fullName,schoolOrDojangName,beltRank,registrationId,seedNumber,isBye);
 
 @override
 String toString() {
-  return 'ParticipantEntity(id: $id, divisionId: $divisionId, firstName: $firstName, lastName: $lastName, schoolOrDojangName: $schoolOrDojangName, beltRank: $beltRank, registrationId: $registrationId, seedNumber: $seedNumber, isBye: $isBye)';
+  return 'ParticipantEntity(id: $id, divisionId: $divisionId, fullName: $fullName, schoolOrDojangName: $schoolOrDojangName, beltRank: $beltRank, registrationId: $registrationId, seedNumber: $seedNumber, isBye: $isBye)';
 }
 
 
@@ -263,7 +261,7 @@ abstract mixin class _$ParticipantEntityCopyWith<$Res> implements $ParticipantEn
   factory _$ParticipantEntityCopyWith(_ParticipantEntity value, $Res Function(_ParticipantEntity) _then) = __$ParticipantEntityCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String divisionId, String firstName, String lastName, String? schoolOrDojangName, String? beltRank, String? registrationId, int? seedNumber, bool isBye
+ String id, String divisionId, String fullName, String? schoolOrDojangName, String? beltRank, String? registrationId, int? seedNumber, bool isBye
 });
 
 
@@ -280,12 +278,11 @@ class __$ParticipantEntityCopyWithImpl<$Res>
 
 /// Create a copy of ParticipantEntity
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? divisionId = null,Object? firstName = null,Object? lastName = null,Object? schoolOrDojangName = freezed,Object? beltRank = freezed,Object? registrationId = freezed,Object? seedNumber = freezed,Object? isBye = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? divisionId = null,Object? fullName = null,Object? schoolOrDojangName = freezed,Object? beltRank = freezed,Object? registrationId = freezed,Object? seedNumber = freezed,Object? isBye = null,}) {
   return _then(_ParticipantEntity(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,divisionId: null == divisionId ? _self.divisionId : divisionId // ignore: cast_nullable_to_non_nullable
-as String,firstName: null == firstName ? _self.firstName : firstName // ignore: cast_nullable_to_non_nullable
-as String,lastName: null == lastName ? _self.lastName : lastName // ignore: cast_nullable_to_non_nullable
+as String,fullName: null == fullName ? _self.fullName : fullName // ignore: cast_nullable_to_non_nullable
 as String,schoolOrDojangName: freezed == schoolOrDojangName ? _self.schoolOrDojangName : schoolOrDojangName // ignore: cast_nullable_to_non_nullable
 as String?,beltRank: freezed == beltRank ? _self.beltRank : beltRank // ignore: cast_nullable_to_non_nullable
 as String?,registrationId: freezed == registrationId ? _self.registrationId : registrationId // ignore: cast_nullable_to_non_nullable

@@ -19,35 +19,35 @@ void main() {
     organizer: 'INDIA TAEKWONDO',
     categoryLabel: 'JUNIOR',
     divisionLabel: 'BOYS',
+    weightClassLabel: 'UNDER 59',
     createdAt: DateTime(2026),
   );
 
   List<ParticipantEntity> makeParticipants(int count) {
     final names = [
-      ['Saiansh', 'Mathur', 'Delhi', 'DL012025-22514'],
-      ['R.S.', 'Vignesh', 'Tamil Nadu', 'TN012024-14083'],
-      ['Shashi', 'Kumar', 'Haryana', 'HR172026-26123'],
-      ['J.', 'Vino', 'Tamil Nadu', 'TN222026-26267'],
-      ['Aarush', 'Barua', 'Chandigarh', 'CH012026-26255'],
-      ['Asad', 'Khan', 'UP', 'UP322025-20125'],
-      ['Arsalan Siraj', 'Khan', 'Maharashtra', 'MH032025-25234'],
-      ['Ayush', 'Kumar', 'UP', 'UP53202525572'],
-      ['Lakshay', 'Goyar', 'Rajasthan', 'RJ162026-25767'],
-      ['Akash', 'Kumar', 'UP', 'UP322024-16826'],
-      ['Gedajit', 'Irengbam', 'Manipur', 'MN042023-5340'],
-      ['Pranjit', 'Sakia', 'Assam', 'AS132023-6969'],
-      ['Rajat', 'Solanki', 'Rajasthan', 'RJ062022-4069'],
-      ['Jay Dinesh', 'Salaskar', 'Maharashtra', 'MH332025-25272'],
-      ['Tej Pratap', 'Sharma', 'Rajasthan', 'RJ082025-33001'],
-      ['Apoorva', 'Pandey', 'Delhi', 'DL052024-44100'],
+      ['Saiansh Mathur', 'Delhi', 'DL012025-22514'],
+      ['R.S. Vignesh', 'Tamil Nadu', 'TN012024-14083'],
+      ['Shashi Kumar', 'Haryana', 'HR172026-26123'],
+      ['J. Vino', 'Tamil Nadu', 'TN222026-26267'],
+      ['Aarush Barua', 'Chandigarh', 'CH012026-26255'],
+      ['Asad Khan', 'UP', 'UP322025-20125'],
+      ['Arsalan Siraj Khan', 'Maharashtra', 'MH032025-25234'],
+      ['Ayush Kumar', 'UP', 'UP53202525572'],
+      ['Lakshay Goyar', 'Rajasthan', 'RJ162026-25767'],
+      ['Akash Kumar', 'UP', 'UP322024-16826'],
+      ['Gedajit Irengbam', 'Manipur', 'MN042023-5340'],
+      ['Pranjit Sakia', 'Assam', 'AS132023-6969'],
+      ['Rajat Solanki', 'Rajasthan', 'RJ062022-4069'],
+      ['Jay Dinesh Salaskar', 'Maharashtra', 'MH332025-25272'],
+      ['Tej Pratap Sharma', 'Rajasthan', 'RJ082025-33001'],
+      ['Apoorva Pandey', 'Delhi', 'DL052024-44100'],
     ];
     return List.generate(count, (i) => ParticipantEntity(
       id: uuid.v4(),
       divisionId: 'div1',
-      firstName: names[i % names.length][0],
-      lastName: names[i % names.length][1],
-      schoolOrDojangName: names[i % names.length][2],
-      registrationId: names[i % names.length][3],
+      fullName: names[i % names.length][0],
+      schoolOrDojangName: names[i % names.length][1],
+      registrationId: names[i % names.length][2],
       seedNumber: i + 1,
     ));
   }
@@ -100,7 +100,7 @@ void main() {
           ? participants.where((p) => p.id == m.participantBlueId).firstOrNull
           : null;
       debugPrint('R${m.roundNumber} M${m.matchNumberInRound}: '
-          'Blue=${blue?.lastName ?? "BYE"} Red=${red?.lastName ?? "BYE"} '
+          'Blue=${blue?.fullName ?? "BYE"} Red=${red?.fullName ?? "BYE"} '
           'Status=${m.status} Result=${m.resultType} '
           'Winner=${m.winnerId != null ? "yes" : "-"}');
     }
@@ -211,7 +211,7 @@ void main() {
           : null;
       debugPrint('Bracket=${m.bracketId == 'wb-golden' ? 'WB' : m.bracketId == 'lb-golden' ? 'LB' : 'GF'} '
           'R${m.roundNumber} M${m.matchNumberInRound}: '
-          'Blue=${blue?.lastName ?? "TBD"} Red=${red?.lastName ?? "TBD"} '
+          'Blue=${blue?.fullName ?? "TBD"} Red=${red?.fullName ?? "TBD"} '
           'Status=${m.status} Result=${m.resultType}');
     }
   }
