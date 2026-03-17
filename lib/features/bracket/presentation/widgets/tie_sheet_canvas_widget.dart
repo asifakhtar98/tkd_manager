@@ -882,24 +882,14 @@ class TieSheetPainter extends CustomPainter {
     }
 
     if (match.winnerId != null) {
-      final winnerPen  = _Pens.round(_BracketColors.connectorWon);
-      final nextJunctionX = mirrored ? junctionX - roundColW : junctionX + roundColW;
-
-      // Winner advancement arm from junction center outward.
-      canvas.drawLine(output, Offset(nextJunctionX, midY), winnerPen);
-
       // Override winner's node offset so the next round's junction
       // connects FROM this junction, not from the R1 participant row.
+      // The next round's Bezier input arm handles the visual connection.
       _nodeOffsets[match.winnerId!] = output;
 
       final winner = _findP(match.winnerId);
       if (winner != null) {
-        final winnerLabel = '✓ ${_pName(winner)}';
-        if (!mirrored) {
-          _drawText(canvas, winnerLabel, junctionX + 20, midY - 14, _bold(9));
-        } else {
-          _drawText(canvas, winnerLabel, junctionX - 20, midY - 14, _bold(9), alignRight: true);
-        }
+        _drawText(canvas, '${_pName(winner)}', junctionX, midY - 22, _bold(9), center: true);
       }
     }
 

@@ -4,6 +4,8 @@ import 'package:uuid/uuid.dart';
 import 'package:tkd_saas/features/tournament/domain/entities/tournament_entity.dart';
 import 'package:tkd_saas/features/bracket/data/services/single_elimination_bracket_generator_service_implementation.dart';
 import 'package:tkd_saas/features/bracket/data/services/double_elimination_bracket_generator_service_implementation.dart';
+import 'package:tkd_saas/features/bracket/data/services/match_progression_service_implementation.dart';
+import 'package:tkd_saas/features/bracket/domain/entities/match_entity.dart';
 import 'package:tkd_saas/features/bracket/presentation/widgets/tie_sheet_canvas_widget.dart';
 import 'package:tkd_saas/features/participant/domain/entities/participant_entity.dart';
 
@@ -86,7 +88,7 @@ void main() {
     expect(find.byType(CustomPaint), findsWidgets);
     await expectLater(
       find.byType(TieSheetCanvasWidget),
-      matchesGoldenFile(goldenFileName),
+      matchesGoldenFile('../../../goldens/$goldenFileName'),
     );
 
     // Print match info for debugging
@@ -192,7 +194,7 @@ void main() {
     expect(find.byType(CustomPaint), findsWidgets);
     await expectLater(
       find.byType(TieSheetCanvasWidget),
-      matchesGoldenFile(goldenFileName),
+      matchesGoldenFile('../../../goldens/$goldenFileName'),
     );
 
     // Print match info for debugging
@@ -234,5 +236,108 @@ void main() {
   // DE 8 players: full symmetric bracket, no BYEs
   testWidgets('DE 8-player bracket', (tester) async {
     await runDEGoldenTest(tester, 8, 'de_8_player_golden.png');
+  });
+
+  // ─────────────────────────────────────────────────────────────
+  // WITH MATCH RESULTS (goldens to verify winner display)
+  // ─────────────────────────────────────────────────────────────
+
+  final progressionService = MatchProgressionServiceImplementation();
+
+  /// Helper: record blue-corner winners for all non-BYE matches in the given [roundNumber].
+  List<MatchEntity> recordBlueWinnersForRound(List<MatchEntity> matches, int roundNumber) {
+    var updatedMatches = matches;
+    final roundMatches = updatedMatches.where((m) =>
+        m.roundNumber == roundNumber &&
+        m.resultType != MatchResultType.bye &&
+        m.status != MatchStatus.completed &&
+        m.participantBlueId != null &&
+        m.participantRedId != null).toList();
+    for (final match in roundMatches) {
+      updatedMatches = progressionService.recordResult(
+        matches: updatedMatches,
+        matchId: match.id,
+        winnerId: match.participantBlueId!,
+      );
+    }
+    return updatedMatches;
+  }
+
+  Future<void> runResultGoldenTest(
+    WidgetTester tester, {
+    required int playerCount,
+    required List<int> roundsToResolve,
+    required String goldenFileName,
+    bool include3rd = false,
+  }) async {
+    final participants = makeParticipants(playerCount);
+    final result = generator.generate(
+      divisionId: 'div1',
+      participantIds: participants.map((p) => p.id).toList(),
+      bracketId: uuid.v4(),
+      includeThirdPlaceMatch: include3rd,
+    );
+
+    var matches = result.matches;
+    for (final roundNumber in roundsToResolve) {
+      matches = recordBlueWinnersForRound(matches, roundNumber);
+    }
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: SingleChildScrollView(
+              child: TieSheetCanvasWidget(
+                tournament: defaultTournament,
+                matches: matches,
+                participants: participants,
+                bracketType: 'Single Elimination',
+                onMatchTap: (_) {},
+                printKey: GlobalKey(),
+                includeThirdPlaceMatch: include3rd,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await expectLater(
+      find.byType(TieSheetCanvasWidget),
+      matchesGoldenFile('../../../goldens/$goldenFileName'),
+    );
+  }
+
+  // 8-player SE: R1 winners only — verifies winner names + node offset overrides
+  testWidgets('8-player bracket with R1 results', (tester) async {
+    await runResultGoldenTest(
+      tester,
+      playerCount: 8,
+      roundsToResolve: [1],
+      goldenFileName: '8_player_with_r1_results_golden.png',
+    );
+  });
+
+  // 8-player SE: full tournament — R1+R2+Final, verifies center final winner
+  testWidgets('8-player bracket full tournament results', (tester) async {
+    await runResultGoldenTest(
+      tester,
+      playerCount: 8,
+      roundsToResolve: [1, 2, 3],
+      goldenFileName: '8_player_full_results_golden.png',
+    );
+  });
+
+  // 14-player SE: R1 partial results — BYE matches + real winners side by side
+  testWidgets('14-player bracket with R1 results', (tester) async {
+    await runResultGoldenTest(
+      tester,
+      playerCount: 14,
+      roundsToResolve: [1],
+      goldenFileName: '14_player_with_r1_results_golden.png',
+    );
   });
 }
