@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -56,8 +57,23 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
   // Tracks whether we have already committed a snapshot for this generation
   // session, so we don't double-save on rebuilds.
   bool _snapshotSaved = false;
-  bool _isExportingPdf = false;
+
+  /// Non-null while a PDF export is in progress.
+  /// Value ranges from 0.0 (just started) to 1.0 (complete).
+  double? _pdfExportProgress;
+  String _pdfExportStatusMessage = '';
+
+  bool get _isExportingPdf => _pdfExportProgress != null;
+
   static const _uuid = Uuid();
+
+  void _updateExportProgress(double progress, String message) {
+    if (!mounted) return;
+    setState(() {
+      _pdfExportProgress = progress;
+      _pdfExportStatusMessage = message;
+    });
+  }
 
   @override
   void dispose() {
@@ -65,28 +81,43 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
     super.dispose();
   }
 
-  /// Exports the currently visible bracket tab as a real PDF.
+  /// Exports the currently visible bracket as a real PDF.
   ///
-  /// Captures the [RepaintBoundary] for the active tab (winners or losers),
-  /// converts the canvas to a PNG image, and embeds it in a landscape A4 PDF
-  /// page with a header showing the tournament name and format.
+  /// Each heavy step is followed by a microtask yield so the event loop can
+  /// repaint the progress overlay — critical on web where there is no
+  /// background isolate.
   Future<void> _exportPdf(String title) async {
-    setState(() => _isExportingPdf = true);
+    _updateExportProgress(0.0, 'Capturing bracket image…');
+    await Future<void>.delayed(Duration.zero);
+
     try {
-      pw.ImageProvider? bracketImage;
+      // ── Step 1: Capture bracket image (main thread, needs render tree) ──
+      Uint8List? capturedImageBytes;
       try {
         final boundary = _printKey.currentContext?.findRenderObject()
             as RenderRepaintBoundary?;
         if (boundary != null) {
           final ui.Image image = await boundary.toImage(pixelRatio: 2.0);
+          _updateExportProgress(0.15, 'Converting image…');
+          await Future<void>.delayed(Duration.zero);
+
           final byteData =
               await image.toByteData(format: ui.ImageByteFormat.png);
           if (byteData != null) {
-            bracketImage = pw.MemoryImage(byteData.buffer.asUint8List());
+            capturedImageBytes = byteData.buffer.asUint8List();
           }
         }
       } catch (_) {
         // Capture failed — fall back to text-only export.
+      }
+
+      // ── Step 2: Build PDF page layout ──
+      _updateExportProgress(0.35, 'Building PDF layout…');
+      await Future<void>.delayed(Duration.zero);
+
+      pw.ImageProvider? bracketImage;
+      if (capturedImageBytes != null) {
+        bracketImage = pw.MemoryImage(capturedImageBytes);
       }
 
       final doc = pw.Document();
@@ -98,7 +129,6 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
             return pw.Column(
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [
-                // Header
                 pw.Text(
                   title,
                   style: pw.TextStyle(
@@ -113,7 +143,6 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
                 pw.SizedBox(height: 12),
                 pw.Divider(),
                 pw.SizedBox(height: 12),
-                // Bracket image or fallback
                 if (bracketImage != null)
                   pw.Expanded(
                     child: pw.Center(
@@ -135,12 +164,26 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
           },
         ),
       );
+
+      // ── Step 3: Serialize PDF to bytes ──
+      _updateExportProgress(0.6, 'Generating PDF bytes…');
+      await Future<void>.delayed(Duration.zero);
+
+      final pdfBytes = await doc.save();
+
+      // ── Step 4: Show native print / share dialog ──
+      _updateExportProgress(0.85, 'Opening print dialog…');
+      await Future<void>.delayed(Duration.zero);
+
       await Printing.layoutPdf(
-        onLayout: (PdfPageFormat format) async => doc.save(),
+        onLayout: (PdfPageFormat format) async => pdfBytes,
       );
     } finally {
       if (mounted) {
-        setState(() => _isExportingPdf = false);
+        setState(() {
+          _pdfExportProgress = null;
+          _pdfExportStatusMessage = '';
+        });
       }
     }
   }
@@ -449,17 +492,33 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
           if (_isExportingPdf)
             Container(
               color: Colors.black54,
-              child: const Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    CircularProgressIndicator(color: Colors.white),
-                    SizedBox(height: 16),
-                    Text(
-                      'Generating PDF…',
-                      style: TextStyle(color: Colors.white, fontSize: 16),
-                    ),
-                  ],
+              child: Center(
+                child: SizedBox(
+                  width: 280,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const CircularProgressIndicator(color: Colors.white),
+                      const SizedBox(height: 20),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(4),
+                        child: LinearProgressIndicator(
+                          value: _pdfExportProgress ?? 0.0,
+                          minHeight: 6,
+                          backgroundColor: Colors.white24,
+                          valueColor: const AlwaysStoppedAnimation<Color>(
+                              Colors.white),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        _pdfExportStatusMessage,
+                        style: const TextStyle(
+                            color: Colors.white, fontSize: 14),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
