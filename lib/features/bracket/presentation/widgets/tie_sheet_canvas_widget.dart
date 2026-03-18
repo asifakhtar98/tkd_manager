@@ -220,7 +220,7 @@ class TieSheetPainter extends CustomPainter {
   static const double subHeaderH  = 28.0;
   static const double medalH      = 170.0;
   static const double margin      = 36.0;
-  static const double centerGap   = 170.0;
+  static const double centerGap   = 340.0;
   static const double sectionGap  = 50.0;
   static const double sectionLabelH = 32.0;
   static const double _cardRadius = 6.0;
@@ -361,6 +361,7 @@ class TieSheetPainter extends CustomPainter {
   // ── 3e  Single-Elimination layout ─────────────────────────────────────────
 
   void _paintSE(Canvas canvas, Size size, Paint thickPen) {
+    final List<void Function()> deferredDecorations = [];
     double startY = margin;
     startY = _paintHeader(canvas, size, startY, thickPen);
 
@@ -409,13 +410,13 @@ class TieSheetPainter extends CustomPainter {
       final c = roundMatches.length;
       for (final match in roundMatches) {
         if (r == winRounds) {
-          _paintCenterFinalJunction(canvas, match, size.width / 2, thickPen);
+          _paintCenterFinalJunction(canvas, match, size.width / 2, thickPen, deferredDecorations);
         } else {
           final isLeft    = match.matchNumberInRound <= (c + 1) ~/ 2;
           final junctionX = isLeft
               ? margin + listW + (r * roundColW)
               : rightEdge - listW - (r * roundColW);
-          _paintJunction(canvas, match, junctionX, thickPen, mirrored: !isLeft);
+          _paintJunction(canvas, match, junctionX, thickPen, mirrored: !isLeft, deferredDecorations: deferredDecorations);
         }
       }
     }
@@ -425,11 +426,16 @@ class TieSheetPainter extends CustomPainter {
       final thirdMatch    = matches.where((m) => m.roundNumber == thirdMaxRound && m.matchNumberInRound == 2).firstOrNull;
       if (thirdMatch != null) _paint3rdPlaceMatch(canvas, thirdMatch, thickPen, tableTop);
     }
+
+    for (final deco in deferredDecorations) {
+      deco();
+    }
   }
 
   // ── 3f  Double-Elimination layout ─────────────────────────────────────────
 
   void _paintDE(Canvas canvas, Size size, Paint thickPen) {
+    final List<void Function()> deferredDecorations = [];
     double startY = margin;
     startY = _paintHeader(canvas, size, startY, thickPen);
 
@@ -453,7 +459,7 @@ class TieSheetPainter extends CustomPainter {
     for (var r = 1; r <= wbRounds; r++) {
       final junctionX = margin + listW + (r * roundColW);
       for (final match in wbByRound[r] ?? []) {
-        _paintJunction(canvas, match, junctionX, thickPen, mirrored: false);
+        _paintJunction(canvas, match, junctionX, thickPen, mirrored: false, deferredDecorations: deferredDecorations);
       }
     }
 
@@ -499,7 +505,7 @@ class TieSheetPainter extends CustomPainter {
     for (var r = 1; r <= lbRounds; r++) {
       final junctionX = margin + listW + (r * roundColW);
       for (final match in lbByRound[r] ?? []) {
-        _paintJunction(canvas, match, junctionX, thickPen, mirrored: false);
+        _paintJunction(canvas, match, junctionX, thickPen, mirrored: false, deferredDecorations: deferredDecorations);
       }
     }
 
@@ -515,15 +521,19 @@ class TieSheetPainter extends CustomPainter {
       final gfMidY  = (gfTopY + gfBotY) / 2;
 
       _nodeOffsets[gf1.id] = Offset(gfX, gfMidY);
-      _paintGrandFinalNode(canvas, gf1, gfX, gfTopY, gfBotY, thickPen, 'GRAND FINAL');
+      _paintGrandFinalNode(canvas, gf1, gfX, gfTopY, gfBotY, thickPen, 'GRAND FINAL', deferredDecorations);
 
       if (gfMatches.length > 1) {
         final gf2    = gfMatches[1];
         final resetX = gfX + roundColW;
         _nodeOffsets[gf2.id] = Offset(resetX, gfMidY);
         canvas.drawLine(Offset(gfX, gfMidY), Offset(resetX, gfMidY), thickPen);
-        _paintGrandFinalNode(canvas, gf2, resetX, gfMidY - 25, gfMidY + 25, thickPen, 'RESET');
+        _paintGrandFinalNode(canvas, gf2, resetX, gfMidY - 25, gfMidY + 25, thickPen, 'RESET', deferredDecorations);
       }
+    }
+
+    for (final deco in deferredDecorations) {
+      deco();
     }
   }
 
@@ -538,7 +548,7 @@ class TieSheetPainter extends CustomPainter {
         center: true);
   }
 
-  void _paintGrandFinalNode(Canvas canvas, MatchEntity match, double x, double topY, double botY, Paint pen, String label) {
+  void _paintGrandFinalNode(Canvas canvas, MatchEntity match, double x, double topY, double botY, Paint pen, String label, List<void Function()> deferredDecorations) {
     final pendingPen = _Pens.thin(_BracketColors.pending);
     final winnerPen  = _Pens.round(_BracketColors.connectorWon);
     final midY = (topY + botY) / 2;
@@ -552,23 +562,26 @@ class TieSheetPainter extends CustomPainter {
 
     canvas.drawLine(Offset(x, midY), Offset(x + 40, midY), match.winnerId != null ? winnerPen : pendingPen);
 
-    _drawText(canvas, label, x, topY - 20, _bold(10), center: true);
-    _drawBadge(canvas, 'B', _BracketColors.blue, x + 16, topY - 6);
-    _drawBadge(canvas, 'R', _BracketColors.red,  x + 16, botY + 14);
-
     final gNum = _matchGlobalNumbers[match.id];
-    if (gNum != null) _drawMatchPill(canvas, '$gNum', x + 18, midY);
+    final w = match.winnerId != null ? _findP(match.winnerId) : null;
+    final wName = w != null ? _pName(w) : null;
 
-    if (match.winnerId != null) {
-      final w = _findP(match.winnerId);
-      if (w != null) _drawText(canvas, _pName(w), x + 45, midY - 6, _bold(9));
-    }
+    deferredDecorations.add(() {
+      _drawText(canvas, label, x, topY - 20, _bold(10), center: true);
+      _drawBadge(canvas, 'B', _BracketColors.blue, x + 16, topY - 6);
+      _drawBadge(canvas, 'R', _BracketColors.red,  x + 16, botY + 14);
+
+      if (gNum != null) _drawMatchPill(canvas, '$gNum', x + 18, midY);
+      if (wName != null) {
+        _drawText(canvas, wName, x + 45, midY - 6, _bold(9));
+      }
+    });
 
     matchHitAreas.add(MapEntry(match.id,
         Rect.fromCenter(center: Offset(x, midY), width: roundColW * 0.6, height: max(35, (botY - topY).abs() + 10))));
   }
 
-  void _paintCenterFinalJunction(Canvas canvas, MatchEntity match, double junctionX, Paint pen) {
+  void _paintCenterFinalJunction(Canvas canvas, MatchEntity match, double junctionX, Paint pen, List<void Function()> deferredDecorations) {
     if (match.resultType == MatchResultType.bye) return;
 
     final pendingPen = _Pens.thin(_BracketColors.pending);
@@ -587,40 +600,31 @@ class TieSheetPainter extends CustomPainter {
     final topArmY    = rawMidY - halfSpan;
     final botArmY    = rawMidY + halfSpan;
 
-    // ── Smooth Bezier arms instead of hard right-angle lines ──
-    const curveR = 12.0;
-    final topPath = Path()
-      ..moveTo(topIn.dx, topIn.dy)
-      ..lineTo(junctionX - curveR, topIn.dy)
-      ..quadraticBezierTo(junctionX, topIn.dy, junctionX, topIn.dy + curveR)
-      ..lineTo(junctionX, rawMidY);
-    canvas.drawPath(topPath, topPen);
+    canvas.drawLine(topIn, Offset(junctionX, topIn.dy), topPen);
+    canvas.drawLine(botIn, Offset(junctionX, botIn.dy), botPen);
 
-    final botPath = Path()
-      ..moveTo(botIn.dx, botIn.dy)
-      ..lineTo(junctionX + curveR, botIn.dy)
-      ..quadraticBezierTo(junctionX, botIn.dy, junctionX, botIn.dy - curveR)
-      ..lineTo(junctionX, rawMidY);
-    canvas.drawPath(botPath, botPen);
-
-    // ── Vertical merge line ──
-    canvas.drawLine(Offset(junctionX, topArmY), Offset(junctionX, botArmY), _Pens.thin(_BracketColors.connector));
+    final realTopY = min(topIn.dy, topArmY);
+    final realBotY = max(botIn.dy, botArmY);
+    canvas.drawLine(Offset(junctionX, realTopY), Offset(junctionX, realBotY), _Pens.thin(_BracketColors.connector));
 
     _nodeOffsets[match.id] = Offset(junctionX, rawMidY);
 
-    // ── Match number pill ──
     final gNum = _matchGlobalNumbers[match.id];
-    if (gNum != null) {
-      _drawMatchPill(canvas, '$gNum', junctionX, rawMidY);
-    }
+    final w = match.winnerId != null ? _findP(match.winnerId) : null;
+    final wName = w != null ? _pName(w) : null;
 
-    _drawBadge(canvas, 'B', _BracketColors.blue, junctionX - 20, topArmY - 14);
-    _drawBadge(canvas, 'R', _BracketColors.red,  junctionX + 20, botArmY + 14);
+    deferredDecorations.add(() {
+      if (gNum != null) {
+        _drawMatchPill(canvas, '$gNum', junctionX, rawMidY);
+      }
+      _drawBadge(canvas, 'B', _BracketColors.blue, junctionX - 20, topArmY - 14);
+      _drawBadge(canvas, 'R', _BracketColors.red,  junctionX + 20, botArmY + 14);
 
-    if (match.winnerId != null) {
-      final w = _findP(match.winnerId);
-      if (w != null) _drawText(canvas, _pName(w), junctionX, rawMidY - 20, _bold(9), center: true);
-    }
+      if (wName != null) {
+        // Draw centered slightly above the junction
+        _drawText(canvas, wName, junctionX, rawMidY - 26, _bold(9), center: true);
+      }
+    });
 
     matchHitAreas.add(MapEntry(match.id,
         Rect.fromCenter(center: Offset(junctionX, rawMidY), width: 80, height: max(50, botArmY - topArmY + 30))));
@@ -686,7 +690,6 @@ class TieSheetPainter extends CustomPainter {
 
   void _paintParticipantRow(Canvas canvas, int idx, ParticipantEntity p, double x, double y, Paint pen, {required bool mirrored}) {
     final right = x + listW;
-    final connectorPen = _Pens.round(_BracketColors.connector, w: 1.5);
 
     if (!mirrored) {
       // ── Card with shadow ──
@@ -711,9 +714,6 @@ class TieSheetPainter extends CustomPainter {
       if (p.registrationId != null && p.registrationId!.isNotEmpty) {
         _drawText(canvas, p.registrationId!, right - 8, textY, _normal(9), alignRight: true);
       }
-
-      // ── Connector arm ──
-      canvas.drawLine(Offset(right, y + rowH / 2), Offset(right + roundColW, y + rowH / 2), connectorPen);
     } else {
       // ── Mirrored card with shadow ──
       final cardRect = RRect.fromLTRBR(x, y + 1, right, y + rowH - 1, const Radius.circular(_cardRadius));
@@ -737,16 +737,12 @@ class TieSheetPainter extends CustomPainter {
       }
       _drawText(canvas, _pName(p), x + regIdColW + nameColW - 8, textY, _bold(10), alignRight: true);
       _drawText(canvas, '$idx', right - noColW / 2, textY, _normal(10), center: true);
-
-      // ── Connector arm ──
-      canvas.drawLine(Offset(x, y + rowH / 2), Offset(x - roundColW, y + rowH / 2), connectorPen);
     }
   }
 
   /// Paints a placeholder row for a bracket slot with no assigned participant.
   void _paintTbdRow(Canvas canvas, int idx, double x, double y) {
     final right = x + listW;
-    final connectorPen = _Pens.thin(_BracketColors.pending);
 
     final cardRect = RRect.fromLTRBR(x, y + 1, right, y + rowH - 1, const Radius.circular(_cardRadius));
     canvas.drawRRect(cardRect, _Pens.fill(_BracketColors.tbdFill));
@@ -762,8 +758,6 @@ class TieSheetPainter extends CustomPainter {
         const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: _BracketColors.muted), center: true);
     _drawText(canvas, 'TBD', x + noColW + 8, textY,
         const TextStyle(fontSize: 10, fontWeight: FontWeight.w600, fontStyle: FontStyle.italic, color: _BracketColors.muted));
-
-    canvas.drawLine(Offset(right, y + rowH / 2), Offset(right + roundColW, y + rowH / 2), connectorPen);
   }
 
   /// Renders a flat R1 participant table, writing [_nodeOffsets] for each slot
@@ -805,7 +799,7 @@ class TieSheetPainter extends CustomPainter {
     }
   }
 
-  void _paintJunction(Canvas canvas, MatchEntity match, double junctionX, Paint pen, {required bool mirrored}) {
+  void _paintJunction(Canvas canvas, MatchEntity match, double junctionX, Paint pen, {required bool mirrored, required List<void Function()> deferredDecorations}) {
     final pendingPen = _Pens.thin(_BracketColors.pending);
     final winnerPen  = _Pens.round(_BracketColors.connectorWon);
 
@@ -856,41 +850,48 @@ class TieSheetPainter extends CustomPainter {
     final pathT = Path()
       ..moveTo(effectiveTop.dx, effectiveTop.dy)
       ..lineTo(junctionX - (mirrored ? -r : r), effectiveTop.dy)
-      ..quadraticBezierTo(junctionX, effectiveTop.dy, junctionX, effectiveTop.dy + r)
+      ..arcToPoint(Offset(junctionX, effectiveTop.dy + r), radius: const Radius.circular(r), clockwise: !mirrored)
       ..lineTo(junctionX, midY);
     canvas.drawPath(pathT, topPen);
 
     final pathB = Path()
       ..moveTo(effectiveBot.dx, effectiveBot.dy)
       ..lineTo(junctionX - (mirrored ? -r : r), effectiveBot.dy)
-      ..quadraticBezierTo(junctionX, effectiveBot.dy, junctionX, effectiveBot.dy - r)
+      ..arcToPoint(Offset(junctionX, effectiveBot.dy - r), radius: const Radius.circular(r), clockwise: mirrored)
       ..lineTo(junctionX, midY);
     canvas.drawPath(pathB, botPen);
 
-
-    if (!mirrored) {
-      _drawBadge(canvas, 'B', _BracketColors.blue, junctionX - 20, effectiveTop.dy - 14);
-      _drawBadge(canvas, 'R', _BracketColors.red,  junctionX - 20, effectiveBot.dy + 14);
-    } else {
-      _drawBadge(canvas, 'B', _BracketColors.blue, junctionX + 20, effectiveTop.dy - 14);
-      _drawBadge(canvas, 'R', _BracketColors.red,  junctionX + 20, effectiveBot.dy + 14);
-    }
-
     final gNum = _matchGlobalNumbers[match.id];
-    if (gNum != null) {
-      _drawMatchPill(canvas, '$gNum', junctionX, midY);
-    }
+    final w = match.winnerId != null ? _findP(match.winnerId) : null;
+    final wName = w != null ? _pName(w) : null;
+
+    deferredDecorations.add(() {
+      if (!mirrored) {
+        _drawBadge(canvas, 'B', _BracketColors.blue, junctionX - 20, effectiveTop.dy - 14);
+        _drawBadge(canvas, 'R', _BracketColors.red,  junctionX - 20, effectiveBot.dy + 14);
+      } else {
+        _drawBadge(canvas, 'B', _BracketColors.blue, junctionX + 20, effectiveTop.dy - 14);
+        _drawBadge(canvas, 'R', _BracketColors.red,  junctionX + 20, effectiveBot.dy + 14);
+      }
+
+      if (gNum != null) {
+        _drawMatchPill(canvas, '$gNum', junctionX, midY);
+      }
+
+      if (wName != null) {
+        if (!mirrored) {
+          _drawText(canvas, '✓ $wName', junctionX + 18, midY - 14, _bold(9), alignRight: false);
+        } else {
+          _drawText(canvas, '✓ $wName', junctionX - 18, midY - 14, _bold(9), alignRight: true);
+        }
+      }
+    });
 
     if (match.winnerId != null) {
       // Override winner's node offset so the next round's junction
       // connects FROM this junction, not from the R1 participant row.
       // The next round's Bezier input arm handles the visual connection.
       _nodeOffsets[match.winnerId!] = output;
-
-      final winner = _findP(match.winnerId);
-      if (winner != null) {
-        _drawText(canvas, '${_pName(winner)}', junctionX, midY - 22, _bold(9), center: true);
-      }
     }
 
     matchHitAreas.add(MapEntry(match.id,
