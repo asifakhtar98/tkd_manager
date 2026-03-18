@@ -322,6 +322,306 @@ $DoubleEliminationBracketGenerationResultCopyWith<$Res> get data {
 }
 
 /// @nodoc
+mixin _$BracketHistoryEntry {
+
+/// Metadata describing what action was taken.
+ BracketMatchAction get action;/// The full bracket result snapshot AFTER this action was applied.
+ BracketResult get resultSnapshot;
+/// Create a copy of BracketHistoryEntry
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$BracketHistoryEntryCopyWith<BracketHistoryEntry> get copyWith => _$BracketHistoryEntryCopyWithImpl<BracketHistoryEntry>(this as BracketHistoryEntry, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is BracketHistoryEntry&&(identical(other.action, action) || other.action == action)&&(identical(other.resultSnapshot, resultSnapshot) || other.resultSnapshot == resultSnapshot));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,action,resultSnapshot);
+
+@override
+String toString() {
+  return 'BracketHistoryEntry(action: $action, resultSnapshot: $resultSnapshot)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $BracketHistoryEntryCopyWith<$Res>  {
+  factory $BracketHistoryEntryCopyWith(BracketHistoryEntry value, $Res Function(BracketHistoryEntry) _then) = _$BracketHistoryEntryCopyWithImpl;
+@useResult
+$Res call({
+ BracketMatchAction action, BracketResult resultSnapshot
+});
+
+
+$BracketMatchActionCopyWith<$Res> get action;$BracketResultCopyWith<$Res> get resultSnapshot;
+
+}
+/// @nodoc
+class _$BracketHistoryEntryCopyWithImpl<$Res>
+    implements $BracketHistoryEntryCopyWith<$Res> {
+  _$BracketHistoryEntryCopyWithImpl(this._self, this._then);
+
+  final BracketHistoryEntry _self;
+  final $Res Function(BracketHistoryEntry) _then;
+
+/// Create a copy of BracketHistoryEntry
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? action = null,Object? resultSnapshot = null,}) {
+  return _then(_self.copyWith(
+action: null == action ? _self.action : action // ignore: cast_nullable_to_non_nullable
+as BracketMatchAction,resultSnapshot: null == resultSnapshot ? _self.resultSnapshot : resultSnapshot // ignore: cast_nullable_to_non_nullable
+as BracketResult,
+  ));
+}
+/// Create a copy of BracketHistoryEntry
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$BracketMatchActionCopyWith<$Res> get action {
+  
+  return $BracketMatchActionCopyWith<$Res>(_self.action, (value) {
+    return _then(_self.copyWith(action: value));
+  });
+}/// Create a copy of BracketHistoryEntry
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$BracketResultCopyWith<$Res> get resultSnapshot {
+  
+  return $BracketResultCopyWith<$Res>(_self.resultSnapshot, (value) {
+    return _then(_self.copyWith(resultSnapshot: value));
+  });
+}
+}
+
+
+/// Adds pattern-matching-related methods to [BracketHistoryEntry].
+extension BracketHistoryEntryPatterns on BracketHistoryEntry {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _BracketHistoryEntry value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _BracketHistoryEntry() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _BracketHistoryEntry value)  $default,){
+final _that = this;
+switch (_that) {
+case _BracketHistoryEntry():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _BracketHistoryEntry value)?  $default,){
+final _that = this;
+switch (_that) {
+case _BracketHistoryEntry() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( BracketMatchAction action,  BracketResult resultSnapshot)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _BracketHistoryEntry() when $default != null:
+return $default(_that.action,_that.resultSnapshot);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( BracketMatchAction action,  BracketResult resultSnapshot)  $default,) {final _that = this;
+switch (_that) {
+case _BracketHistoryEntry():
+return $default(_that.action,_that.resultSnapshot);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( BracketMatchAction action,  BracketResult resultSnapshot)?  $default,) {final _that = this;
+switch (_that) {
+case _BracketHistoryEntry() when $default != null:
+return $default(_that.action,_that.resultSnapshot);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class _BracketHistoryEntry implements BracketHistoryEntry {
+  const _BracketHistoryEntry({required this.action, required this.resultSnapshot});
+  
+
+/// Metadata describing what action was taken.
+@override final  BracketMatchAction action;
+/// The full bracket result snapshot AFTER this action was applied.
+@override final  BracketResult resultSnapshot;
+
+/// Create a copy of BracketHistoryEntry
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$BracketHistoryEntryCopyWith<_BracketHistoryEntry> get copyWith => __$BracketHistoryEntryCopyWithImpl<_BracketHistoryEntry>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _BracketHistoryEntry&&(identical(other.action, action) || other.action == action)&&(identical(other.resultSnapshot, resultSnapshot) || other.resultSnapshot == resultSnapshot));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,action,resultSnapshot);
+
+@override
+String toString() {
+  return 'BracketHistoryEntry(action: $action, resultSnapshot: $resultSnapshot)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$BracketHistoryEntryCopyWith<$Res> implements $BracketHistoryEntryCopyWith<$Res> {
+  factory _$BracketHistoryEntryCopyWith(_BracketHistoryEntry value, $Res Function(_BracketHistoryEntry) _then) = __$BracketHistoryEntryCopyWithImpl;
+@override @useResult
+$Res call({
+ BracketMatchAction action, BracketResult resultSnapshot
+});
+
+
+@override $BracketMatchActionCopyWith<$Res> get action;@override $BracketResultCopyWith<$Res> get resultSnapshot;
+
+}
+/// @nodoc
+class __$BracketHistoryEntryCopyWithImpl<$Res>
+    implements _$BracketHistoryEntryCopyWith<$Res> {
+  __$BracketHistoryEntryCopyWithImpl(this._self, this._then);
+
+  final _BracketHistoryEntry _self;
+  final $Res Function(_BracketHistoryEntry) _then;
+
+/// Create a copy of BracketHistoryEntry
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? action = null,Object? resultSnapshot = null,}) {
+  return _then(_BracketHistoryEntry(
+action: null == action ? _self.action : action // ignore: cast_nullable_to_non_nullable
+as BracketMatchAction,resultSnapshot: null == resultSnapshot ? _self.resultSnapshot : resultSnapshot // ignore: cast_nullable_to_non_nullable
+as BracketResult,
+  ));
+}
+
+/// Create a copy of BracketHistoryEntry
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$BracketMatchActionCopyWith<$Res> get action {
+  
+  return $BracketMatchActionCopyWith<$Res>(_self.action, (value) {
+    return _then(_self.copyWith(action: value));
+  });
+}/// Create a copy of BracketHistoryEntry
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$BracketResultCopyWith<$Res> get resultSnapshot {
+  
+  return $BracketResultCopyWith<$Res>(_self.resultSnapshot, (value) {
+    return _then(_self.copyWith(resultSnapshot: value));
+  });
+}
+}
+
+/// @nodoc
 mixin _$BracketState {
 
 
@@ -435,12 +735,12 @@ return failure(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  generating,TResult Function( BracketResult result,  List<ParticipantEntity> participants,  BracketFormat format,  bool includeThirdPlaceMatch,  String? errorMessage)?  loadSuccess,TResult Function( String message)?  failure,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  generating,TResult Function( BracketResult result,  List<ParticipantEntity> participants,  BracketFormat format,  bool includeThirdPlaceMatch,  String? errorMessage,  List<BracketHistoryEntry> actionHistory,  int historyPointer,  bool isReplayInProgress,  BracketResult? initialResult)?  loadSuccess,TResult Function( String message)?  failure,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case BracketInitial() when initial != null:
 return initial();case BracketGenerating() when generating != null:
 return generating();case BracketLoadSuccess() when loadSuccess != null:
-return loadSuccess(_that.result,_that.participants,_that.format,_that.includeThirdPlaceMatch,_that.errorMessage);case BracketFailure() when failure != null:
+return loadSuccess(_that.result,_that.participants,_that.format,_that.includeThirdPlaceMatch,_that.errorMessage,_that.actionHistory,_that.historyPointer,_that.isReplayInProgress,_that.initialResult);case BracketFailure() when failure != null:
 return failure(_that.message);case _:
   return orElse();
 
@@ -459,12 +759,12 @@ return failure(_that.message);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  generating,required TResult Function( BracketResult result,  List<ParticipantEntity> participants,  BracketFormat format,  bool includeThirdPlaceMatch,  String? errorMessage)  loadSuccess,required TResult Function( String message)  failure,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  generating,required TResult Function( BracketResult result,  List<ParticipantEntity> participants,  BracketFormat format,  bool includeThirdPlaceMatch,  String? errorMessage,  List<BracketHistoryEntry> actionHistory,  int historyPointer,  bool isReplayInProgress,  BracketResult? initialResult)  loadSuccess,required TResult Function( String message)  failure,}) {final _that = this;
 switch (_that) {
 case BracketInitial():
 return initial();case BracketGenerating():
 return generating();case BracketLoadSuccess():
-return loadSuccess(_that.result,_that.participants,_that.format,_that.includeThirdPlaceMatch,_that.errorMessage);case BracketFailure():
+return loadSuccess(_that.result,_that.participants,_that.format,_that.includeThirdPlaceMatch,_that.errorMessage,_that.actionHistory,_that.historyPointer,_that.isReplayInProgress,_that.initialResult);case BracketFailure():
 return failure(_that.message);}
 }
 /// A variant of `when` that fallback to returning `null`
@@ -479,12 +779,12 @@ return failure(_that.message);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  generating,TResult? Function( BracketResult result,  List<ParticipantEntity> participants,  BracketFormat format,  bool includeThirdPlaceMatch,  String? errorMessage)?  loadSuccess,TResult? Function( String message)?  failure,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  generating,TResult? Function( BracketResult result,  List<ParticipantEntity> participants,  BracketFormat format,  bool includeThirdPlaceMatch,  String? errorMessage,  List<BracketHistoryEntry> actionHistory,  int historyPointer,  bool isReplayInProgress,  BracketResult? initialResult)?  loadSuccess,TResult? Function( String message)?  failure,}) {final _that = this;
 switch (_that) {
 case BracketInitial() when initial != null:
 return initial();case BracketGenerating() when generating != null:
 return generating();case BracketLoadSuccess() when loadSuccess != null:
-return loadSuccess(_that.result,_that.participants,_that.format,_that.includeThirdPlaceMatch,_that.errorMessage);case BracketFailure() when failure != null:
+return loadSuccess(_that.result,_that.participants,_that.format,_that.includeThirdPlaceMatch,_that.errorMessage,_that.actionHistory,_that.historyPointer,_that.isReplayInProgress,_that.initialResult);case BracketFailure() when failure != null:
 return failure(_that.message);case _:
   return null;
 
@@ -561,7 +861,7 @@ String toString() {
 
 
 class BracketLoadSuccess implements BracketState {
-  const BracketLoadSuccess({required this.result, required final  List<ParticipantEntity> participants, required this.format, required this.includeThirdPlaceMatch, this.errorMessage}): _participants = participants;
+  const BracketLoadSuccess({required this.result, required final  List<ParticipantEntity> participants, required this.format, required this.includeThirdPlaceMatch, this.errorMessage, final  List<BracketHistoryEntry> actionHistory = const [], this.historyPointer = -1, this.isReplayInProgress = false, this.initialResult}): _participants = participants,_actionHistory = actionHistory;
   
 
  final  BracketResult result;
@@ -576,6 +876,27 @@ class BracketLoadSuccess implements BracketState {
  final  BracketFormat format;
  final  bool includeThirdPlaceMatch;
  final  String? errorMessage;
+/// Chronological list of all match-result actions taken since generation.
+/// The initial (generation) state is NOT in this list — it is stored as
+/// [initialResult] below.
+ final  List<BracketHistoryEntry> _actionHistory;
+/// Chronological list of all match-result actions taken since generation.
+/// The initial (generation) state is NOT in this list — it is stored as
+/// [initialResult] below.
+@JsonKey() List<BracketHistoryEntry> get actionHistory {
+  if (_actionHistory is EqualUnmodifiableListView) return _actionHistory;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_actionHistory);
+}
+
+/// Pointer into [actionHistory]. -1 means we are at the initial
+/// (pre-any-action) state. 0 means after the first action, etc.
+@JsonKey() final  int historyPointer;
+/// True when an animated replay is in progress.
+@JsonKey() final  bool isReplayInProgress;
+/// The bracket result immediately after generation, before any match
+/// results were recorded. Used as the baseline for undo and replay.
+ final  BracketResult? initialResult;
 
 /// Create a copy of BracketState
 /// with the given fields replaced by the non-null parameter values.
@@ -587,16 +908,16 @@ $BracketLoadSuccessCopyWith<BracketLoadSuccess> get copyWith => _$BracketLoadSuc
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is BracketLoadSuccess&&(identical(other.result, result) || other.result == result)&&const DeepCollectionEquality().equals(other._participants, _participants)&&(identical(other.format, format) || other.format == format)&&(identical(other.includeThirdPlaceMatch, includeThirdPlaceMatch) || other.includeThirdPlaceMatch == includeThirdPlaceMatch)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is BracketLoadSuccess&&(identical(other.result, result) || other.result == result)&&const DeepCollectionEquality().equals(other._participants, _participants)&&(identical(other.format, format) || other.format == format)&&(identical(other.includeThirdPlaceMatch, includeThirdPlaceMatch) || other.includeThirdPlaceMatch == includeThirdPlaceMatch)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage)&&const DeepCollectionEquality().equals(other._actionHistory, _actionHistory)&&(identical(other.historyPointer, historyPointer) || other.historyPointer == historyPointer)&&(identical(other.isReplayInProgress, isReplayInProgress) || other.isReplayInProgress == isReplayInProgress)&&(identical(other.initialResult, initialResult) || other.initialResult == initialResult));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,result,const DeepCollectionEquality().hash(_participants),format,includeThirdPlaceMatch,errorMessage);
+int get hashCode => Object.hash(runtimeType,result,const DeepCollectionEquality().hash(_participants),format,includeThirdPlaceMatch,errorMessage,const DeepCollectionEquality().hash(_actionHistory),historyPointer,isReplayInProgress,initialResult);
 
 @override
 String toString() {
-  return 'BracketState.loadSuccess(result: $result, participants: $participants, format: $format, includeThirdPlaceMatch: $includeThirdPlaceMatch, errorMessage: $errorMessage)';
+  return 'BracketState.loadSuccess(result: $result, participants: $participants, format: $format, includeThirdPlaceMatch: $includeThirdPlaceMatch, errorMessage: $errorMessage, actionHistory: $actionHistory, historyPointer: $historyPointer, isReplayInProgress: $isReplayInProgress, initialResult: $initialResult)';
 }
 
 
@@ -607,11 +928,11 @@ abstract mixin class $BracketLoadSuccessCopyWith<$Res> implements $BracketStateC
   factory $BracketLoadSuccessCopyWith(BracketLoadSuccess value, $Res Function(BracketLoadSuccess) _then) = _$BracketLoadSuccessCopyWithImpl;
 @useResult
 $Res call({
- BracketResult result, List<ParticipantEntity> participants, BracketFormat format, bool includeThirdPlaceMatch, String? errorMessage
+ BracketResult result, List<ParticipantEntity> participants, BracketFormat format, bool includeThirdPlaceMatch, String? errorMessage, List<BracketHistoryEntry> actionHistory, int historyPointer, bool isReplayInProgress, BracketResult? initialResult
 });
 
 
-$BracketResultCopyWith<$Res> get result;
+$BracketResultCopyWith<$Res> get result;$BracketResultCopyWith<$Res>? get initialResult;
 
 }
 /// @nodoc
@@ -624,14 +945,18 @@ class _$BracketLoadSuccessCopyWithImpl<$Res>
 
 /// Create a copy of BracketState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? result = null,Object? participants = null,Object? format = null,Object? includeThirdPlaceMatch = null,Object? errorMessage = freezed,}) {
+@pragma('vm:prefer-inline') $Res call({Object? result = null,Object? participants = null,Object? format = null,Object? includeThirdPlaceMatch = null,Object? errorMessage = freezed,Object? actionHistory = null,Object? historyPointer = null,Object? isReplayInProgress = null,Object? initialResult = freezed,}) {
   return _then(BracketLoadSuccess(
 result: null == result ? _self.result : result // ignore: cast_nullable_to_non_nullable
 as BracketResult,participants: null == participants ? _self._participants : participants // ignore: cast_nullable_to_non_nullable
 as List<ParticipantEntity>,format: null == format ? _self.format : format // ignore: cast_nullable_to_non_nullable
 as BracketFormat,includeThirdPlaceMatch: null == includeThirdPlaceMatch ? _self.includeThirdPlaceMatch : includeThirdPlaceMatch // ignore: cast_nullable_to_non_nullable
 as bool,errorMessage: freezed == errorMessage ? _self.errorMessage : errorMessage // ignore: cast_nullable_to_non_nullable
-as String?,
+as String?,actionHistory: null == actionHistory ? _self._actionHistory : actionHistory // ignore: cast_nullable_to_non_nullable
+as List<BracketHistoryEntry>,historyPointer: null == historyPointer ? _self.historyPointer : historyPointer // ignore: cast_nullable_to_non_nullable
+as int,isReplayInProgress: null == isReplayInProgress ? _self.isReplayInProgress : isReplayInProgress // ignore: cast_nullable_to_non_nullable
+as bool,initialResult: freezed == initialResult ? _self.initialResult : initialResult // ignore: cast_nullable_to_non_nullable
+as BracketResult?,
   ));
 }
 
@@ -643,6 +968,18 @@ $BracketResultCopyWith<$Res> get result {
   
   return $BracketResultCopyWith<$Res>(_self.result, (value) {
     return _then(_self.copyWith(result: value));
+  });
+}/// Create a copy of BracketState
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$BracketResultCopyWith<$Res>? get initialResult {
+    if (_self.initialResult == null) {
+    return null;
+  }
+
+  return $BracketResultCopyWith<$Res>(_self.initialResult!, (value) {
+    return _then(_self.copyWith(initialResult: value));
   });
 }
 }

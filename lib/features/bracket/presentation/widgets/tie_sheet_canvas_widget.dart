@@ -379,8 +379,9 @@ class TieSheetPainter extends CustomPainter {
     _matchGlobalNumbers.clear();
     final sorted = List<MatchEntity>.from(matches)
       ..sort((a, b) {
-        if (a.roundNumber != b.roundNumber)
+        if (a.roundNumber != b.roundNumber) {
           return a.roundNumber.compareTo(b.roundNumber);
+        }
         return a.matchNumberInRound.compareTo(b.matchNumberInRound);
       });
     for (var i = 0; i < sorted.length; i++) {
@@ -552,8 +553,9 @@ class TieSheetPainter extends CustomPainter {
             (m) => m.roundNumber == thirdMaxRound && m.matchNumberInRound == 2,
           )
           .firstOrNull;
-      if (thirdMatch != null)
+      if (thirdMatch != null) {
         _paint3rdPlaceMatch(canvas, thirdMatch, thickPen, tableTop);
+      }
     }
 
     for (final deco in deferredDecorations) {
@@ -723,10 +725,12 @@ class TieSheetPainter extends CustomPainter {
       final gfMidY = (gfTopY + gfBotY) / 2;
 
       _nodeOffsets['${gf1.id}_output'] = Offset(gfX, gfMidY);
-      if (wbChampOffset != null)
+      if (wbChampOffset != null) {
         _nodeOffsets['${gf1.id}_top_input'] = wbChampOffset;
-      if (lbChampOffset != null)
+      }
+      if (lbChampOffset != null) {
         _nodeOffsets['${gf1.id}_bot_input'] = lbChampOffset;
+      }
 
       _paintGrandFinalNode(
         canvas,
@@ -825,18 +829,20 @@ class TieSheetPainter extends CustomPainter {
     if (drawInputs) {
       final topIn = _resolveInputOffset(match, isTopSlot: true);
       final botIn = _resolveInputOffset(match, isTopSlot: false);
-      if (topIn != null)
+      if (topIn != null) {
         canvas.drawLine(
           topIn,
           Offset(x, topY),
           match.participantBlueId != null ? winnerPen : pendingPen,
         );
-      if (botIn != null)
+      }
+      if (botIn != null) {
         canvas.drawLine(
           botIn,
           Offset(x, botY),
           match.participantRedId != null ? winnerPen : pendingPen,
         );
+      }
     }
 
     canvas.drawLine(
@@ -1592,8 +1598,9 @@ class TieSheetPainter extends CustomPainter {
           (mm) => mm.roundNumber == allRounds && mm.matchNumberInRound == 1,
         )
         .firstOrNull;
-    if (finals == null || !_nodeOffsets.containsKey('${finals.id}_output'))
+    if (finals == null || !_nodeOffsets.containsKey('${finals.id}_output')) {
       return;
+    }
 
     final fPos = _nodeOffsets['${finals.id}_output']!;
     final x = fPos.dx;
@@ -1770,7 +1777,7 @@ class TieSheetPainter extends CustomPainter {
           ? finals.participantBlueId
           : finals.participantRedId;
       final silver = _findP(silverId);
-      if (gold != null)
+      if (gold != null) {
         _drawText(
           canvas,
           _pName(gold),
@@ -1778,7 +1785,8 @@ class TieSheetPainter extends CustomPainter {
           y + _medalRowH / 2 - 7,
           _bold(11),
         );
-      if (silver != null)
+      }
+      if (silver != null) {
         _drawText(
           canvas,
           _pName(silver),
@@ -1786,6 +1794,7 @@ class TieSheetPainter extends CustomPainter {
           y + (_medalRowH + 4) + _medalRowH / 2 - 7,
           _bold(11),
         );
+      }
     }
     // 3rd-place match: winner = Bronze 1, loser = Bronze 2
     final thirdM = matches
@@ -1794,7 +1803,7 @@ class TieSheetPainter extends CustomPainter {
     if (thirdM != null) {
       if (thirdM.winnerId != null) {
         final bronze1 = _findP(thirdM.winnerId);
-        if (bronze1 != null)
+        if (bronze1 != null) {
           _drawText(
             canvas,
             _pName(bronze1),
@@ -1802,13 +1811,14 @@ class TieSheetPainter extends CustomPainter {
             y + 2 * (_medalRowH + 4) + _medalRowH / 2 - 7,
             _bold(11),
           );
+        }
       }
       final loserId = thirdM.winnerId == thirdM.participantRedId
           ? thirdM.participantBlueId
           : thirdM.participantRedId;
       if (loserId != null) {
         final bronze2 = _findP(loserId);
-        if (bronze2 != null)
+        if (bronze2 != null) {
           _drawText(
             canvas,
             _pName(bronze2),
@@ -1816,6 +1826,7 @@ class TieSheetPainter extends CustomPainter {
             y + 3 * (_medalRowH + 4) + _medalRowH / 2 - 7,
             _bold(11),
           );
+        }
       }
     }
   }

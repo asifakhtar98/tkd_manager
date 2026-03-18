@@ -10,6 +10,11 @@ void main() {
   tearDown(getIt.reset);
 
   Future<void> navigateToSetup(WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1920, 1080);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
     await tester.pumpWidget(const app.TkdTournamentApp());
     await tester.pumpAndSettle();
     // Dashboard now uses a 'New Bracket' FAB.
@@ -416,7 +421,7 @@ void main() {
       await addPlayers(tester, fourPlayers);
       await tapGenerate(tester);
 
-      final refreshButton = find.byIcon(Icons.refresh);
+      final refreshButton = find.text('Regenerate');
       await tester.tap(refreshButton);
       await tester.pumpAndSettle();
 
@@ -426,7 +431,7 @@ void main() {
         findsOneWidget,
       );
       expect(find.text('Cancel'), findsOneWidget);
-      expect(find.text('Regenerate'), findsOneWidget);
+      expect(find.widgetWithText(ElevatedButton, 'Regenerate'), findsOneWidget);
 
       await tester.tap(find.text('Cancel'));
       await tester.pumpAndSettle();
@@ -442,11 +447,11 @@ void main() {
       await addPlayers(tester, fourPlayers);
       await tapGenerate(tester);
 
-      final refreshButton = find.byIcon(Icons.refresh);
+      final refreshButton = find.text('Regenerate');
       await tester.tap(refreshButton);
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Regenerate'));
+      await tester.tap(find.widgetWithText(ElevatedButton, 'Regenerate'));
       await tester.pumpAndSettle();
 
       expect(find.text('Regenerate Bracket?'), findsNothing);
@@ -460,8 +465,7 @@ void main() {
       await addPlayers(tester, fourPlayers);
       await tapGenerate(tester);
 
-      expect(find.byIcon(Icons.picture_as_pdf), findsOneWidget);
-      expect(find.byTooltip('Export PDF'), findsOneWidget);
+      expect(find.text('Export PDF'), findsOneWidget);
 
       await goBack(tester);
     });
@@ -515,10 +519,10 @@ void main() {
         // Single-canvas layout: WB/LB labels painted on canvas, verify widget.
         expect(find.byType(TieSheetCanvasWidget), findsOneWidget);
 
-        final refreshButton = find.byIcon(Icons.refresh);
+        final refreshButton = find.text('Regenerate');
         await tester.tap(refreshButton);
         await tester.pumpAndSettle();
-        await tester.tap(find.text('Regenerate'));
+        await tester.tap(find.widgetWithText(ElevatedButton, 'Regenerate'));
         await tester.pumpAndSettle();
 
         expect(find.textContaining('Double Elimination'), findsOneWidget);

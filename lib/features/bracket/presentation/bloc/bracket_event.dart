@@ -32,4 +32,24 @@ sealed class BracketEvent with _$BracketEvent {
 
   /// Clear the [BracketLoadSuccess.errorMessage] after the UI has shown it.
   const factory BracketEvent.errorDismissed() = BracketErrorDismissed;
+
+  /// Undo the most recent match result recording.
+  const factory BracketEvent.undoRequested() = BracketUndoRequested;
+
+  /// Redo the last undone match result recording.
+  const factory BracketEvent.redoRequested() = BracketRedoRequested;
+
+  /// Start replaying all recorded actions from the initial bracket state.
+  const factory BracketEvent.replayRequested() = BracketReplayRequested;
+
+  /// Advance replay by one step (called by the replay timer).
+  const factory BracketEvent.replayStepAdvanced() = BracketReplayStepAdvanced;
+
+  /// Cancel an in-progress replay.
+  const factory BracketEvent.replayCancelled() = BracketReplayCancelled;
+
+  /// Jump directly to a specific point in the history.
+  const factory BracketEvent.historyJumpRequested({
+    required int targetHistoryIndex,
+  }) = BracketHistoryJumpRequested;
 }

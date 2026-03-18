@@ -10,6 +10,7 @@ import 'package:uuid/uuid.dart';
 import 'package:tkd_saas/features/bracket/domain/entities/match_entity.dart';
 import 'package:tkd_saas/core/router/app_routes.dart';
 import 'package:tkd_saas/features/bracket/presentation/bloc/bracket_bloc.dart';
+import 'package:tkd_saas/features/bracket/presentation/widgets/bracket_history_drawer.dart';
 import 'package:tkd_saas/features/bracket/presentation/widgets/score_entry_dialog.dart';
 import 'package:tkd_saas/features/bracket/presentation/widgets/tie_sheet_canvas_widget.dart';
 import 'package:tkd_saas/features/participant/domain/entities/participant_entity.dart';
@@ -50,10 +51,12 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
   final TransformationController _transformController =
       TransformationController();
   final GlobalKey _printKey = GlobalKey();
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   // Tracks whether we have already committed a snapshot for this generation
   // session, so we don't double-save on rebuilds.
   bool _snapshotSaved = false;
+  bool _isExportingPdf = false;
   static const _uuid = Uuid();
 
   @override
@@ -68,72 +71,78 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
   /// converts the canvas to a PNG image, and embeds it in a landscape A4 PDF
   /// page with a header showing the tournament name and format.
   Future<void> _exportPdf(String title) async {
-    pw.ImageProvider? bracketImage;
+    setState(() => _isExportingPdf = true);
     try {
-      final boundary = _printKey.currentContext?.findRenderObject()
-          as RenderRepaintBoundary?;
-      if (boundary != null) {
-        final ui.Image image = await boundary.toImage(pixelRatio: 2.0);
-        final byteData =
-            await image.toByteData(format: ui.ImageByteFormat.png);
-        if (byteData != null) {
-          bracketImage =
-              pw.MemoryImage(byteData.buffer.asUint8List());
+      pw.ImageProvider? bracketImage;
+      try {
+        final boundary = _printKey.currentContext?.findRenderObject()
+            as RenderRepaintBoundary?;
+        if (boundary != null) {
+          final ui.Image image = await boundary.toImage(pixelRatio: 2.0);
+          final byteData =
+              await image.toByteData(format: ui.ImageByteFormat.png);
+          if (byteData != null) {
+            bracketImage = pw.MemoryImage(byteData.buffer.asUint8List());
+          }
         }
+      } catch (_) {
+        // Capture failed — fall back to text-only export.
       }
-    } catch (_) {
-      // Capture failed — fall back to text-only export.
-    }
 
-    final doc = pw.Document();
-    doc.addPage(
-      pw.Page(
-        pageFormat: PdfPageFormat.a4.landscape,
-        margin: const pw.EdgeInsets.all(24),
-        build: (pw.Context ctx) {
-          return pw.Column(
-            crossAxisAlignment: pw.CrossAxisAlignment.start,
-            children: [
-              // Header
-              pw.Text(
-                title,
-                style: pw.TextStyle(
-                  fontSize: 18,
-                  fontWeight: pw.FontWeight.bold,
-                ),
-              ),
-              pw.Text(
-                widget.bracketFormat.displayLabel,
-                style: const pw.TextStyle(fontSize: 12),
-              ),
-              pw.SizedBox(height: 12),
-              pw.Divider(),
-              pw.SizedBox(height: 12),
-              // Bracket image or fallback
-              if (bracketImage != null)
-                pw.Expanded(
-                  child: pw.Center(
-                    child: pw.Image(bracketImage, fit: pw.BoxFit.contain),
+      final doc = pw.Document();
+      doc.addPage(
+        pw.Page(
+          pageFormat: PdfPageFormat.a4.landscape,
+          margin: const pw.EdgeInsets.all(24),
+          build: (pw.Context ctx) {
+            return pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                // Header
+                pw.Text(
+                  title,
+                  style: pw.TextStyle(
+                    fontSize: 18,
+                    fontWeight: pw.FontWeight.bold,
                   ),
-                )
-              else
-                pw.Expanded(
-                  child: pw.Center(
-                    child: pw.Text(
-                      'Bracket image could not be captured.\n'
-                      'Please try again after the bracket has fully rendered.',
-                      textAlign: pw.TextAlign.center,
+                ),
+                pw.Text(
+                  widget.bracketFormat.displayLabel,
+                  style: const pw.TextStyle(fontSize: 12),
+                ),
+                pw.SizedBox(height: 12),
+                pw.Divider(),
+                pw.SizedBox(height: 12),
+                // Bracket image or fallback
+                if (bracketImage != null)
+                  pw.Expanded(
+                    child: pw.Center(
+                      child: pw.Image(bracketImage, fit: pw.BoxFit.contain),
+                    ),
+                  )
+                else
+                  pw.Expanded(
+                    child: pw.Center(
+                      child: pw.Text(
+                        'Bracket image could not be captured.\n'
+                        'Please try again after the bracket has fully rendered.',
+                        textAlign: pw.TextAlign.center,
+                      ),
                     ),
                   ),
-                ),
-            ],
-          );
-        },
-      ),
-    );
-    await Printing.layoutPdf(
-      onLayout: (PdfPageFormat format) async => doc.save(),
-    );
+              ],
+            );
+          },
+        ),
+      );
+      await Printing.layoutPdf(
+        onLayout: (PdfPageFormat format) async => doc.save(),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isExportingPdf = false);
+      }
+    }
   }
 
   @override
@@ -197,13 +206,19 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
           BracketLoadSuccess(:final result,
               :final participants,
               :final format,
-              :final includeThirdPlaceMatch) =>
+              :final includeThirdPlaceMatch,
+              :final actionHistory,
+              :final historyPointer,
+              :final isReplayInProgress) =>
             _buildViewer(
               context: context,
               result: result,
               participants: participants,
               format: format,
               includeThirdPlaceMatch: includeThirdPlaceMatch,
+              actionHistory: actionHistory,
+              historyPointer: historyPointer,
+              isReplayInProgress: isReplayInProgress,
             ),
         };
       },
@@ -253,6 +268,9 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
     required List<ParticipantEntity> participants,
     required BracketFormat format,
     required bool includeThirdPlaceMatch,
+    required List<BracketHistoryEntry> actionHistory,
+    required int historyPointer,
+    required bool isReplayInProgress,
   }) {
     // Gather all matches for the score entry handler.
     final List<MatchEntity> allMatches = switch (result) {
@@ -277,7 +295,18 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
 
     final tournamentTitle = widget.tournament?.name ?? 'Tournament';
 
+    final bool canUndo = historyPointer >= 0 && !isReplayInProgress;
+    final bool canRedo = historyPointer < actionHistory.length - 1 &&
+        !isReplayInProgress;
+    final bool hasHistory = actionHistory.isNotEmpty;
+
+    final actionButtonStyle = TextButton.styleFrom(
+      foregroundColor: Colors.white,
+      disabledForegroundColor: Colors.grey,
+    );
+
     return Scaffold(
+      key: _scaffoldKey,
       appBar: AppBar(
         title: Text('${format.displayLabel} — ${participants.length} Players'),
         leading: IconButton(
@@ -285,9 +314,62 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
           onPressed: () => context.pop(),
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            tooltip: 'Regenerate',
+          // ── Undo ──
+          TextButton(
+            style: actionButtonStyle,
+            onPressed: canUndo
+                ? () => context
+                    .read<BracketBloc>()
+                    .add(const BracketEvent.undoRequested())
+                : null,
+            child: const Text('Undo'),
+          ),
+
+          // ── Redo ──
+          TextButton(
+            style: actionButtonStyle,
+            onPressed: canRedo
+                ? () => context
+                    .read<BracketBloc>()
+                    .add(const BracketEvent.redoRequested())
+                : null,
+            child: const Text('Redo'),
+          ),
+
+          // ── Replay / Stop ──
+          if (isReplayInProgress)
+            TextButton(
+              style: actionButtonStyle,
+              onPressed: () => context
+                  .read<BracketBloc>()
+                  .add(const BracketEvent.replayCancelled()),
+              child: const Text('Stop Replay'),
+            )
+          else
+            TextButton(
+              style: actionButtonStyle,
+              onPressed: hasHistory
+                  ? () => context
+                      .read<BracketBloc>()
+                      .add(const BracketEvent.replayRequested())
+                  : null,
+              child: const Text('Replay All'),
+            ),
+
+          // ── History Drawer ──
+          TextButton(
+            style: actionButtonStyle,
+            onPressed: hasHistory
+                ? () => _scaffoldKey.currentState?.openEndDrawer()
+                : null,
+            child: const Text('History'),
+          ),
+
+          const SizedBox(width: 4),
+
+          // ── Regenerate ──
+          TextButton(
+            style: actionButtonStyle,
             onPressed: () async {
               final confirm = await showDialog<bool>(
                 context: context,
@@ -314,15 +396,75 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
                     .add(const BracketRegenerateRequested());
               }
             },
+            child: const Text('Regenerate'),
           ),
-          IconButton(
-            icon: const Icon(Icons.picture_as_pdf),
-            tooltip: 'Export PDF',
-            onPressed: () => _exportPdf(tournamentTitle),
+
+          // ── Export PDF ──
+          TextButton(
+            style: actionButtonStyle,
+            onPressed: _isExportingPdf
+                ? null
+                : () => _exportPdf(tournamentTitle),
+            child: _isExportingPdf
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                : const Text('Export PDF'),
           ),
         ],
       ),
-      body: view,
+      endDrawer: BracketHistoryDrawer(
+        actionHistory: actionHistory,
+        historyPointer: historyPointer,
+        onJumpToHistoryIndex: (targetIndex) {
+          context.read<BracketBloc>().add(
+                BracketEvent.historyJumpRequested(
+                  targetHistoryIndex: targetIndex,
+                ),
+              );
+          // Close the drawer after jumping.
+          _scaffoldKey.currentState?.closeEndDrawer();
+        },
+      ),
+      body: Stack(
+        children: [
+          Column(
+            children: [
+              // ── Replay progress indicator ──
+              if (isReplayInProgress && actionHistory.isNotEmpty)
+                LinearProgressIndicator(
+                  value: (historyPointer + 1) / actionHistory.length,
+                  minHeight: 4,
+                ),
+              // ── Bracket canvas ──
+              Expanded(child: view),
+            ],
+          ),
+          // ── PDF export loading overlay ──
+          if (_isExportingPdf)
+            Container(
+              color: Colors.black54,
+              child: const Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    CircularProgressIndicator(color: Colors.white),
+                    SizedBox(height: 16),
+                    Text(
+                      'Generating PDF…',
+                      style: TextStyle(color: Colors.white, fontSize: 16),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+        ],
+      ),
     );
   }
 

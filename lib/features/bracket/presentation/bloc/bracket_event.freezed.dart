@@ -55,14 +55,20 @@ extension BracketEventPatterns on BracketEvent {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( BracketGenerateRequested value)?  generateRequested,TResult Function( BracketRegenerateRequested value)?  regenerateRequested,TResult Function( BracketMatchResultRecorded value)?  matchResultRecorded,TResult Function( BracketErrorDismissed value)?  errorDismissed,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( BracketGenerateRequested value)?  generateRequested,TResult Function( BracketRegenerateRequested value)?  regenerateRequested,TResult Function( BracketMatchResultRecorded value)?  matchResultRecorded,TResult Function( BracketErrorDismissed value)?  errorDismissed,TResult Function( BracketUndoRequested value)?  undoRequested,TResult Function( BracketRedoRequested value)?  redoRequested,TResult Function( BracketReplayRequested value)?  replayRequested,TResult Function( BracketReplayStepAdvanced value)?  replayStepAdvanced,TResult Function( BracketReplayCancelled value)?  replayCancelled,TResult Function( BracketHistoryJumpRequested value)?  historyJumpRequested,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
 case BracketGenerateRequested() when generateRequested != null:
 return generateRequested(_that);case BracketRegenerateRequested() when regenerateRequested != null:
 return regenerateRequested(_that);case BracketMatchResultRecorded() when matchResultRecorded != null:
 return matchResultRecorded(_that);case BracketErrorDismissed() when errorDismissed != null:
-return errorDismissed(_that);case _:
+return errorDismissed(_that);case BracketUndoRequested() when undoRequested != null:
+return undoRequested(_that);case BracketRedoRequested() when redoRequested != null:
+return redoRequested(_that);case BracketReplayRequested() when replayRequested != null:
+return replayRequested(_that);case BracketReplayStepAdvanced() when replayStepAdvanced != null:
+return replayStepAdvanced(_that);case BracketReplayCancelled() when replayCancelled != null:
+return replayCancelled(_that);case BracketHistoryJumpRequested() when historyJumpRequested != null:
+return historyJumpRequested(_that);case _:
   return orElse();
 
 }
@@ -80,14 +86,20 @@ return errorDismissed(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( BracketGenerateRequested value)  generateRequested,required TResult Function( BracketRegenerateRequested value)  regenerateRequested,required TResult Function( BracketMatchResultRecorded value)  matchResultRecorded,required TResult Function( BracketErrorDismissed value)  errorDismissed,}){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( BracketGenerateRequested value)  generateRequested,required TResult Function( BracketRegenerateRequested value)  regenerateRequested,required TResult Function( BracketMatchResultRecorded value)  matchResultRecorded,required TResult Function( BracketErrorDismissed value)  errorDismissed,required TResult Function( BracketUndoRequested value)  undoRequested,required TResult Function( BracketRedoRequested value)  redoRequested,required TResult Function( BracketReplayRequested value)  replayRequested,required TResult Function( BracketReplayStepAdvanced value)  replayStepAdvanced,required TResult Function( BracketReplayCancelled value)  replayCancelled,required TResult Function( BracketHistoryJumpRequested value)  historyJumpRequested,}){
 final _that = this;
 switch (_that) {
 case BracketGenerateRequested():
 return generateRequested(_that);case BracketRegenerateRequested():
 return regenerateRequested(_that);case BracketMatchResultRecorded():
 return matchResultRecorded(_that);case BracketErrorDismissed():
-return errorDismissed(_that);}
+return errorDismissed(_that);case BracketUndoRequested():
+return undoRequested(_that);case BracketRedoRequested():
+return redoRequested(_that);case BracketReplayRequested():
+return replayRequested(_that);case BracketReplayStepAdvanced():
+return replayStepAdvanced(_that);case BracketReplayCancelled():
+return replayCancelled(_that);case BracketHistoryJumpRequested():
+return historyJumpRequested(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -101,14 +113,20 @@ return errorDismissed(_that);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( BracketGenerateRequested value)?  generateRequested,TResult? Function( BracketRegenerateRequested value)?  regenerateRequested,TResult? Function( BracketMatchResultRecorded value)?  matchResultRecorded,TResult? Function( BracketErrorDismissed value)?  errorDismissed,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( BracketGenerateRequested value)?  generateRequested,TResult? Function( BracketRegenerateRequested value)?  regenerateRequested,TResult? Function( BracketMatchResultRecorded value)?  matchResultRecorded,TResult? Function( BracketErrorDismissed value)?  errorDismissed,TResult? Function( BracketUndoRequested value)?  undoRequested,TResult? Function( BracketRedoRequested value)?  redoRequested,TResult? Function( BracketReplayRequested value)?  replayRequested,TResult? Function( BracketReplayStepAdvanced value)?  replayStepAdvanced,TResult? Function( BracketReplayCancelled value)?  replayCancelled,TResult? Function( BracketHistoryJumpRequested value)?  historyJumpRequested,}){
 final _that = this;
 switch (_that) {
 case BracketGenerateRequested() when generateRequested != null:
 return generateRequested(_that);case BracketRegenerateRequested() when regenerateRequested != null:
 return regenerateRequested(_that);case BracketMatchResultRecorded() when matchResultRecorded != null:
 return matchResultRecorded(_that);case BracketErrorDismissed() when errorDismissed != null:
-return errorDismissed(_that);case _:
+return errorDismissed(_that);case BracketUndoRequested() when undoRequested != null:
+return undoRequested(_that);case BracketRedoRequested() when redoRequested != null:
+return redoRequested(_that);case BracketReplayRequested() when replayRequested != null:
+return replayRequested(_that);case BracketReplayStepAdvanced() when replayStepAdvanced != null:
+return replayStepAdvanced(_that);case BracketReplayCancelled() when replayCancelled != null:
+return replayCancelled(_that);case BracketHistoryJumpRequested() when historyJumpRequested != null:
+return historyJumpRequested(_that);case _:
   return null;
 
 }
@@ -125,13 +143,19 @@ return errorDismissed(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( List<ParticipantEntity> participants,  BracketFormat bracketFormat,  bool dojangSeparation,  bool includeThirdPlaceMatch)?  generateRequested,TResult Function()?  regenerateRequested,TResult Function( String matchId,  String winnerId,  MatchResultType resultType,  int? blueScore,  int? redScore)?  matchResultRecorded,TResult Function()?  errorDismissed,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( List<ParticipantEntity> participants,  BracketFormat bracketFormat,  bool dojangSeparation,  bool includeThirdPlaceMatch)?  generateRequested,TResult Function()?  regenerateRequested,TResult Function( String matchId,  String winnerId,  MatchResultType resultType,  int? blueScore,  int? redScore)?  matchResultRecorded,TResult Function()?  errorDismissed,TResult Function()?  undoRequested,TResult Function()?  redoRequested,TResult Function()?  replayRequested,TResult Function()?  replayStepAdvanced,TResult Function()?  replayCancelled,TResult Function( int targetHistoryIndex)?  historyJumpRequested,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case BracketGenerateRequested() when generateRequested != null:
 return generateRequested(_that.participants,_that.bracketFormat,_that.dojangSeparation,_that.includeThirdPlaceMatch);case BracketRegenerateRequested() when regenerateRequested != null:
 return regenerateRequested();case BracketMatchResultRecorded() when matchResultRecorded != null:
 return matchResultRecorded(_that.matchId,_that.winnerId,_that.resultType,_that.blueScore,_that.redScore);case BracketErrorDismissed() when errorDismissed != null:
-return errorDismissed();case _:
+return errorDismissed();case BracketUndoRequested() when undoRequested != null:
+return undoRequested();case BracketRedoRequested() when redoRequested != null:
+return redoRequested();case BracketReplayRequested() when replayRequested != null:
+return replayRequested();case BracketReplayStepAdvanced() when replayStepAdvanced != null:
+return replayStepAdvanced();case BracketReplayCancelled() when replayCancelled != null:
+return replayCancelled();case BracketHistoryJumpRequested() when historyJumpRequested != null:
+return historyJumpRequested(_that.targetHistoryIndex);case _:
   return orElse();
 
 }
@@ -149,13 +173,19 @@ return errorDismissed();case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( List<ParticipantEntity> participants,  BracketFormat bracketFormat,  bool dojangSeparation,  bool includeThirdPlaceMatch)  generateRequested,required TResult Function()  regenerateRequested,required TResult Function( String matchId,  String winnerId,  MatchResultType resultType,  int? blueScore,  int? redScore)  matchResultRecorded,required TResult Function()  errorDismissed,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( List<ParticipantEntity> participants,  BracketFormat bracketFormat,  bool dojangSeparation,  bool includeThirdPlaceMatch)  generateRequested,required TResult Function()  regenerateRequested,required TResult Function( String matchId,  String winnerId,  MatchResultType resultType,  int? blueScore,  int? redScore)  matchResultRecorded,required TResult Function()  errorDismissed,required TResult Function()  undoRequested,required TResult Function()  redoRequested,required TResult Function()  replayRequested,required TResult Function()  replayStepAdvanced,required TResult Function()  replayCancelled,required TResult Function( int targetHistoryIndex)  historyJumpRequested,}) {final _that = this;
 switch (_that) {
 case BracketGenerateRequested():
 return generateRequested(_that.participants,_that.bracketFormat,_that.dojangSeparation,_that.includeThirdPlaceMatch);case BracketRegenerateRequested():
 return regenerateRequested();case BracketMatchResultRecorded():
 return matchResultRecorded(_that.matchId,_that.winnerId,_that.resultType,_that.blueScore,_that.redScore);case BracketErrorDismissed():
-return errorDismissed();}
+return errorDismissed();case BracketUndoRequested():
+return undoRequested();case BracketRedoRequested():
+return redoRequested();case BracketReplayRequested():
+return replayRequested();case BracketReplayStepAdvanced():
+return replayStepAdvanced();case BracketReplayCancelled():
+return replayCancelled();case BracketHistoryJumpRequested():
+return historyJumpRequested(_that.targetHistoryIndex);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -169,13 +199,19 @@ return errorDismissed();}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( List<ParticipantEntity> participants,  BracketFormat bracketFormat,  bool dojangSeparation,  bool includeThirdPlaceMatch)?  generateRequested,TResult? Function()?  regenerateRequested,TResult? Function( String matchId,  String winnerId,  MatchResultType resultType,  int? blueScore,  int? redScore)?  matchResultRecorded,TResult? Function()?  errorDismissed,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( List<ParticipantEntity> participants,  BracketFormat bracketFormat,  bool dojangSeparation,  bool includeThirdPlaceMatch)?  generateRequested,TResult? Function()?  regenerateRequested,TResult? Function( String matchId,  String winnerId,  MatchResultType resultType,  int? blueScore,  int? redScore)?  matchResultRecorded,TResult? Function()?  errorDismissed,TResult? Function()?  undoRequested,TResult? Function()?  redoRequested,TResult? Function()?  replayRequested,TResult? Function()?  replayStepAdvanced,TResult? Function()?  replayCancelled,TResult? Function( int targetHistoryIndex)?  historyJumpRequested,}) {final _that = this;
 switch (_that) {
 case BracketGenerateRequested() when generateRequested != null:
 return generateRequested(_that.participants,_that.bracketFormat,_that.dojangSeparation,_that.includeThirdPlaceMatch);case BracketRegenerateRequested() when regenerateRequested != null:
 return regenerateRequested();case BracketMatchResultRecorded() when matchResultRecorded != null:
 return matchResultRecorded(_that.matchId,_that.winnerId,_that.resultType,_that.blueScore,_that.redScore);case BracketErrorDismissed() when errorDismissed != null:
-return errorDismissed();case _:
+return errorDismissed();case BracketUndoRequested() when undoRequested != null:
+return undoRequested();case BracketRedoRequested() when redoRequested != null:
+return redoRequested();case BracketReplayRequested() when replayRequested != null:
+return replayRequested();case BracketReplayStepAdvanced() when replayStepAdvanced != null:
+return replayStepAdvanced();case BracketReplayCancelled() when replayCancelled != null:
+return replayCancelled();case BracketHistoryJumpRequested() when historyJumpRequested != null:
+return historyJumpRequested(_that.targetHistoryIndex);case _:
   return null;
 
 }
@@ -400,5 +436,231 @@ String toString() {
 
 
 
+
+/// @nodoc
+
+
+class BracketUndoRequested implements BracketEvent {
+  const BracketUndoRequested();
+  
+
+
+
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is BracketUndoRequested);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+  return 'BracketEvent.undoRequested()';
+}
+
+
+}
+
+
+
+
+/// @nodoc
+
+
+class BracketRedoRequested implements BracketEvent {
+  const BracketRedoRequested();
+  
+
+
+
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is BracketRedoRequested);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+  return 'BracketEvent.redoRequested()';
+}
+
+
+}
+
+
+
+
+/// @nodoc
+
+
+class BracketReplayRequested implements BracketEvent {
+  const BracketReplayRequested();
+  
+
+
+
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is BracketReplayRequested);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+  return 'BracketEvent.replayRequested()';
+}
+
+
+}
+
+
+
+
+/// @nodoc
+
+
+class BracketReplayStepAdvanced implements BracketEvent {
+  const BracketReplayStepAdvanced();
+  
+
+
+
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is BracketReplayStepAdvanced);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+  return 'BracketEvent.replayStepAdvanced()';
+}
+
+
+}
+
+
+
+
+/// @nodoc
+
+
+class BracketReplayCancelled implements BracketEvent {
+  const BracketReplayCancelled();
+  
+
+
+
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is BracketReplayCancelled);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+  return 'BracketEvent.replayCancelled()';
+}
+
+
+}
+
+
+
+
+/// @nodoc
+
+
+class BracketHistoryJumpRequested implements BracketEvent {
+  const BracketHistoryJumpRequested({required this.targetHistoryIndex});
+  
+
+ final  int targetHistoryIndex;
+
+/// Create a copy of BracketEvent
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$BracketHistoryJumpRequestedCopyWith<BracketHistoryJumpRequested> get copyWith => _$BracketHistoryJumpRequestedCopyWithImpl<BracketHistoryJumpRequested>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is BracketHistoryJumpRequested&&(identical(other.targetHistoryIndex, targetHistoryIndex) || other.targetHistoryIndex == targetHistoryIndex));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,targetHistoryIndex);
+
+@override
+String toString() {
+  return 'BracketEvent.historyJumpRequested(targetHistoryIndex: $targetHistoryIndex)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $BracketHistoryJumpRequestedCopyWith<$Res> implements $BracketEventCopyWith<$Res> {
+  factory $BracketHistoryJumpRequestedCopyWith(BracketHistoryJumpRequested value, $Res Function(BracketHistoryJumpRequested) _then) = _$BracketHistoryJumpRequestedCopyWithImpl;
+@useResult
+$Res call({
+ int targetHistoryIndex
+});
+
+
+
+
+}
+/// @nodoc
+class _$BracketHistoryJumpRequestedCopyWithImpl<$Res>
+    implements $BracketHistoryJumpRequestedCopyWith<$Res> {
+  _$BracketHistoryJumpRequestedCopyWithImpl(this._self, this._then);
+
+  final BracketHistoryJumpRequested _self;
+  final $Res Function(BracketHistoryJumpRequested) _then;
+
+/// Create a copy of BracketEvent
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? targetHistoryIndex = null,}) {
+  return _then(BracketHistoryJumpRequested(
+targetHistoryIndex: null == targetHistoryIndex ? _self.targetHistoryIndex : targetHistoryIndex // ignore: cast_nullable_to_non_nullable
+as int,
+  ));
+}
+
+
+}
 
 // dart format on
