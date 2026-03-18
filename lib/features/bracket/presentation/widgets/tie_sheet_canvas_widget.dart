@@ -388,20 +388,23 @@ class TieSheetPainter extends CustomPainter {
       final match = r1Matches.first;
       final b = _findP(match.participantBlueId);
       final r = _findP(match.participantRedId);
+      int idx = 0;
       if (b != null) {
-        _paintParticipantRow(canvas, 1, b, margin, tableTop, thickPen, mirrored: false);
+        idx++;
+        _paintParticipantRow(canvas, idx, b, margin, tableTop, thickPen, mirrored: false);
         _nodeOffsets[b.id] = Offset(margin + listW, tableTop + rowH / 2);
       }
       if (r != null) {
-        _paintParticipantRow(canvas, 1, r, rightTableLeft, tableTop, thickPen, mirrored: true);
+        idx++;
+        _paintParticipantRow(canvas, idx, r, rightTableLeft, tableTop, thickPen, mirrored: true);
         _nodeOffsets[r.id] = Offset(rightTableLeft, tableTop + rowH / 2);
       }
     } else {
       final leftR1Matches  = r1Matches.where((m) => m.matchNumberInRound <= leftHalfCount).toList();
       final rightR1Matches = r1Matches.where((m) => m.matchNumberInRound >  leftHalfCount).toList();
 
-      _paintParticipantList(canvas, leftR1Matches,  margin,         tableTop, thickPen, mirrored: false);
-      _paintParticipantList(canvas, rightR1Matches, rightTableLeft, tableTop, thickPen, mirrored: true);
+      final nextIdx = _paintParticipantList(canvas, leftR1Matches,  margin,         tableTop, thickPen, mirrored: false);
+      _paintParticipantList(canvas, rightR1Matches, rightTableLeft, tableTop, thickPen, mirrored: true, startIdx: nextIdx);
     }
 
     // Draw bracket tree (rounds 1 → final).
@@ -454,7 +457,7 @@ class TieSheetPainter extends CustomPainter {
     final wbTableTop = startY + sectionLabelH + 8;
 
     final wbR1 = wbByRound[1] ?? [];
-    _paintParticipantList(canvas, wbR1, margin, wbTableTop, thickPen, mirrored: false);
+    final int wbNextIdx = _paintParticipantList(canvas, wbR1, margin, wbTableTop, thickPen, mirrored: false);
 
     for (var r = 1; r <= wbRounds; r++) {
       final junctionX = margin + listW + (r * roundColW);
@@ -473,7 +476,7 @@ class TieSheetPainter extends CustomPainter {
     // WB losses). Always render every slot — real data or TBD placeholder —
     // so junctions always have a valid node offset to connect to.
     final lbR1 = lbByRound[1] ?? [];
-    var    lbIdx = 0;
+    var    lbIdx = wbNextIdx;
     double lbY   = lbTableTop;
     final  lbNodeX = margin + listW;
     for (final m in lbR1) {
@@ -765,7 +768,7 @@ class TieSheetPainter extends CustomPainter {
   ///
   /// [mirrored] flips column order and reverses the direction of the arm that
   /// connects the row to the bracket tree.
-  void _paintParticipantList(
+  int _paintParticipantList(
     Canvas canvas,
     List<MatchEntity> r1Matches,
     double x,
@@ -797,6 +800,8 @@ class TieSheetPainter extends CustomPainter {
       }
       y += pairGap;
     }
+    
+    return idx;
   }
 
   void _paintJunction(Canvas canvas, MatchEntity match, double junctionX, Paint pen, {required bool mirrored, required List<void Function()> deferredDecorations}) {
