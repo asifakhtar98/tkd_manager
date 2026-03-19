@@ -27,12 +27,12 @@ enum MatchStatus {
 
   /// Human-readable label for UI display purposes.
   String get displayName => switch (this) {
-        MatchStatus.pending => 'Pending',
-        MatchStatus.ready => 'Ready',
-        MatchStatus.inProgress => 'In Progress',
-        MatchStatus.completed => 'Completed',
-        MatchStatus.cancelled => 'Cancelled',
-      };
+    MatchStatus.pending => 'Pending',
+    MatchStatus.ready => 'Ready',
+    MatchStatus.inProgress => 'In Progress',
+    MatchStatus.completed => 'Completed',
+    MatchStatus.cancelled => 'Cancelled',
+  };
 }
 
 /// How a match was decided — describes the method of victory.
@@ -61,13 +61,13 @@ enum MatchResultType {
 
   /// Human-readable label for UI display purposes.
   String get displayName => switch (this) {
-        MatchResultType.points => 'Points',
-        MatchResultType.knockout => 'Knockout',
-        MatchResultType.disqualification => 'Disqualification',
-        MatchResultType.withdrawal => 'Withdrawal',
-        MatchResultType.refereeDecision => 'Referee Decision',
-        MatchResultType.bye => 'BYE',
-      };
+    MatchResultType.points => 'Points',
+    MatchResultType.knockout => 'Knockout',
+    MatchResultType.disqualification => 'Disqualification',
+    MatchResultType.withdrawal => 'Withdrawal',
+    MatchResultType.refereeDecision => 'Referee Decision',
+    MatchResultType.bye => 'BYE',
+  };
 }
 
 /// A single match within a bracket, tracking participants, scoring, and results.

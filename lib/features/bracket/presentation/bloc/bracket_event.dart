@@ -11,8 +11,10 @@ sealed class BracketEvent with _$BracketEvent {
   /// Request initial bracket generation with participant list and config.
   const factory BracketEvent.generateRequested({
     required List<ParticipantEntity> participants,
+
     /// The elimination format to generate.
     required BracketFormat bracketFormat,
+
     /// Whether to apply dojang (gym) separation seeding.
     required bool dojangSeparation,
     required bool includeThirdPlaceMatch,

@@ -9,7 +9,7 @@ part of 'participant_entity.dart';
 _ParticipantEntity _$ParticipantEntityFromJson(Map<String, dynamic> json) =>
     _ParticipantEntity(
       id: json['id'] as String,
-      divisionId: json['divisionId'] as String,
+      genderId: json['genderId'] as String,
       fullName: json['fullName'] as String,
       schoolOrDojangName: json['schoolOrDojangName'] as String?,
       beltRank: json['beltRank'] as String?,
@@ -21,7 +21,7 @@ _ParticipantEntity _$ParticipantEntityFromJson(Map<String, dynamic> json) =>
 Map<String, dynamic> _$ParticipantEntityToJson(_ParticipantEntity instance) =>
     <String, dynamic>{
       'id': instance.id,
-      'divisionId': instance.divisionId,
+      'genderId': instance.genderId,
       'fullName': instance.fullName,
       'schoolOrDojangName': instance.schoolOrDojangName,
       'beltRank': instance.beltRank,

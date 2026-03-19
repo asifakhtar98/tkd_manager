@@ -26,7 +26,7 @@ class SingleEliminationBracketGeneratorServiceImplementation
 
   @override
   BracketGenerationResult generate({
-    required String divisionId,
+    required String genderId,
     required List<String> participantIds,
     required String bracketId,
     bool includeThirdPlaceMatch = false,
@@ -53,7 +53,7 @@ class SingleEliminationBracketGeneratorServiceImplementation
 
     final bracket = BracketEntity(
       id: bracketId,
-      divisionId: divisionId,
+      genderId: genderId,
       bracketType: BracketType.winners,
       totalRounds: numberOfRounds,
       createdAtTimestamp: now,
@@ -66,8 +66,13 @@ class SingleEliminationBracketGeneratorServiceImplementation
     );
 
     // 1. Create all match slots, indexed by round and position.
-    final matchesByRoundAndPosition =
-        _createMatchSlots(bracketId, numberOfRounds, bracketSize, matchIds, now);
+    final matchesByRoundAndPosition = _createMatchSlots(
+      bracketId,
+      numberOfRounds,
+      bracketSize,
+      matchIds,
+      now,
+    );
 
     // 2. Link winner-advancement paths between rounds.
     _linkMatchAdvancements(matchesByRoundAndPosition, numberOfRounds);
@@ -128,9 +133,11 @@ class SingleEliminationBracketGeneratorServiceImplementation
       matchesByRoundAndPosition[roundNumber] = {};
       final matchCountInRound = bracketSize ~/ _powerOfTwo(roundNumber);
 
-      for (var matchPosition = 1;
-          matchPosition <= matchCountInRound;
-          matchPosition++) {
+      for (
+        var matchPosition = 1;
+        matchPosition <= matchCountInRound;
+        matchPosition++
+      ) {
         matchesByRoundAndPosition[roundNumber]![matchPosition] = MatchEntity(
           id: matchIds[matchIdIndex++],
           bracketId: bracketId,
@@ -153,17 +160,18 @@ class SingleEliminationBracketGeneratorServiceImplementation
   ) {
     for (var roundNumber = 1; roundNumber < numberOfRounds; roundNumber++) {
       final currentRoundMatches = matchesByRoundAndPosition[roundNumber]!;
-      for (var matchPosition = 1;
-          matchPosition <= currentRoundMatches.length;
-          matchPosition++) {
+      for (
+        var matchPosition = 1;
+        matchPosition <= currentRoundMatches.length;
+        matchPosition++
+      ) {
         final nextRoundMatchPosition = (matchPosition + 1) ~/ 2;
         final nextRoundMatch =
-            matchesByRoundAndPosition[roundNumber + 1]![nextRoundMatchPosition]!;
+            matchesByRoundAndPosition[roundNumber +
+                1]![nextRoundMatchPosition]!;
 
-        currentRoundMatches[matchPosition] =
-            currentRoundMatches[matchPosition]!.copyWith(
-          winnerAdvancesToMatchId: nextRoundMatch.id,
-        );
+        currentRoundMatches[matchPosition] = currentRoundMatches[matchPosition]!
+            .copyWith(winnerAdvancesToMatchId: nextRoundMatch.id);
       }
     }
   }
@@ -180,16 +188,20 @@ class SingleEliminationBracketGeneratorServiceImplementation
     final firstRoundMatches = matchesByRoundAndPosition[1]!;
     final seedingOrder = _generateSeedingOrder(numberOfRounds);
 
-    for (var matchPosition = 1;
-        matchPosition <= firstRoundMatches.length;
-        matchPosition++) {
+    for (
+      var matchPosition = 1;
+      matchPosition <= firstRoundMatches.length;
+      matchPosition++
+    ) {
       final blueSeedNumber = seedingOrder[(matchPosition - 1) * 2];
       final redSeedNumber = seedingOrder[(matchPosition - 1) * 2 + 1];
 
-      final blueParticipantId =
-          blueSeedNumber <= participantCount ? participantIds[blueSeedNumber - 1] : null;
-      final redParticipantId =
-          redSeedNumber <= participantCount ? participantIds[redSeedNumber - 1] : null;
+      final blueParticipantId = blueSeedNumber <= participantCount
+          ? participantIds[blueSeedNumber - 1]
+          : null;
+      final redParticipantId = redSeedNumber <= participantCount
+          ? participantIds[redSeedNumber - 1]
+          : null;
 
       var currentMatch = firstRoundMatches[matchPosition]!.copyWith(
         participantBlueId: blueParticipantId,
@@ -257,10 +269,8 @@ class SingleEliminationBracketGeneratorServiceImplementation
 
     for (final semiPosition in [1, 2]) {
       if (semiFinalsMatches.containsKey(semiPosition)) {
-        semiFinalsMatches[semiPosition] =
-            semiFinalsMatches[semiPosition]!.copyWith(
-          loserAdvancesToMatchId: thirdPlaceMatch.id,
-        );
+        semiFinalsMatches[semiPosition] = semiFinalsMatches[semiPosition]!
+            .copyWith(loserAdvancesToMatchId: thirdPlaceMatch.id);
       }
     }
 
@@ -274,9 +284,11 @@ class SingleEliminationBracketGeneratorServiceImplementation
     final firstRoundMatches = matchesByRoundAndPosition[1]!;
     final secondRoundMatches = matchesByRoundAndPosition[2]!;
 
-    for (var matchPosition = 1;
-        matchPosition <= firstRoundMatches.length;
-        matchPosition++) {
+    for (
+      var matchPosition = 1;
+      matchPosition <= firstRoundMatches.length;
+      matchPosition++
+    ) {
       final firstRoundMatch = firstRoundMatches[matchPosition]!;
       if (firstRoundMatch.resultType != MatchResultType.bye ||
           firstRoundMatch.winnerId == null) {
@@ -288,11 +300,13 @@ class SingleEliminationBracketGeneratorServiceImplementation
 
       // Odd matches feed blue (top), even matches feed red (bottom).
       if (matchPosition % 2 != 0) {
-        nextRoundMatch =
-            nextRoundMatch.copyWith(participantBlueId: firstRoundMatch.winnerId);
+        nextRoundMatch = nextRoundMatch.copyWith(
+          participantBlueId: firstRoundMatch.winnerId,
+        );
       } else {
-        nextRoundMatch =
-            nextRoundMatch.copyWith(participantRedId: firstRoundMatch.winnerId);
+        nextRoundMatch = nextRoundMatch.copyWith(
+          participantRedId: firstRoundMatch.winnerId,
+        );
       }
 
       secondRoundMatches[nextRoundMatchPosition] = nextRoundMatch;

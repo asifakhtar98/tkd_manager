@@ -94,15 +94,17 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
       // ── Step 1: Capture bracket image (main thread, needs render tree) ──
       Uint8List? capturedImageBytes;
       try {
-        final boundary = _printKey.currentContext?.findRenderObject()
-            as RenderRepaintBoundary?;
+        final boundary =
+            _printKey.currentContext?.findRenderObject()
+                as RenderRepaintBoundary?;
         if (boundary != null) {
           final ui.Image image = await boundary.toImage(pixelRatio: 2.0);
           _updateExportProgress(0.15, 'Converting image…');
           await Future<void>.delayed(Duration.zero);
 
-          final byteData =
-              await image.toByteData(format: ui.ImageByteFormat.png);
+          final byteData = await image.toByteData(
+            format: ui.ImageByteFormat.png,
+          );
           if (byteData != null) {
             capturedImageBytes = byteData.buffer.asUint8List();
           }
@@ -193,8 +195,13 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
     return BlocConsumer<BracketBloc, BracketState>(
       listenWhen: (prev, current) => current is BracketLoadSuccess,
       listener: (context, state) {
-        if (state case BracketLoadSuccess(:final result, :final participants,
-            :final format, :final includeThirdPlaceMatch, :final errorMessage)) {
+        if (state case BracketLoadSuccess(
+          :final result,
+          :final participants,
+          :final format,
+          :final includeThirdPlaceMatch,
+          :final errorMessage,
+        )) {
           // Show error as SnackBar without destroying bracket state.
           if (errorMessage != null) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -221,38 +228,45 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
       builder: (context, state) {
         return switch (state) {
           BracketInitial() || BracketGenerating() => Scaffold(
-              appBar: AppBar(
-                  title: Text(
-                      '${widget.bracketFormat.displayLabel} — ${widget.participants.length} Players')),
-              body: const Center(child: CircularProgressIndicator()),
+            appBar: AppBar(
+              title: Text(
+                '${widget.bracketFormat.displayLabel} — ${widget.participants.length} Players',
+              ),
             ),
+            body: const Center(child: CircularProgressIndicator()),
+          ),
           BracketFailure(:final message) => Scaffold(
-              appBar: AppBar(
-                title: const Text('Error'),
-                leading: IconButton(
-                  icon: const Icon(Icons.arrow_back),
-                  onPressed: () => context.pop(),
-                ),
-              ),
-              body: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.error_outline,
-                        size: 48, color: Colors.redAccent),
-                    const SizedBox(height: 16),
-                    Text(message, textAlign: TextAlign.center),
-                  ],
-                ),
+            appBar: AppBar(
+              title: const Text('Error'),
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () => context.pop(),
               ),
             ),
-          BracketLoadSuccess(:final result,
-              :final participants,
-              :final format,
-              :final includeThirdPlaceMatch,
-              :final actionHistory,
-              :final historyPointer,
-              :final isReplayInProgress) =>
+            body: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.error_outline,
+                    size: 48,
+                    color: Colors.redAccent,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(message, textAlign: TextAlign.center),
+                ],
+              ),
+            ),
+          ),
+          BracketLoadSuccess(
+            :final result,
+            :final participants,
+            :final format,
+            :final includeThirdPlaceMatch,
+            :final actionHistory,
+            :final historyPointer,
+            :final isReplayInProgress,
+          ) =>
             _buildViewer(
               context: context,
               result: result,
@@ -298,11 +312,11 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
     );
 
     context.read<TournamentBloc>().add(
-          TournamentEvent.bracketSnapshotAdded(
-            tournamentId: widget.tournament!.id,
-            snapshot: snapshot,
-          ),
-        );
+      TournamentEvent.bracketSnapshotAdded(
+        tournamentId: widget.tournament!.id,
+        snapshot: snapshot,
+      ),
+    );
   }
 
   Widget _buildViewer({
@@ -339,8 +353,8 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
     final tournamentTitle = widget.tournament?.name ?? 'Tournament';
 
     final bool canUndo = historyPointer >= 0 && !isReplayInProgress;
-    final bool canRedo = historyPointer < actionHistory.length - 1 &&
-        !isReplayInProgress;
+    final bool canRedo =
+        historyPointer < actionHistory.length - 1 && !isReplayInProgress;
     final bool hasHistory = actionHistory.isNotEmpty;
 
     final actionButtonStyle = TextButton.styleFrom(
@@ -361,9 +375,9 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
           TextButton(
             style: actionButtonStyle,
             onPressed: canUndo
-                ? () => context
-                    .read<BracketBloc>()
-                    .add(const BracketEvent.undoRequested())
+                ? () => context.read<BracketBloc>().add(
+                    const BracketEvent.undoRequested(),
+                  )
                 : null,
             child: const Text('Undo'),
           ),
@@ -372,9 +386,9 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
           TextButton(
             style: actionButtonStyle,
             onPressed: canRedo
-                ? () => context
-                    .read<BracketBloc>()
-                    .add(const BracketEvent.redoRequested())
+                ? () => context.read<BracketBloc>().add(
+                    const BracketEvent.redoRequested(),
+                  )
                 : null,
             child: const Text('Redo'),
           ),
@@ -383,18 +397,18 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
           if (isReplayInProgress)
             TextButton(
               style: actionButtonStyle,
-              onPressed: () => context
-                  .read<BracketBloc>()
-                  .add(const BracketEvent.replayCancelled()),
+              onPressed: () => context.read<BracketBloc>().add(
+                const BracketEvent.replayCancelled(),
+              ),
               child: const Text('Stop Replay'),
             )
           else
             TextButton(
               style: actionButtonStyle,
               onPressed: hasHistory
-                  ? () => context
-                      .read<BracketBloc>()
-                      .add(const BracketEvent.replayRequested())
+                  ? () => context.read<BracketBloc>().add(
+                      const BracketEvent.replayRequested(),
+                    )
                   : null,
               child: const Text('Replay All'),
             ),
@@ -419,14 +433,17 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
                 builder: (c) => AlertDialog(
                   title: const Text('Regenerate Bracket?'),
                   content: const Text(
-                      'Current match scores and progress will be lost.'),
+                    'Current match scores and progress will be lost.',
+                  ),
                   actions: [
                     TextButton(
-                        onPressed: () => Navigator.pop(c, false),
-                        child: const Text('Cancel')),
+                      onPressed: () => Navigator.pop(c, false),
+                      child: const Text('Cancel'),
+                    ),
                     ElevatedButton(
-                        onPressed: () => Navigator.pop(c, true),
-                        child: const Text('Regenerate')),
+                      onPressed: () => Navigator.pop(c, true),
+                      child: const Text('Regenerate'),
+                    ),
                   ],
                 ),
               );
@@ -434,9 +451,9 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
                 if (!widget.isHistoryView) {
                   setState(() => _snapshotSaved = false);
                 }
-                context
-                    .read<BracketBloc>()
-                    .add(const BracketRegenerateRequested());
+                context.read<BracketBloc>().add(
+                  const BracketRegenerateRequested(),
+                );
               }
             },
             child: const Text('Regenerate'),
@@ -466,10 +483,8 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
         historyPointer: historyPointer,
         onJumpToHistoryIndex: (targetIndex) {
           context.read<BracketBloc>().add(
-                BracketEvent.historyJumpRequested(
-                  targetHistoryIndex: targetIndex,
-                ),
-              );
+            BracketEvent.historyJumpRequested(targetHistoryIndex: targetIndex),
+          );
           // Close the drawer after jumping.
           _scaffoldKey.currentState?.closeEndDrawer();
         },
@@ -507,14 +522,17 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
                           minHeight: 6,
                           backgroundColor: Colors.white24,
                           valueColor: const AlwaysStoppedAnimation<Color>(
-                              Colors.white),
+                            Colors.white,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 12),
                       Text(
                         _pdfExportStatusMessage,
                         style: const TextStyle(
-                            color: Colors.white, fontSize: 14),
+                          color: Colors.white,
+                          fontSize: 14,
+                        ),
                         textAlign: TextAlign.center,
                       ),
                     ],
@@ -543,7 +561,8 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
         child: Padding(
           padding: const EdgeInsets.all(40.0),
           child: TieSheetCanvasWidget(
-            tournament: widget.tournament ??
+            tournament:
+                widget.tournament ??
                 TournamentEntity(
                   id: 'demo',
                   name: 'Demo Tournament',
@@ -552,12 +571,8 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
             matches: matches,
             participants: widget.participants,
             bracketType: widget.bracketFormat.displayLabel,
-            onMatchTap: (matchId) => _handleMatchTap(
-              context,
-              matchId,
-              matches,
-              participants,
-            ),
+            onMatchTap: (matchId) =>
+                _handleMatchTap(context, matchId, matches, participants),
             printKey: _printKey,
             includeThirdPlaceMatch: widget.includeThirdPlaceMatch,
             winnersBracketId: winnersBracketId,
@@ -602,7 +617,8 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
     if (match.participantBlueId == null || match.participantRedId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-            content: Text('Both participants must be assigned first.')),
+          content: Text('Both participants must be assigned first.'),
+        ),
       );
       return;
     }
@@ -618,14 +634,14 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
     ).then((result) {
       if (result != null && context.mounted) {
         context.read<BracketBloc>().add(
-              BracketEvent.matchResultRecorded(
-                matchId: matchId,
-                winnerId: result.winnerId,
-                resultType: result.resultType,
-                blueScore: result.blueScore,
-                redScore: result.redScore,
-              ),
-            );
+          BracketEvent.matchResultRecorded(
+            matchId: matchId,
+            winnerId: result.winnerId,
+            resultType: result.resultType,
+            blueScore: result.blueScore,
+            redScore: result.redScore,
+          ),
+        );
       }
     });
   }

@@ -7,7 +7,8 @@ part 'double_elimination_bracket_generation_result.freezed.dart';
 /// Value object containing the results of a double elimination
 /// bracket generation operation.
 @freezed
-abstract class DoubleEliminationBracketGenerationResult with _$DoubleEliminationBracketGenerationResult {
+abstract class DoubleEliminationBracketGenerationResult
+    with _$DoubleEliminationBracketGenerationResult {
   const factory DoubleEliminationBracketGenerationResult({
     required BracketEntity winnersBracket,
     required BracketEntity losersBracket,

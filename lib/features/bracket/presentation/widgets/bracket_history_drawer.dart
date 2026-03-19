@@ -31,9 +31,7 @@ class BracketHistoryDrawer extends StatelessWidget {
           Container(
             width: double.infinity,
             padding: const EdgeInsets.fromLTRB(20, 48, 20, 16),
-            decoration: BoxDecoration(
-              color: colorScheme.primaryContainer,
-            ),
+            decoration: BoxDecoration(color: colorScheme.primaryContainer),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -102,11 +100,8 @@ class BracketHistoryDrawer extends StatelessWidget {
                 : ListView.separated(
                     padding: const EdgeInsets.symmetric(vertical: 4),
                     itemCount: actionHistory.length,
-                    separatorBuilder: (_, _) => const Divider(
-                      height: 1,
-                      indent: 16,
-                      endIndent: 16,
-                    ),
+                    separatorBuilder: (_, _) =>
+                        const Divider(height: 1, indent: 16, endIndent: 16),
                     itemBuilder: (context, index) {
                       final entry = actionHistory[index];
                       return _HistoryEntryTile(
@@ -168,8 +163,8 @@ class _HistoryEntryTile extends StatelessWidget {
                   color: isCurrentPosition
                       ? colorScheme.primary
                       : isInitialState
-                          ? colorScheme.surfaceContainerHighest
-                          : colorScheme.surfaceContainerHigh,
+                      ? colorScheme.surfaceContainerHighest
+                      : colorScheme.surfaceContainerHigh,
                   border: isCurrentPosition
                       ? null
                       : Border.all(color: colorScheme.outline.withAlpha(80)),

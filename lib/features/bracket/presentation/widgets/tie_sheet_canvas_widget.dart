@@ -1040,18 +1040,18 @@ class TieSheetPainter extends CustomPainter {
     canvas.drawRRect(infoRect, _Pens.fill(_BracketColors.hdrFill));
     canvas.drawRRect(infoRect, _Pens.thin(_BracketColors.cardBorder));
 
-    final category = tournament.categoryLabel.isNotEmpty
-        ? tournament.categoryLabel.toUpperCase()
-        : 'CATEGORY';
-    final division = tournament.divisionLabel.isNotEmpty
-        ? tournament.divisionLabel.toUpperCase()
-        : 'DIVISION';
-    final weightClass = tournament.weightClassLabel.isNotEmpty
-        ? tournament.weightClassLabel.toUpperCase()
-        : 'WEIGHT CLASS';
+    final ageCategory = tournament.ageCategoryLabel.isNotEmpty
+        ? tournament.ageCategoryLabel.toUpperCase()
+        : 'AGE CATEGORY';
+    final gender = tournament.genderLabel.isNotEmpty
+        ? tournament.genderLabel.toUpperCase()
+        : 'GENDER';
+    final weightDivision = tournament.weightDivisionLabel.isNotEmpty
+        ? tournament.weightDivisionLabel.toUpperCase()
+        : 'WEIGHT DIVISION';
     final infoTextY = infoRowTop + subHeaderH / 2 - 6;
 
-    // Column layout: No. | Category | Division | Weight Class
+    // Column layout: No. | Age Category | Gender | Weight Division
     final infoColNoW = noColW;
     final remainingW = (infoRight - infoLeft) - infoColNoW;
     final infoColW = remainingW / 3;
@@ -1084,7 +1084,7 @@ class TieSheetPainter extends CustomPainter {
     );
     _drawText(
       canvas,
-      category,
+      ageCategory,
       infoLeft + infoColNoW + infoColW / 2,
       infoTextY,
       _bold(11),
@@ -1092,7 +1092,7 @@ class TieSheetPainter extends CustomPainter {
     );
     _drawText(
       canvas,
-      division,
+      gender,
       infoLeft + infoColNoW + infoColW + infoColW / 2,
       infoTextY,
       _bold(11),
@@ -1100,7 +1100,7 @@ class TieSheetPainter extends CustomPainter {
     );
     _drawText(
       canvas,
-      weightClass,
+      weightDivision,
       infoLeft + infoColNoW + infoColW * 2 + infoColW / 2,
       infoTextY,
       _bold(11),

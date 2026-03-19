@@ -55,9 +55,8 @@ class TournamentDetailScreen extends StatelessWidget {
           floatingActionButton: FloatingActionButton.extended(
             icon: const Icon(Icons.add),
             label: const Text('Add Bracket'),
-            onPressed: () => SetupRoute(
-              tournamentId: tournamentId,
-            ).push(context),
+            onPressed: () =>
+                SetupRoute(tournamentId: tournamentId).push(context),
           ),
           body: CustomScrollView(
             slivers: [
@@ -70,8 +69,11 @@ class TournamentDetailScreen extends StatelessWidget {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.account_tree_outlined,
-                            size: 64, color: Colors.grey),
+                        Icon(
+                          Icons.account_tree_outlined,
+                          size: 64,
+                          color: Colors.grey,
+                        ),
                         SizedBox(height: 16),
                         Text(
                           'No brackets yet.\nTap "+ Add Bracket" to generate the first one.',
@@ -92,11 +94,11 @@ class TournamentDetailScreen extends StatelessWidget {
                       snapshot: snapshots[index],
                       tournament: tournament,
                       onDelete: () => context.read<TournamentBloc>().add(
-                            TournamentEvent.bracketSnapshotRemoved(
-                              tournamentId: tournamentId,
-                              snapshotId: snapshots[index].id,
-                            ),
-                          ),
+                        TournamentEvent.bracketSnapshotRemoved(
+                          tournamentId: tournamentId,
+                          snapshotId: snapshots[index].id,
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -116,9 +118,7 @@ class TournamentDetailScreen extends StatelessWidget {
       builder: (_) => CreateTournamentDialog(existing: tournament),
     );
     if (updated != null && context.mounted) {
-      context
-          .read<TournamentBloc>()
-          .add(TournamentEvent.updated(updated));
+      context.read<TournamentBloc>().add(TournamentEvent.updated(updated));
     }
   }
 
@@ -150,9 +150,9 @@ class TournamentDetailScreen extends StatelessWidget {
       ),
     );
     if (confirm == true && context.mounted) {
-      context
-          .read<TournamentBloc>()
-          .add(TournamentEvent.deleted(tournament.id));
+      context.read<TournamentBloc>().add(
+        TournamentEvent.deleted(tournament.id),
+      );
       context.pop();
     }
   }
@@ -177,12 +177,12 @@ class _TournamentHeader extends StatelessWidget {
         _InfoRow(Icons.location_on_outlined, tournament.venue),
       if (tournament.organizer.isNotEmpty)
         _InfoRow(Icons.person_outline, tournament.organizer),
-      if (tournament.categoryLabel.isNotEmpty)
-        _InfoRow(Icons.category_outlined, tournament.categoryLabel),
-      if (tournament.divisionLabel.isNotEmpty)
-        _InfoRow(Icons.group_outlined, tournament.divisionLabel),
-      if (tournament.weightClassLabel.isNotEmpty)
-        _InfoRow(Icons.fitness_center_outlined, tournament.weightClassLabel),
+      if (tournament.ageCategoryLabel.isNotEmpty)
+        _InfoRow(Icons.category_outlined, tournament.ageCategoryLabel),
+      if (tournament.genderLabel.isNotEmpty)
+        _InfoRow(Icons.group_outlined, tournament.genderLabel),
+      if (tournament.weightDivisionLabel.isNotEmpty)
+        _InfoRow(Icons.fitness_center_outlined, tournament.weightDivisionLabel),
     ];
 
     return Card(
@@ -194,8 +194,9 @@ class _TournamentHeader extends StatelessWidget {
           children: [
             Text(
               tournament.name,
-              style: theme.textTheme.titleLarge
-                  ?.copyWith(fontWeight: FontWeight.bold),
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
             if (infoRows.isNotEmpty) ...[
               const SizedBox(height: 12),

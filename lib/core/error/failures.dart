@@ -27,6 +27,5 @@ class DatabaseFailure extends Failure {
 /// Typically thrown when participant counts are invalid or bracket
 /// configuration rules are violated.
 class GenerationFailure extends Failure {
-  const GenerationFailure(
-      [super.message = 'Bracket generation failed.']);
+  const GenerationFailure([super.message = 'Bracket generation failed.']);
 }

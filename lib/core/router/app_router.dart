@@ -6,8 +6,8 @@ import 'app_routes.dart';
 class AppRouter {
   /// Use a factory method so tests get a fresh router instance per run.
   static GoRouter createRouter() => GoRouter(
-        initialLocation: '/',
-        debugLogDiagnostics: false,
-        routes: $appRoutes,
-      );
+    initialLocation: '/',
+    debugLogDiagnostics: false,
+    routes: $appRoutes,
+  );
 }

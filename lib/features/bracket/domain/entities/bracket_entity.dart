@@ -22,10 +22,10 @@ enum BracketType {
 
   /// Human-readable label for UI display purposes.
   String get displayLabel => switch (this) {
-        BracketType.winners => 'Winners',
-        BracketType.losers => 'Losers',
-        BracketType.pool => 'Pool',
-      };
+    BracketType.winners => 'Winners',
+    BracketType.losers => 'Losers',
+    BracketType.pool => 'Pool',
+  };
 }
 
 /// Represents a single bracket structure within a tournament division.
@@ -39,7 +39,7 @@ abstract class BracketEntity with _$BracketEntity {
     required String id,
 
     /// The division this bracket belongs to.
-    required String divisionId,
+    required String genderId,
 
     /// Role of this bracket (winners, losers, or pool).
     required BracketType bracketType,

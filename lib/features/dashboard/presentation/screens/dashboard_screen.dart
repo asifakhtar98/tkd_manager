@@ -19,18 +19,13 @@ class DashboardScreen extends StatelessWidget {
         elevation: 0,
         centerTitle: false,
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        icon: const Icon(Icons.add),
-        label: const Text('New Bracket'),
-        onPressed: () => const SetupRoute().push(context),
-      ),
+    
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildWelcomeHeader(theme),
-            const SizedBox(height: 32),
+           
             _buildTournamentSection(context, theme),
             const SizedBox(height: 48),
             _buildDemoSection(context, theme),
@@ -58,27 +53,7 @@ class DashboardScreen extends StatelessWidget {
     ).push(context);
   }
 
-  Widget _buildWelcomeHeader(ThemeData theme) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'TKD Tournament Dashboard',
-          style: theme.textTheme.headlineSmall?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: theme.colorScheme.onSurface,
-          ),
-        ),
-        const SizedBox(height: 12),
-        Text(
-          'Create professional TKD brackets or explore demo formats below.',
-          style: theme.textTheme.bodyLarge?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
-        ),
-      ],
-    );
-  }
+
 
   Widget _buildTournamentSection(BuildContext context, ThemeData theme) {
     return BlocBuilder<TournamentBloc, TournamentState>(
@@ -96,9 +71,16 @@ class DashboardScreen extends StatelessWidget {
                 const Spacer(),
                 FilledButton.icon(
                   icon: const Icon(Icons.add),
+                  label: const Text('Create Bracket'),
+                  onPressed: () => const SetupRoute().push(context),
+                ),
+                const SizedBox(width: 16),
+                FilledButton.icon(
+                  icon: const Icon(Icons.add),
                   label: const Text('New Tournament'),
                   onPressed: () => _showCreateDialog(context),
                 ),
+                
               ],
             ),
             const SizedBox(height: 16),

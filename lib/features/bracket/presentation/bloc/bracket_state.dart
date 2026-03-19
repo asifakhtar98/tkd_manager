@@ -12,8 +12,11 @@ part 'bracket_state.freezed.dart';
 /// the presentation layer.
 @freezed
 sealed class BracketResult with _$BracketResult {
-  const factory BracketResult.singleElimination(BracketGenerationResult data) = SingleEliminationResult;
-  const factory BracketResult.doubleElimination(DoubleEliminationBracketGenerationResult data) = DoubleEliminationResult;
+  const factory BracketResult.singleElimination(BracketGenerationResult data) =
+      SingleEliminationResult;
+  const factory BracketResult.doubleElimination(
+    DoubleEliminationBracketGenerationResult data,
+  ) = DoubleEliminationResult;
 }
 
 /// A single entry in the undo/redo history stack.

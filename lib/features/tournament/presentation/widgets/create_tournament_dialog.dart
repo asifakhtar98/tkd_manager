@@ -15,8 +15,7 @@ class CreateTournamentDialog extends StatefulWidget {
   final TournamentEntity? existing;
 
   @override
-  State<CreateTournamentDialog> createState() =>
-      _CreateTournamentDialogState();
+  State<CreateTournamentDialog> createState() => _CreateTournamentDialogState();
 }
 
 class _CreateTournamentDialogState extends State<CreateTournamentDialog> {
@@ -27,9 +26,9 @@ class _CreateTournamentDialogState extends State<CreateTournamentDialog> {
   late final TextEditingController _dateRangeController;
   late final TextEditingController _venueController;
   late final TextEditingController _organizerController;
-  late final TextEditingController _categoryController;
+  late final TextEditingController _ageCategoryController;
   late final TextEditingController _divisionController;
-  late final TextEditingController _weightClassController;
+  late final TextEditingController _weightDivisionController;
 
   bool get _isEditing => widget.existing != null;
 
@@ -37,13 +36,27 @@ class _CreateTournamentDialogState extends State<CreateTournamentDialog> {
   void initState() {
     super.initState();
     final existingTournament = widget.existing;
-    _nameController = TextEditingController(text: existingTournament?.name ?? '');
-    _dateRangeController = TextEditingController(text: existingTournament?.dateRange ?? '');
-    _venueController = TextEditingController(text: existingTournament?.venue ?? '');
-    _organizerController = TextEditingController(text: existingTournament?.organizer ?? '');
-    _categoryController = TextEditingController(text: existingTournament?.categoryLabel ?? '');
-    _divisionController = TextEditingController(text: existingTournament?.divisionLabel ?? '');
-    _weightClassController = TextEditingController(text: existingTournament?.weightClassLabel ?? '');
+    _nameController = TextEditingController(
+      text: existingTournament?.name ?? '',
+    );
+    _dateRangeController = TextEditingController(
+      text: existingTournament?.dateRange ?? '',
+    );
+    _venueController = TextEditingController(
+      text: existingTournament?.venue ?? '',
+    );
+    _organizerController = TextEditingController(
+      text: existingTournament?.organizer ?? '',
+    );
+    _ageCategoryController = TextEditingController(
+      text: existingTournament?.ageCategoryLabel ?? '',
+    );
+    _divisionController = TextEditingController(
+      text: existingTournament?.genderLabel ?? '',
+    );
+    _weightDivisionController = TextEditingController(
+      text: existingTournament?.weightDivisionLabel ?? '',
+    );
   }
 
   @override
@@ -52,9 +65,9 @@ class _CreateTournamentDialogState extends State<CreateTournamentDialog> {
     _dateRangeController.dispose();
     _venueController.dispose();
     _organizerController.dispose();
-    _categoryController.dispose();
+    _ageCategoryController.dispose();
     _divisionController.dispose();
-    _weightClassController.dispose();
+    _weightDivisionController.dispose();
     super.dispose();
   }
 
@@ -69,9 +82,9 @@ class _CreateTournamentDialogState extends State<CreateTournamentDialog> {
       dateRange: _dateRangeController.text.trim(),
       venue: _venueController.text.trim(),
       organizer: _organizerController.text.trim(),
-      categoryLabel: _categoryController.text.trim(),
-      divisionLabel: _divisionController.text.trim(),
-      weightClassLabel: _weightClassController.text.trim(),
+      ageCategoryLabel: _ageCategoryController.text.trim(),
+      genderLabel: _divisionController.text.trim(),
+      weightDivisionLabel: _weightDivisionController.text.trim(),
       createdAt: existingTournament?.createdAt ?? DateTime.now(),
     );
 
@@ -92,10 +105,13 @@ class _CreateTournamentDialogState extends State<CreateTournamentDialog> {
               children: [
                 TextFormField(
                   controller: _nameController,
-                  decoration: const InputDecoration(labelText: 'Tournament Name *'),
+                  decoration: const InputDecoration(
+                    labelText: 'Tournament Name *',
+                  ),
                   textInputAction: TextInputAction.next,
-                  validator: (value) =>
-                      (value == null || value.trim().isEmpty) ? 'Required' : null,
+                  validator: (value) => (value == null || value.trim().isEmpty)
+                      ? 'Required'
+                      : null,
                   autofocus: true,
                 ),
                 const SizedBox(height: 12),
@@ -118,23 +134,26 @@ class _CreateTournamentDialogState extends State<CreateTournamentDialog> {
                 ),
                 const SizedBox(height: 12),
                 TextField(
-                  controller: _categoryController,
-                  decoration:
-                      const InputDecoration(labelText: 'Category (e.g., JUNIOR)'),
+                  controller: _ageCategoryController,
+                  decoration: const InputDecoration(
+                    labelText: 'Age Category (e.g- JUNIOR, SENIOR, etc)',
+                  ),
                   textInputAction: TextInputAction.next,
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: _divisionController,
-                  decoration:
-                      const InputDecoration(labelText: 'Division (e.g., BOYS)'),
+                  decoration: const InputDecoration(
+                    labelText: 'Gender (e.g- BOYS, GIRLS, etc)',
+                  ),
                   textInputAction: TextInputAction.next,
                 ),
                 const SizedBox(height: 12),
                 TextField(
-                  controller: _weightClassController,
-                  decoration:
-                      const InputDecoration(labelText: 'Weight Class (e.g., UNDER 59)'),
+                  controller: _weightDivisionController,
+                  decoration: const InputDecoration(
+                    labelText: 'Weight Division (e.g- UNDER 59KG, etc)',
+                  ),
                   textInputAction: TextInputAction.done,
                   onSubmitted: (_) => _submitTournamentForm(),
                 ),

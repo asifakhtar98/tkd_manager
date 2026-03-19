@@ -21,7 +21,7 @@ void main() {
     test('throws ArgumentError for fewer than 2 participants', () {
       expect(
         () => service.generate(
-          divisionId: 'd1',
+          genderId: 'd1',
           participantIds: ['p1'],
           winnersBracketId: 'wb1',
           losersBracketId: 'lb1',
@@ -36,7 +36,7 @@ void main() {
     group('2 players', () {
       test('WB has 1 round, LB has 0 rounds', () {
         final result = service.generate(
-          divisionId: 'd1',
+          genderId: 'd1',
           participantIds: makeIds(2),
           winnersBracketId: 'wb1',
           losersBracketId: 'lb1',
@@ -47,7 +47,7 @@ void main() {
 
       test('has grand finals match', () {
         final result = service.generate(
-          divisionId: 'd1',
+          genderId: 'd1',
           participantIds: makeIds(2),
           winnersBracketId: 'wb1',
           losersBracketId: 'lb1',
@@ -57,25 +57,21 @@ void main() {
 
       test('WB R1 match routes loser to grand finals (no LB)', () {
         final result = service.generate(
-          divisionId: 'd1',
+          genderId: 'd1',
           participantIds: makeIds(2),
           winnersBracketId: 'wb1',
           losersBracketId: 'lb1',
         );
         final wbR1 = result.allMatches
-            .where((m) =>
-                m.bracketId == 'wb1' && m.roundNumber == 1)
+            .where((m) => m.bracketId == 'wb1' && m.roundNumber == 1)
             .toList();
         expect(wbR1.length, 1);
-        expect(
-          wbR1.first.loserAdvancesToMatchId,
-          result.grandFinalsMatch.id,
-        );
+        expect(wbR1.first.loserAdvancesToMatchId, result.grandFinalsMatch.id);
       });
 
       test('total matches: WB(1) + GF(1) + reset(1) = 3', () {
         final result = service.generate(
-          divisionId: 'd1',
+          genderId: 'd1',
           participantIds: makeIds(2),
           winnersBracketId: 'wb1',
           losersBracketId: 'lb1',
@@ -91,7 +87,7 @@ void main() {
     group('4 players', () {
       test('WB has 2 rounds', () {
         final result = service.generate(
-          divisionId: 'd1',
+          genderId: 'd1',
           participantIds: makeIds(4),
           winnersBracketId: 'wb1',
           losersBracketId: 'lb1',
@@ -101,7 +97,7 @@ void main() {
 
       test('LB has 2 rounds', () {
         final result = service.generate(
-          divisionId: 'd1',
+          genderId: 'd1',
           participantIds: makeIds(4),
           winnersBracketId: 'wb1',
           losersBracketId: 'lb1',
@@ -111,7 +107,7 @@ void main() {
 
       test('WB match count: 3 (bracketSize - 1)', () {
         final result = service.generate(
-          divisionId: 'd1',
+          genderId: 'd1',
           participantIds: makeIds(4),
           winnersBracketId: 'wb1',
           losersBracketId: 'lb1',
@@ -121,15 +117,13 @@ void main() {
             .toList();
         // WB R1 = 2, WB R2 = 1, GF is also bracketId == wb1
         // GF round = wRounds + 1 = 3
-        final wbCore = wbMatches
-            .where((m) => m.roundNumber <= 2)
-            .toList();
+        final wbCore = wbMatches.where((m) => m.roundNumber <= 2).toList();
         expect(wbCore.length, 3);
       });
 
       test('LB match count: 2', () {
         final result = service.generate(
-          divisionId: 'd1',
+          genderId: 'd1',
           participantIds: makeIds(4),
           winnersBracketId: 'wb1',
           losersBracketId: 'lb1',
@@ -142,16 +136,18 @@ void main() {
 
       test('WB R1 seeding: seed 1 vs seed 4, seed 2 vs seed 3', () {
         final result = service.generate(
-          divisionId: 'd1',
+          genderId: 'd1',
           participantIds: makeIds(4),
           winnersBracketId: 'wb1',
           losersBracketId: 'lb1',
         );
-        final r1 = result.allMatches
-            .where((m) => m.bracketId == 'wb1' && m.roundNumber == 1)
-            .toList()
-          ..sort((a, b) =>
-              a.matchNumberInRound.compareTo(b.matchNumberInRound));
+        final r1 =
+            result.allMatches
+                .where((m) => m.bracketId == 'wb1' && m.roundNumber == 1)
+                .toList()
+              ..sort(
+                (a, b) => a.matchNumberInRound.compareTo(b.matchNumberInRound),
+              );
 
         expect(r1[0].participantBlueId, 'p1');
         expect(r1[0].participantRedId, 'p4');
@@ -161,7 +157,7 @@ void main() {
 
       test('WB R1 losers route to LB R1', () {
         final result = service.generate(
-          divisionId: 'd1',
+          genderId: 'd1',
           participantIds: makeIds(4),
           winnersBracketId: 'wb1',
           losersBracketId: 'lb1',
@@ -188,14 +184,14 @@ void main() {
 
       test('WB R2 loser routes to LB R2', () {
         final result = service.generate(
-          divisionId: 'd1',
+          genderId: 'd1',
           participantIds: makeIds(4),
           winnersBracketId: 'wb1',
           losersBracketId: 'lb1',
         );
-        final wbR2 = result.allMatches
-            .firstWhere(
-                (m) => m.bracketId == 'wb1' && m.roundNumber == 2);
+        final wbR2 = result.allMatches.firstWhere(
+          (m) => m.bracketId == 'wb1' && m.roundNumber == 2,
+        );
         final lbR2 = result.allMatches
             .where((m) => m.bracketId == 'lb1' && m.roundNumber == 2)
             .toList();
@@ -210,23 +206,20 @@ void main() {
 
       test('WB final winner routes to grand finals', () {
         final result = service.generate(
-          divisionId: 'd1',
+          genderId: 'd1',
           participantIds: makeIds(4),
           winnersBracketId: 'wb1',
           losersBracketId: 'lb1',
         );
-        final wbFinal = result.allMatches
-            .firstWhere(
-                (m) => m.bracketId == 'wb1' && m.roundNumber == 2);
-        expect(
-          wbFinal.winnerAdvancesToMatchId,
-          result.grandFinalsMatch.id,
+        final wbFinal = result.allMatches.firstWhere(
+          (m) => m.bracketId == 'wb1' && m.roundNumber == 2,
         );
+        expect(wbFinal.winnerAdvancesToMatchId, result.grandFinalsMatch.id);
       });
 
       test('LB final winner routes to grand finals', () {
         final result = service.generate(
-          divisionId: 'd1',
+          genderId: 'd1',
           participantIds: makeIds(4),
           winnersBracketId: 'wb1',
           losersBracketId: 'lb1',
@@ -234,31 +227,28 @@ void main() {
         final lbFinal = result.allMatches
             .where((m) => m.bracketId == 'lb1')
             .reduce((a, b) => a.roundNumber > b.roundNumber ? a : b);
-        expect(
-          lbFinal.winnerAdvancesToMatchId,
-          result.grandFinalsMatch.id,
-        );
+        expect(lbFinal.winnerAdvancesToMatchId, result.grandFinalsMatch.id);
       });
 
       test('LB R1 winner routes to LB R2', () {
         final result = service.generate(
-          divisionId: 'd1',
+          genderId: 'd1',
           participantIds: makeIds(4),
           winnersBracketId: 'wb1',
           losersBracketId: 'lb1',
         );
-        final lbR1 = result.allMatches
-            .firstWhere(
-                (m) => m.bracketId == 'lb1' && m.roundNumber == 1);
-        final lbR2 = result.allMatches
-            .firstWhere(
-                (m) => m.bracketId == 'lb1' && m.roundNumber == 2);
+        final lbR1 = result.allMatches.firstWhere(
+          (m) => m.bracketId == 'lb1' && m.roundNumber == 1,
+        );
+        final lbR2 = result.allMatches.firstWhere(
+          (m) => m.bracketId == 'lb1' && m.roundNumber == 2,
+        );
         expect(lbR1.winnerAdvancesToMatchId, lbR2.id);
       });
 
       test('grand finals routes to reset match when enabled', () {
         final result = service.generate(
-          divisionId: 'd1',
+          genderId: 'd1',
           participantIds: makeIds(4),
           winnersBracketId: 'wb1',
           losersBracketId: 'lb1',
@@ -273,22 +263,19 @@ void main() {
 
       test('no reset match when disabled', () {
         final result = service.generate(
-          divisionId: 'd1',
+          genderId: 'd1',
           participantIds: makeIds(4),
           winnersBracketId: 'wb1',
           losersBracketId: 'lb1',
           includeResetMatch: false,
         );
         expect(result.resetMatch, isNull);
-        expect(
-          result.grandFinalsMatch.winnerAdvancesToMatchId,
-          isNull,
-        );
+        expect(result.grandFinalsMatch.winnerAdvancesToMatchId, isNull);
       });
 
       test('total matches: WB(3) + LB(2) + GF(1) + reset(1) = 7', () {
         final result = service.generate(
-          divisionId: 'd1',
+          genderId: 'd1',
           participantIds: makeIds(4),
           winnersBracketId: 'wb1',
           losersBracketId: 'lb1',
@@ -299,7 +286,7 @@ void main() {
 
       test('total matches without reset: 6', () {
         final result = service.generate(
-          divisionId: 'd1',
+          genderId: 'd1',
           participantIds: makeIds(4),
           winnersBracketId: 'wb1',
           losersBracketId: 'lb1',
@@ -315,7 +302,7 @@ void main() {
     group('3 players', () {
       test('WB has 2 rounds, LB has 2 rounds', () {
         final result = service.generate(
-          divisionId: 'd1',
+          genderId: 'd1',
           participantIds: makeIds(3),
           winnersBracketId: 'wb1',
           losersBracketId: 'lb1',
@@ -326,34 +313,35 @@ void main() {
 
       test('WB R1 has exactly 1 bye match', () {
         final result = service.generate(
-          divisionId: 'd1',
+          genderId: 'd1',
           participantIds: makeIds(3),
           winnersBracketId: 'wb1',
           losersBracketId: 'lb1',
         );
         final wbR1Byes = result.allMatches
-            .where((m) =>
-                m.bracketId == 'wb1' &&
-                m.roundNumber == 1 &&
-                m.resultType == MatchResultType.bye)
+            .where(
+              (m) =>
+                  m.bracketId == 'wb1' &&
+                  m.roundNumber == 1 &&
+                  m.resultType == MatchResultType.bye,
+            )
             .toList();
         expect(wbR1Byes.length, 1);
       });
 
       test('bye winner is advanced to WB R2', () {
         final result = service.generate(
-          divisionId: 'd1',
+          genderId: 'd1',
           participantIds: makeIds(3),
           winnersBracketId: 'wb1',
           losersBracketId: 'lb1',
         );
-        final wbR2 = result.allMatches
-            .firstWhere(
-                (m) => m.bracketId == 'wb1' && m.roundNumber == 2);
-        final byeMatch = result.allMatches
-            .firstWhere((m) =>
-                m.bracketId == 'wb1' &&
-                m.resultType == MatchResultType.bye);
+        final wbR2 = result.allMatches.firstWhere(
+          (m) => m.bracketId == 'wb1' && m.roundNumber == 2,
+        );
+        final byeMatch = result.allMatches.firstWhere(
+          (m) => m.bracketId == 'wb1' && m.resultType == MatchResultType.bye,
+        );
         final byeWinner = byeMatch.winnerId!;
         expect(
           wbR2.participantBlueId == byeWinner ||
@@ -365,15 +353,14 @@ void main() {
 
       test('WB bye match does NOT route loser to LB', () {
         final result = service.generate(
-          divisionId: 'd1',
+          genderId: 'd1',
           participantIds: makeIds(3),
           winnersBracketId: 'wb1',
           losersBracketId: 'lb1',
         );
-        final byeMatch = result.allMatches
-            .firstWhere((m) =>
-                m.bracketId == 'wb1' &&
-                m.resultType == MatchResultType.bye);
+        final byeMatch = result.allMatches.firstWhere(
+          (m) => m.bracketId == 'wb1' && m.resultType == MatchResultType.bye,
+        );
         expect(
           byeMatch.loserAdvancesToMatchId,
           isNull,
@@ -388,7 +375,7 @@ void main() {
     group('5 players', () {
       test('WB has 3 rounds, LB has 4 rounds', () {
         final result = service.generate(
-          divisionId: 'd1',
+          genderId: 'd1',
           participantIds: makeIds(5),
           winnersBracketId: 'wb1',
           losersBracketId: 'lb1',
@@ -399,23 +386,25 @@ void main() {
 
       test('WB R1 has 3 bye matches', () {
         final result = service.generate(
-          divisionId: 'd1',
+          genderId: 'd1',
           participantIds: makeIds(5),
           winnersBracketId: 'wb1',
           losersBracketId: 'lb1',
         );
         final wbR1Byes = result.allMatches
-            .where((m) =>
-                m.bracketId == 'wb1' &&
-                m.roundNumber == 1 &&
-                m.resultType == MatchResultType.bye)
+            .where(
+              (m) =>
+                  m.bracketId == 'wb1' &&
+                  m.roundNumber == 1 &&
+                  m.resultType == MatchResultType.bye,
+            )
             .toList();
         expect(wbR1Byes.length, 3);
       });
 
       test('all bye winners advance to WB R2', () {
         final result = service.generate(
-          divisionId: 'd1',
+          genderId: 'd1',
           participantIds: makeIds(5),
           winnersBracketId: 'wb1',
           losersBracketId: 'lb1',
@@ -424,16 +413,19 @@ void main() {
             .where((m) => m.bracketId == 'wb1' && m.roundNumber == 2)
             .toList();
         final byes = result.allMatches
-            .where((m) =>
-                m.bracketId == 'wb1' &&
-                m.resultType == MatchResultType.bye)
+            .where(
+              (m) =>
+                  m.bracketId == 'wb1' && m.resultType == MatchResultType.bye,
+            )
             .toList();
 
         for (final bye in byes) {
           final winnerId = bye.winnerId!;
-          final inR2 = wbR2.any((m) =>
-              m.participantBlueId == winnerId ||
-              m.participantRedId == winnerId);
+          final inR2 = wbR2.any(
+            (m) =>
+                m.participantBlueId == winnerId ||
+                m.participantRedId == winnerId,
+          );
           expect(
             inR2,
             isTrue,
@@ -449,7 +441,7 @@ void main() {
     group('8 players', () {
       test('WB has 3 rounds', () {
         final result = service.generate(
-          divisionId: 'd1',
+          genderId: 'd1',
           participantIds: makeIds(8),
           winnersBracketId: 'wb1',
           losersBracketId: 'lb1',
@@ -459,7 +451,7 @@ void main() {
 
       test('LB has 4 rounds', () {
         final result = service.generate(
-          divisionId: 'd1',
+          genderId: 'd1',
           participantIds: makeIds(8),
           winnersBracketId: 'wb1',
           losersBracketId: 'lb1',
@@ -469,7 +461,7 @@ void main() {
 
       test('WB match count: 7', () {
         final result = service.generate(
-          divisionId: 'd1',
+          genderId: 'd1',
           participantIds: makeIds(8),
           winnersBracketId: 'wb1',
           losersBracketId: 'lb1',
@@ -482,7 +474,7 @@ void main() {
 
       test('LB match count: 6', () {
         final result = service.generate(
-          divisionId: 'd1',
+          genderId: 'd1',
           participantIds: makeIds(8),
           winnersBracketId: 'wb1',
           losersBracketId: 'lb1',
@@ -495,7 +487,7 @@ void main() {
 
       test('LB round structure: R1=2, R2=2, R3=1, R4=1', () {
         final result = service.generate(
-          divisionId: 'd1',
+          genderId: 'd1',
           participantIds: makeIds(8),
           winnersBracketId: 'wb1',
           losersBracketId: 'lb1',
@@ -512,21 +504,20 @@ void main() {
 
       test('no bye matches in WB', () {
         final result = service.generate(
-          divisionId: 'd1',
+          genderId: 'd1',
           participantIds: makeIds(8),
           winnersBracketId: 'wb1',
           losersBracketId: 'lb1',
         );
-        final byes = result.allMatches
-            .where((m) =>
-                m.bracketId == 'wb1' &&
-                m.resultType == MatchResultType.bye);
+        final byes = result.allMatches.where(
+          (m) => m.bracketId == 'wb1' && m.resultType == MatchResultType.bye,
+        );
         expect(byes, isEmpty);
       });
 
       test('WB R1 losers route to LB R1 (consolidation)', () {
         final result = service.generate(
-          divisionId: 'd1',
+          genderId: 'd1',
           participantIds: makeIds(8),
           winnersBracketId: 'wb1',
           losersBracketId: 'lb1',
@@ -548,15 +539,14 @@ void main() {
           expect(
             lbR1Ids.contains(m.loserAdvancesToMatchId),
             isTrue,
-            reason:
-                'WB R1 M${m.matchNumberInRound} loser must route to LB R1',
+            reason: 'WB R1 M${m.matchNumberInRound} loser must route to LB R1',
           );
         }
       });
 
       test('WB R2 losers route to LB R2 (drop-in)', () {
         final result = service.generate(
-          divisionId: 'd1',
+          genderId: 'd1',
           participantIds: makeIds(8),
           winnersBracketId: 'wb1',
           losersBracketId: 'lb1',
@@ -578,22 +568,21 @@ void main() {
           expect(
             lbR2Ids.contains(m.loserAdvancesToMatchId),
             isTrue,
-            reason:
-                'WB R2 M${m.matchNumberInRound} loser must route to LB R2',
+            reason: 'WB R2 M${m.matchNumberInRound} loser must route to LB R2',
           );
         }
       });
 
       test('WB R3 loser routes to LB R4 (drop-in)', () {
         final result = service.generate(
-          divisionId: 'd1',
+          genderId: 'd1',
           participantIds: makeIds(8),
           winnersBracketId: 'wb1',
           losersBracketId: 'lb1',
         );
-        final wbR3 = result.allMatches
-            .firstWhere(
-                (m) => m.bracketId == 'wb1' && m.roundNumber == 3);
+        final wbR3 = result.allMatches.firstWhere(
+          (m) => m.bracketId == 'wb1' && m.roundNumber == 3,
+        );
         final lbR4Ids = result.allMatches
             .where((m) => m.bracketId == 'lb1' && m.roundNumber == 4)
             .map((m) => m.id)
@@ -613,7 +602,7 @@ void main() {
 
       test('LB internal routing: odd rounds feed same count, even halve', () {
         final result = service.generate(
-          divisionId: 'd1',
+          genderId: 'd1',
           participantIds: makeIds(8),
           winnersBracketId: 'wb1',
           losersBracketId: 'lb1',
@@ -656,7 +645,7 @@ void main() {
 
       test('LB final winner routes to grand finals', () {
         final result = service.generate(
-          divisionId: 'd1',
+          genderId: 'd1',
           participantIds: makeIds(8),
           winnersBracketId: 'wb1',
           losersBracketId: 'lb1',
@@ -664,16 +653,12 @@ void main() {
         final lbFinal = result.allMatches
             .where((m) => m.bracketId == 'lb1')
             .reduce((a, b) => a.roundNumber > b.roundNumber ? a : b);
-        expect(
-          lbFinal.winnerAdvancesToMatchId,
-          result.grandFinalsMatch.id,
-        );
+        expect(lbFinal.winnerAdvancesToMatchId, result.grandFinalsMatch.id);
       });
 
-      test(
-          'total matches: WB(7) + LB(6) + GF(1) + reset(1) = 15', () {
+      test('total matches: WB(7) + LB(6) + GF(1) + reset(1) = 15', () {
         final result = service.generate(
-          divisionId: 'd1',
+          genderId: 'd1',
           participantIds: makeIds(8),
           winnersBracketId: 'wb1',
           losersBracketId: 'lb1',
@@ -684,13 +669,14 @@ void main() {
 
       test('all R1 participants in WB are assigned', () {
         final result = service.generate(
-          divisionId: 'd1',
+          genderId: 'd1',
           participantIds: makeIds(8),
           winnersBracketId: 'wb1',
           losersBracketId: 'lb1',
         );
-        final wbR1 = result.allMatches
-            .where((m) => m.bracketId == 'wb1' && m.roundNumber == 1);
+        final wbR1 = result.allMatches.where(
+          (m) => m.bracketId == 'wb1' && m.roundNumber == 1,
+        );
         for (final m in wbR1) {
           expect(m.participantBlueId, isNotNull);
           expect(m.participantRedId, isNotNull);
@@ -699,13 +685,14 @@ void main() {
 
       test('all participants appear exactly once in WB R1', () {
         final result = service.generate(
-          divisionId: 'd1',
+          genderId: 'd1',
           participantIds: makeIds(8),
           winnersBracketId: 'wb1',
           losersBracketId: 'lb1',
         );
-        final wbR1 = result.allMatches
-            .where((m) => m.bracketId == 'wb1' && m.roundNumber == 1);
+        final wbR1 = result.allMatches.where(
+          (m) => m.bracketId == 'wb1' && m.roundNumber == 1,
+        );
         final allP = <String>{};
         for (final m in wbR1) {
           if (m.participantBlueId != null) allP.add(m.participantBlueId!);
@@ -721,7 +708,7 @@ void main() {
     group('bracket entities', () {
       test('correct IDs and types', () {
         final result = service.generate(
-          divisionId: 'd1',
+          genderId: 'd1',
           participantIds: makeIds(4),
           winnersBracketId: 'wb_test',
           losersBracketId: 'lb_test',
@@ -732,15 +719,15 @@ void main() {
         expect(result.losersBracket.bracketType, BracketType.losers);
       });
 
-      test('both brackets reference correct divisionId', () {
+      test('both brackets reference correct genderId', () {
         final result = service.generate(
-          divisionId: 'div_99',
+          genderId: 'div_99',
           participantIds: makeIds(4),
           winnersBracketId: 'wb1',
           losersBracketId: 'lb1',
         );
-        expect(result.winnersBracket.divisionId, 'div_99');
-        expect(result.losersBracket.divisionId, 'div_99');
+        expect(result.winnersBracket.genderId, 'div_99');
+        expect(result.losersBracket.genderId, 'div_99');
       });
     });
 
@@ -750,7 +737,7 @@ void main() {
     group('match uniqueness', () {
       test('all match IDs are unique', () {
         final result = service.generate(
-          divisionId: 'd1',
+          genderId: 'd1',
           participantIds: makeIds(8),
           winnersBracketId: 'wb1',
           losersBracketId: 'lb1',
@@ -762,7 +749,7 @@ void main() {
 
       test('routing targets always point to valid matches', () {
         final result = service.generate(
-          divisionId: 'd1',
+          genderId: 'd1',
           participantIds: makeIds(8),
           winnersBracketId: 'wb1',
           losersBracketId: 'lb1',
@@ -791,60 +778,62 @@ void main() {
     });
 
     // ─────────────────────────────────────────────────────────────
-    // Cross-bracket routing rule verification  
+    // Cross-bracket routing rule verification
     // ─────────────────────────────────────────────────────────────
     group('cross-bracket routing rules', () {
       test('WB Round R losers go to LB Round 2*(R-1) for R>=2', () {
         final result = service.generate(
-          divisionId: 'd1',
+          genderId: 'd1',
           participantIds: makeIds(8),
           winnersBracketId: 'wb1',
           losersBracketId: 'lb1',
         );
         final lbById = {
-          for (final m
-              in result.allMatches.where((m) => m.bracketId == 'lb1'))
+          for (final m in result.allMatches.where((m) => m.bracketId == 'lb1'))
             m.id: m,
         };
 
         // WB R2 → LB R2 (2*(2-1) = 2)
-        final wbR2 = result.allMatches
-            .where((m) => m.bracketId == 'wb1' && m.roundNumber == 2);
+        final wbR2 = result.allMatches.where(
+          (m) => m.bracketId == 'wb1' && m.roundNumber == 2,
+        );
         for (final m in wbR2) {
           final target = lbById[m.loserAdvancesToMatchId!]!;
-          expect(target.roundNumber, 2,
-              reason: 'WB R2 loser must go to LB R2');
+          expect(target.roundNumber, 2, reason: 'WB R2 loser must go to LB R2');
         }
 
         // WB R3 → LB R4 (2*(3-1) = 4)
-        final wbR3 = result.allMatches
-            .where((m) => m.bracketId == 'wb1' && m.roundNumber == 3);
+        final wbR3 = result.allMatches.where(
+          (m) => m.bracketId == 'wb1' && m.roundNumber == 3,
+        );
         for (final m in wbR3) {
           final target = lbById[m.loserAdvancesToMatchId!]!;
-          expect(target.roundNumber, 4,
-              reason: 'WB R3 loser must go to LB R4');
+          expect(target.roundNumber, 4, reason: 'WB R3 loser must go to LB R4');
         }
       });
 
       test('16 players: WB R4 loser routes to LB R6', () {
         final result = service.generate(
-          divisionId: 'd1',
+          genderId: 'd1',
           participantIds: makeIds(16),
           winnersBracketId: 'wb1',
           losersBracketId: 'lb1',
         );
         final lbById = {
-          for (final m
-              in result.allMatches.where((m) => m.bracketId == 'lb1'))
+          for (final m in result.allMatches.where((m) => m.bracketId == 'lb1'))
             m.id: m,
         };
 
-        final wbR4 = result.allMatches
-            .where((m) => m.bracketId == 'wb1' && m.roundNumber == 4);
+        final wbR4 = result.allMatches.where(
+          (m) => m.bracketId == 'wb1' && m.roundNumber == 4,
+        );
         for (final m in wbR4) {
           final target = lbById[m.loserAdvancesToMatchId!]!;
-          expect(target.roundNumber, 6,
-              reason: 'WB R4 (final) loser must go to LB R6');
+          expect(
+            target.roundNumber,
+            6,
+            reason: 'WB R4 (final) loser must go to LB R6',
+          );
         }
       });
     });
@@ -855,7 +844,7 @@ void main() {
     group('16 players', () {
       test('WB: 4 rounds, LB: 6 rounds', () {
         final result = service.generate(
-          divisionId: 'd1',
+          genderId: 'd1',
           participantIds: makeIds(16),
           winnersBracketId: 'wb1',
           losersBracketId: 'lb1',
@@ -866,7 +855,7 @@ void main() {
 
       test('WB match count: 15', () {
         final result = service.generate(
-          divisionId: 'd1',
+          genderId: 'd1',
           participantIds: makeIds(16),
           winnersBracketId: 'wb1',
           losersBracketId: 'lb1',
@@ -879,7 +868,7 @@ void main() {
 
       test('LB match count: 14', () {
         final result = service.generate(
-          divisionId: 'd1',
+          genderId: 'd1',
           participantIds: makeIds(16),
           winnersBracketId: 'wb1',
           losersBracketId: 'lb1',
@@ -892,7 +881,7 @@ void main() {
 
       test('total with reset: WB(15) + LB(14) + GF(1) + reset(1) = 31', () {
         final result = service.generate(
-          divisionId: 'd1',
+          genderId: 'd1',
           participantIds: makeIds(16),
           winnersBracketId: 'wb1',
           losersBracketId: 'lb1',
@@ -903,7 +892,7 @@ void main() {
 
       test('LB round structure: R1=4, R2=4, R3=2, R4=2, R5=1, R6=1', () {
         final result = service.generate(
-          divisionId: 'd1',
+          genderId: 'd1',
           participantIds: makeIds(16),
           winnersBracketId: 'wb1',
           losersBracketId: 'lb1',
@@ -927,7 +916,7 @@ void main() {
     group('grand finals bracketId (F1)', () {
       test('GF match has bracketId distinct from WB and LB', () {
         final result = service.generate(
-          divisionId: 'd1',
+          genderId: 'd1',
           participantIds: makeIds(4),
           winnersBracketId: 'wb1',
           losersBracketId: 'lb1',
@@ -940,7 +929,7 @@ void main() {
 
       test('Reset match has same bracketId as grand finals', () {
         final result = service.generate(
-          divisionId: 'd1',
+          genderId: 'd1',
           participantIds: makeIds(4),
           winnersBracketId: 'wb1',
           losersBracketId: 'lb1',
@@ -950,32 +939,37 @@ void main() {
         expect(result.resetMatch!.bracketId, result.grandFinalsMatch.bracketId);
       });
 
-      test('GF/Reset are not counted as WB or LB matches by bracketId filter', () {
-        final result = service.generate(
-          divisionId: 'd1',
-          participantIds: makeIds(8),
-          winnersBracketId: 'wb1',
-          losersBracketId: 'lb1',
-        );
+      test(
+        'GF/Reset are not counted as WB or LB matches by bracketId filter',
+        () {
+          final result = service.generate(
+            genderId: 'd1',
+            participantIds: makeIds(8),
+            winnersBracketId: 'wb1',
+            losersBracketId: 'lb1',
+          );
 
-        final wbMatches = result.allMatches
-            .where((m) => m.bracketId == 'wb1')
-            .toList();
-        final lbMatches = result.allMatches
-            .where((m) => m.bracketId == 'lb1')
-            .toList();
-        final gfMatches = result.allMatches
-            .where((m) => m.bracketId != 'wb1' && m.bracketId != 'lb1')
-            .toList();
+          final wbMatches = result.allMatches
+              .where((m) => m.bracketId == 'wb1')
+              .toList();
+          final lbMatches = result.allMatches
+              .where((m) => m.bracketId == 'lb1')
+              .toList();
+          final gfMatches = result.allMatches
+              .where((m) => m.bracketId != 'wb1' && m.bracketId != 'lb1')
+              .toList();
 
-        // GF matches should only be grand finals + optional reset
-        expect(gfMatches.length, greaterThanOrEqualTo(1));
-        expect(gfMatches.length, lessThanOrEqualTo(2));
+          // GF matches should only be grand finals + optional reset
+          expect(gfMatches.length, greaterThanOrEqualTo(1));
+          expect(gfMatches.length, lessThanOrEqualTo(2));
 
-        // WB + LB + GF should equal total
-        expect(wbMatches.length + lbMatches.length + gfMatches.length,
-            result.allMatches.length);
-      });
+          // WB + LB + GF should equal total
+          expect(
+            wbMatches.length + lbMatches.length + gfMatches.length,
+            result.allMatches.length,
+          );
+        },
+      );
     });
 
     // ─────────────────────────────────────────────────────────────
@@ -984,7 +978,7 @@ void main() {
     group('3 players', () {
       test('generates valid bracket structure', () {
         final result = service.generate(
-          divisionId: 'd1',
+          genderId: 'd1',
           participantIds: makeIds(3),
           winnersBracketId: 'wb1',
           losersBracketId: 'lb1',
@@ -997,7 +991,7 @@ void main() {
 
       test('seeding assigns participants correctly with 1 bye', () {
         final result = service.generate(
-          divisionId: 'd1',
+          genderId: 'd1',
           participantIds: makeIds(3),
           winnersBracketId: 'wb1',
           losersBracketId: 'lb1',
@@ -1010,8 +1004,9 @@ void main() {
         // Should have 2 R1 matches, one with a bye
         expect(r1.length, 2);
 
-        final byeMatches = r1.where(
-            (m) => m.resultType == MatchResultType.bye).toList();
+        final byeMatches = r1
+            .where((m) => m.resultType == MatchResultType.bye)
+            .toList();
         expect(byeMatches.length, 1);
       });
     });

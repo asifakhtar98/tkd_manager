@@ -117,12 +117,14 @@ class BracketRoute extends GoRouteData with $BracketRoute {
   Widget build(BuildContext context, GoRouterState state) {
     return BlocProvider(
       create: (_) => getIt<BracketBloc>()
-        ..add(BracketGenerateRequested(
-          participants: $extra.participants,
-          bracketFormat: $extra.bracketFormat,
-          dojangSeparation: $extra.dojangSeparation,
-          includeThirdPlaceMatch: $extra.includeThirdPlaceMatch,
-        )),
+        ..add(
+          BracketGenerateRequested(
+            participants: $extra.participants,
+            bracketFormat: $extra.bracketFormat,
+            dojangSeparation: $extra.dojangSeparation,
+            includeThirdPlaceMatch: $extra.includeThirdPlaceMatch,
+          ),
+        ),
       child: BracketViewerScreen(
         participants: $extra.participants,
         dojangSeparation: $extra.dojangSeparation,

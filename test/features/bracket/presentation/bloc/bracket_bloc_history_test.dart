@@ -1,4 +1,3 @@
-
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tkd_saas/core/di/injection.dart';
 import 'package:tkd_saas/core/router/app_routes.dart';
@@ -10,10 +9,14 @@ void main() {
   late BracketBloc bracketBloc;
 
   final fourParticipants = <ParticipantEntity>[
-    const ParticipantEntity(id: 'p1', divisionId: 'div1', fullName: 'Alice Kim'),
-    const ParticipantEntity(id: 'p2', divisionId: 'div1', fullName: 'Bob Park'),
-    const ParticipantEntity(id: 'p3', divisionId: 'div1', fullName: 'Charlie Lee'),
-    const ParticipantEntity(id: 'p4', divisionId: 'div1', fullName: 'Dave Choi'),
+    const ParticipantEntity(id: 'p1', genderId: 'div1', fullName: 'Alice Kim'),
+    const ParticipantEntity(id: 'p2', genderId: 'div1', fullName: 'Bob Park'),
+    const ParticipantEntity(
+      id: 'p3',
+      genderId: 'div1',
+      fullName: 'Charlie Lee',
+    ),
+    const ParticipantEntity(id: 'p4', genderId: 'div1', fullName: 'Dave Choi'),
   ];
 
   setUp(() {
@@ -31,12 +34,14 @@ void main() {
     List<ParticipantEntity>? participants,
     BracketFormat format = BracketFormat.singleElimination,
   }) async {
-    bracketBloc.add(BracketEvent.generateRequested(
-      participants: participants ?? fourParticipants,
-      bracketFormat: format,
-      dojangSeparation: false,
-      includeThirdPlaceMatch: false,
-    ));
+    bracketBloc.add(
+      BracketEvent.generateRequested(
+        participants: participants ?? fourParticipants,
+        bracketFormat: format,
+        dojangSeparation: false,
+        includeThirdPlaceMatch: false,
+      ),
+    );
     await expectLater(
       bracketBloc.stream,
       emitsThrough(isA<BracketLoadSuccess>()),
@@ -64,13 +69,15 @@ void main() {
     int? blueScore,
     int? redScore,
   }) async {
-    bracketBloc.add(BracketEvent.matchResultRecorded(
-      matchId: match.id,
-      winnerId: match.participantBlueId!,
-      resultType: MatchResultType.points,
-      blueScore: blueScore,
-      redScore: redScore,
-    ));
+    bracketBloc.add(
+      BracketEvent.matchResultRecorded(
+        matchId: match.id,
+        winnerId: match.participantBlueId!,
+        resultType: MatchResultType.points,
+        blueScore: blueScore,
+        redScore: redScore,
+      ),
+    );
     // Wait for a new BracketLoadSuccess with updated history pointer.
     await expectLater(
       bracketBloc.stream,
@@ -93,10 +100,7 @@ void main() {
 
         expect(afterRecord.actionHistory, hasLength(1));
         expect(afterRecord.historyPointer, 0);
-        expect(
-          afterRecord.actionHistory.first.action.matchId,
-          match.id,
-        );
+        expect(afterRecord.actionHistory.first.action.matchId, match.id);
         expect(
           afterRecord.actionHistory.first.action.displayLabel,
           contains('won by'),
@@ -151,57 +155,51 @@ void main() {
       },
     );
 
-    test(
-      'undo at initial state (historyPointer = -1) is a no-op',
-      () async {
-        final state = await generateBracket();
-        expect(state.historyPointer, -1);
+    test('undo at initial state (historyPointer = -1) is a no-op', () async {
+      final state = await generateBracket();
+      expect(state.historyPointer, -1);
 
-        bracketBloc.add(const BracketEvent.undoRequested());
-        // Give a small window for any state change.
-        await Future<void>.delayed(const Duration(milliseconds: 100));
-        final afterUndo = bracketBloc.state as BracketLoadSuccess;
+      bracketBloc.add(const BracketEvent.undoRequested());
+      // Give a small window for any state change.
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+      final afterUndo = bracketBloc.state as BracketLoadSuccess;
 
-        expect(afterUndo.historyPointer, -1);
-        expect(afterUndo.result, equals(state.result));
-      },
-    );
+      expect(afterUndo.historyPointer, -1);
+      expect(afterUndo.result, equals(state.result));
+    });
 
-    test(
-      'multiple undos walk back through history correctly',
-      () async {
-        var state = await generateBracket();
-        final initialResult = state.result;
+    test('multiple undos walk back through history correctly', () async {
+      var state = await generateBracket();
+      final initialResult = state.result;
 
-        // Score two matches.
-        final match1 = findFirstScorableMatch(state);
-        state = await recordMatchResult(match1);
-        final afterMatch1Result = state.result;
+      // Score two matches.
+      final match1 = findFirstScorableMatch(state);
+      state = await recordMatchResult(match1);
+      final afterMatch1Result = state.result;
 
-        final match2 = findFirstScorableMatch(state);
-        state = await recordMatchResult(match2);
+      final match2 = findFirstScorableMatch(state);
+      state = await recordMatchResult(match2);
 
-        // Undo once → should be at match1 state.
-        bracketBloc.add(const BracketEvent.undoRequested());
-        await expectLater(
-          bracketBloc.stream,
-          emitsThrough(isA<BracketLoadSuccess>()),
-        );
-        state = bracketBloc.state as BracketLoadSuccess;
-        expect(state.historyPointer, 0);
-        expect(state.result, equals(afterMatch1Result));
+      // Undo once → should be at match1 state.
+      bracketBloc.add(const BracketEvent.undoRequested());
+      await expectLater(
+        bracketBloc.stream,
+        emitsThrough(isA<BracketLoadSuccess>()),
+      );
+      state = bracketBloc.state as BracketLoadSuccess;
+      expect(state.historyPointer, 0);
+      expect(state.result, equals(afterMatch1Result));
 
-        // Undo again → should be at initial state.
-        bracketBloc.add(const BracketEvent.undoRequested());
-        await expectLater(
-          bracketBloc.stream,
-          emitsThrough(isA<BracketLoadSuccess>()),
-        );
-        state = bracketBloc.state as BracketLoadSuccess;
-        expect(state.historyPointer, -1);
-        expect(state.result, equals(initialResult));
-      },
-    );
+      // Undo again → should be at initial state.
+      bracketBloc.add(const BracketEvent.undoRequested());
+      await expectLater(
+        bracketBloc.stream,
+        emitsThrough(isA<BracketLoadSuccess>()),
+      );
+      state = bracketBloc.state as BracketLoadSuccess;
+      expect(state.historyPointer, -1);
+      expect(state.result, equals(initialResult));
+    });
   });
 
   group('Redo', () {
@@ -233,23 +231,20 @@ void main() {
       },
     );
 
-    test(
-      'redo at latest action is a no-op',
-      () async {
-        var state = await generateBracket();
-        final match = findFirstScorableMatch(state);
-        state = await recordMatchResult(match);
+    test('redo at latest action is a no-op', () async {
+      var state = await generateBracket();
+      final match = findFirstScorableMatch(state);
+      state = await recordMatchResult(match);
 
-        expect(state.historyPointer, 0);
+      expect(state.historyPointer, 0);
 
-        bracketBloc.add(const BracketEvent.redoRequested());
-        await Future<void>.delayed(const Duration(milliseconds: 100));
-        final afterRedo = bracketBloc.state as BracketLoadSuccess;
+      bracketBloc.add(const BracketEvent.redoRequested());
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+      final afterRedo = bracketBloc.state as BracketLoadSuccess;
 
-        expect(afterRedo.historyPointer, 0);
-        expect(afterRedo.result, equals(state.result));
-      },
-    );
+      expect(afterRedo.historyPointer, 0);
+      expect(afterRedo.result, equals(state.result));
+    });
   });
 
   group('Redo truncation', () {
@@ -281,10 +276,7 @@ void main() {
         expect(state.actionHistory, hasLength(2));
         expect(state.historyPointer, 1);
         // The second entry should reference the new match, not match2.
-        expect(
-          state.actionHistory[1].action.matchId,
-          equals(newMatch.id),
-        );
+        expect(state.actionHistory[1].action.matchId, equals(newMatch.id));
       },
     );
   });
@@ -299,13 +291,11 @@ void main() {
         // Score two matches.
         final match1 = findFirstScorableMatch(state);
         state = await recordMatchResult(match1);
-        final afterMatch1Snapshot =
-            state.actionHistory[0].resultSnapshot;
+        final afterMatch1Snapshot = state.actionHistory[0].resultSnapshot;
 
         final match2 = findFirstScorableMatch(state);
         state = await recordMatchResult(match2);
-        final afterMatch2Snapshot =
-            state.actionHistory[1].resultSnapshot;
+        final afterMatch2Snapshot = state.actionHistory[1].resultSnapshot;
 
         // Start replay.
         bracketBloc.add(const BracketEvent.replayRequested());
@@ -440,70 +430,61 @@ void main() {
       },
     );
 
-    test(
-      'jumping to -1 restores initial state',
-      () async {
-        var state = await generateBracket();
-        final initialResult = state.result;
+    test('jumping to -1 restores initial state', () async {
+      var state = await generateBracket();
+      final initialResult = state.result;
 
-        final match1 = findFirstScorableMatch(state);
-        state = await recordMatchResult(match1);
+      final match1 = findFirstScorableMatch(state);
+      state = await recordMatchResult(match1);
 
-        bracketBloc.add(
-          const BracketEvent.historyJumpRequested(targetHistoryIndex: -1),
-        );
-        await expectLater(
-          bracketBloc.stream,
-          emitsThrough(isA<BracketLoadSuccess>()),
-        );
-        state = bracketBloc.state as BracketLoadSuccess;
+      bracketBloc.add(
+        const BracketEvent.historyJumpRequested(targetHistoryIndex: -1),
+      );
+      await expectLater(
+        bracketBloc.stream,
+        emitsThrough(isA<BracketLoadSuccess>()),
+      );
+      state = bracketBloc.state as BracketLoadSuccess;
 
-        expect(state.historyPointer, -1);
-        expect(state.result, equals(initialResult));
-      },
-    );
+      expect(state.historyPointer, -1);
+      expect(state.result, equals(initialResult));
+    });
 
-    test(
-      'jumping to an out-of-range index is a no-op',
-      () async {
-        var state = await generateBracket();
-        final match = findFirstScorableMatch(state);
-        state = await recordMatchResult(match);
-        final currentPointer = state.historyPointer;
+    test('jumping to an out-of-range index is a no-op', () async {
+      var state = await generateBracket();
+      final match = findFirstScorableMatch(state);
+      state = await recordMatchResult(match);
+      final currentPointer = state.historyPointer;
 
-        bracketBloc.add(
-          const BracketEvent.historyJumpRequested(targetHistoryIndex: 999),
-        );
-        await Future<void>.delayed(const Duration(milliseconds: 100));
-        final afterJump = bracketBloc.state as BracketLoadSuccess;
+      bracketBloc.add(
+        const BracketEvent.historyJumpRequested(targetHistoryIndex: 999),
+      );
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+      final afterJump = bracketBloc.state as BracketLoadSuccess;
 
-        expect(afterJump.historyPointer, currentPointer);
-      },
-    );
+      expect(afterJump.historyPointer, currentPointer);
+    });
   });
 
   group('Regeneration clears history', () {
-    test(
-      'regenerating after recording results clears all history',
-      () async {
-        var state = await generateBracket();
-        final match = findFirstScorableMatch(state);
-        state = await recordMatchResult(match);
-        expect(state.actionHistory, hasLength(1));
+    test('regenerating after recording results clears all history', () async {
+      var state = await generateBracket();
+      final match = findFirstScorableMatch(state);
+      state = await recordMatchResult(match);
+      expect(state.actionHistory, hasLength(1));
 
-        bracketBloc.add(const BracketEvent.regenerateRequested());
-        await expectLater(
-          bracketBloc.stream,
-          emitsThrough(isA<BracketLoadSuccess>()),
-        );
-        state = bracketBloc.state as BracketLoadSuccess;
+      bracketBloc.add(const BracketEvent.regenerateRequested());
+      await expectLater(
+        bracketBloc.stream,
+        emitsThrough(isA<BracketLoadSuccess>()),
+      );
+      state = bracketBloc.state as BracketLoadSuccess;
 
-        expect(state.actionHistory, isEmpty);
-        expect(state.historyPointer, -1);
-        expect(state.isReplayInProgress, isFalse);
-        expect(state.initialResult, isNotNull);
-      },
-    );
+      expect(state.actionHistory, isEmpty);
+      expect(state.historyPointer, -1);
+      expect(state.isReplayInProgress, isFalse);
+      expect(state.initialResult, isNotNull);
+    });
   });
 
   group('Replay-blocking guards', () {
@@ -528,68 +509,58 @@ void main() {
       return bracketBloc.state as BracketLoadSuccess;
     }
 
-    test(
-      'match recording is blocked during replay',
-      () async {
-        final replayState = await startReplay();
+    test('match recording is blocked during replay', () async {
+      final replayState = await startReplay();
 
-        // Try to record a match during replay.
-        bracketBloc.add(BracketEvent.matchResultRecorded(
+      // Try to record a match during replay.
+      bracketBloc.add(
+        BracketEvent.matchResultRecorded(
           matchId: replayState.actionHistory.first.action.matchId,
           winnerId: 'p1',
           resultType: MatchResultType.points,
-        ));
-        await Future<void>.delayed(const Duration(milliseconds: 100));
-        final afterAttempt = bracketBloc.state as BracketLoadSuccess;
+        ),
+      );
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+      final afterAttempt = bracketBloc.state as BracketLoadSuccess;
 
-        // ActionHistory should NOT have grown because recording is blocked.
-        expect(afterAttempt.actionHistory, hasLength(1));
-        expect(afterAttempt.isReplayInProgress, isTrue);
-      },
-    );
+      // ActionHistory should NOT have grown because recording is blocked.
+      expect(afterAttempt.actionHistory, hasLength(1));
+      expect(afterAttempt.isReplayInProgress, isTrue);
+    });
 
-    test(
-      'undo is blocked during replay',
-      () async {
-        await startReplay();
+    test('undo is blocked during replay', () async {
+      await startReplay();
 
-        bracketBloc.add(const BracketEvent.undoRequested());
-        await Future<void>.delayed(const Duration(milliseconds: 100));
-        final afterAttempt = bracketBloc.state as BracketLoadSuccess;
+      bracketBloc.add(const BracketEvent.undoRequested());
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+      final afterAttempt = bracketBloc.state as BracketLoadSuccess;
 
-        // Replay should still be in progress — undo did nothing.
-        expect(afterAttempt.isReplayInProgress, isTrue);
-      },
-    );
+      // Replay should still be in progress — undo did nothing.
+      expect(afterAttempt.isReplayInProgress, isTrue);
+    });
 
-    test(
-      'redo is blocked during replay',
-      () async {
-        await startReplay();
+    test('redo is blocked during replay', () async {
+      await startReplay();
 
-        bracketBloc.add(const BracketEvent.redoRequested());
-        await Future<void>.delayed(const Duration(milliseconds: 100));
-        final afterAttempt = bracketBloc.state as BracketLoadSuccess;
+      bracketBloc.add(const BracketEvent.redoRequested());
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+      final afterAttempt = bracketBloc.state as BracketLoadSuccess;
 
-        expect(afterAttempt.isReplayInProgress, isTrue);
-      },
-    );
+      expect(afterAttempt.isReplayInProgress, isTrue);
+    });
 
-    test(
-      'history jump is blocked during replay',
-      () async {
-        final replayState = await startReplay();
-        final pointerBeforeAttempt = replayState.historyPointer;
+    test('history jump is blocked during replay', () async {
+      final replayState = await startReplay();
+      final pointerBeforeAttempt = replayState.historyPointer;
 
-        bracketBloc.add(
-          const BracketEvent.historyJumpRequested(targetHistoryIndex: 0),
-        );
-        await Future<void>.delayed(const Duration(milliseconds: 100));
-        final afterAttempt = bracketBloc.state as BracketLoadSuccess;
+      bracketBloc.add(
+        const BracketEvent.historyJumpRequested(targetHistoryIndex: 0),
+      );
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+      final afterAttempt = bracketBloc.state as BracketLoadSuccess;
 
-        expect(afterAttempt.isReplayInProgress, isTrue);
-        expect(afterAttempt.historyPointer, pointerBeforeAttempt);
-      },
-    );
+      expect(afterAttempt.isReplayInProgress, isTrue);
+      expect(afterAttempt.historyPointer, pointerBeforeAttempt);
+    });
   });
 }

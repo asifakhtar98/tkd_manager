@@ -146,7 +146,8 @@ class _ScoreEntryDialogState extends State<ScoreEntryDialog> {
                 ),
               ],
               onChanged: (selectedResultType) {
-                if (selectedResultType != null) setState(() => _resultType = selectedResultType);
+                if (selectedResultType != null)
+                  setState(() => _resultType = selectedResultType);
               },
             ),
             const SizedBox(height: 16),
@@ -193,12 +194,14 @@ class _ScoreEntryDialogState extends State<ScoreEntryDialog> {
           onPressed: _selectedWinnerId == null
               ? null
               : () {
-                  Navigator.of(context).pop(ScoreEntryResult(
-                    winnerId: _selectedWinnerId!,
-                    resultType: _resultType,
-                    blueScore: int.tryParse(_blueScoreController.text),
-                    redScore: int.tryParse(_redScoreController.text),
-                  ));
+                  Navigator.of(context).pop(
+                    ScoreEntryResult(
+                      winnerId: _selectedWinnerId!,
+                      resultType: _resultType,
+                      blueScore: int.tryParse(_blueScoreController.text),
+                      redScore: int.tryParse(_redScoreController.text),
+                    ),
+                  );
                 },
           child: const Text('Confirm'),
         ),

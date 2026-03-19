@@ -24,8 +24,7 @@ class ParticipantEntryScreen extends StatefulWidget {
   final String? tournamentId;
 
   @override
-  State<ParticipantEntryScreen> createState() =>
-      _ParticipantEntryScreenState();
+  State<ParticipantEntryScreen> createState() => _ParticipantEntryScreenState();
 }
 
 class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
@@ -45,9 +44,9 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
   final _dateRangeController = TextEditingController();
   final _venueController = TextEditingController();
   final _organizerController = TextEditingController();
-  final _categoryController = TextEditingController();
+  final _ageCategoryController = TextEditingController();
   final _divisionController = TextEditingController();
-  final _weightClassController = TextEditingController();
+  final _weightDivisionController = TextEditingController();
 
   // Participant entry controllers
   final _fullNameController = TextEditingController();
@@ -69,9 +68,9 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
     _dateRangeController.dispose();
     _venueController.dispose();
     _organizerController.dispose();
-    _categoryController.dispose();
+    _ageCategoryController.dispose();
     _divisionController.dispose();
-    _weightClassController.dispose();
+    _weightDivisionController.dispose();
     _fullNameController.dispose();
     _dojangController.dispose();
     _registrationIdController.dispose();
@@ -101,9 +100,9 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
         dateRange: _dateRangeController.text.trim(),
         venue: _venueController.text.trim(),
         organizer: _organizerController.text.trim(),
-        categoryLabel: _categoryController.text.trim(),
-        divisionLabel: _divisionController.text.trim(),
-        weightClassLabel: _weightClassController.text.trim(),
+        ageCategoryLabel: _ageCategoryController.text.trim(),
+        genderLabel: _divisionController.text.trim(),
+        weightDivisionLabel: _weightDivisionController.text.trim(),
         createdAt: DateTime.now(),
       );
     }
@@ -113,18 +112,20 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
   void _addParticipantFromFormFields() {
     if (_fullNameController.text.trim().isEmpty) return;
     setState(() {
-      _participants.add(ParticipantEntity(
-        id: _uuid.v4(),
-        divisionId: 'manual_division',
-        fullName: _fullNameController.text.trim(),
-        schoolOrDojangName: _dojangController.text.trim().isNotEmpty
-            ? _dojangController.text.trim()
-            : null,
-        registrationId: _registrationIdController.text.trim().isNotEmpty
-            ? _registrationIdController.text.trim()
-            : null,
-        seedNumber: _participants.length + 1,
-      ));
+      _participants.add(
+        ParticipantEntity(
+          id: _uuid.v4(),
+          genderId: 'manual_division',
+          fullName: _fullNameController.text.trim(),
+          schoolOrDojangName: _dojangController.text.trim().isNotEmpty
+              ? _dojangController.text.trim()
+              : null,
+          registrationId: _registrationIdController.text.trim().isNotEmpty
+              ? _registrationIdController.text.trim()
+              : null,
+          seedNumber: _participants.length + 1,
+        ),
+      );
       _fullNameController.clear();
       _dojangController.clear();
       _registrationIdController.clear();
@@ -138,19 +139,20 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
       for (var csvLine in lines) {
         final parts = csvLine.split(',');
         if (parts.isNotEmpty && parts[0].trim().isNotEmpty) {
-          _participants.add(ParticipantEntity(
-            id: _uuid.v4(),
-            divisionId: 'manual_division',
-            fullName: parts[0].trim(),
-            schoolOrDojangName:
-                parts.length > 1 && parts[1].trim().isNotEmpty
-                    ? parts[1].trim()
-                    : null,
-            registrationId: parts.length > 2 && parts[2].trim().isNotEmpty
-                ? parts[2].trim()
-                : null,
-            seedNumber: _participants.length + 1,
-          ));
+          _participants.add(
+            ParticipantEntity(
+              id: _uuid.v4(),
+              genderId: 'manual_division',
+              fullName: parts[0].trim(),
+              schoolOrDojangName: parts.length > 1 && parts[1].trim().isNotEmpty
+                  ? parts[1].trim()
+                  : null,
+              registrationId: parts.length > 2 && parts[2].trim().isNotEmpty
+                  ? parts[2].trim()
+                  : null,
+              seedNumber: _participants.length + 1,
+            ),
+          );
         }
       }
     });
@@ -159,14 +161,19 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
   void _removeParticipant(int index) =>
       setState(() => _participants.removeAt(index));
 
-  Future<void> _handleGenerateBracketRequested(BuildContext context, TournamentState state) async {
+  Future<void> _handleGenerateBracketRequested(
+    BuildContext context,
+    TournamentState state,
+  ) async {
     final bloc = context.read<TournamentBloc>();
 
     TournamentEntity? tournament = _resolveTournament(state);
     if (tournament == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Please select or create a tournament first.'),
-      ));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select or create a tournament first.'),
+        ),
+      );
       return;
     }
 
@@ -190,9 +197,10 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
   Widget build(BuildContext context) {
     return BlocBuilder<TournamentBloc, TournamentState>(
       builder: (context, state) {
-        final canGenerate = _participants.length >= 2 &&
+        final canGenerate =
+            _participants.length >= 2 &&
             (_selectedTournamentId != null &&
-                _selectedTournamentId != _createNewSentinel
+                    _selectedTournamentId != _createNewSentinel
                 ? true
                 : _nameController.text.trim().isNotEmpty);
 
@@ -220,10 +228,10 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor:
-                          canGenerate ? Colors.blueAccent : Colors.grey[800],
-                      foregroundColor:
-                          canGenerate ? Colors.white : Colors.grey,
+                      backgroundColor: canGenerate
+                          ? Colors.blueAccent
+                          : Colors.grey[800],
+                      foregroundColor: canGenerate ? Colors.white : Colors.grey,
                     ),
                     onPressed: canGenerate
                         ? () => _handleGenerateBracketRequested(context, state)
@@ -273,10 +281,7 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
   // Tournament selector section
   // ─────────────────────────────────────────────────────────────────────────
 
-  Widget _buildTournamentSelector(
-    BuildContext context,
-    TournamentState state,
-  ) {
+  Widget _buildTournamentSelector(BuildContext context, TournamentState state) {
     final existing = _existingTournament(state);
 
     return Column(
@@ -298,8 +303,10 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                   decoration: const InputDecoration(
                     labelText: 'Select or Create Tournament',
                     border: OutlineInputBorder(),
-                    contentPadding:
-                        EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 4,
+                    ),
                   ),
                   isEmpty: _selectedTournamentId == null,
                   child: DropdownButtonHideUnderline(
@@ -312,8 +319,11 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                           value: _createNewSentinel,
                           child: Row(
                             children: [
-                              Icon(Icons.add_circle_outline,
-                                  size: 18, color: Colors.blueAccent),
+                              Icon(
+                                Icons.add_circle_outline,
+                                size: 18,
+                                color: Colors.blueAccent,
+                              ),
                               SizedBox(width: 8),
                               Flexible(
                                 child: Text(
@@ -347,9 +357,9 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                             _dateRangeController.clear();
                             _venueController.clear();
                             _organizerController.clear();
-                            _categoryController.clear();
+                            _ageCategoryController.clear();
                             _divisionController.clear();
-                            _weightClassController.clear();
+                            _weightDivisionController.clear();
                           }
                         });
                       },
@@ -371,8 +381,7 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                   const SizedBox(height: 8),
                   TextField(
                     controller: _dateRangeController,
-                    decoration:
-                        const InputDecoration(labelText: 'Date Range'),
+                    decoration: const InputDecoration(labelText: 'Date Range'),
                     textInputAction: TextInputAction.next,
                   ),
                   const SizedBox(height: 8),
@@ -389,9 +398,9 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                   ),
                   const SizedBox(height: 8),
                   TextField(
-                    controller: _categoryController,
+                    controller: _ageCategoryController,
                     decoration: const InputDecoration(
-                      labelText: 'Category (e.g., JUNIOR)',
+                      labelText: 'Age Category (e.g., JUNIOR)',
                     ),
                     textInputAction: TextInputAction.next,
                   ),
@@ -399,15 +408,15 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                   TextField(
                     controller: _divisionController,
                     decoration: const InputDecoration(
-                      labelText: 'Division (e.g., BOYS)',
+                      labelText: 'Gender (e.g., BOYS)',
                     ),
                     textInputAction: TextInputAction.next,
                   ),
                   const SizedBox(height: 8),
                   TextField(
-                    controller: _weightClassController,
+                    controller: _weightDivisionController,
                     decoration: const InputDecoration(
-                      labelText: 'Weight Class (e.g., UNDER 59)',
+                      labelText: 'Weight Division (e.g., UNDER 59)',
                     ),
                     textInputAction: TextInputAction.done,
                   ),
@@ -425,20 +434,20 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                       label: 'Organizer',
                       value: existing.organizer,
                     ),
-                  if (existing.categoryLabel.isNotEmpty)
+                  if (existing.ageCategoryLabel.isNotEmpty)
                     _ReadOnlyField(
-                      label: 'Category',
-                      value: existing.categoryLabel,
+                      label: 'Age Category',
+                      value: existing.ageCategoryLabel,
                     ),
-                  if (existing.divisionLabel.isNotEmpty)
+                  if (existing.genderLabel.isNotEmpty)
                     _ReadOnlyField(
-                      label: 'Division',
-                      value: existing.divisionLabel,
+                      label: 'Gender',
+                      value: existing.genderLabel,
                     ),
-                  if (existing.weightClassLabel.isNotEmpty)
+                  if (existing.weightDivisionLabel.isNotEmpty)
                     _ReadOnlyField(
-                      label: 'Weight Class',
-                      value: existing.weightClassLabel,
+                      label: 'Weight Division',
+                      value: existing.weightDivisionLabel,
                     ),
                 ],
               ],
@@ -473,11 +482,15 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                   isExpanded: true,
                   items: BracketFormat.values
                       .map(
-                        (f) => DropdownMenuItem(value: f, child: Text(f.displayLabel)),
+                        (f) => DropdownMenuItem(
+                          value: f,
+                          child: Text(f.displayLabel),
+                        ),
                       )
                       .toList(),
                   onChanged: (val) {
-                    if (val != null) setState(() => _selectedBracketFormat = val);
+                    if (val != null)
+                      setState(() => _selectedBracketFormat = val);
                   },
                 ),
                 const SizedBox(height: 16),
@@ -485,8 +498,7 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                   title: const Text('Dojang / School Separation'),
                   subtitle: const Text('Auto-distribute teammates'),
                   value: _dojangSeparation,
-                  onChanged: (val) =>
-                      setState(() => _dojangSeparation = val),
+                  onChanged: (val) => setState(() => _dojangSeparation = val),
                 ),
                 if (_selectedBracketFormat == BracketFormat.singleElimination)
                   SwitchListTile(
@@ -568,25 +580,22 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                           final ctrl = TextEditingController();
                           return AlertDialog(
                             title: const Text('Paste CSV'),
-                            content: TextField(
-                              controller: ctrl,
-                              maxLines: 5,
-                            ),
+                            content: TextField(controller: ctrl, maxLines: 5),
                             actions: [
                               TextButton(
                                 onPressed: () => Navigator.pop(c, ''),
                                 child: const Text('Cancel'),
                               ),
                               ElevatedButton(
-                                onPressed: () =>
-                                    Navigator.pop(c, ctrl.text),
+                                onPressed: () => Navigator.pop(c, ctrl.text),
                                 child: const Text('Import'),
                               ),
                             ],
                           );
                         },
                       );
-                      if (text != null && text.isNotEmpty) _importParticipantsFromCsvData(text);
+                      if (text != null && text.isNotEmpty)
+                        _importParticipantsFromCsvData(text);
                     },
                   ),
                 ),
@@ -675,8 +684,9 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                       final item = _participants.removeAt(oldIndex);
                       _participants.insert(newIndex, item);
                       for (int i = 0; i < _participants.length; i++) {
-                        _participants[i] =
-                            _participants[i].copyWith(seedNumber: i + 1);
+                        _participants[i] = _participants[i].copyWith(
+                          seedNumber: i + 1,
+                        );
                       }
                     });
                   },
@@ -694,14 +704,16 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                           p.fullName.toUpperCase(),
                           style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
-                        subtitle: Text([
-                          if (p.schoolOrDojangName != null &&
-                              p.schoolOrDojangName!.isNotEmpty)
-                            'Dojang: ${p.schoolOrDojangName}',
-                          if (p.registrationId != null &&
-                              p.registrationId!.isNotEmpty)
-                            'Reg: ${p.registrationId}',
-                        ].join(' | ')),
+                        subtitle: Text(
+                          [
+                            if (p.schoolOrDojangName != null &&
+                                p.schoolOrDojangName!.isNotEmpty)
+                              'Dojang: ${p.schoolOrDojangName}',
+                            if (p.registrationId != null &&
+                                p.registrationId!.isNotEmpty)
+                              'Reg: ${p.registrationId}',
+                          ].join(' | '),
+                        ),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -753,9 +765,7 @@ class _ReadOnlyField extends StatelessWidget {
               ),
             ),
           ),
-          Expanded(
-            child: Text(value, style: const TextStyle(fontSize: 13)),
-          ),
+          Expanded(child: Text(value, style: const TextStyle(fontSize: 13))),
         ],
       ),
     );

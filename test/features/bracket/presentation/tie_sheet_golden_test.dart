@@ -11,7 +11,9 @@ import 'package:tkd_saas/features/participant/domain/entities/participant_entity
 
 void main() {
   const uuid = Uuid();
-  final generator = SingleEliminationBracketGeneratorServiceImplementation(uuid);
+  final generator = SingleEliminationBracketGeneratorServiceImplementation(
+    uuid,
+  );
 
   final defaultTournament = TournamentEntity(
     id: 'golden-test',
@@ -19,9 +21,9 @@ void main() {
     dateRange: '18 Jan. to 22 Jan, 2026',
     venue: 'SMS Indoor Stadium, Jaipur, Rajasthan',
     organizer: 'INDIA TAEKWONDO',
-    categoryLabel: 'JUNIOR',
-    divisionLabel: 'BOYS',
-    weightClassLabel: 'UNDER 59',
+    ageCategoryLabel: 'JUNIOR',
+    genderLabel: 'BOYS',
+    weightDivisionLabel: 'UNDER 59',
     createdAt: DateTime(2026),
   );
 
@@ -44,20 +46,28 @@ void main() {
       ['Tej Pratap Sharma', 'Rajasthan', 'RJ082025-33001'],
       ['Apoorva Pandey', 'Delhi', 'DL052024-44100'],
     ];
-    return List.generate(count, (i) => ParticipantEntity(
-      id: uuid.v4(),
-      divisionId: 'div1',
-      fullName: names[i % names.length][0],
-      schoolOrDojangName: names[i % names.length][1],
-      registrationId: names[i % names.length][2],
-      seedNumber: i + 1,
-    ));
+    return List.generate(
+      count,
+      (i) => ParticipantEntity(
+        id: uuid.v4(),
+        genderId: 'div1',
+        fullName: names[i % names.length][0],
+        schoolOrDojangName: names[i % names.length][1],
+        registrationId: names[i % names.length][2],
+        seedNumber: i + 1,
+      ),
+    );
   }
 
-  Future<void> runGoldenTest(WidgetTester tester, int playerCount, String goldenFileName, {bool include3rd = false}) async {
+  Future<void> runGoldenTest(
+    WidgetTester tester,
+    int playerCount,
+    String goldenFileName, {
+    bool include3rd = false,
+  }) async {
     final participants = makeParticipants(playerCount);
     final result = generator.generate(
-      divisionId: 'div1',
+      genderId: 'div1',
       participantIds: participants.map((p) => p.id).toList(),
       bracketId: uuid.v4(),
       includeThirdPlaceMatch: include3rd,
@@ -101,14 +111,20 @@ void main() {
       final blue = m.participantBlueId != null
           ? participants.where((p) => p.id == m.participantBlueId).firstOrNull
           : null;
-      debugPrint('R${m.roundNumber} M${m.matchNumberInRound}: '
-          'Blue=${blue?.fullName ?? "BYE"} Red=${red?.fullName ?? "BYE"} '
-          'Status=${m.status} Result=${m.resultType} '
-          'Winner=${m.winnerId != null ? "yes" : "-"}');
+      debugPrint(
+        'R${m.roundNumber} M${m.matchNumberInRound}: '
+        'Blue=${blue?.fullName ?? "BYE"} Red=${red?.fullName ?? "BYE"} '
+        'Status=${m.status} Result=${m.resultType} '
+        'Winner=${m.winnerId != null ? "yes" : "-"}',
+      );
     }
 
-    final customPaints = tester.widgetList<CustomPaint>(find.byType(CustomPaint));
-    final tiePaint = customPaints.firstWhere((cp) => cp.painter is TieSheetPainter);
+    final customPaints = tester.widgetList<CustomPaint>(
+      find.byType(CustomPaint),
+    );
+    final tiePaint = customPaints.firstWhere(
+      (cp) => cp.painter is TieSheetPainter,
+    );
     debugPrint('Canvas size: ${tiePaint.size}');
   }
 
@@ -149,19 +165,30 @@ void main() {
 
   // 14 players with 3rd place match
   testWidgets('14-player bracket with 3rd place', (tester) async {
-    await runGoldenTest(tester, 14, '14_player_3rd_place_golden.png', include3rd: true);
+    await runGoldenTest(
+      tester,
+      14,
+      '14_player_3rd_place_golden.png',
+      include3rd: true,
+    );
   });
 
   // ─────────────────────────────────────────────────────────────
   // DOUBLE ELIMINATION GOLDENS
   // ─────────────────────────────────────────────────────────────
 
-  final deGenerator = DoubleEliminationBracketGeneratorServiceImplementation(uuid);
+  final deGenerator = DoubleEliminationBracketGeneratorServiceImplementation(
+    uuid,
+  );
 
-  Future<void> runDEGoldenTest(WidgetTester tester, int playerCount, String goldenFileName) async {
+  Future<void> runDEGoldenTest(
+    WidgetTester tester,
+    int playerCount,
+    String goldenFileName,
+  ) async {
     final participants = makeParticipants(playerCount);
     final result = deGenerator.generate(
-      divisionId: 'div1',
+      genderId: 'div1',
       participantIds: participants.map((p) => p.id).toList(),
       winnersBracketId: 'wb-golden',
       losersBracketId: 'lb-golden',
@@ -200,10 +227,18 @@ void main() {
     // Print match info for debugging
     debugPrint('=== DE $playerCount PLAYER MATCH INFO ===');
     debugPrint('Total matches: ${result.allMatches.length}');
-    final wbMatches = result.allMatches.where((m) => m.bracketId == 'wb-golden').toList();
-    final lbMatches = result.allMatches.where((m) => m.bracketId == 'lb-golden').toList();
-    final gfMatches = result.allMatches.where((m) => m.bracketId != 'wb-golden' && m.bracketId != 'lb-golden').toList();
-    debugPrint('WB matches: ${wbMatches.length}, LB matches: ${lbMatches.length}, GF matches: ${gfMatches.length}');
+    final wbMatches = result.allMatches
+        .where((m) => m.bracketId == 'wb-golden')
+        .toList();
+    final lbMatches = result.allMatches
+        .where((m) => m.bracketId == 'lb-golden')
+        .toList();
+    final gfMatches = result.allMatches
+        .where((m) => m.bracketId != 'wb-golden' && m.bracketId != 'lb-golden')
+        .toList();
+    debugPrint(
+      'WB matches: ${wbMatches.length}, LB matches: ${lbMatches.length}, GF matches: ${gfMatches.length}',
+    );
     for (final m in result.allMatches) {
       final red = m.participantRedId != null
           ? participants.where((p) => p.id == m.participantRedId).firstOrNull
@@ -211,10 +246,16 @@ void main() {
       final blue = m.participantBlueId != null
           ? participants.where((p) => p.id == m.participantBlueId).firstOrNull
           : null;
-      debugPrint('Bracket=${m.bracketId == 'wb-golden' ? 'WB' : m.bracketId == 'lb-golden' ? 'LB' : 'GF'} '
-          'R${m.roundNumber} M${m.matchNumberInRound}: '
-          'Blue=${blue?.fullName ?? "TBD"} Red=${red?.fullName ?? "TBD"} '
-          'Status=${m.status} Result=${m.resultType}');
+      debugPrint(
+        'Bracket=${m.bracketId == 'wb-golden'
+            ? 'WB'
+            : m.bracketId == 'lb-golden'
+            ? 'LB'
+            : 'GF'} '
+        'R${m.roundNumber} M${m.matchNumberInRound}: '
+        'Blue=${blue?.fullName ?? "TBD"} Red=${red?.fullName ?? "TBD"} '
+        'Status=${m.status} Result=${m.resultType}',
+      );
     }
   }
 
@@ -245,14 +286,21 @@ void main() {
   final progressionService = MatchProgressionServiceImplementation();
 
   /// Helper: record blue-corner winners for all non-BYE matches in the given [roundNumber].
-  List<MatchEntity> recordBlueWinnersForRound(List<MatchEntity> matches, int roundNumber) {
+  List<MatchEntity> recordBlueWinnersForRound(
+    List<MatchEntity> matches,
+    int roundNumber,
+  ) {
     var updatedMatches = matches;
-    final roundMatches = updatedMatches.where((m) =>
-        m.roundNumber == roundNumber &&
-        m.resultType != MatchResultType.bye &&
-        m.status != MatchStatus.completed &&
-        m.participantBlueId != null &&
-        m.participantRedId != null).toList();
+    final roundMatches = updatedMatches
+        .where(
+          (m) =>
+              m.roundNumber == roundNumber &&
+              m.resultType != MatchResultType.bye &&
+              m.status != MatchStatus.completed &&
+              m.participantBlueId != null &&
+              m.participantRedId != null,
+        )
+        .toList();
     for (final match in roundMatches) {
       updatedMatches = progressionService.recordResult(
         matches: updatedMatches,
@@ -272,7 +320,7 @@ void main() {
   }) async {
     final participants = makeParticipants(playerCount);
     final result = generator.generate(
-      divisionId: 'div1',
+      genderId: 'div1',
       participantIds: participants.map((p) => p.id).toList(),
       bracketId: uuid.v4(),
       includeThirdPlaceMatch: include3rd,

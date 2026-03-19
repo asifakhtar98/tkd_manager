@@ -319,8 +319,13 @@ void main() {
       expect(find.text('Date Range'), findsOneWidget);
       expect(find.text('Venue'), findsOneWidget);
       expect(find.text('Organizer'), findsOneWidget);
-      expect(find.text('Category (e.g., JUNIOR)'), findsOneWidget);
-      expect(find.text('Division (e.g., BOYS)'), findsOneWidget);
+      final ageCatFinder = find.textContaining('Age Category');
+      await tester.ensureVisible(ageCatFinder.first);
+      expect(ageCatFinder, findsAtLeast(1));
+
+      final genderFinder = find.textContaining('Gender');
+      await tester.ensureVisible(genderFinder.first);
+      expect(genderFinder, findsAtLeast(1));
     });
 
     testWidgets('4b. Registration ID field is present', (tester) async {
@@ -331,7 +336,10 @@ void main() {
     testWidgets('4c. Fill and save tournament info fields', (tester) async {
       await navigateToSetup(tester);
       // Select create-new to reveal the tournament fields.
-      await selectCreateNewTournament(tester, name: 'National TKD Championship');
+      await selectCreateNewTournament(
+        tester,
+        name: 'National TKD Championship',
+      );
 
       final venueField = find.widgetWithText(TextField, 'Venue');
       await tester.enterText(venueField, 'Sports Arena');

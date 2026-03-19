@@ -111,19 +111,23 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
 
       // Truncate any redo entries beyond the current pointer, then push.
       final truncatedHistory = currentState.historyPointer >= 0
-          ? currentState.actionHistory
-                .sublist(0, currentState.historyPointer + 1)
+          ? currentState.actionHistory.sublist(
+              0,
+              currentState.historyPointer + 1,
+            )
           : <BracketHistoryEntry>[];
 
       final newHistory = [...truncatedHistory, newEntry];
       final newPointer = newHistory.length - 1;
 
-      emit(currentState.copyWith(
-        result: updatedResult,
-        errorMessage: null,
-        actionHistory: newHistory,
-        historyPointer: newPointer,
-      ));
+      emit(
+        currentState.copyWith(
+          result: updatedResult,
+          errorMessage: null,
+          actionHistory: newHistory,
+          historyPointer: newPointer,
+        ),
+      );
     } on ArgumentError catch (e) {
       emit(currentState.copyWith(errorMessage: e.message.toString()));
     } catch (e) {
@@ -151,11 +155,13 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
         ? currentState.actionHistory[newPointer].resultSnapshot
         : currentState.initialResult!;
 
-    emit(currentState.copyWith(
-      result: restoredResult,
-      historyPointer: newPointer,
-      errorMessage: null,
-    ));
+    emit(
+      currentState.copyWith(
+        result: restoredResult,
+        historyPointer: newPointer,
+        errorMessage: null,
+      ),
+    );
   }
 
   // ── Redo ───────────────────────────────────────────────────────────────────
@@ -175,11 +181,13 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
     final restoredResult =
         currentState.actionHistory[newPointer].resultSnapshot;
 
-    emit(currentState.copyWith(
-      result: restoredResult,
-      historyPointer: newPointer,
-      errorMessage: null,
-    ));
+    emit(
+      currentState.copyWith(
+        result: restoredResult,
+        historyPointer: newPointer,
+        errorMessage: null,
+      ),
+    );
   }
 
   // ── Replay ─────────────────────────────────────────────────────────────────
@@ -196,12 +204,14 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
     _preReplayHistoryPointer = currentState.historyPointer;
 
     // Reset to initial state and mark replay in progress.
-    emit(currentState.copyWith(
-      result: currentState.initialResult!,
-      historyPointer: -1,
-      isReplayInProgress: true,
-      errorMessage: null,
-    ));
+    emit(
+      currentState.copyWith(
+        result: currentState.initialResult!,
+        historyPointer: -1,
+        isReplayInProgress: true,
+        errorMessage: null,
+      ),
+    );
 
     // Start stepping through the history.
     _replayTimer = Timer.periodic(_replayStepDuration, (_) {
@@ -228,13 +238,11 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
       return;
     }
 
-    final nextResult =
-        currentState.actionHistory[nextPointer].resultSnapshot;
+    final nextResult = currentState.actionHistory[nextPointer].resultSnapshot;
 
-    emit(currentState.copyWith(
-      result: nextResult,
-      historyPointer: nextPointer,
-    ));
+    emit(
+      currentState.copyWith(result: nextResult, historyPointer: nextPointer),
+    );
   }
 
   void _handleReplayCancelled(
@@ -252,12 +260,14 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
         ? currentState.actionHistory[restoredPointer].resultSnapshot
         : currentState.initialResult!;
 
-    emit(currentState.copyWith(
-      result: restoredResult,
-      historyPointer: restoredPointer,
-      isReplayInProgress: false,
-      errorMessage: null,
-    ));
+    emit(
+      currentState.copyWith(
+        result: restoredResult,
+        historyPointer: restoredPointer,
+        isReplayInProgress: false,
+        errorMessage: null,
+      ),
+    );
   }
 
   // ── History jump ───────────────────────────────────────────────────────────
@@ -271,8 +281,7 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
     if (currentState.isReplayInProgress) return;
 
     final targetIndex = event.targetHistoryIndex;
-    if (targetIndex < -1 ||
-        targetIndex >= currentState.actionHistory.length) {
+    if (targetIndex < -1 || targetIndex >= currentState.actionHistory.length) {
       return;
     }
 
@@ -280,11 +289,13 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
         ? currentState.actionHistory[targetIndex].resultSnapshot
         : currentState.initialResult!;
 
-    emit(currentState.copyWith(
-      result: restoredResult,
-      historyPointer: targetIndex,
-      errorMessage: null,
-    ));
+    emit(
+      currentState.copyWith(
+        result: restoredResult,
+        historyPointer: targetIndex,
+        errorMessage: null,
+      ),
+    );
   }
 
   // ── Error dismiss ──────────────────────────────────────────────────────────
@@ -306,8 +317,9 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
   ) {
     emit(const BracketState.generating());
     try {
-      final participantIds =
-          req.participants.map((participant) => participant.id).toList();
+      final participantIds = req.participants
+          .map((participant) => participant.id)
+          .toList();
 
       late final BracketResult bracketResult;
 
@@ -316,7 +328,7 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
           final winnersBracketId = _uuid.v4();
           final losersBracketId = _uuid.v4();
           final doubleEliminationResult = _doubleEliminationGenerator.generate(
-            divisionId: _uuid.v4(),
+            genderId: _uuid.v4(),
             participantIds: participantIds,
             winnersBracketId: winnersBracketId,
             losersBracketId: losersBracketId,
@@ -326,7 +338,7 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
           );
         case BracketFormat.singleElimination:
           final singleEliminationResult = _singleEliminationGenerator.generate(
-            divisionId: _uuid.v4(),
+            genderId: _uuid.v4(),
             participantIds: participantIds,
             bracketId: _uuid.v4(),
             includeThirdPlaceMatch: req.includeThirdPlaceMatch,
@@ -336,18 +348,20 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
           );
       }
 
-      emit(BracketState.loadSuccess(
-        result: bracketResult,
-        participants: req.participants,
-        format: req.bracketFormat,
-        includeThirdPlaceMatch: req.includeThirdPlaceMatch,
-        // Store initial result for undo/replay baseline.
-        initialResult: bracketResult,
-        // Clear history on fresh or re-generation.
-        actionHistory: [],
-        historyPointer: -1,
-        isReplayInProgress: false,
-      ));
+      emit(
+        BracketState.loadSuccess(
+          result: bracketResult,
+          participants: req.participants,
+          format: req.bracketFormat,
+          includeThirdPlaceMatch: req.includeThirdPlaceMatch,
+          // Store initial result for undo/replay baseline.
+          initialResult: bracketResult,
+          // Clear history on fresh or re-generation.
+          actionHistory: [],
+          historyPointer: -1,
+          isReplayInProgress: false,
+        ),
+      );
     } on ArgumentError catch (e) {
       emit(BracketState.failure(e.message.toString()));
     } catch (e) {
@@ -410,10 +424,11 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
     final roundLabel = match != null
         ? 'R${match.roundNumber}-M${match.matchNumberInRound}'
         : event.matchId.length > 8
-            ? event.matchId.substring(0, 8)
-            : event.matchId;
+        ? event.matchId.substring(0, 8)
+        : event.matchId;
 
-    final winnerName = participants
+    final winnerName =
+        participants
             .where((participant) => participant.id == event.winnerId)
             .firstOrNull
             ?.fullName ??

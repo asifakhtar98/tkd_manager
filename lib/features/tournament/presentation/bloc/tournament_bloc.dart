@@ -66,10 +66,12 @@ class TournamentBloc extends Bloc<TournamentEvent, TournamentState> {
     final updatedBracketsMap = Map<String, List<BracketSnapshot>>.from(
       state.bracketsByTournamentId,
     )..remove(event.tournamentId);
-    emit(state.copyWith(
-      tournaments: updatedTournamentList,
-      bracketsByTournamentId: updatedBracketsMap,
-    ));
+    emit(
+      state.copyWith(
+        tournaments: updatedTournamentList,
+        bracketsByTournamentId: updatedBracketsMap,
+      ),
+    );
   }
 
   void _handleTournamentUpdated(
@@ -77,7 +79,9 @@ class TournamentBloc extends Bloc<TournamentEvent, TournamentState> {
     Emitter<TournamentState> emit,
   ) {
     final updatedTournamentList = state.tournaments.map((tournament) {
-      return tournament.id == event.tournament.id ? event.tournament : tournament;
+      return tournament.id == event.tournament.id
+          ? event.tournament
+          : tournament;
     }).toList();
     emit(state.copyWith(tournaments: updatedTournamentList));
   }

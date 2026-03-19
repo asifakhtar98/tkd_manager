@@ -7,7 +7,7 @@ part 'participant_entity.g.dart';
 abstract class ParticipantEntity with _$ParticipantEntity {
   const factory ParticipantEntity({
     required String id,
-    required String divisionId,
+    required String genderId,
     required String fullName,
     String? schoolOrDojangName,
     String? beltRank,

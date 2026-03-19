@@ -25,71 +25,66 @@ abstract final class AppTheme {
   // ─────────────────────────────────────────
 
   static ThemeData get light => ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: _brandPrimaryNavy,
-          secondary: _brandSecondaryGold,
-          brightness: Brightness.light,
+    useMaterial3: true,
+    colorScheme: ColorScheme.fromSeed(
+      seedColor: _brandPrimaryNavy,
+      secondary: _brandSecondaryGold,
+      brightness: Brightness.light,
+    ),
+    appBarTheme: const AppBarTheme(
+      backgroundColor: _brandPrimaryNavy,
+      foregroundColor: Colors.white,
+      elevation: 0,
+      centerTitle: false,
+      titleTextStyle: TextStyle(
+        color: Colors.white,
+        fontSize: 20,
+        fontWeight: FontWeight.w600,
+        letterSpacing: 0.15,
+      ),
+      iconTheme: IconThemeData(color: Colors.white),
+      actionsIconTheme: IconThemeData(color: Colors.white),
+    ),
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: _brandPrimaryNavy,
+        foregroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(10)),
         ),
-        appBarTheme: const AppBarTheme(
-          backgroundColor: _brandPrimaryNavy,
-          foregroundColor: Colors.white,
-          elevation: 0,
-          centerTitle: false,
-          titleTextStyle: TextStyle(
-            color: Colors.white,
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 0.15,
-          ),
-          iconTheme: IconThemeData(color: Colors.white),
-          actionsIconTheme: IconThemeData(color: Colors.white),
-        ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: _brandPrimaryNavy,
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.all(Radius.circular(10)),
-            ),
-          ),
-        ),
-        cardTheme: const CardThemeData(
-          elevation: 2,
-          margin: EdgeInsets.zero,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(Radius.circular(12)),
-          ),
-        ),
-        inputDecorationTheme: const InputDecorationTheme(
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.all(Radius.circular(8)),
-          ),
-          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        ),
-        tabBarTheme: const TabBarThemeData(
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white70,
-          indicatorColor: _brandSecondaryGold,
-        ),
-        chipTheme: ChipThemeData(
-          backgroundColor: _chipBackgroundIndigo,
-          labelStyle: const TextStyle(color: _brandPrimaryNavy),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-        ),
-        snackBarTheme: const SnackBarThemeData(
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(Radius.circular(8)),
-          ),
-        ),
-        dividerTheme: const DividerThemeData(
-          thickness: 1,
-          color: _dividerGrey,
-        ),
-        visualDensity: VisualDensity.adaptivePlatformDensity,
-      );
+      ),
+    ),
+    cardTheme: const CardThemeData(
+      elevation: 2,
+      margin: EdgeInsets.zero,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.all(Radius.circular(12)),
+      ),
+    ),
+    inputDecorationTheme: const InputDecorationTheme(
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.all(Radius.circular(8)),
+      ),
+      contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+    ),
+    tabBarTheme: const TabBarThemeData(
+      labelColor: Colors.white,
+      unselectedLabelColor: Colors.white70,
+      indicatorColor: _brandSecondaryGold,
+    ),
+    chipTheme: ChipThemeData(
+      backgroundColor: _chipBackgroundIndigo,
+      labelStyle: const TextStyle(color: _brandPrimaryNavy),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+    ),
+    snackBarTheme: const SnackBarThemeData(
+      behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.all(Radius.circular(8)),
+      ),
+    ),
+    dividerTheme: const DividerThemeData(thickness: 1, color: _dividerGrey),
+    visualDensity: VisualDensity.adaptivePlatformDensity,
+  );
 }

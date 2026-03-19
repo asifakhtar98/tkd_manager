@@ -20,16 +20,16 @@ class DemoData {
   /// All demo brackets reference this tournament so that snapshots,
   /// history, and the viewer work correctly without polluting real data.
   static TournamentEntity get demoTournament => TournamentEntity(
-        id: _demoTournamentId,
-        name: 'Demo Tournament',
-        dateRange: 'March 10, 2026',
-        venue: 'Demo Arena',
-        organizer: 'TKD Brackets',
-        categoryLabel: 'Demo Category',
-        divisionLabel: 'Demo Division',
-        weightClassLabel: 'Under 59',
-        createdAt: DateTime(2026, 3, 10),
-      );
+    id: _demoTournamentId,
+    name: 'Demo Tournament',
+    dateRange: 'March 10, 2026',
+    venue: 'Demo Arena',
+    organizer: 'TKD Brackets',
+    ageCategoryLabel: 'Demo Age Category',
+    genderLabel: 'Demo Gender',
+    weightDivisionLabel: 'Under 59',
+    createdAt: DateTime(2026, 3, 10),
+  );
 
   // ── Participants ───────────────────────────────────────────────────────
 
@@ -70,7 +70,7 @@ class DemoData {
     return List.generate(count, (i) {
       return ParticipantEntity(
         id: 'demo-p-$count-${i + 1}',
-        divisionId: 'demo_division',
+        genderId: 'demo_division',
         fullName: _fullNames[i % _fullNames.length],
         schoolOrDojangName: _schools[i % _schools.length],
         registrationId: 'DEMO-${1000 + i}',

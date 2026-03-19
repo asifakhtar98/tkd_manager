@@ -9,7 +9,7 @@ part of 'bracket_entity.dart';
 _BracketEntity _$BracketEntityFromJson(Map<String, dynamic> json) =>
     _BracketEntity(
       id: json['id'] as String,
-      divisionId: json['divisionId'] as String,
+      genderId: json['genderId'] as String,
       bracketType: $enumDecode(_$BracketTypeEnumMap, json['bracketType']),
       totalRounds: (json['totalRounds'] as num).toInt(),
       createdAtTimestamp: DateTime.parse(json['createdAtTimestamp'] as String),
@@ -34,7 +34,7 @@ _BracketEntity _$BracketEntityFromJson(Map<String, dynamic> json) =>
 Map<String, dynamic> _$BracketEntityToJson(_BracketEntity instance) =>
     <String, dynamic>{
       'id': instance.id,
-      'divisionId': instance.divisionId,
+      'genderId': instance.genderId,
       'bracketType': _$BracketTypeEnumMap[instance.bracketType]!,
       'totalRounds': instance.totalRounds,
       'createdAtTimestamp': instance.createdAtTimestamp.toIso8601String(),
