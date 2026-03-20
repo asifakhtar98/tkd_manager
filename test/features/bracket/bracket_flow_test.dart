@@ -17,8 +17,8 @@ void main() {
 
     await tester.pumpWidget(const app.TkdTournamentApp());
     await tester.pumpAndSettle();
-    // Dashboard now uses a 'New Bracket' FAB.
-    final startBtn = find.text('New Bracket');
+    // Dashboard now uses a 'Create Bracket' button.
+    final startBtn = find.text('Create Bracket');
     await tester.ensureVisible(startBtn);
     await tester.tap(startBtn);
     await tester.pumpAndSettle();

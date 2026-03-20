@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../../domain/entities/match_entity.dart';
 import '../../../tournament/domain/entities/tournament_entity.dart';
 import '../../../participant/domain/entities/participant_entity.dart';
+import 'participant_slot_hit_area.dart';
 
 // ══════════════════════════════════════════════════════════════════════════════
 // SECTION 1 — WIDGET  (TieSheetCanvasWidget + _TieSheetCanvasWidgetState)
@@ -22,6 +23,18 @@ class TieSheetCanvasWidget extends StatefulWidget {
   final String? winnersBracketId;
   final String? losersBracketId;
 
+  /// Whether bracket edit mode is active (enables drag-swap and tap-edit).
+  final bool isEditModeEnabled;
+
+  /// Called when a participant slot swap is completed via drag-and-drop.
+  final void Function(
+    ParticipantSlotHitArea source,
+    ParticipantSlotHitArea target,
+  )? onParticipantSlotSwapped;
+
+  /// Called when a participant slot is tapped in edit mode.
+  final void Function(ParticipantSlotHitArea slot)? onParticipantSlotTapped;
+
   const TieSheetCanvasWidget({
     super.key,
     required this.tournament,
@@ -33,6 +46,9 @@ class TieSheetCanvasWidget extends StatefulWidget {
     required this.includeThirdPlaceMatch,
     this.winnersBracketId,
     this.losersBracketId,
+    this.isEditModeEnabled = false,
+    this.onParticipantSlotSwapped,
+    this.onParticipantSlotTapped,
   });
 
   @override
@@ -41,6 +57,7 @@ class TieSheetCanvasWidget extends StatefulWidget {
 
 class _TieSheetCanvasWidgetState extends State<TieSheetCanvasWidget> {
   List<MapEntry<String, Rect>> _hitAreas = [];
+  List<ParticipantSlotHitArea> _participantSlotHitAreas = [];
 
   @override
   void initState() {
@@ -67,7 +84,12 @@ class _TieSheetCanvasWidgetState extends State<TieSheetCanvasWidget> {
     painter.paint(canvas, size);
     recorder.endRecording();
     if (mounted) {
-      setState(() => _hitAreas = List.from(painter.matchHitAreas));
+      setState(() {
+        _hitAreas = List.from(painter.matchHitAreas);
+        _participantSlotHitAreas = List.from(
+          painter.participantSlotHitAreas,
+        );
+      });
     }
   }
 
@@ -79,12 +101,14 @@ class _TieSheetCanvasWidgetState extends State<TieSheetCanvasWidget> {
     includeThirdPlaceMatch: widget.includeThirdPlaceMatch,
     winnersBracketId: widget.winnersBracketId,
     losersBracketId: widget.losersBracketId,
+    isEditModeEnabled: widget.isEditModeEnabled,
   );
 
   @override
   Widget build(BuildContext context) {
     final painter = _createPainter();
     final size = painter.calculateCanvasSize();
+    final isEditMode = widget.isEditModeEnabled;
 
     return RepaintBoundary(
       key: widget.printKey,
@@ -96,33 +120,130 @@ class _TieSheetCanvasWidgetState extends State<TieSheetCanvasWidget> {
             willChange: false,
             child: SizedBox(width: size.width, height: size.height),
           ),
-          ..._hitAreas.map((entry) {
-            final rect = entry.value;
-            final matchId = entry.key;
-            return Positioned(
-              left: rect.left,
-              top: rect.top,
-              width: rect.width,
-              height: rect.height,
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(4),
-                  hoverColor: Colors.blueAccent.withValues(alpha: 0.1),
-                  splashColor: Colors.blueAccent.withValues(alpha: 0.2),
-                  highlightColor: Colors.blueAccent.withValues(alpha: 0.1),
-                  onTap: () => widget.onMatchTap(matchId),
-                  child: const Tooltip(
-                    message: 'Record Score / Result',
-                    child: SizedBox.expand(),
+          // ── Match hit areas (disabled during edit mode) ──
+          if (!isEditMode)
+            ..._hitAreas.map((entry) {
+              final rect = entry.value;
+              final matchId = entry.key;
+              return Positioned(
+                left: rect.left,
+                top: rect.top,
+                width: rect.width,
+                height: rect.height,
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(4),
+                    hoverColor: Colors.blueAccent.withValues(alpha: 0.1),
+                    splashColor: Colors.blueAccent.withValues(alpha: 0.2),
+                    highlightColor: Colors.blueAccent.withValues(alpha: 0.1),
+                    onTap: () => widget.onMatchTap(matchId),
+                    child: const Tooltip(
+                      message: 'Record Score / Result',
+                      child: SizedBox.expand(),
+                    ),
                   ),
                 ),
-              ),
-            );
-          }),
+              );
+            }),
+          // ── Participant slot hit areas (edit mode only) ──
+          if (isEditMode)
+            ..._participantSlotHitAreas
+                .where((slot) => slot.participantId != null)
+                .map((slot) => _buildEditModeSlotOverlay(slot)),
         ],
       ),
     );
+  }
+
+  /// Builds a draggable + tappable overlay for a participant slot in edit mode.
+  Widget _buildEditModeSlotOverlay(ParticipantSlotHitArea slot) {
+    final rect = slot.boundingRect;
+    return Positioned(
+      left: rect.left,
+      top: rect.top,
+      width: rect.width,
+      height: rect.height,
+      child: LongPressDraggable<ParticipantSlotHitArea>(
+        data: slot,
+        delay: const Duration(milliseconds: 300),
+        feedback: Material(
+          elevation: 6,
+          borderRadius: BorderRadius.circular(6),
+          color: Colors.blue.shade50,
+          child: Container(
+            width: rect.width * 0.8,
+            height: rect.height,
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            alignment: Alignment.centerLeft,
+            child: Text(
+              _participantNameForSlot(slot),
+              style: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1E293B),
+                decoration: TextDecoration.none,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ),
+        childWhenDragging: Container(
+          decoration: BoxDecoration(
+            color: Colors.blue.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(
+              color: Colors.blue.withValues(alpha: 0.3),
+              width: 1.5,
+            ),
+          ),
+        ),
+        child: DragTarget<ParticipantSlotHitArea>(
+          onWillAcceptWithDetails: (details) {
+            // Accept drops from different slots only.
+            return details.data != slot;
+          },
+          onAcceptWithDetails: (details) {
+            widget.onParticipantSlotSwapped?.call(details.data, slot);
+          },
+          builder: (context, candidateData, rejectedData) {
+            final isHovered = candidateData.isNotEmpty;
+            return Material(
+              color: isHovered
+                  ? Colors.green.withValues(alpha: 0.15)
+                  : Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(6),
+                hoverColor: Colors.amber.withValues(alpha: 0.1),
+                onTap: () {
+                  widget.onParticipantSlotTapped?.call(slot);
+                },
+                child: Container(
+                  decoration: isHovered
+                      ? BoxDecoration(
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(
+                            color: Colors.green.withValues(alpha: 0.6),
+                            width: 2,
+                          ),
+                        )
+                      : null,
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  /// Finds the participant name for display in drag feedback.
+  String _participantNameForSlot(ParticipantSlotHitArea slot) {
+    if (slot.participantId == null) return 'TBD';
+    final participant = widget.participants
+        .where((p) => p.id == slot.participantId)
+        .firstOrNull;
+    return participant?.fullName ?? 'Unknown';
   }
 }
 
@@ -209,8 +330,10 @@ class TieSheetPainter extends CustomPainter {
   final bool includeThirdPlaceMatch;
   final String? winnersBracketId;
   final String? losersBracketId;
+  final bool isEditModeEnabled;
 
   final List<MapEntry<String, Rect>> matchHitAreas = [];
+  final List<ParticipantSlotHitArea> participantSlotHitAreas = [];
   final Map<String, int> _matchGlobalNumbers = {};
   final Map<String, Offset> _nodeOffsets = {};
 
@@ -249,6 +372,7 @@ class TieSheetPainter extends CustomPainter {
     required this.includeThirdPlaceMatch,
     this.winnersBracketId,
     this.losersBracketId,
+    this.isEditModeEnabled = false,
   });
 
   bool get _isDouble => winnersBracketId != null && losersBracketId != null;
@@ -470,6 +594,14 @@ class TieSheetPainter extends CustomPainter {
           margin + listW,
           tableTop + rowH / 2,
         );
+        _registerParticipantSlotHitArea(
+          matchId: match.id,
+          slotPosition: 'blue',
+          participantId: match.participantBlueId,
+          x: margin,
+          y: tableTop,
+          serialNumber: idx,
+        );
       }
       if (r != null) {
         idx++;
@@ -485,6 +617,14 @@ class TieSheetPainter extends CustomPainter {
         _nodeOffsets['${match.id}_bot_input'] = Offset(
           rightTableLeft,
           tableTop + rowH / 2,
+        );
+        _registerParticipantSlotHitArea(
+          matchId: match.id,
+          slotPosition: 'red',
+          participantId: match.participantRedId,
+          x: rightTableLeft,
+          y: tableTop,
+          serialNumber: idx,
         );
       }
     } else {
@@ -659,6 +799,14 @@ class TieSheetPainter extends CustomPainter {
           thickPen,
           mirrored: false,
         );
+        _registerParticipantSlotHitArea(
+          matchId: m.id,
+          slotPosition: 'blue',
+          participantId: m.participantBlueId,
+          x: margin,
+          y: lbY,
+          serialNumber: lbIdx,
+        );
       } else {
         _paintTbdRow(canvas, lbIdx, margin, lbY);
       }
@@ -675,6 +823,14 @@ class TieSheetPainter extends CustomPainter {
           lbY,
           thickPen,
           mirrored: false,
+        );
+        _registerParticipantSlotHitArea(
+          matchId: m.id,
+          slotPosition: 'red',
+          participantId: m.participantRedId,
+          x: margin,
+          y: lbY,
+          serialNumber: lbIdx,
         );
       } else {
         _paintTbdRow(canvas, lbIdx, margin, lbY);
@@ -1322,6 +1478,14 @@ class TieSheetPainter extends CustomPainter {
         idx++;
         _paintParticipantRow(canvas, idx, b, x, y, pen, mirrored: mirrored);
         _nodeOffsets['${m.id}_top_input'] = Offset(nodeX, y + rowH / 2);
+        _registerParticipantSlotHitArea(
+          matchId: m.id,
+          slotPosition: 'blue',
+          participantId: m.participantBlueId,
+          x: x,
+          y: y,
+          serialNumber: idx,
+        );
         y += rowH;
         if (r != null) y += rowGap; // intra-pair gap between blue & red rows
       }
@@ -1329,6 +1493,14 @@ class TieSheetPainter extends CustomPainter {
         idx++;
         _paintParticipantRow(canvas, idx, r, x, y, pen, mirrored: mirrored);
         _nodeOffsets['${m.id}_bot_input'] = Offset(nodeX, y + rowH / 2);
+        _registerParticipantSlotHitArea(
+          matchId: m.id,
+          slotPosition: 'red',
+          participantId: m.participantRedId,
+          x: x,
+          y: y,
+          serialNumber: idx,
+        );
         y += rowH;
       }
       y += pairGap;
@@ -1957,11 +2129,32 @@ class TieSheetPainter extends CustomPainter {
     }
   }
 
+  /// Registers a participant slot hit area for edit-mode interaction.
+  void _registerParticipantSlotHitArea({
+    required String matchId,
+    required String slotPosition,
+    required String? participantId,
+    required double x,
+    required double y,
+    required int serialNumber,
+  }) {
+    participantSlotHitAreas.add(
+      ParticipantSlotHitArea(
+        matchId: matchId,
+        slotPosition: slotPosition,
+        participantId: participantId,
+        boundingRect: Rect.fromLTWH(x, y, listW, rowH),
+        serialNumber: serialNumber,
+      ),
+    );
+  }
+
   @override
   // Repaint only when the data that drives the visual output actually changes.
   bool shouldRepaint(covariant TieSheetPainter old) =>
       old.matches != matches ||
       old.participants != participants ||
       old.bracketType != bracketType ||
-      old.includeThirdPlaceMatch != includeThirdPlaceMatch;
+      old.includeThirdPlaceMatch != includeThirdPlaceMatch ||
+      old.isEditModeEnabled != isEditModeEnabled;
 }

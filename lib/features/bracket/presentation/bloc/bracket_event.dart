@@ -54,4 +54,22 @@ sealed class BracketEvent with _$BracketEvent {
   const factory BracketEvent.historyJumpRequested({
     required int targetHistoryIndex,
   }) = BracketHistoryJumpRequested;
+
+  /// Toggle bracket edit mode on or off.
+  const factory BracketEvent.editModeToggled() = BracketEditModeToggled;
+
+  /// Swap two participant slots in the bracket.
+  const factory BracketEvent.participantSlotSwapped({
+    required String sourceMatchId,
+    required String sourceSlotPosition,
+    required String targetMatchId,
+    required String targetSlotPosition,
+  }) = BracketParticipantSlotSwapped;
+
+  /// Update a participant's name and/or registration ID.
+  const factory BracketEvent.participantDetailsUpdated({
+    required String participantId,
+    required String updatedFullName,
+    String? updatedRegistrationId,
+  }) = BracketParticipantDetailsUpdated;
 }

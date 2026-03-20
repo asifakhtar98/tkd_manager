@@ -12,6 +12,8 @@ import 'package:tkd_saas/features/bracket/domain/entities/match_entity.dart';
 import 'package:tkd_saas/core/router/app_routes.dart';
 import 'package:tkd_saas/features/bracket/presentation/bloc/bracket_bloc.dart';
 import 'package:tkd_saas/features/bracket/presentation/widgets/bracket_history_drawer.dart';
+import 'package:tkd_saas/features/bracket/presentation/widgets/participant_edit_dialog.dart';
+import 'package:tkd_saas/features/bracket/presentation/widgets/participant_slot_hit_area.dart';
 import 'package:tkd_saas/features/bracket/presentation/widgets/score_entry_dialog.dart';
 import 'package:tkd_saas/features/bracket/presentation/widgets/tie_sheet_canvas_widget.dart';
 import 'package:tkd_saas/features/participant/domain/entities/participant_entity.dart';
@@ -266,6 +268,7 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
             :final actionHistory,
             :final historyPointer,
             :final isReplayInProgress,
+            :final isEditModeEnabled,
           ) =>
             _buildViewer(
               context: context,
@@ -276,6 +279,7 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
               actionHistory: actionHistory,
               historyPointer: historyPointer,
               isReplayInProgress: isReplayInProgress,
+              isEditModeEnabled: isEditModeEnabled,
             ),
         };
       },
@@ -328,6 +332,7 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
     required List<BracketHistoryEntry> actionHistory,
     required int historyPointer,
     required bool isReplayInProgress,
+    required bool isEditModeEnabled,
   }) {
     // Gather all matches for the score entry handler.
     final List<MatchEntity> allMatches = switch (result) {
@@ -348,6 +353,7 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
       participants,
       winnersBracketId: winnersBracketId,
       losersBracketId: losersBracketId,
+      isEditModeEnabled: isEditModeEnabled,
     );
 
     final tournamentTitle = widget.tournament?.name ?? 'Tournament';
@@ -424,6 +430,24 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
 
           const SizedBox(width: 4),
 
+          // ── Edit Mode Toggle ──
+          TextButton(
+            style: TextButton.styleFrom(
+              foregroundColor: isEditModeEnabled
+                  ? Colors.amber
+                  : Colors.white,
+              disabledForegroundColor: Colors.grey,
+            ),
+            onPressed: isReplayInProgress
+                ? null
+                : () => context.read<BracketBloc>().add(
+                    const BracketEvent.editModeToggled(),
+                  ),
+            child: Text(isEditModeEnabled ? 'Exit Edit' : 'Edit Mode'),
+          ),
+
+          const SizedBox(width: 4),
+
           // ── Regenerate ──
           TextButton(
             style: actionButtonStyle,
@@ -493,6 +517,32 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
         children: [
           Column(
             children: [
+              // ── Edit mode info banner ──
+              if (isEditModeEnabled)
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  color: Colors.amber.shade100,
+                  child: const Row(
+                    children: [
+                      Icon(Icons.edit, size: 16, color: Color(0xFF92400E)),
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Edit Mode — Tap a participant to edit details, '
+                          'or long-press and drag to swap positions.',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Color(0xFF92400E),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               // ── Replay progress indicator ──
               if (isReplayInProgress && actionHistory.isNotEmpty)
                 LinearProgressIndicator(
@@ -550,6 +600,7 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
     List<ParticipantEntity> participants, {
     String? winnersBracketId,
     String? losersBracketId,
+    bool isEditModeEnabled = false,
   }) {
     return InteractiveViewer(
       transformationController: _transformController,
@@ -569,7 +620,7 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
                   createdAt: DateTime(2026),
                 ),
             matches: matches,
-            participants: widget.participants,
+            participants: participants,
             bracketType: widget.bracketFormat.displayLabel,
             onMatchTap: (matchId) =>
                 _handleMatchTap(context, matchId, matches, participants),
@@ -577,6 +628,19 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
             includeThirdPlaceMatch: widget.includeThirdPlaceMatch,
             winnersBracketId: winnersBracketId,
             losersBracketId: losersBracketId,
+            isEditModeEnabled: isEditModeEnabled,
+            onParticipantSlotSwapped: (source, target) {
+              _handleParticipantSwap(
+                context,
+                source,
+                target,
+                matches,
+                participants,
+              );
+            },
+            onParticipantSlotTapped: (slot) {
+              _handleParticipantSlotTap(context, slot, participants);
+            },
           ),
         ),
       ),
@@ -652,5 +716,54 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
     );
     if (matchingParticipants.isEmpty) return 'Unknown';
     return matchingParticipants.first.fullName;
+  }
+
+  /// Handles a participant slot swap triggered by drag-and-drop.
+  void _handleParticipantSwap(
+    BuildContext context,
+    ParticipantSlotHitArea source,
+    ParticipantSlotHitArea target,
+    List<MatchEntity> allMatches,
+    List<ParticipantEntity> participants,
+  ) {
+    if (source.participantId == null || target.participantId == null) return;
+
+    context.read<BracketBloc>().add(
+      BracketEvent.participantSlotSwapped(
+        sourceMatchId: source.matchId,
+        sourceSlotPosition: source.slotPosition,
+        targetMatchId: target.matchId,
+        targetSlotPosition: target.slotPosition,
+      ),
+    );
+  }
+
+  /// Handles a participant slot tap in edit mode — opens the edit dialog.
+  void _handleParticipantSlotTap(
+    BuildContext context,
+    ParticipantSlotHitArea slot,
+    List<ParticipantEntity> participants,
+  ) {
+    if (slot.participantId == null) return;
+
+    final participant = participants
+        .where((p) => p.id == slot.participantId)
+        .firstOrNull;
+    if (participant == null) return;
+
+    ParticipantEditDialog.show(
+      context: context,
+      participant: participant,
+    ).then((result) {
+      if (result != null && context.mounted) {
+        context.read<BracketBloc>().add(
+          BracketEvent.participantDetailsUpdated(
+            participantId: participant.id,
+            updatedFullName: result.updatedFullName,
+            updatedRegistrationId: result.updatedRegistrationId,
+          ),
+        );
+      }
+    });
   }
 }

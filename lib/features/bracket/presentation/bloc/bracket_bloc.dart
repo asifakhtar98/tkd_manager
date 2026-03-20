@@ -3,7 +3,9 @@ import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 import 'package:tkd_saas/core/router/app_routes.dart';
+import 'package:tkd_saas/features/bracket/domain/entities/bracket_edit_action.dart';
 import 'package:tkd_saas/features/bracket/domain/entities/bracket_match_action.dart';
+import 'package:tkd_saas/features/bracket/domain/entities/match_entity.dart';
 import 'package:tkd_saas/features/bracket/domain/services/double_elimination_bracket_generator_service.dart';
 import 'package:tkd_saas/features/bracket/domain/services/match_progression_service.dart';
 import 'package:tkd_saas/features/bracket/domain/services/single_elimination_bracket_generator_service.dart';
@@ -33,6 +35,9 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
     on<BracketReplayStepAdvanced>(_handleReplayStepAdvanced);
     on<BracketReplayCancelled>(_handleReplayCancelled);
     on<BracketHistoryJumpRequested>(_handleHistoryJumpRequested);
+    on<BracketEditModeToggled>(_handleEditModeToggled);
+    on<BracketParticipantSlotSwapped>(_handleParticipantSlotSwapped);
+    on<BracketParticipantDetailsUpdated>(_handleParticipantDetailsUpdated);
   }
 
   final SingleEliminationBracketGeneratorService _singleEliminationGenerator;
@@ -83,6 +88,7 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
     final currentState = state;
     if (currentState is! BracketLoadSuccess) return;
     if (currentState.isReplayInProgress) return; // Block during replay.
+    if (currentState.isEditModeEnabled) return; // Block during edit mode.
 
     try {
       final updatedResult = _applyMatchResult(currentState.result, event);
@@ -105,8 +111,9 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
       );
 
       final newEntry = BracketHistoryEntry(
-        action: newAction,
+        action: BracketAction.matchResult(newAction),
         resultSnapshot: updatedResult,
+        participantsSnapshot: currentState.participants,
       );
 
       // Truncate any redo entries beyond the current pointer, then push.
@@ -154,10 +161,14 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
     final restoredResult = newPointer >= 0
         ? currentState.actionHistory[newPointer].resultSnapshot
         : currentState.initialResult!;
+    final restoredParticipants = newPointer >= 0
+        ? currentState.actionHistory[newPointer].participantsSnapshot
+        : currentState.initialParticipants ?? currentState.participants;
 
     emit(
       currentState.copyWith(
         result: restoredResult,
+        participants: restoredParticipants,
         historyPointer: newPointer,
         errorMessage: null,
       ),
@@ -178,12 +189,12 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
     }
 
     final newPointer = currentState.historyPointer + 1;
-    final restoredResult =
-        currentState.actionHistory[newPointer].resultSnapshot;
+    final entry = currentState.actionHistory[newPointer];
 
     emit(
       currentState.copyWith(
-        result: restoredResult,
+        result: entry.resultSnapshot,
+        participants: entry.participantsSnapshot,
         historyPointer: newPointer,
         errorMessage: null,
       ),
@@ -207,8 +218,11 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
     emit(
       currentState.copyWith(
         result: currentState.initialResult!,
+        participants:
+            currentState.initialParticipants ?? currentState.participants,
         historyPointer: -1,
         isReplayInProgress: true,
+        isEditModeEnabled: false,
         errorMessage: null,
       ),
     );
@@ -238,10 +252,14 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
       return;
     }
 
-    final nextResult = currentState.actionHistory[nextPointer].resultSnapshot;
+    final entry = currentState.actionHistory[nextPointer];
 
     emit(
-      currentState.copyWith(result: nextResult, historyPointer: nextPointer),
+      currentState.copyWith(
+        result: entry.resultSnapshot,
+        participants: entry.participantsSnapshot,
+        historyPointer: nextPointer,
+      ),
     );
   }
 
@@ -259,10 +277,14 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
     final restoredResult = restoredPointer >= 0
         ? currentState.actionHistory[restoredPointer].resultSnapshot
         : currentState.initialResult!;
+    final restoredParticipants = restoredPointer >= 0
+        ? currentState.actionHistory[restoredPointer].participantsSnapshot
+        : currentState.initialParticipants ?? currentState.participants;
 
     emit(
       currentState.copyWith(
         result: restoredResult,
+        participants: restoredParticipants,
         historyPointer: restoredPointer,
         isReplayInProgress: false,
         errorMessage: null,
@@ -288,12 +310,231 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
     final restoredResult = targetIndex >= 0
         ? currentState.actionHistory[targetIndex].resultSnapshot
         : currentState.initialResult!;
+    final restoredParticipants = targetIndex >= 0
+        ? currentState.actionHistory[targetIndex].participantsSnapshot
+        : currentState.initialParticipants ?? currentState.participants;
 
     emit(
       currentState.copyWith(
         result: restoredResult,
+        participants: restoredParticipants,
         historyPointer: targetIndex,
         errorMessage: null,
+      ),
+    );
+  }
+
+  // ── Edit mode toggle ──────────────────────────────────────────────────────
+
+  void _handleEditModeToggled(
+    BracketEditModeToggled event,
+    Emitter<BracketState> emit,
+  ) {
+    final currentState = state;
+    if (currentState is! BracketLoadSuccess) return;
+    if (currentState.isReplayInProgress) return;
+
+    final enabling = !currentState.isEditModeEnabled;
+
+    // When enabling edit mode, check if match results exist.
+    if (enabling && _hasCompletedMatches(currentState)) {
+      emit(
+        currentState.copyWith(
+          errorMessage:
+              'Reset all match results before enabling edit mode. '
+              'Use "Regenerate" to start fresh.',
+        ),
+      );
+      return;
+    }
+
+    emit(currentState.copyWith(isEditModeEnabled: enabling));
+  }
+
+  // ── Participant slot swap ─────────────────────────────────────────────────
+
+  void _handleParticipantSlotSwapped(
+    BracketParticipantSlotSwapped event,
+    Emitter<BracketState> emit,
+  ) {
+    final currentState = state;
+    if (currentState is! BracketLoadSuccess) return;
+    if (!currentState.isEditModeEnabled) return;
+    if (currentState.isReplayInProgress) return;
+
+    // Bug 4: Reject no-op self-swaps (same match + same slot).
+    if (event.sourceMatchId == event.targetMatchId &&
+        event.sourceSlotPosition == event.targetSlotPosition) {
+      return;
+    }
+
+    // Bug 4: Reject swaps where both slots reference the same participant.
+    final sourceParticipantIdForGuard = _getParticipantIdForSlot(
+      currentState.result,
+      event.sourceMatchId,
+      event.sourceSlotPosition,
+    );
+    final targetParticipantIdForGuard = _getParticipantIdForSlot(
+      currentState.result,
+      event.targetMatchId,
+      event.targetSlotPosition,
+    );
+    if (sourceParticipantIdForGuard != null &&
+        sourceParticipantIdForGuard == targetParticipantIdForGuard) {
+      return;
+    }
+
+    // Block swaps when match results exist.
+    if (_hasCompletedMatches(currentState)) {
+      emit(
+        currentState.copyWith(
+          errorMessage: 'Cannot swap participants after matches have been scored.',
+        ),
+      );
+      return;
+    }
+
+    try {
+      final updatedResult = _applyParticipantSlotSwap(
+        currentState.result,
+        sourceMatchId: event.sourceMatchId,
+        sourceSlotPosition: event.sourceSlotPosition,
+        targetMatchId: event.targetMatchId,
+        targetSlotPosition: event.targetSlotPosition,
+      );
+
+      // Build display label for history.
+      final sourceParticipantId = _getParticipantIdForSlot(
+        currentState.result,
+        event.sourceMatchId,
+        event.sourceSlotPosition,
+      );
+      final targetParticipantId = _getParticipantIdForSlot(
+        currentState.result,
+        event.targetMatchId,
+        event.targetSlotPosition,
+      );
+      final sourceName = _findParticipantName(
+        sourceParticipantId,
+        currentState.participants,
+      );
+      final targetName = _findParticipantName(
+        targetParticipantId,
+        currentState.participants,
+      );
+
+      final editAction = BracketEditAction.participantSlotSwapped(
+        sourceMatchId: event.sourceMatchId,
+        sourceSlotPosition: event.sourceSlotPosition,
+        targetMatchId: event.targetMatchId,
+        targetSlotPosition: event.targetSlotPosition,
+        displayLabel: 'Swapped $sourceName ↔ $targetName',
+        recordedAt: DateTime.now(),
+      );
+
+      final newEntry = BracketHistoryEntry(
+        action: BracketAction.editAction(editAction),
+        resultSnapshot: updatedResult,
+        participantsSnapshot: currentState.participants,
+      );
+
+      final truncatedHistory = currentState.historyPointer >= 0
+          ? currentState.actionHistory.sublist(
+              0,
+              currentState.historyPointer + 1,
+            )
+          : <BracketHistoryEntry>[];
+
+      final newHistory = [...truncatedHistory, newEntry];
+      final newPointer = newHistory.length - 1;
+
+      emit(
+        currentState.copyWith(
+          result: updatedResult,
+          errorMessage: null,
+          actionHistory: newHistory,
+          historyPointer: newPointer,
+        ),
+      );
+    } on ArgumentError catch (e) {
+      emit(currentState.copyWith(errorMessage: e.message.toString()));
+    } catch (e) {
+      emit(currentState.copyWith(errorMessage: e.toString()));
+    }
+  }
+
+  // ── Participant details update ────────────────────────────────────────────
+
+  void _handleParticipantDetailsUpdated(
+    BracketParticipantDetailsUpdated event,
+    Emitter<BracketState> emit,
+  ) {
+    final currentState = state;
+    if (currentState is! BracketLoadSuccess) return;
+    if (!currentState.isEditModeEnabled) return; // Bug 2: guard edit-mode.
+    if (currentState.isReplayInProgress) return;
+
+    final participantIndex = currentState.participants.indexWhere(
+      (participant) => participant.id == event.participantId,
+    );
+    if (participantIndex == -1) {
+      emit(
+        currentState.copyWith(
+          errorMessage: 'Participant not found: ${event.participantId}',
+        ),
+      );
+      return;
+    }
+
+    final oldParticipant = currentState.participants[participantIndex];
+    // Bug 3: Normalize empty registrationId to null instead of storing "".
+    final resolvedRegistrationId = event.updatedRegistrationId == null
+        ? oldParticipant.registrationId
+        : (event.updatedRegistrationId!.isEmpty
+            ? null
+            : event.updatedRegistrationId);
+
+    final updatedParticipant = oldParticipant.copyWith(
+      fullName: event.updatedFullName,
+      registrationId: resolvedRegistrationId,
+    );
+
+    final updatedParticipants = List<ParticipantEntity>.from(
+      currentState.participants,
+    );
+    updatedParticipants[participantIndex] = updatedParticipant;
+
+    final editAction = BracketEditAction.participantDetailsUpdated(
+      participantId: event.participantId,
+      updatedFullName: event.updatedFullName,
+      updatedRegistrationId: event.updatedRegistrationId,
+      displayLabel:
+          'Edited: ${oldParticipant.fullName} → ${event.updatedFullName}',
+      recordedAt: DateTime.now(),
+    );
+
+    final newEntry = BracketHistoryEntry(
+      action: BracketAction.editAction(editAction),
+      resultSnapshot: currentState.result,
+      participantsSnapshot: updatedParticipants,
+    );
+
+    final truncatedHistory = currentState.historyPointer >= 0
+        ? currentState.actionHistory.sublist(
+            0,
+            currentState.historyPointer + 1,
+          )
+        : <BracketHistoryEntry>[];
+
+    final newHistory = [...truncatedHistory, newEntry];
+    final newPointer = newHistory.length - 1;
+
+    emit(
+      currentState.copyWith(
+        participants: updatedParticipants,
+        errorMessage: null,
+        actionHistory: newHistory,
+        historyPointer: newPointer,
       ),
     );
   }
@@ -354,12 +595,14 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
           participants: req.participants,
           format: req.bracketFormat,
           includeThirdPlaceMatch: req.includeThirdPlaceMatch,
-          // Store initial result for undo/replay baseline.
+          // Store initial snapshots for undo/replay baseline.
           initialResult: bracketResult,
+          initialParticipants: req.participants,
           // Clear history on fresh or re-generation.
           actionHistory: [],
           historyPointer: -1,
           isReplayInProgress: false,
+          isEditModeEnabled: false,
         ),
       );
     } on ArgumentError catch (e) {
@@ -403,6 +646,111 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
           doubleEliminationResult.data.copyWith(allMatches: updated),
         );
       },
+    );
+  }
+
+  /// Swaps two participant slots in the bracket match list and returns a new
+  /// [BracketResult] with the updated match entities.
+  BracketResult _applyParticipantSlotSwap(
+    BracketResult currentResult, {
+    required String sourceMatchId,
+    required String sourceSlotPosition,
+    required String targetMatchId,
+    required String targetSlotPosition,
+  }) {
+    final allMatches = switch (currentResult) {
+      SingleEliminationResult(:final data) => data.matches,
+      DoubleEliminationResult(:final data) => data.allMatches,
+    };
+
+    final sourceMatch = allMatches.firstWhere(
+      (matchEntity) => matchEntity.id == sourceMatchId,
+      orElse: () => throw ArgumentError('Source match not found: $sourceMatchId'),
+    );
+    final targetMatch = allMatches.firstWhere(
+      (matchEntity) => matchEntity.id == targetMatchId,
+      orElse: () => throw ArgumentError('Target match not found: $targetMatchId'),
+    );
+
+    final sourceParticipantId = sourceSlotPosition == 'blue'
+        ? sourceMatch.participantBlueId
+        : sourceMatch.participantRedId;
+    final targetParticipantId = targetSlotPosition == 'blue'
+        ? targetMatch.participantBlueId
+        : targetMatch.participantRedId;
+
+    // Apply the swap to the match list.
+    final updatedMatches = allMatches.map((matchEntity) {
+      if (matchEntity.id == sourceMatchId && matchEntity.id == targetMatchId) {
+        // Bug 5: Same match — unconditional blue ↔ red swap.
+        return matchEntity.copyWith(
+          participantBlueId: matchEntity.participantRedId,
+          participantRedId: matchEntity.participantBlueId,
+        );
+      } else if (matchEntity.id == sourceMatchId) {
+        return sourceSlotPosition == 'blue'
+            ? matchEntity.copyWith(participantBlueId: targetParticipantId)
+            : matchEntity.copyWith(participantRedId: targetParticipantId);
+      } else if (matchEntity.id == targetMatchId) {
+        return targetSlotPosition == 'blue'
+            ? matchEntity.copyWith(participantBlueId: sourceParticipantId)
+            : matchEntity.copyWith(participantRedId: sourceParticipantId);
+      }
+      return matchEntity;
+    }).toList();
+
+    return switch (currentResult) {
+      SingleEliminationResult(:final data) =>
+        BracketResult.singleElimination(data.copyWith(matches: updatedMatches)),
+      DoubleEliminationResult(:final data) =>
+        BracketResult.doubleElimination(
+          data.copyWith(allMatches: updatedMatches),
+        ),
+    };
+  }
+
+  /// Returns the participant ID in the given slot of the given match.
+  String? _getParticipantIdForSlot(
+    BracketResult result,
+    String matchId,
+    String slotPosition,
+  ) {
+    final allMatches = switch (result) {
+      SingleEliminationResult(:final data) => data.matches,
+      DoubleEliminationResult(:final data) => data.allMatches,
+    };
+    final match = allMatches
+        .where((matchEntity) => matchEntity.id == matchId)
+        .firstOrNull;
+    if (match == null) return null;
+    return slotPosition == 'blue'
+        ? match.participantBlueId
+        : match.participantRedId;
+  }
+
+  /// Returns a human-readable participant name, or 'TBD' if not found.
+  String _findParticipantName(
+    String? participantId,
+    List<ParticipantEntity> participants,
+  ) {
+    if (participantId == null) return 'TBD';
+    return participants
+            .where((participant) => participant.id == participantId)
+            .firstOrNull
+            ?.fullName ??
+        'Unknown';
+  }
+
+  /// Checks whether any match in the current bracket has been completed.
+  bool _hasCompletedMatches(BracketLoadSuccess currentState) {
+    final allMatches = switch (currentState.result) {
+      SingleEliminationResult(:final data) => data.matches,
+      DoubleEliminationResult(:final data) => data.allMatches,
+    };
+    return allMatches.any(
+      (matchEntity) =>
+          matchEntity.isCompleted &&
+          matchEntity.resultType != MatchResultType.bye,
     );
   }
 
