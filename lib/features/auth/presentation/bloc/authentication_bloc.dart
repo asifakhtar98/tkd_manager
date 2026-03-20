@@ -91,16 +91,20 @@ class AuthenticationBloc
     });
   }
 
-  /// Returns `true` when the app was opened via a Supabase email
-  /// confirmation redirect (the browser URL contains a `?code=` parameter)
-  /// and the code has not yet been consumed.
+  /// Returns `true` when the app was opened via a Supabase email-confirmation
+  /// redirect — the browser URL path is `/email-confirmed` (set by the
+  /// distinct `emailRedirectTo` used during sign-up).
+  ///
+  /// Password-recovery redirects land on the origin (`/`) and are NOT matched
+  /// here, preventing the bug where a recovery PKCE code was incorrectly
+  /// treated as an email-confirmation redirect.
   bool get _isEmailConfirmationRedirect {
     if (_emailConfirmationCodeConsumed) return false;
     if (_isEmailConfirmationRedirectOverride != null) {
       return _isEmailConfirmationRedirectOverride();
     }
     if (!kIsWeb) return false;
-    return Uri.base.queryParameters.containsKey('code');
+    return Uri.base.path == '/email-confirmed';
   }
 
   // ───────────────────────────────────────────────────────────────────────────

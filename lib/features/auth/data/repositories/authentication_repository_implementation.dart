@@ -62,7 +62,7 @@ class AuthenticationRepositoryImplementation
       final AuthResponse response = await _supabaseClient.auth.signUp(
         email: email,
         password: password,
-        emailRedirectTo: _webRedirectUrl,
+        emailRedirectTo: _emailConfirmationRedirectUrl,
       );
 
       final User? user = response.user;
@@ -170,6 +170,14 @@ class AuthenticationRepositoryImplementation
   /// back to the running application. Returns `null` on non-web platforms
   /// (mobile deep links are handled differently).
   String? get _webRedirectUrl => kIsWeb ? Uri.base.origin : null;
+
+  /// Redirect URL used exclusively for **sign-up email confirmation** links.
+  ///
+  /// Points to the `/email-confirmed` path so the [AuthenticationBloc] can
+  /// distinguish email-confirmation redirects from password-recovery redirects
+  /// by inspecting `Uri.base.path` instead of the ambiguous `?code=` param.
+  String? get _emailConfirmationRedirectUrl =>
+      kIsWeb ? '${Uri.base.origin}/email-confirmed' : null;
 
   /// Maps Supabase's technical error messages to friendlier text where
   /// possible, falling back to the raw message otherwise.

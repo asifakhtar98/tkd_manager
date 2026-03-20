@@ -711,6 +711,48 @@ void main() {
         await Future<void>.delayed(const Duration(milliseconds: 100));
         expect(authenticationBloc.state, isA<AuthenticationAuthenticated>());
       });
+
+      // ── BUG-1 regression ──────────────────────────────────────────────────
+      test(
+          'password recovery PKCE redirect (isEmailConfirmationRedirect = false) '
+          'does NOT trigger email confirmation — emits authenticated instead',
+          () async {
+        // Simulates a password-recovery redirect: the URL path is "/" (origin),
+        // NOT "/email-confirmed", so _isEmailConfirmationRedirect returns false.
+        final FakeUser fakeUser = FakeUser();
+
+        authenticationBloc = AuthenticationBloc(
+          authenticationRepository: mockAuthenticationRepository,
+          isEmailConfirmationRedirect: () => false,
+        );
+
+        authenticationBloc
+            .add(const AuthenticationSubscriptionRequested());
+        await Future<void>.delayed(Duration.zero);
+
+        expectLater(
+          authenticationBloc.stream,
+          emitsInOrder([isA<AuthenticationAuthenticated>()]),
+        );
+
+        // Simulate the signedIn event that PKCE fires before passwordRecovery.
+        authStateStreamController.add(
+          AuthState(
+            AuthChangeEvent.signedIn,
+            createFakeSession(user: fakeUser),
+          ),
+        );
+
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+
+        // signOut must NOT have been called — the session is preserved for
+        // the subsequent passwordRecovery event to work correctly.
+        verifyNever(() => mockAuthenticationRepository.signOut());
+        expect(
+          authenticationBloc.state,
+          isA<AuthenticationAuthenticated>(),
+        );
+      });
     });
 
     // ─────────────────────────────────────────────────────────────────────────

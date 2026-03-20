@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:tkd_saas/features/auth/presentation/bloc/authentication_bloc.dart';
+import 'package:tkd_saas/features/auth/presentation/utils/auth_snackbar_listener.dart';
 import 'package:tkd_saas/features/auth/presentation/utils/auth_validators.dart';
 import 'package:tkd_saas/features/auth/presentation/widgets/auth_branding_header.dart';
 import 'package:tkd_saas/features/auth/presentation/widgets/auth_submit_button.dart';
@@ -70,8 +71,10 @@ class _LoginScreenState extends State<LoginScreen> {
   void _switchToMode(_AuthMode mode) {
     setState(() {
       _authMode = mode;
-      // Reset form validation when switching modes.
+      // Reset form validation and clear the password field so credentials
+      // typed in one mode don't leak into another.
       _formKey.currentState?.reset();
+      _passwordController.clear();
     });
   }
 
@@ -139,99 +142,101 @@ class _LoginScreenState extends State<LoginScreen> {
                           horizontal: 32,
                           vertical: 36,
                         ),
-                        child: Form(
-                          key: _formKey,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              Text(
-                                _headerTitle,
-                                style: theme.textTheme.headlineSmall?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: colorScheme.onSurface,
+                        child: AutofillGroup(
+                          child: Form(
+                            key: _formKey,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Text(
+                                  _headerTitle,
+                                  style: theme.textTheme.headlineSmall?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: colorScheme.onSurface,
+                                  ),
+                                  textAlign: TextAlign.center,
                                 ),
-                                textAlign: TextAlign.center,
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                _headerSubtitle,
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: colorScheme.onSurfaceVariant,
+                                const SizedBox(height: 8),
+                                Text(
+                                  _headerSubtitle,
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    color: colorScheme.onSurfaceVariant,
+                                  ),
+                                  textAlign: TextAlign.center,
                                 ),
-                                textAlign: TextAlign.center,
-                              ),
-                              const SizedBox(height: 32),
+                                const SizedBox(height: 32),
 
-                              // ── Email field (always visible) ──
-                              TextFormField(
-                                controller: _emailController,
-                                keyboardType: TextInputType.emailAddress,
-                                textInputAction:
-                                    _authMode == _AuthMode.forgotPassword
-                                        ? TextInputAction.done
-                                        : TextInputAction.next,
-                                autofillHints: const [AutofillHints.email],
-                                enabled: !isLoading,
-                                decoration: const InputDecoration(
-                                  labelText: 'Email',
-                                  prefixIcon: Icon(Icons.email_outlined),
-                                ),
-                                validator: AuthValidators.validateEmail,
-                                onFieldSubmitted:
-                                    _authMode == _AuthMode.forgotPassword
-                                        ? (_) => _submitForm()
-                                        : null,
-                              ),
-
-                              // ── Password field (hidden in forgot-password mode) ──
-                              if (_authMode != _AuthMode.forgotPassword) ...[
-                                const SizedBox(height: 20),
-                                PasswordTextFormField(
-                                  controller: _passwordController,
+                                // ── Email field (always visible) ──
+                                TextFormField(
+                                  controller: _emailController,
+                                  keyboardType: TextInputType.emailAddress,
+                                  textInputAction:
+                                      _authMode == _AuthMode.forgotPassword
+                                          ? TextInputAction.done
+                                          : TextInputAction.next,
+                                  autofillHints: const [AutofillHints.email],
                                   enabled: !isLoading,
-                                  autofillHints: _authMode == _AuthMode.signUp
-                                      ? const [AutofillHints.newPassword]
-                                      : const [AutofillHints.password],
-                                  validator: AuthValidators.validatePassword,
-                                  onFieldSubmitted: (_) => _submitForm(),
+                                  decoration: const InputDecoration(
+                                    labelText: 'Email',
+                                    prefixIcon: Icon(Icons.email_outlined),
+                                  ),
+                                  validator: AuthValidators.validateEmail,
+                                  onFieldSubmitted:
+                                      _authMode == _AuthMode.forgotPassword
+                                          ? (_) => _submitForm()
+                                          : null,
                                 ),
-                              ],
 
-                              // ── Forgot Password link (sign-in mode only) ──
-                              if (_authMode == _AuthMode.signIn) ...[
-                                const SizedBox(height: 4),
-                                Align(
-                                  alignment: Alignment.centerRight,
-                                  child: TextButton(
-                                    onPressed: isLoading
-                                        ? null
-                                        : () => _switchToMode(
-                                              _AuthMode.forgotPassword,
-                                            ),
-                                    child: Text(
-                                      'Forgot Password?',
-                                      style: TextStyle(
-                                        color: colorScheme.primary,
-                                        fontSize: 13,
+                                // ── Password field (hidden in forgot-password mode) ──
+                                if (_authMode != _AuthMode.forgotPassword) ...[
+                                  const SizedBox(height: 20),
+                                  PasswordTextFormField(
+                                    controller: _passwordController,
+                                    enabled: !isLoading,
+                                    autofillHints: _authMode == _AuthMode.signUp
+                                        ? const [AutofillHints.newPassword]
+                                        : const [AutofillHints.password],
+                                    validator: AuthValidators.validatePassword,
+                                    onFieldSubmitted: (_) => _submitForm(),
+                                  ),
+                                ],
+
+                                // ── Forgot Password link (sign-in mode only) ──
+                                if (_authMode == _AuthMode.signIn) ...[
+                                  const SizedBox(height: 4),
+                                  Align(
+                                    alignment: Alignment.centerRight,
+                                    child: TextButton(
+                                      onPressed: isLoading
+                                          ? null
+                                          : () => _switchToMode(
+                                                _AuthMode.forgotPassword,
+                                              ),
+                                      child: Text(
+                                        'Forgot Password?',
+                                        style: TextStyle(
+                                          color: colorScheme.primary,
+                                          fontSize: 13,
+                                        ),
                                       ),
                                     ),
                                   ),
+                                ],
+
+                                const SizedBox(height: 20),
+
+                                // ── Submit button ──
+                                AuthSubmitButton(
+                                  label: _submitButtonLabel,
+                                  isLoading: isLoading,
+                                  onPressed: _submitForm,
                                 ),
+                                const SizedBox(height: 16),
+
+                                // ── Toggle links ──
+                                _buildToggleLinks(isLoading, colorScheme, theme),
                               ],
-
-                              const SizedBox(height: 20),
-
-                              // ── Submit button ──
-                              AuthSubmitButton(
-                                label: _submitButtonLabel,
-                                isLoading: isLoading,
-                                onPressed: _submitForm,
-                              ),
-                              const SizedBox(height: 16),
-
-                              // ── Toggle links ──
-                              _buildToggleLinks(isLoading, colorScheme, theme),
-                            ],
+                            ),
                           ),
                         ),
                       ),
@@ -312,47 +317,11 @@ class _LoginScreenState extends State<LoginScreen> {
     BuildContext context,
     AuthenticationState state,
   ) {
-    if (!context.mounted) return;
-
-    if (state is AuthenticationFailureState) {
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          SnackBar(
-            content: Text(state.message),
-            behavior: SnackBarBehavior.floating,
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
-    } else if (state is AuthenticationPasswordResetEmailSent) {
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          SnackBar(
-            content: const Text(
-              'Password reset link sent! Check your email.',
-            ),
-            behavior: SnackBarBehavior.floating,
-            backgroundColor: Theme.of(context).colorScheme.primary,
-          ),
-        );
-      // Switch back to sign-in mode after sending reset link.
-      _switchToMode(_AuthMode.signIn);
-    } else if (state is AuthenticationEmailConfirmationSent) {
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          SnackBar(
-            content: const Text(
-              'Account created! Check your email to confirm your account.',
-            ),
-            behavior: SnackBarBehavior.floating,
-            duration: const Duration(seconds: 6),
-            backgroundColor: Theme.of(context).colorScheme.primary,
-          ),
-        );
-      // Switch to sign-in mode so the user can log in after confirming.
-      _switchToMode(_AuthMode.signIn);
-    }
+    handleAuthenticationStateForSnackbar(
+      context,
+      state,
+      onPasswordResetEmailSent: () => _switchToMode(_AuthMode.signIn),
+      onEmailConfirmationSent: () => _switchToMode(_AuthMode.signIn),
+    );
   }
 }

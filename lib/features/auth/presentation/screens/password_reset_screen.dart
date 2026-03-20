@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:tkd_saas/features/auth/presentation/bloc/authentication_bloc.dart';
+import 'package:tkd_saas/features/auth/presentation/utils/auth_snackbar_listener.dart';
 import 'package:tkd_saas/features/auth/presentation/utils/auth_validators.dart';
 import 'package:tkd_saas/features/auth/presentation/widgets/auth_branding_header.dart';
 import 'package:tkd_saas/features/auth/presentation/widgets/auth_submit_button.dart';
@@ -85,8 +86,9 @@ class _PasswordResetScreenState extends State<PasswordResetScreen> {
                           horizontal: 32,
                           vertical: 36,
                         ),
-                        child: Form(
-                          key: _formKey,
+                        child: AutofillGroup(
+                          child: Form(
+                            key: _formKey,
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
@@ -143,6 +145,7 @@ class _PasswordResetScreenState extends State<PasswordResetScreen> {
                             ],
                           ),
                         ),
+                        ),
                       ),
                     ),
                   ],
@@ -163,18 +166,6 @@ class _PasswordResetScreenState extends State<PasswordResetScreen> {
     BuildContext context,
     AuthenticationState state,
   ) {
-    if (!context.mounted) return;
-
-    if (state is AuthenticationFailureState) {
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          SnackBar(
-            content: Text(state.message),
-            behavior: SnackBarBehavior.floating,
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
-    }
+    handleAuthenticationStateForSnackbar(context, state);
   }
 }

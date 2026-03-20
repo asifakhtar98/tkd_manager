@@ -73,7 +73,8 @@ class AppRouter {
             !isOnLoginPage &&
             !isInPasswordRecovery &&
             !isEmailJustConfirmed &&
-            !isOnEmailConfirmedPage) {
+            !isOnEmailConfirmedPage &&
+            !isOnResetPasswordPage) {
           return RoutePaths.login;
         }
 
