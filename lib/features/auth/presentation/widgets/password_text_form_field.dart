@@ -64,9 +64,7 @@ class _PasswordTextFormFieldState extends State<PasswordTextFormField> {
         labelText: widget.labelText,
         prefixIcon: Icon(widget.prefixIcon),
         suffixIcon: IconButton(
-          icon: Icon(
-            _isObscured ? Icons.visibility : Icons.visibility_off,
-          ),
+          icon: Icon(_isObscured ? Icons.visibility : Icons.visibility_off),
           onPressed: _toggleVisibility,
         ),
       ),

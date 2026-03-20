@@ -39,9 +39,7 @@ void handleAuthenticationStateForSnackbar(
         ..hideCurrentSnackBar()
         ..showSnackBar(
           SnackBar(
-            content: const Text(
-              'Password reset link sent! Check your email.',
-            ),
+            content: const Text('Password reset link sent! Check your email.'),
             behavior: SnackBarBehavior.floating,
             backgroundColor: colorScheme.primary,
           ),

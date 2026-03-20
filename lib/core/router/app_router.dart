@@ -42,8 +42,7 @@ class AppRouter {
         final AuthenticationState authState = authenticationBloc.state;
         final String currentLocation = state.matchedLocation;
 
-        final bool isAuthenticated =
-            authState is AuthenticationAuthenticated;
+        final bool isAuthenticated = authState is AuthenticationAuthenticated;
         final bool isOnLoginPage = currentLocation == RoutePaths.login;
         final bool isOnResetPasswordPage =
             currentLocation == RoutePaths.resetPassword;

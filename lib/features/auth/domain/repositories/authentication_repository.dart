@@ -30,17 +30,13 @@ abstract interface class AuthenticationRepository {
   ///
   /// The email contains a link that, when clicked, redirects the user
   /// back to the app with a recovery token handled by [authStateChanges].
-  Future<Either<Failure, Unit>> resetPasswordForEmail({
-    required String email,
-  });
+  Future<Either<Failure, Unit>> resetPasswordForEmail({required String email});
 
   /// Updates the currently authenticated user's password.
   ///
   /// Typically called after the user clicks a recovery link and lands
   /// on the password-reset screen.
-  Future<Either<Failure, Unit>> updatePassword({
-    required String newPassword,
-  });
+  Future<Either<Failure, Unit>> updatePassword({required String newPassword});
 
   /// Signs the current user out and destroys the local session.
   Future<void> signOut();

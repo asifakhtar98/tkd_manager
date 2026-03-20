@@ -28,11 +28,8 @@ class AuthenticationRepositoryImplementation
     required String password,
   }) async {
     try {
-      final AuthResponse response =
-          await _supabaseClient.auth.signInWithPassword(
-        email: email,
-        password: password,
-      );
+      final AuthResponse response = await _supabaseClient.auth
+          .signInWithPassword(email: email, password: password);
 
       final User? user = response.user;
       if (user == null) {

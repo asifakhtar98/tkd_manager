@@ -38,10 +38,10 @@ class _PasswordResetScreenState extends State<PasswordResetScreen> {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
     context.read<AuthenticationBloc>().add(
-          AuthenticationPasswordUpdateRequested(
-            newPassword: _passwordController.text,
-          ),
-        );
+      AuthenticationPasswordUpdateRequested(
+        newPassword: _passwordController.text,
+      ),
+    );
   }
 
   // ───────────────────────────────────────────────────────────────────────────
@@ -89,62 +89,64 @@ class _PasswordResetScreenState extends State<PasswordResetScreen> {
                         child: AutofillGroup(
                           child: Form(
                             key: _formKey,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              Text(
-                                'Set New Password',
-                                style: theme.textTheme.headlineSmall?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: colorScheme.onSurface,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Text(
+                                  'Set New Password',
+                                  style: theme.textTheme.headlineSmall
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                        color: colorScheme.onSurface,
+                                      ),
+                                  textAlign: TextAlign.center,
                                 ),
-                                textAlign: TextAlign.center,
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                'Enter your new password below',
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: colorScheme.onSurfaceVariant,
+                                const SizedBox(height: 8),
+                                Text(
+                                  'Enter your new password below',
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    color: colorScheme.onSurfaceVariant,
+                                  ),
+                                  textAlign: TextAlign.center,
                                 ),
-                                textAlign: TextAlign.center,
-                              ),
-                              const SizedBox(height: 32),
+                                const SizedBox(height: 32),
 
-                              // ── New Password ──
-                              PasswordTextFormField(
-                                controller: _passwordController,
-                                labelText: 'New Password',
-                                textInputAction: TextInputAction.next,
-                                autofillHints: const [
-                                  AutofillHints.newPassword,
-                                ],
-                                enabled: !isLoading,
-                                validator: AuthValidators.validatePassword,
-                              ),
-                              const SizedBox(height: 20),
-
-                              // ── Confirm Password ──
-                              PasswordTextFormField(
-                                controller: _confirmPasswordController,
-                                labelText: 'Confirm Password',
-                                prefixIcon: Icons.lock_reset_outlined,
-                                enabled: !isLoading,
-                                validator: AuthValidators.validateConfirmPassword(
-                                  _passwordController,
+                                // ── New Password ──
+                                PasswordTextFormField(
+                                  controller: _passwordController,
+                                  labelText: 'New Password',
+                                  textInputAction: TextInputAction.next,
+                                  autofillHints: const [
+                                    AutofillHints.newPassword,
+                                  ],
+                                  enabled: !isLoading,
+                                  validator: AuthValidators.validatePassword,
                                 ),
-                                onFieldSubmitted: (_) => _submitNewPassword(),
-                              ),
-                              const SizedBox(height: 28),
+                                const SizedBox(height: 20),
 
-                              // ── Submit button ──
-                              AuthSubmitButton(
-                                label: 'Update Password',
-                                isLoading: isLoading,
-                                onPressed: _submitNewPassword,
-                              ),
-                            ],
+                                // ── Confirm Password ──
+                                PasswordTextFormField(
+                                  controller: _confirmPasswordController,
+                                  labelText: 'Confirm Password',
+                                  prefixIcon: Icons.lock_reset_outlined,
+                                  enabled: !isLoading,
+                                  validator:
+                                      AuthValidators.validateConfirmPassword(
+                                        _passwordController,
+                                      ),
+                                  onFieldSubmitted: (_) => _submitNewPassword(),
+                                ),
+                                const SizedBox(height: 28),
+
+                                // ── Submit button ──
+                                AuthSubmitButton(
+                                  label: 'Update Password',
+                                  isLoading: isLoading,
+                                  onPressed: _submitNewPassword,
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
                         ),
                       ),
                     ),
@@ -162,10 +164,7 @@ class _PasswordResetScreenState extends State<PasswordResetScreen> {
   // Listener
   // ───────────────────────────────────────────────────────────────────────────
 
-  void _authStateListener(
-    BuildContext context,
-    AuthenticationState state,
-  ) {
+  void _authStateListener(BuildContext context, AuthenticationState state) {
     handleAuthenticationStateForSnackbar(context, state);
   }
 }

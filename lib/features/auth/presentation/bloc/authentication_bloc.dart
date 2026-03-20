@@ -22,9 +22,9 @@ class AuthenticationBloc
   AuthenticationBloc({
     required AuthenticationRepository authenticationRepository,
     @visibleForTesting bool Function()? isEmailConfirmationRedirect,
-  })  : _authenticationRepository = authenticationRepository,
-        _isEmailConfirmationRedirectOverride = isEmailConfirmationRedirect,
-        super(const AuthenticationState.unknown()) {
+  }) : _authenticationRepository = authenticationRepository,
+       _isEmailConfirmationRedirectOverride = isEmailConfirmationRedirect,
+       super(const AuthenticationState.unknown()) {
     on<AuthenticationSubscriptionRequested>(_onSubscriptionRequested);
     on<AuthenticationSignInRequested>(_onSignInRequested);
     on<AuthenticationSignUpRequested>(_onSignUpRequested);
@@ -33,9 +33,7 @@ class AuthenticationBloc
     on<AuthenticationPasswordUpdateRequested>(_onPasswordUpdateRequested);
     on<_AuthenticationStatusChanged>(_onStatusChanged);
     on<_AuthenticationPasswordRecoveryDetected>(_onPasswordRecoveryDetected);
-    on<_AuthenticationEmailConfirmationDetected>(
-      _onEmailConfirmationDetected,
-    );
+    on<_AuthenticationEmailConfirmationDetected>(_onEmailConfirmationDetected);
   }
 
   final AuthenticationRepository _authenticationRepository;
@@ -62,8 +60,9 @@ class AuthenticationBloc
     // Cancel any previous subscription defensively.
     await _authStateSubscription?.cancel();
 
-    _authStateSubscription =
-        _authenticationRepository.authStateChanges.listen((AuthState data) {
+    _authStateSubscription = _authenticationRepository.authStateChanges.listen((
+      AuthState data,
+    ) {
       switch (data.event) {
         case AuthChangeEvent.initialSession:
         case AuthChangeEvent.signedIn:
@@ -123,9 +122,9 @@ class AuthenticationBloc
     );
 
     result.fold(
-      (failure) => emit(AuthenticationState.authenticationFailure(
-        message: failure.message,
-      )),
+      (failure) => emit(
+        AuthenticationState.authenticationFailure(message: failure.message),
+      ),
       // Success: the auth-state stream listener will emit `authenticated`.
       (_) {},
     );
@@ -147,13 +146,14 @@ class AuthenticationBloc
     );
 
     result.fold(
-      (failure) => emit(AuthenticationState.authenticationFailure(
-        message: failure.message,
-      )),
+      (failure) => emit(
+        AuthenticationState.authenticationFailure(message: failure.message),
+      ),
       (signUpResult) => switch (signUpResult) {
         SignUpAuthenticated() => (), // Stream will fire `signedIn`.
-        SignUpConfirmationRequired() =>
-          emit(const AuthenticationState.emailConfirmationSent()),
+        SignUpConfirmationRequired() => emit(
+          const AuthenticationState.emailConfirmationSent(),
+        ),
       },
     );
   }
@@ -173,9 +173,9 @@ class AuthenticationBloc
     );
 
     result.fold(
-      (failure) => emit(AuthenticationState.authenticationFailure(
-        message: failure.message,
-      )),
+      (failure) => emit(
+        AuthenticationState.authenticationFailure(message: failure.message),
+      ),
       (_) => emit(const AuthenticationState.passwordResetEmailSent()),
     );
   }
@@ -191,9 +191,9 @@ class AuthenticationBloc
     );
 
     result.fold(
-      (failure) => emit(AuthenticationState.authenticationFailure(
-        message: failure.message,
-      )),
+      (failure) => emit(
+        AuthenticationState.authenticationFailure(message: failure.message),
+      ),
       // Password updated — force an authenticated state so the router
       // redirects to the dashboard immediately.
       (_) {
@@ -204,10 +204,11 @@ class AuthenticationBloc
           // The recovery session expired between submitting and completion.
           // Emit a failure so the user sees an error instead of an
           // infinite loading spinner.
-          emit(const AuthenticationState.authenticationFailure(
-            message:
-                'Your session has expired. Please sign in again.',
-          ));
+          emit(
+            const AuthenticationState.authenticationFailure(
+              message: 'Your session has expired. Please sign in again.',
+            ),
+          );
         }
       },
     );

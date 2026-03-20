@@ -54,15 +54,19 @@ class _LoginScreenState extends State<LoginScreen> {
 
     switch (_authMode) {
       case _AuthMode.signIn:
-        bloc.add(AuthenticationSignInRequested(
-          email: email,
-          password: _passwordController.text,
-        ));
+        bloc.add(
+          AuthenticationSignInRequested(
+            email: email,
+            password: _passwordController.text,
+          ),
+        );
       case _AuthMode.signUp:
-        bloc.add(AuthenticationSignUpRequested(
-          email: email,
-          password: _passwordController.text,
-        ));
+        bloc.add(
+          AuthenticationSignUpRequested(
+            email: email,
+            password: _passwordController.text,
+          ),
+        );
       case _AuthMode.forgotPassword:
         bloc.add(AuthenticationPasswordResetRequested(email: email));
     }
@@ -83,22 +87,22 @@ class _LoginScreenState extends State<LoginScreen> {
   // ───────────────────────────────────────────────────────────────────────────
 
   String get _headerTitle => switch (_authMode) {
-        _AuthMode.signIn => 'Welcome Back',
-        _AuthMode.signUp => 'Create Account',
-        _AuthMode.forgotPassword => 'Forgot Password',
-      };
+    _AuthMode.signIn => 'Welcome Back',
+    _AuthMode.signUp => 'Create Account',
+    _AuthMode.forgotPassword => 'Forgot Password',
+  };
 
   String get _headerSubtitle => switch (_authMode) {
-        _AuthMode.signIn => 'Sign in to continue',
-        _AuthMode.signUp => 'Sign up to get started',
-        _AuthMode.forgotPassword => 'Enter your email to receive a reset link',
-      };
+    _AuthMode.signIn => 'Sign in to continue',
+    _AuthMode.signUp => 'Sign up to get started',
+    _AuthMode.forgotPassword => 'Enter your email to receive a reset link',
+  };
 
   String get _submitButtonLabel => switch (_authMode) {
-        _AuthMode.signIn => 'Sign In',
-        _AuthMode.signUp => 'Sign Up',
-        _AuthMode.forgotPassword => 'Send Reset Link',
-      };
+    _AuthMode.signIn => 'Sign In',
+    _AuthMode.signUp => 'Sign Up',
+    _AuthMode.forgotPassword => 'Send Reset Link',
+  };
 
   // ───────────────────────────────────────────────────────────────────────────
   // Build
@@ -150,10 +154,11 @@ class _LoginScreenState extends State<LoginScreen> {
                               children: [
                                 Text(
                                   _headerTitle,
-                                  style: theme.textTheme.headlineSmall?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: colorScheme.onSurface,
-                                  ),
+                                  style: theme.textTheme.headlineSmall
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                        color: colorScheme.onSurface,
+                                      ),
                                   textAlign: TextAlign.center,
                                 ),
                                 const SizedBox(height: 8),
@@ -172,8 +177,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                   keyboardType: TextInputType.emailAddress,
                                   textInputAction:
                                       _authMode == _AuthMode.forgotPassword
-                                          ? TextInputAction.done
-                                          : TextInputAction.next,
+                                      ? TextInputAction.done
+                                      : TextInputAction.next,
                                   autofillHints: const [AutofillHints.email],
                                   enabled: !isLoading,
                                   decoration: const InputDecoration(
@@ -183,8 +188,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                   validator: AuthValidators.validateEmail,
                                   onFieldSubmitted:
                                       _authMode == _AuthMode.forgotPassword
-                                          ? (_) => _submitForm()
-                                          : null,
+                                      ? (_) => _submitForm()
+                                      : null,
                                 ),
 
                                 // ── Password field (hidden in forgot-password mode) ──
@@ -210,8 +215,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                       onPressed: isLoading
                                           ? null
                                           : () => _switchToMode(
-                                                _AuthMode.forgotPassword,
-                                              ),
+                                              _AuthMode.forgotPassword,
+                                            ),
                                       child: Text(
                                         'Forgot Password?',
                                         style: TextStyle(
@@ -234,7 +239,11 @@ class _LoginScreenState extends State<LoginScreen> {
                                 const SizedBox(height: 16),
 
                                 // ── Toggle links ──
-                                _buildToggleLinks(isLoading, colorScheme, theme),
+                                _buildToggleLinks(
+                                  isLoading,
+                                  colorScheme,
+                                  theme,
+                                ),
                               ],
                             ),
                           ),
@@ -262,50 +271,47 @@ class _LoginScreenState extends State<LoginScreen> {
   ) {
     return switch (_authMode) {
       _AuthMode.signIn => Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text("Don't have an account?", style: theme.textTheme.bodyMedium),
-            TextButton(
-              onPressed:
-                  isLoading ? null : () => _switchToMode(_AuthMode.signUp),
-              child: Text(
-                'Sign Up',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: colorScheme.primary,
-                ),
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text("Don't have an account?", style: theme.textTheme.bodyMedium),
+          TextButton(
+            onPressed: isLoading ? null : () => _switchToMode(_AuthMode.signUp),
+            child: Text(
+              'Sign Up',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: colorScheme.primary,
               ),
-            ),
-          ],
-        ),
-      _AuthMode.signUp => Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text('Already have an account?', style: theme.textTheme.bodyMedium),
-            TextButton(
-              onPressed:
-                  isLoading ? null : () => _switchToMode(_AuthMode.signIn),
-              child: Text(
-                'Sign In',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: colorScheme.primary,
-                ),
-              ),
-            ),
-          ],
-        ),
-      _AuthMode.forgotPassword => TextButton(
-          onPressed:
-              isLoading ? null : () => _switchToMode(_AuthMode.signIn),
-          child: Text(
-            'Back to Sign In',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: colorScheme.primary,
             ),
           ),
+        ],
+      ),
+      _AuthMode.signUp => Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text('Already have an account?', style: theme.textTheme.bodyMedium),
+          TextButton(
+            onPressed: isLoading ? null : () => _switchToMode(_AuthMode.signIn),
+            child: Text(
+              'Sign In',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: colorScheme.primary,
+              ),
+            ),
+          ),
+        ],
+      ),
+      _AuthMode.forgotPassword => TextButton(
+        onPressed: isLoading ? null : () => _switchToMode(_AuthMode.signIn),
+        child: Text(
+          'Back to Sign In',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: colorScheme.primary,
+          ),
         ),
+      ),
     };
   }
 
@@ -313,10 +319,7 @@ class _LoginScreenState extends State<LoginScreen> {
   // Listener — show snackbar on auth state changes
   // ───────────────────────────────────────────────────────────────────────────
 
-  void _authStateListener(
-    BuildContext context,
-    AuthenticationState state,
-  ) {
+  void _authStateListener(BuildContext context, AuthenticationState state) {
     handleAuthenticationStateForSnackbar(
       context,
       state,

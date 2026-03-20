@@ -133,8 +133,7 @@ class _EmailConfirmedScreenState extends State<EmailConfirmedScreen>
                         SizedBox(
                           height: 48,
                           child: FilledButton.icon(
-                            onPressed: () =>
-                                context.go(RoutePaths.login),
+                            onPressed: () => context.go(RoutePaths.login),
                             icon: const Icon(Icons.login),
                             label: const Text(
                               'Continue to Sign In',
