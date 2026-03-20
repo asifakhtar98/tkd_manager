@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:tkd_saas/core/router/app_routes.dart';
+import 'package:tkd_saas/features/auth/presentation/bloc/authentication_bloc.dart';
 import 'package:tkd_saas/features/core/data/demo_data.dart';
 import 'package:tkd_saas/features/tournament/domain/entities/tournament_entity.dart';
 import 'package:tkd_saas/features/tournament/presentation/bloc/tournament_bloc.dart';
@@ -18,6 +19,18 @@ class DashboardScreen extends StatelessWidget {
         title: const Text('TKD Tournament Manager'),
         elevation: 0,
         centerTitle: false,
+        actions: [
+          TextButton.icon(
+            onPressed: () {
+              context
+                  .read<AuthenticationBloc>()
+                  .add(const AuthenticationSignOutRequested());
+            },
+            icon: const Icon(Icons.logout),
+            label: const Text('Sign Out'),
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
     
       body: SingleChildScrollView(
