@@ -3,7 +3,6 @@ import 'package:tkd_saas/core/di/injection.dart';
 import 'package:tkd_saas/core/router/app_routes.dart';
 import 'package:tkd_saas/features/bracket/domain/entities/match_entity.dart';
 import 'package:tkd_saas/features/bracket/presentation/bloc/bracket_bloc.dart';
-import 'package:tkd_saas/features/bracket/presentation/bloc/bracket_state.dart';
 import 'package:tkd_saas/features/participant/domain/entities/participant_entity.dart';
 
 void main() {

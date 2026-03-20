@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:tkd_saas/core/di/injection.dart';
+import 'package:tkd_saas/features/auth/presentation/screens/email_confirmed_screen.dart';
 import 'package:tkd_saas/features/auth/presentation/screens/login_screen.dart';
+import 'package:tkd_saas/features/auth/presentation/screens/password_reset_screen.dart';
 import 'package:tkd_saas/features/bracket/presentation/bloc/bracket_bloc.dart';
 import 'package:tkd_saas/features/bracket/presentation/screens/bracket_viewer_screen.dart';
 import 'package:tkd_saas/features/dashboard/presentation/screens/dashboard_screen.dart';
@@ -38,6 +40,22 @@ enum BracketFormat {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Canonical route paths — used by the redirect guard and anywhere else
+// that needs to reference a route path by compile-safe constant.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// Compile-safe route path constants.
+///
+/// Use these instead of raw strings (e.g. `'/login'`) in redirect guards
+/// and programmatic navigation so typos become compiler errors.
+abstract final class RoutePaths {
+  static const String dashboard = '/';
+  static const String login = '/login';
+  static const String resetPassword = '/reset-password';
+  static const String emailConfirmed = '/email-confirmed';
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Route definitions — annotated for go_router_builder code generation.
 // Run: dart run build_runner build --delete-conflicting-outputs
 // ─────────────────────────────────────────────────────────────────────────────
@@ -50,6 +68,26 @@ class LoginRoute extends GoRouteData with $LoginRoute {
   @override
   Widget build(BuildContext context, GoRouterState state) =>
       const LoginScreen();
+}
+
+@TypedGoRoute<PasswordResetRoute>(path: '/reset-password')
+@immutable
+class PasswordResetRoute extends GoRouteData with $PasswordResetRoute {
+  const PasswordResetRoute();
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      const PasswordResetScreen();
+}
+
+@TypedGoRoute<EmailConfirmedRoute>(path: '/email-confirmed')
+@immutable
+class EmailConfirmedRoute extends GoRouteData with $EmailConfirmedRoute {
+  const EmailConfirmedRoute();
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      const EmailConfirmedScreen();
 }
 
 @TypedGoRoute<DashboardRoute>(path: '/')

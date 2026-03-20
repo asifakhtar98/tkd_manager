@@ -7,6 +7,9 @@ import 'package:tkd_saas/features/tournament/domain/entities/tournament_entity.d
 import 'package:tkd_saas/features/tournament/presentation/bloc/tournament_bloc.dart';
 import 'package:tkd_saas/features/tournament/presentation/widgets/create_tournament_dialog.dart';
 
+/// Main dashboard showing tournaments, demo brackets, and a sign-out action.
+///
+/// This is the default route for authenticated users.
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
 

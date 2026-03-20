@@ -1,7 +1,9 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:fpdart/fpdart.dart';
 import 'package:injectable/injectable.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:tkd_saas/core/error/failures.dart';
+import 'package:tkd_saas/features/auth/domain/entities/sign_up_result.dart';
 import 'package:tkd_saas/features/auth/domain/repositories/authentication_repository.dart';
 
 /// Supabase-backed implementation of [AuthenticationRepository].
@@ -52,7 +54,7 @@ class AuthenticationRepositoryImplementation
   // ───────────────────────────────────────────────────────────────────────────
 
   @override
-  Future<Either<Failure, User>> signUpWithEmailAndPassword({
+  Future<Either<Failure, SignUpResult>> signUpWithEmailAndPassword({
     required String email,
     required String password,
   }) async {
@@ -60,6 +62,7 @@ class AuthenticationRepositoryImplementation
       final AuthResponse response = await _supabaseClient.auth.signUp(
         email: email,
         password: password,
+        emailRedirectTo: _webRedirectUrl,
       );
 
       final User? user = response.user;
@@ -80,7 +83,49 @@ class AuthenticationRepositoryImplementation
         );
       }
 
-      return Right(user);
+      // If no session was created, email confirmation is required.
+      if (response.session == null) {
+        return const Right(SignUpConfirmationRequired());
+      }
+
+      return Right(SignUpAuthenticated(user: user));
+    } on AuthException catch (authException) {
+      return Left(AuthenticationFailure(_humanReadableMessage(authException)));
+    } on Exception catch (exception) {
+      return Left(AuthenticationFailure(exception.toString()));
+    }
+  }
+
+  // ───────────────────────────────────────────────────────────────────────────
+  // Password Reset
+  // ───────────────────────────────────────────────────────────────────────────
+
+  @override
+  Future<Either<Failure, Unit>> resetPasswordForEmail({
+    required String email,
+  }) async {
+    try {
+      await _supabaseClient.auth.resetPasswordForEmail(
+        email,
+        redirectTo: _webRedirectUrl,
+      );
+      return const Right(unit);
+    } on AuthException catch (authException) {
+      return Left(AuthenticationFailure(_humanReadableMessage(authException)));
+    } on Exception catch (exception) {
+      return Left(AuthenticationFailure(exception.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Unit>> updatePassword({
+    required String newPassword,
+  }) async {
+    try {
+      await _supabaseClient.auth.updateUser(
+        UserAttributes(password: newPassword),
+      );
+      return const Right(unit);
     } on AuthException catch (authException) {
       return Left(AuthenticationFailure(_humanReadableMessage(authException)));
     } on Exception catch (exception) {
@@ -120,6 +165,11 @@ class AuthenticationRepositoryImplementation
   // ───────────────────────────────────────────────────────────────────────────
   // Helpers
   // ───────────────────────────────────────────────────────────────────────────
+
+  /// On Flutter web, uses the current origin so Supabase email links redirect
+  /// back to the running application. Returns `null` on non-web platforms
+  /// (mobile deep links are handled differently).
+  String? get _webRedirectUrl => kIsWeb ? Uri.base.origin : null;
 
   /// Maps Supabase's technical error messages to friendlier text where
   /// possible, falling back to the raw message otherwise.

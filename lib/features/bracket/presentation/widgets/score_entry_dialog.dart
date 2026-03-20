@@ -146,8 +146,9 @@ class _ScoreEntryDialogState extends State<ScoreEntryDialog> {
                 ),
               ],
               onChanged: (selectedResultType) {
-                if (selectedResultType != null)
+                if (selectedResultType != null) {
                   setState(() => _resultType = selectedResultType);
+                }
               },
             ),
             const SizedBox(height: 16),

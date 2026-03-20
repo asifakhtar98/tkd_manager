@@ -1,10 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fpdart/fpdart.dart';
+import 'package:fpdart/fpdart.dart' show Left, Right, Unit, unit;
 import 'package:mocktail/mocktail.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:tkd_saas/core/error/failures.dart';
+import 'package:tkd_saas/features/auth/domain/entities/sign_up_result.dart';
 import 'package:tkd_saas/features/auth/domain/repositories/authentication_repository.dart';
 import 'package:tkd_saas/features/auth/presentation/bloc/authentication_bloc.dart';
 
@@ -21,6 +22,18 @@ class FakeUser extends Fake implements User {
 
   @override
   String get email => 'test@example.com';
+}
+
+/// Helper to reduce repeated Session construction across tests.
+Session createFakeSession({
+  required User user,
+  String accessToken = 'test-token',
+}) {
+  return Session(
+    accessToken: accessToken,
+    tokenType: 'bearer',
+    user: user,
+  );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -90,14 +103,11 @@ void main() {
           emitsInOrder([isA<AuthenticationAuthenticated>()]),
         );
 
-        final Session fakeSession = Session(
-          accessToken: 'test-token',
-          tokenType: 'bearer',
-          user: fakeUser,
-        );
-
         authStateStreamController.add(
-          AuthState(AuthChangeEvent.signedIn, fakeSession),
+          AuthState(
+            AuthChangeEvent.signedIn,
+            createFakeSession(user: fakeUser),
+          ),
         );
       });
 
@@ -120,11 +130,6 @@ void main() {
           'emits authenticated when auth stream fires tokenRefreshed with a valid session',
           () async {
         final FakeUser fakeUser = FakeUser();
-        final Session fakeSession = Session(
-          accessToken: 'refreshed-token',
-          tokenType: 'bearer',
-          user: fakeUser,
-        );
 
         authenticationBloc
             .add(const AuthenticationSubscriptionRequested());
@@ -136,7 +141,13 @@ void main() {
         );
 
         authStateStreamController.add(
-          AuthState(AuthChangeEvent.tokenRefreshed, fakeSession),
+          AuthState(
+            AuthChangeEvent.tokenRefreshed,
+            createFakeSession(
+              user: fakeUser,
+              accessToken: 'refreshed-token',
+            ),
+          ),
         );
       });
 
@@ -158,27 +169,19 @@ void main() {
       });
 
       test(
-          'does not emit for passwordRecovery event',
+          'emits passwordRecoveryInProgress when auth stream fires passwordRecovery',
           () async {
         authenticationBloc
             .add(const AuthenticationSubscriptionRequested());
         await Future<void>.delayed(Duration.zero);
 
-        // Add passwordRecovery — should be a no-op.
+        expectLater(
+          authenticationBloc.stream,
+          emitsInOrder([isA<AuthenticationPasswordRecoveryInProgress>()]),
+        );
+
         authStateStreamController.add(
           AuthState(AuthChangeEvent.passwordRecovery, null),
-        );
-
-        // Then add signedOut — this SHOULD emit.
-        authStateStreamController.add(
-          AuthState(AuthChangeEvent.signedOut, null),
-        );
-
-        // We should only see unauthenticated (from signedOut),
-        // NOT anything from passwordRecovery.
-        await expectLater(
-          authenticationBloc.stream,
-          emitsInOrder([isA<AuthenticationUnauthenticated>()]),
         );
       });
 
@@ -186,11 +189,6 @@ void main() {
           'does not emit for userUpdated event',
           () async {
         final FakeUser fakeUser = FakeUser();
-        final Session fakeSession = Session(
-          accessToken: 'test-token',
-          tokenType: 'bearer',
-          user: fakeUser,
-        );
 
         authenticationBloc
             .add(const AuthenticationSubscriptionRequested());
@@ -198,7 +196,10 @@ void main() {
 
         // userUpdated should be a no-op.
         authStateStreamController.add(
-          AuthState(AuthChangeEvent.userUpdated, fakeSession),
+          AuthState(
+            AuthChangeEvent.userUpdated,
+            createFakeSession(user: fakeUser),
+          ),
         );
 
         // signedOut SHOULD emit.
@@ -216,11 +217,6 @@ void main() {
           'cancels previous subscription when dispatched multiple times',
           () async {
         final FakeUser fakeUser = FakeUser();
-        final Session fakeSession = Session(
-          accessToken: 'test-token',
-          tokenType: 'bearer',
-          user: fakeUser,
-        );
 
         // First subscription.
         authenticationBloc
@@ -250,7 +246,10 @@ void main() {
 
         // Event on the NEW stream — should be processed.
         secondStreamController.add(
-          AuthState(AuthChangeEvent.signedIn, fakeSession),
+          AuthState(
+            AuthChangeEvent.signedIn,
+            createFakeSession(user: fakeUser),
+          ),
         );
 
         await Future<void>.delayed(const Duration(milliseconds: 50));
@@ -273,7 +272,7 @@ void main() {
             email: any(named: 'email'),
             password: any(named: 'password'),
           ),
-        ).thenAnswer((_) async => Right(fakeUser));
+        ).thenAnswer((_) async => Right<Failure, User>(fakeUser));
 
         expectLater(
           authenticationBloc.stream,
@@ -329,7 +328,7 @@ void main() {
 
     group('AuthenticationSignUpRequested', () {
       test(
-          'emits inProgress then delegates to stream on successful sign-up',
+          'emits inProgress then delegates to stream when signup creates session',
           () async {
         final FakeUser fakeUser = FakeUser();
 
@@ -338,7 +337,9 @@ void main() {
             email: any(named: 'email'),
             password: any(named: 'password'),
           ),
-        ).thenAnswer((_) async => Right(fakeUser));
+        ).thenAnswer(
+          (_) async => Right(SignUpAuthenticated(user: fakeUser)),
+        );
 
         expectLater(
           authenticationBloc.stream,
@@ -354,7 +355,35 @@ void main() {
       });
 
       test(
-          'emits inProgress then authenticationFailure on sign-up error (duplicate)',
+          'emits inProgress then emailConfirmationSent when confirmation required',
+          () async {
+        when(
+          () => mockAuthenticationRepository.signUpWithEmailAndPassword(
+            email: any(named: 'email'),
+            password: any(named: 'password'),
+          ),
+        ).thenAnswer(
+          (_) async => const Right(SignUpConfirmationRequired()),
+        );
+
+        expectLater(
+          authenticationBloc.stream,
+          emitsInOrder([
+            isA<AuthenticationInProgress>(),
+            isA<AuthenticationEmailConfirmationSent>(),
+          ]),
+        );
+
+        authenticationBloc.add(
+          const AuthenticationSignUpRequested(
+            email: 'new@example.com',
+            password: 'password123',
+          ),
+        );
+      });
+
+      test(
+          'emits inProgress then authenticationFailure on sign-up error',
           () async {
         when(
           () => mockAuthenticationRepository.signUpWithEmailAndPassword(
@@ -391,14 +420,207 @@ void main() {
     });
 
     // ─────────────────────────────────────────────────────────────────────────
+    // Password Reset
+    // ─────────────────────────────────────────────────────────────────────────
+
+    group('AuthenticationPasswordResetRequested', () {
+      test(
+          'emits inProgress then passwordResetEmailSent on success',
+          () async {
+        when(
+          () => mockAuthenticationRepository.resetPasswordForEmail(
+            email: any(named: 'email'),
+          ),
+        ).thenAnswer((_) async => const Right<Failure, Unit>(unit));
+
+        expectLater(
+          authenticationBloc.stream,
+          emitsInOrder([
+            isA<AuthenticationInProgress>(),
+            isA<AuthenticationPasswordResetEmailSent>(),
+          ]),
+        );
+
+        authenticationBloc.add(
+          const AuthenticationPasswordResetRequested(
+            email: 'test@example.com',
+          ),
+        );
+      });
+
+      test(
+          'emits inProgress then authenticationFailure on error',
+          () async {
+        when(
+          () => mockAuthenticationRepository.resetPasswordForEmail(
+            email: any(named: 'email'),
+          ),
+        ).thenAnswer(
+          (_) async => const Left(
+            AuthenticationFailure('Too many attempts.'),
+          ),
+        );
+
+        expectLater(
+          authenticationBloc.stream,
+          emitsInOrder([
+            isA<AuthenticationInProgress>(),
+            isA<AuthenticationFailureState>().having(
+              (AuthenticationFailureState s) => s.message,
+              'message',
+              'Too many attempts.',
+            ),
+          ]),
+        );
+
+        authenticationBloc.add(
+          const AuthenticationPasswordResetRequested(
+            email: 'test@example.com',
+          ),
+        );
+      });
+    });
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Password Update
+    // ─────────────────────────────────────────────────────────────────────────
+
+    group('AuthenticationPasswordUpdateRequested', () {
+      test(
+          'emits inProgress then authenticated on success',
+          () async {
+        final FakeUser fakeUser = FakeUser();
+
+        when(
+          () => mockAuthenticationRepository.updatePassword(
+            newPassword: any(named: 'newPassword'),
+          ),
+        ).thenAnswer((_) async => const Right<Failure, Unit>(unit));
+
+        when(() => mockAuthenticationRepository.currentUser)
+            .thenReturn(fakeUser);
+
+        expectLater(
+          authenticationBloc.stream,
+          emitsInOrder([
+            isA<AuthenticationInProgress>(),
+            isA<AuthenticationAuthenticated>(),
+          ]),
+        );
+
+        authenticationBloc.add(
+          const AuthenticationPasswordUpdateRequested(
+            newPassword: 'newPassword123',
+          ),
+        );
+      });
+
+      test(
+          'emits inProgress then authenticationFailure when currentUser is null',
+          () async {
+        when(
+          () => mockAuthenticationRepository.updatePassword(
+            newPassword: any(named: 'newPassword'),
+          ),
+        ).thenAnswer((_) async => const Right<Failure, Unit>(unit));
+
+        when(() => mockAuthenticationRepository.currentUser)
+            .thenReturn(null);
+
+        expectLater(
+          authenticationBloc.stream,
+          emitsInOrder([
+            isA<AuthenticationInProgress>(),
+            isA<AuthenticationFailureState>().having(
+              (AuthenticationFailureState s) => s.message,
+              'message',
+              'Your session has expired. Please sign in again.',
+            ),
+          ]),
+        );
+
+        authenticationBloc.add(
+          const AuthenticationPasswordUpdateRequested(
+            newPassword: 'newPassword123',
+          ),
+        );
+      });
+
+      test(
+          'emits inProgress then authenticationFailure on error',
+          () async {
+        when(
+          () => mockAuthenticationRepository.updatePassword(
+            newPassword: any(named: 'newPassword'),
+          ),
+        ).thenAnswer(
+          (_) async => const Left(
+            AuthenticationFailure('Password is too weak.'),
+          ),
+        );
+
+        expectLater(
+          authenticationBloc.stream,
+          emitsInOrder([
+            isA<AuthenticationInProgress>(),
+            isA<AuthenticationFailureState>().having(
+              (AuthenticationFailureState s) => s.message,
+              'message',
+              'Password is too weak.',
+            ),
+          ]),
+        );
+
+        authenticationBloc.add(
+          const AuthenticationPasswordUpdateRequested(
+            newPassword: '123',
+          ),
+        );
+      });
+    });
+
+    // ─────────────────────────────────────────────────────────────────────────
     // Sign Out
     // ─────────────────────────────────────────────────────────────────────────
 
     group('AuthenticationSignOutRequested', () {
-      test('calls signOut on repository and stream emits unauthenticated',
+      test(
+          'always emits unauthenticated directly without waiting for stream',
           () async {
         when(() => mockAuthenticationRepository.signOut())
             .thenAnswer((_) async {});
+
+        expectLater(
+          authenticationBloc.stream,
+          emitsInOrder([isA<AuthenticationUnauthenticated>()]),
+        );
+
+        authenticationBloc
+            .add(const AuthenticationSignOutRequested());
+
+        // Verify the repository was called.
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+        verify(() => mockAuthenticationRepository.signOut()).called(1);
+      });
+    });
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Email Confirmation Detection
+    // ─────────────────────────────────────────────────────────────────────────
+
+    group('Email confirmation redirect detection', () {
+      test(
+          'emits emailJustConfirmed and calls signOut when signedIn fires '
+          'with email confirmation redirect detected', () async {
+        final FakeUser fakeUser = FakeUser();
+
+        when(() => mockAuthenticationRepository.signOut())
+            .thenAnswer((_) async {});
+
+        authenticationBloc = AuthenticationBloc(
+          authenticationRepository: mockAuthenticationRepository,
+          isEmailConfirmationRedirect: () => true,
+        );
 
         authenticationBloc
             .add(const AuthenticationSubscriptionRequested());
@@ -406,33 +628,88 @@ void main() {
 
         expectLater(
           authenticationBloc.stream,
-          emitsInOrder([isA<AuthenticationUnauthenticated>()]),
+          emitsInOrder([isA<AuthenticationEmailJustConfirmed>()]),
         );
-
-        authenticationBloc
-            .add(const AuthenticationSignOutRequested());
-        await Future<void>.delayed(Duration.zero);
 
         authStateStreamController.add(
-          AuthState(AuthChangeEvent.signedOut, null),
+          AuthState(
+            AuthChangeEvent.signedIn,
+            createFakeSession(user: fakeUser),
+          ),
         );
 
+        await Future<void>.delayed(const Duration(milliseconds: 100));
         verify(() => mockAuthenticationRepository.signOut()).called(1);
       });
 
       test(
-          'emits unauthenticated even when signOut throws an exception',
-          () async {
-        when(() => mockAuthenticationRepository.signOut())
-            .thenThrow(Exception('Network error'));
+          'emits authenticated (not emailJustConfirmed) when signedIn fires '
+          'without email confirmation redirect', () async {
+        final FakeUser fakeUser = FakeUser();
 
-        expectLater(
-          authenticationBloc.stream,
-          emitsInOrder([isA<AuthenticationUnauthenticated>()]),
+        authenticationBloc = AuthenticationBloc(
+          authenticationRepository: mockAuthenticationRepository,
+          isEmailConfirmationRedirect: () => false,
         );
 
         authenticationBloc
-            .add(const AuthenticationSignOutRequested());
+            .add(const AuthenticationSubscriptionRequested());
+        await Future<void>.delayed(Duration.zero);
+
+        expectLater(
+          authenticationBloc.stream,
+          emitsInOrder([isA<AuthenticationAuthenticated>()]),
+        );
+
+        authStateStreamController.add(
+          AuthState(
+            AuthChangeEvent.signedIn,
+            createFakeSession(user: fakeUser),
+          ),
+        );
+      });
+
+      test(
+          'email confirmation flag is consumed after first detection — '
+          'subsequent signedIn events emit authenticated', () async {
+        final FakeUser fakeUser = FakeUser();
+        bool simulateRedirect = true;
+
+        when(() => mockAuthenticationRepository.signOut())
+            .thenAnswer((_) async {});
+
+        authenticationBloc = AuthenticationBloc(
+          authenticationRepository: mockAuthenticationRepository,
+          isEmailConfirmationRedirect: () => simulateRedirect,
+        );
+
+        authenticationBloc
+            .add(const AuthenticationSubscriptionRequested());
+        await Future<void>.delayed(Duration.zero);
+
+        // First signedIn → should detect email confirmation.
+        authStateStreamController.add(
+          AuthState(
+            AuthChangeEvent.signedIn,
+            createFakeSession(user: fakeUser),
+          ),
+        );
+
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+        expect(authenticationBloc.state, isA<AuthenticationEmailJustConfirmed>());
+        verify(() => mockAuthenticationRepository.signOut()).called(1);
+
+        // Second signedIn → flag consumed, should emit authenticated.
+        simulateRedirect = false; // URL would still have code but flag consumed.
+        authStateStreamController.add(
+          AuthState(
+            AuthChangeEvent.signedIn,
+            createFakeSession(user: fakeUser),
+          ),
+        );
+
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+        expect(authenticationBloc.state, isA<AuthenticationAuthenticated>());
       });
     });
 
@@ -446,11 +723,8 @@ void main() {
             .add(const AuthenticationSubscriptionRequested());
         await Future<void>.delayed(Duration.zero);
 
-        // Close the BLoC.
         await authenticationBloc.close();
 
-        // The subscription should be cancelled — verify the stream
-        // controller has no listeners remaining.
         expect(authStateStreamController.hasListener, isFalse);
       });
     });

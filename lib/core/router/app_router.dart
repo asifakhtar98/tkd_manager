@@ -10,8 +10,9 @@ import 'app_routes.dart';
 /// from the `@TypedGoRoute` annotations in [app_routes.dart].
 ///
 /// A [redirect] guard ensures every route is locked behind authentication:
-/// unauthenticated users are sent to `/login`, and authenticated users are
-/// bounced away from `/login` to `/`.
+/// unauthenticated users are sent to `/login`, authenticated users are
+/// bounced away from `/login` to `/`, and users in password-recovery
+/// mode are routed to `/reset-password`.
 class AppRouter {
   AppRouter._();
 
@@ -30,7 +31,7 @@ class AppRouter {
     if (_cachedRouter != null) return _cachedRouter!;
 
     _cachedRouter = GoRouter(
-      initialLocation: '/',
+      initialLocation: RoutePaths.dashboard,
       debugLogDiagnostics: false,
       routes: $appRoutes,
 
@@ -39,20 +40,51 @@ class AppRouter {
 
       redirect: (_, GoRouterState state) {
         final AuthenticationState authState = authenticationBloc.state;
+        final String currentLocation = state.matchedLocation;
 
         final bool isAuthenticated =
             authState is AuthenticationAuthenticated;
-        final bool isOnLoginPage =
-            state.matchedLocation == '/login';
+        final bool isOnLoginPage = currentLocation == RoutePaths.login;
+        final bool isOnResetPasswordPage =
+            currentLocation == RoutePaths.resetPassword;
+        final bool isOnEmailConfirmedPage =
+            currentLocation == RoutePaths.emailConfirmed;
+        final bool isInPasswordRecovery =
+            authState is AuthenticationPasswordRecoveryInProgress;
+        final bool isEmailJustConfirmed =
+            authState is AuthenticationEmailJustConfirmed;
 
         // Still checking session — don't redirect yet.
         if (authState is AuthenticationUnknown) return null;
 
-        // Not authenticated → force to login (unless already there).
-        if (!isAuthenticated && !isOnLoginPage) return '/login';
+        // Email just confirmed — route to the interstitial screen.
+        if (isEmailJustConfirmed && !isOnEmailConfirmedPage) {
+          return RoutePaths.emailConfirmed;
+        }
 
-        // Authenticated but lingering on login → send to dashboard.
-        if (isAuthenticated && isOnLoginPage) return '/';
+        // Password recovery mode — route to the reset screen.
+        if (isInPasswordRecovery && !isOnResetPasswordPage) {
+          return RoutePaths.resetPassword;
+        }
+
+        // Not authenticated → force to login (unless already on an
+        // allowed unauthenticated page).
+        if (!isAuthenticated &&
+            !isOnLoginPage &&
+            !isInPasswordRecovery &&
+            !isEmailJustConfirmed &&
+            !isOnEmailConfirmedPage) {
+          return RoutePaths.login;
+        }
+
+        // Authenticated but lingering on login, reset, or confirmed → send
+        // to dashboard.
+        if (isAuthenticated &&
+            (isOnLoginPage ||
+                isOnResetPasswordPage ||
+                isOnEmailConfirmedPage)) {
+          return RoutePaths.dashboard;
+        }
 
         // All other cases — let the route resolve normally.
         return null;

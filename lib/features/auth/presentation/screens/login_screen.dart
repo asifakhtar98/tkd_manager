@@ -2,12 +2,18 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:tkd_saas/features/auth/presentation/bloc/authentication_bloc.dart';
+import 'package:tkd_saas/features/auth/presentation/utils/auth_validators.dart';
+import 'package:tkd_saas/features/auth/presentation/widgets/auth_branding_header.dart';
+import 'package:tkd_saas/features/auth/presentation/widgets/auth_submit_button.dart';
+import 'package:tkd_saas/features/auth/presentation/widgets/password_text_form_field.dart';
 
-/// A single unified login / sign-up screen.
+/// Authentication mode for the login screen.
+enum _AuthMode { signIn, signUp, forgotPassword }
+
+/// A single unified login / sign-up / forgot-password screen.
 ///
-/// The user enters email + password. A toggle link at the bottom switches
-/// between **Sign In** and **Sign Up** mode — no extra details are collected,
-/// making signup as frictionless as a single button tap.
+/// The user enters email + password. Toggle links at the bottom switch
+/// between modes. In forgot-password mode only the email field is shown.
 ///
 /// All state (loading, error) is driven by [AuthenticationBloc].
 class LoginScreen extends StatefulWidget {
@@ -20,14 +26,13 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController(
-    text: kDebugMode ? 'dev1@test.com' : null, 
+    text: kDebugMode ? 'asak91298@gmail.com' : null,
   );
   final TextEditingController _passwordController = TextEditingController(
     text: kDebugMode ? '123456' : null,
   );
 
-  bool _isSignUpMode = false;
-  bool _isPasswordVisible = false;
+  _AuthMode _authMode = _AuthMode.signIn;
 
   @override
   void dispose() {
@@ -44,50 +49,53 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
     final String email = _emailController.text.trim();
-    final String password = _passwordController.text;
+    final AuthenticationBloc bloc = context.read<AuthenticationBloc>();
 
-    if (_isSignUpMode) {
-      context.read<AuthenticationBloc>().add(
-            AuthenticationSignUpRequested(email: email, password: password),
-          );
-    } else {
-      context.read<AuthenticationBloc>().add(
-            AuthenticationSignInRequested(email: email, password: password),
-          );
+    switch (_authMode) {
+      case _AuthMode.signIn:
+        bloc.add(AuthenticationSignInRequested(
+          email: email,
+          password: _passwordController.text,
+        ));
+      case _AuthMode.signUp:
+        bloc.add(AuthenticationSignUpRequested(
+          email: email,
+          password: _passwordController.text,
+        ));
+      case _AuthMode.forgotPassword:
+        bloc.add(AuthenticationPasswordResetRequested(email: email));
     }
   }
 
-  void _toggleAuthMode() {
+  void _switchToMode(_AuthMode mode) {
     setState(() {
-      _isSignUpMode = !_isSignUpMode;
+      _authMode = mode;
+      // Reset form validation when switching modes.
+      _formKey.currentState?.reset();
     });
   }
 
   // ───────────────────────────────────────────────────────────────────────────
-  // Validators
+  // Labels
   // ───────────────────────────────────────────────────────────────────────────
 
-  String? _validateEmail(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'Email is required.';
-    }
-    // Simple regex — matches 99 % of real-world emails.
-    final RegExp emailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
-    if (!emailRegex.hasMatch(value.trim())) {
-      return 'Enter a valid email address.';
-    }
-    return null;
-  }
+  String get _headerTitle => switch (_authMode) {
+        _AuthMode.signIn => 'Welcome Back',
+        _AuthMode.signUp => 'Create Account',
+        _AuthMode.forgotPassword => 'Forgot Password',
+      };
 
-  String? _validatePassword(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Password is required.';
-    }
-    if (value.length < 6) {
-      return 'Password must be at least 6 characters.';
-    }
-    return null;
-  }
+  String get _headerSubtitle => switch (_authMode) {
+        _AuthMode.signIn => 'Sign in to continue',
+        _AuthMode.signUp => 'Sign up to get started',
+        _AuthMode.forgotPassword => 'Enter your email to receive a reset link',
+      };
+
+  String get _submitButtonLabel => switch (_authMode) {
+        _AuthMode.signIn => 'Sign In',
+        _AuthMode.signUp => 'Sign Up',
+        _AuthMode.forgotPassword => 'Send Reset Link',
+      };
 
   // ───────────────────────────────────────────────────────────────────────────
   // Build
@@ -114,7 +122,10 @@ class _LoginScreenState extends State<LoginScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     // ── Branding ──
-                    _buildBrandingHeader(theme, colorScheme),
+                    const AuthBrandingHeader(
+                      icon: Icons.sports_martial_arts,
+                      title: 'TKD Tournament Manager',
+                    ),
                     const SizedBox(height: 40),
 
                     // ── Card with form ──
@@ -134,9 +145,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
                               Text(
-                                _isSignUpMode
-                                    ? 'Create Account'
-                                    : 'Welcome Back',
+                                _headerTitle,
                                 style: theme.textTheme.headlineSmall?.copyWith(
                                   fontWeight: FontWeight.bold,
                                   color: colorScheme.onSurface,
@@ -145,9 +154,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                               const SizedBox(height: 8),
                               Text(
-                                _isSignUpMode
-                                    ? 'Sign up to get started'
-                                    : 'Sign in to continue',
+                                _headerSubtitle,
                                 style: theme.textTheme.bodyMedium?.copyWith(
                                   color: colorScheme.onSurfaceVariant,
                                 ),
@@ -155,104 +162,75 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                               const SizedBox(height: 32),
 
-                              // ── Email field ──
+                              // ── Email field (always visible) ──
                               TextFormField(
                                 controller: _emailController,
                                 keyboardType: TextInputType.emailAddress,
-                                textInputAction: TextInputAction.next,
+                                textInputAction:
+                                    _authMode == _AuthMode.forgotPassword
+                                        ? TextInputAction.done
+                                        : TextInputAction.next,
                                 autofillHints: const [AutofillHints.email],
                                 enabled: !isLoading,
                                 decoration: const InputDecoration(
                                   labelText: 'Email',
                                   prefixIcon: Icon(Icons.email_outlined),
                                 ),
-                                validator: _validateEmail,
+                                validator: AuthValidators.validateEmail,
+                                onFieldSubmitted:
+                                    _authMode == _AuthMode.forgotPassword
+                                        ? (_) => _submitForm()
+                                        : null,
                               ),
-                              const SizedBox(height: 20),
 
-                              // ── Password field ──
-                              TextFormField(
-                                controller: _passwordController,
-                                obscureText: !_isPasswordVisible,
-                                textInputAction: TextInputAction.done,
-                                autofillHints: _isSignUpMode
-                                    ? const [AutofillHints.newPassword]
-                                    : const [AutofillHints.password],
-                                enabled: !isLoading,
-                                decoration: InputDecoration(
-                                  labelText: 'Password',
-                                  prefixIcon:
-                                      const Icon(Icons.lock_outline),
-                                  suffixIcon: IconButton(
-                                    icon: Icon(
-                                      _isPasswordVisible
-                                          ? Icons.visibility_off
-                                          : Icons.visibility,
-                                    ),
-                                    onPressed: () {
-                                      setState(() {
-                                        _isPasswordVisible =
-                                            !_isPasswordVisible;
-                                      });
-                                    },
-                                  ),
+                              // ── Password field (hidden in forgot-password mode) ──
+                              if (_authMode != _AuthMode.forgotPassword) ...[
+                                const SizedBox(height: 20),
+                                PasswordTextFormField(
+                                  controller: _passwordController,
+                                  enabled: !isLoading,
+                                  autofillHints: _authMode == _AuthMode.signUp
+                                      ? const [AutofillHints.newPassword]
+                                      : const [AutofillHints.password],
+                                  validator: AuthValidators.validatePassword,
+                                  onFieldSubmitted: (_) => _submitForm(),
                                 ),
-                                validator: _validatePassword,
-                                onFieldSubmitted: (_) => _submitForm(),
-                              ),
-                              const SizedBox(height: 28),
+                              ],
 
-                              // ── Submit button ──
-                              SizedBox(
-                                height: 48,
-                                child: FilledButton(
-                                  onPressed: isLoading ? null : _submitForm,
-                                  child: isLoading
-                                      ? const SizedBox(
-                                          height: 22,
-                                          width: 22,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2.5,
-                                            color: Colors.white,
-                                          ),
-                                        )
-                                      : Text(
-                                          _isSignUpMode
-                                              ? 'Sign Up'
-                                              : 'Sign In',
-                                          style: const TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-
-                              // ── Toggle link ──
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    _isSignUpMode
-                                        ? 'Already have an account?'
-                                        : "Don't have an account?",
-                                    style: theme.textTheme.bodyMedium,
-                                  ),
-                                  TextButton(
+                              // ── Forgot Password link (sign-in mode only) ──
+                              if (_authMode == _AuthMode.signIn) ...[
+                                const SizedBox(height: 4),
+                                Align(
+                                  alignment: Alignment.centerRight,
+                                  child: TextButton(
                                     onPressed: isLoading
                                         ? null
-                                        : _toggleAuthMode,
+                                        : () => _switchToMode(
+                                              _AuthMode.forgotPassword,
+                                            ),
                                     child: Text(
-                                      _isSignUpMode ? 'Sign In' : 'Sign Up',
+                                      'Forgot Password?',
                                       style: TextStyle(
-                                        fontWeight: FontWeight.bold,
                                         color: colorScheme.primary,
+                                        fontSize: 13,
                                       ),
                                     ),
                                   ),
-                                ],
+                                ),
+                              ],
+
+                              const SizedBox(height: 20),
+
+                              // ── Submit button ──
+                              AuthSubmitButton(
+                                label: _submitButtonLabel,
+                                isLoading: isLoading,
+                                onPressed: _submitForm,
                               ),
+                              const SizedBox(height: 16),
+
+                              // ── Toggle links ──
+                              _buildToggleLinks(isLoading, colorScheme, theme),
                             ],
                           ),
                         ),
@@ -269,49 +247,74 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   // ───────────────────────────────────────────────────────────────────────────
-  // Branding
+  // Toggle Links
   // ───────────────────────────────────────────────────────────────────────────
 
-  Widget _buildBrandingHeader(ThemeData theme, ColorScheme colorScheme) {
-    return Column(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: colorScheme.primaryContainer,
-            shape: BoxShape.circle,
-          ),
-          child: Icon(
-            Icons.sports_martial_arts,
-            size: 48,
-            color: colorScheme.onPrimaryContainer,
+  Widget _buildToggleLinks(
+    bool isLoading,
+    ColorScheme colorScheme,
+    ThemeData theme,
+  ) {
+    return switch (_authMode) {
+      _AuthMode.signIn => Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text("Don't have an account?", style: theme.textTheme.bodyMedium),
+            TextButton(
+              onPressed:
+                  isLoading ? null : () => _switchToMode(_AuthMode.signUp),
+              child: Text(
+                'Sign Up',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: colorScheme.primary,
+                ),
+              ),
+            ),
+          ],
+        ),
+      _AuthMode.signUp => Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('Already have an account?', style: theme.textTheme.bodyMedium),
+            TextButton(
+              onPressed:
+                  isLoading ? null : () => _switchToMode(_AuthMode.signIn),
+              child: Text(
+                'Sign In',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: colorScheme.primary,
+                ),
+              ),
+            ),
+          ],
+        ),
+      _AuthMode.forgotPassword => TextButton(
+          onPressed:
+              isLoading ? null : () => _switchToMode(_AuthMode.signIn),
+          child: Text(
+            'Back to Sign In',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: colorScheme.primary,
+            ),
           ),
         ),
-        const SizedBox(height: 16),
-        Text(
-          'TKD Tournament Manager',
-          style: theme.textTheme.headlineMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: colorScheme.primary,
-          ),
-        ),
-      ],
-    );
+    };
   }
 
   // ───────────────────────────────────────────────────────────────────────────
-  // Listener — show snackbar on auth failure
+  // Listener — show snackbar on auth state changes
   // ───────────────────────────────────────────────────────────────────────────
 
   void _authStateListener(
     BuildContext context,
     AuthenticationState state,
   ) {
-    if (state is AuthenticationFailureState) {
-      // Guard: the router redirect may have already unmounted this widget
-      // by the time the listener fires on the next microtask.
-      if (!context.mounted) return;
+    if (!context.mounted) return;
 
+    if (state is AuthenticationFailureState) {
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
         ..showSnackBar(
@@ -321,6 +324,35 @@ class _LoginScreenState extends State<LoginScreen> {
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
+    } else if (state is AuthenticationPasswordResetEmailSent) {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: const Text(
+              'Password reset link sent! Check your email.',
+            ),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: Theme.of(context).colorScheme.primary,
+          ),
+        );
+      // Switch back to sign-in mode after sending reset link.
+      _switchToMode(_AuthMode.signIn);
+    } else if (state is AuthenticationEmailConfirmationSent) {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: const Text(
+              'Account created! Check your email to confirm your account.',
+            ),
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 6),
+            backgroundColor: Theme.of(context).colorScheme.primary,
+          ),
+        );
+      // Switch to sign-in mode so the user can log in after confirming.
+      _switchToMode(_AuthMode.signIn);
     }
   }
 }

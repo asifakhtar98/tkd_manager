@@ -7,8 +7,11 @@ import 'package:tkd_saas/core/theme/app_theme.dart';
 import 'package:tkd_saas/features/auth/presentation/bloc/authentication_bloc.dart';
 import 'package:tkd_saas/features/tournament/presentation/bloc/tournament_bloc.dart';
 
+import 'package:flutter_web_plugins/url_strategy.dart';
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  usePathUrlStrategy();
 
   await Supabase.initialize(
     url: 'https://lldlunqzkltclpfzpjxh.supabase.co',

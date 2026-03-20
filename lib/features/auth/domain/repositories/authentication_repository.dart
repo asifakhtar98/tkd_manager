@@ -1,6 +1,7 @@
 import 'package:fpdart/fpdart.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:tkd_saas/core/error/failures.dart';
+import 'package:tkd_saas/features/auth/domain/entities/sign_up_result.dart';
 
 /// Contract for all authentication operations.
 ///
@@ -18,11 +19,27 @@ abstract interface class AuthenticationRepository {
 
   /// Registers a new user with [email] and [password].
   ///
-  /// When Supabase "Confirm email" is **disabled**, the returned [User] is
-  /// immediately authenticated and a session is created.
-  Future<Either<Failure, User>> signUpWithEmailAndPassword({
+  /// Returns a [SignUpResult] that indicates whether the user was
+  /// immediately authenticated or needs to confirm their email first.
+  Future<Either<Failure, SignUpResult>> signUpWithEmailAndPassword({
     required String email,
     required String password,
+  });
+
+  /// Sends a password reset email to the given [email] address.
+  ///
+  /// The email contains a link that, when clicked, redirects the user
+  /// back to the app with a recovery token handled by [authStateChanges].
+  Future<Either<Failure, Unit>> resetPasswordForEmail({
+    required String email,
+  });
+
+  /// Updates the currently authenticated user's password.
+  ///
+  /// Typically called after the user clicks a recovery link and lands
+  /// on the password-reset screen.
+  Future<Either<Failure, Unit>> updatePassword({
+    required String newPassword,
   });
 
   /// Signs the current user out and destroys the local session.

@@ -489,8 +489,9 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                       )
                       .toList(),
                   onChanged: (val) {
-                    if (val != null)
+                    if (val != null) {
                       setState(() => _selectedBracketFormat = val);
+                    }
                   },
                 ),
                 const SizedBox(height: 16),
@@ -594,8 +595,9 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                           );
                         },
                       );
-                      if (text != null && text.isNotEmpty)
+                      if (text != null && text.isNotEmpty) {
                         _importParticipantsFromCsvData(text);
+                      }
                     },
                   ),
                 ),
