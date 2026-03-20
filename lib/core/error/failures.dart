@@ -29,3 +29,14 @@ class DatabaseFailure extends Failure {
 class GenerationFailure extends Failure {
   const GenerationFailure([super.message = 'Bracket generation failed.']);
 }
+
+/// Failure originating from Supabase authentication operations.
+///
+/// Wraps [AuthException] messages into the domain failure hierarchy so that
+/// the presentation layer can display user-friendly error text without
+/// depending on Supabase types directly.
+class AuthenticationFailure extends Failure {
+  const AuthenticationFailure([
+    super.message = 'An authentication error occurred.',
+  ]);
+}

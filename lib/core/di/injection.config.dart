@@ -11,7 +11,14 @@
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'package:get_it/get_it.dart' as _i174;
 import 'package:injectable/injectable.dart' as _i526;
+import 'package:supabase_flutter/supabase_flutter.dart' as _i454;
 import 'package:tkd_saas/core/di/injection_module.dart' as _i256;
+import 'package:tkd_saas/features/auth/data/repositories/authentication_repository_implementation.dart'
+    as _i330;
+import 'package:tkd_saas/features/auth/domain/repositories/authentication_repository.dart'
+    as _i791;
+import 'package:tkd_saas/features/auth/presentation/bloc/authentication_bloc.dart'
+    as _i923;
 import 'package:tkd_saas/features/bracket/data/services/double_elimination_bracket_generator_service_implementation.dart'
     as _i82;
 import 'package:tkd_saas/features/bracket/data/services/match_progression_service_implementation.dart'
@@ -39,6 +46,7 @@ extension GetItInjectableX on _i174.GetIt {
     final gh = _i526.GetItHelper(this, environment, environmentFilter);
     final appModule = _$AppModule();
     gh.lazySingleton<_i706.Uuid>(() => appModule.uuid);
+    gh.lazySingleton<_i454.SupabaseClient>(() => appModule.supabaseClient);
     gh.lazySingleton<_i143.TournamentBloc>(() => _i143.TournamentBloc());
     gh.lazySingleton<_i707.MatchProgressionService>(
       () => _i1018.MatchProgressionServiceImplementation(),
@@ -59,6 +67,16 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i1044.DoubleEliminationBracketGeneratorService>(),
         gh<_i707.MatchProgressionService>(),
         gh<_i706.Uuid>(),
+      ),
+    );
+    gh.lazySingleton<_i791.AuthenticationRepository>(
+      () => _i330.AuthenticationRepositoryImplementation(
+        gh<_i454.SupabaseClient>(),
+      ),
+    );
+    gh.factory<_i923.AuthenticationBloc>(
+      () => _i923.AuthenticationBloc(
+        authenticationRepository: gh<_i791.AuthenticationRepository>(),
       ),
     );
     return this;

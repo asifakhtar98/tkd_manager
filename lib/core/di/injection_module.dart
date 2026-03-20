@@ -1,4 +1,5 @@
 import 'package:injectable/injectable.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
 /// Provides third-party / external types that cannot be annotated directly.
@@ -7,4 +8,9 @@ abstract class AppModule {
   /// Provides a shared [Uuid] instance as a lazy singleton.
   @lazySingleton
   Uuid get uuid => const Uuid();
+
+  /// Provides the authenticated [SupabaseClient] from the global singleton
+  /// that was initialised in [main].
+  @lazySingleton
+  SupabaseClient get supabaseClient => Supabase.instance.client;
 }

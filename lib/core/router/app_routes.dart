@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:tkd_saas/core/di/injection.dart';
+import 'package:tkd_saas/features/auth/presentation/screens/login_screen.dart';
 import 'package:tkd_saas/features/bracket/presentation/bloc/bracket_bloc.dart';
 import 'package:tkd_saas/features/bracket/presentation/screens/bracket_viewer_screen.dart';
 import 'package:tkd_saas/features/dashboard/presentation/screens/dashboard_screen.dart';
@@ -40,6 +41,16 @@ enum BracketFormat {
 // Route definitions — annotated for go_router_builder code generation.
 // Run: dart run build_runner build --delete-conflicting-outputs
 // ─────────────────────────────────────────────────────────────────────────────
+
+@TypedGoRoute<LoginRoute>(path: '/login')
+@immutable
+class LoginRoute extends GoRouteData with $LoginRoute {
+  const LoginRoute();
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      const LoginScreen();
+}
 
 @TypedGoRoute<DashboardRoute>(path: '/')
 @immutable

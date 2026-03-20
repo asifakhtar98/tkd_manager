@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "name": "supabase-auth",
+  "owner": "adaptationio",
+  "repo": "skrillz",
+  "path": ".claude/skills/supabase-auth",
+  "branch": "main",
+  "sha": "362af8e99c16715b14b205ccb471597562008f5e",
+  "source": "manual"
+}
