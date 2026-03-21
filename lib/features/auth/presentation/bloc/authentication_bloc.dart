@@ -11,6 +11,13 @@ import 'package:tkd_saas/features/auth/domain/repositories/authentication_reposi
 part 'authentication_event.dart';
 part 'authentication_state.dart';
 
+/// Type alias for the email-confirmation redirect predicate.
+///
+/// Required because `injectable_generator` cannot resolve inline function
+/// types.  Using a typedef satisfies the code-gen while keeping the
+/// `@visibleForTesting` semantics.
+typedef IsEmailConfirmationRedirectPredicate = bool Function();
+
 /// Manages the global authentication lifecycle for the entire application.
 ///
 /// A single instance lives at the root [MultiBlocProvider] (created in
@@ -21,7 +28,7 @@ class AuthenticationBloc
     extends Bloc<AuthenticationEvent, AuthenticationState> {
   AuthenticationBloc({
     required AuthenticationRepository authenticationRepository,
-    @visibleForTesting bool Function()? isEmailConfirmationRedirect,
+    @factoryParam @visibleForTesting IsEmailConfirmationRedirectPredicate? isEmailConfirmationRedirect,
   }) : _authenticationRepository = authenticationRepository,
        _isEmailConfirmationRedirectOverride = isEmailConfirmationRedirect,
        super(const AuthenticationState.unknown()) {
@@ -40,7 +47,7 @@ class AuthenticationBloc
 
   /// Optional override for testing — when non-null, this predicate is used
   /// instead of the default `Uri.base` check.
-  final bool Function()? _isEmailConfirmationRedirectOverride;
+  final IsEmailConfirmationRedirectPredicate? _isEmailConfirmationRedirectOverride;
 
   StreamSubscription<AuthState>? _authStateSubscription;
 

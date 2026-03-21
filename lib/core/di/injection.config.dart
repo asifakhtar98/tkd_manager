@@ -23,12 +23,16 @@ import 'package:tkd_saas/features/bracket/data/services/double_elimination_brack
     as _i82;
 import 'package:tkd_saas/features/bracket/data/services/match_progression_service_implementation.dart'
     as _i1018;
+import 'package:tkd_saas/features/bracket/data/services/participant_shuffle_service_implementation.dart'
+    as _i92;
 import 'package:tkd_saas/features/bracket/data/services/single_elimination_bracket_generator_service_implementation.dart'
     as _i34;
 import 'package:tkd_saas/features/bracket/domain/services/double_elimination_bracket_generator_service.dart'
     as _i1044;
 import 'package:tkd_saas/features/bracket/domain/services/match_progression_service.dart'
     as _i707;
+import 'package:tkd_saas/features/bracket/domain/services/participant_shuffle_service.dart'
+    as _i648;
 import 'package:tkd_saas/features/bracket/domain/services/single_elimination_bracket_generator_service.dart'
     as _i937;
 import 'package:tkd_saas/features/bracket/presentation/bloc/bracket_bloc.dart'
@@ -56,16 +60,11 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i706.Uuid>(),
       ),
     );
+    gh.lazySingleton<_i648.ParticipantShuffleService>(
+      () => _i92.ParticipantShuffleServiceImplementation(),
+    );
     gh.lazySingleton<_i1044.DoubleEliminationBracketGeneratorService>(
       () => _i82.DoubleEliminationBracketGeneratorServiceImplementation(
-        gh<_i706.Uuid>(),
-      ),
-    );
-    gh.factory<_i416.BracketBloc>(
-      () => _i416.BracketBloc(
-        gh<_i937.SingleEliminationBracketGeneratorService>(),
-        gh<_i1044.DoubleEliminationBracketGeneratorService>(),
-        gh<_i707.MatchProgressionService>(),
         gh<_i706.Uuid>(),
       ),
     );
@@ -74,9 +73,23 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i454.SupabaseClient>(),
       ),
     );
-    gh.factory<_i923.AuthenticationBloc>(
-      () => _i923.AuthenticationBloc(
+    gh.factoryParam<
+      _i923.AuthenticationBloc,
+      _i923.IsEmailConfirmationRedirectPredicate?,
+      dynamic
+    >(
+      (isEmailConfirmationRedirect, _) => _i923.AuthenticationBloc(
         authenticationRepository: gh<_i791.AuthenticationRepository>(),
+        isEmailConfirmationRedirect: isEmailConfirmationRedirect,
+      ),
+    );
+    gh.factory<_i416.BracketBloc>(
+      () => _i416.BracketBloc(
+        gh<_i937.SingleEliminationBracketGeneratorService>(),
+        gh<_i1044.DoubleEliminationBracketGeneratorService>(),
+        gh<_i707.MatchProgressionService>(),
+        gh<_i648.ParticipantShuffleService>(),
+        gh<_i706.Uuid>(),
       ),
     );
     return this;

@@ -8,6 +8,7 @@ import 'package:tkd_saas/features/bracket/domain/entities/bracket_match_action.d
 import 'package:tkd_saas/features/bracket/domain/entities/match_entity.dart';
 import 'package:tkd_saas/features/bracket/domain/services/double_elimination_bracket_generator_service.dart';
 import 'package:tkd_saas/features/bracket/domain/services/match_progression_service.dart';
+import 'package:tkd_saas/features/bracket/domain/services/participant_shuffle_service.dart';
 import 'package:tkd_saas/features/bracket/domain/services/single_elimination_bracket_generator_service.dart';
 import 'package:tkd_saas/features/bracket/presentation/bloc/bracket_event.dart';
 import 'package:tkd_saas/features/bracket/presentation/bloc/bracket_state.dart';
@@ -23,6 +24,7 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
     this._singleEliminationGenerator,
     this._doubleEliminationGenerator,
     this._matchProgressionService,
+    this._participantShuffleService,
     this._uuid,
   ) : super(const BracketState.initial()) {
     on<BracketGenerateRequested>(_handleBracketGenerationRequested);
@@ -43,6 +45,7 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
   final SingleEliminationBracketGeneratorService _singleEliminationGenerator;
   final DoubleEliminationBracketGeneratorService _doubleEliminationGenerator;
   final MatchProgressionService _matchProgressionService;
+  final ParticipantShuffleService _participantShuffleService;
   final Uuid _uuid;
 
   /// Caches the last generation request so [BracketRegenerateRequested] can
@@ -76,7 +79,18 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
     final cachedRequest = _cachedGenerationRequest;
     if (cachedRequest == null) return;
     _cancelReplayTimer();
-    _executeBracketGeneration(cachedRequest, emit);
+
+    // Shuffle participants for a fresh draw, respecting dojang separation.
+    final shuffledParticipants =
+        _participantShuffleService.shuffleParticipantsForBracketGeneration(
+      participants: cachedRequest.participants,
+      dojangSeparation: cachedRequest.dojangSeparation,
+    );
+    final shuffledRequest = cachedRequest.copyWith(
+      participants: shuffledParticipants,
+    );
+    _cachedGenerationRequest = shuffledRequest;
+    _executeBracketGeneration(shuffledRequest, emit);
   }
 
   // ── Match result recording (with history push) ─────────────────────────────
