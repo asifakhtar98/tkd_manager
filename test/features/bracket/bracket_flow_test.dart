@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tkd_saas/core/di/injection.dart';
+import 'package:tkd_saas/core/router/app_router.dart';
 import 'package:tkd_saas/core/router/app_routes.dart';
 import 'package:tkd_saas/features/bracket/presentation/widgets/tie_sheet_canvas_widget.dart';
 import 'package:tkd_saas/main.dart' as app;
 
 void main() {
   setUp(configureDependencies);
-  tearDown(getIt.reset);
+  tearDown(() async {
+    AppRouter.resetForTesting();
+    await getIt.reset();
+  });
 
   Future<void> navigateToSetup(WidgetTester tester) async {
     tester.view.physicalSize = const Size(1920, 1080);

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:tkd_saas/core/config/app_config.dart';
 import 'package:tkd_saas/core/router/app_routes.dart';
 import 'package:tkd_saas/features/auth/presentation/bloc/authentication_bloc.dart';
 import 'package:tkd_saas/features/core/data/demo_data.dart';
@@ -23,25 +24,26 @@ class DashboardScreen extends StatelessWidget {
         elevation: 0,
         centerTitle: false,
         actions: [
-          TextButton.icon(
-            onPressed: () {
-              context
-                  .read<AuthenticationBloc>()
-                  .add(const AuthenticationSignOutRequested());
-            },
-            icon: const Icon(Icons.logout),
-            label: const Text('Sign Out'),
-          ),
-          const SizedBox(width: 8),
+          if (AppConfig.isAuthenticationEnabled) ...[
+            TextButton.icon(
+              onPressed: () {
+                context.read<AuthenticationBloc>().add(
+                  const AuthenticationSignOutRequested(),
+                );
+              },
+              icon: const Icon(Icons.logout),
+              label: const Text('Sign Out'),
+            ),
+            const SizedBox(width: 8),
+          ],
         ],
       ),
-    
+
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-           
             _buildTournamentSection(context, theme),
             const SizedBox(height: 48),
             _buildDemoSection(context, theme),
@@ -69,8 +71,6 @@ class DashboardScreen extends StatelessWidget {
     ).push(context);
   }
 
-
-
   Widget _buildTournamentSection(BuildContext context, ThemeData theme) {
     return BlocBuilder<TournamentBloc, TournamentState>(
       builder: (context, state) {
@@ -81,8 +81,9 @@ class DashboardScreen extends StatelessWidget {
               children: [
                 Text(
                   'My Tournaments',
-                  style: theme.textTheme.titleLarge
-                      ?.copyWith(fontWeight: FontWeight.bold),
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const Spacer(),
                 FilledButton.icon(
@@ -96,7 +97,6 @@ class DashboardScreen extends StatelessWidget {
                   label: const Text('New Tournament'),
                   onPressed: () => _showCreateDialog(context),
                 ),
-                
               ],
             ),
             const SizedBox(height: 16),
@@ -114,9 +114,7 @@ class DashboardScreen extends StatelessWidget {
                 ),
               )
             else
-              ...state.tournaments.map(
-                (t) => _TournamentCard(tournament: t),
-              ),
+              ...state.tournaments.map((t) => _TournamentCard(tournament: t)),
           ],
         );
       },
@@ -145,8 +143,9 @@ class DashboardScreen extends StatelessWidget {
       children: [
         Text(
           'Demo Brackets',
-          style: theme.textTheme.titleLarge
-              ?.copyWith(fontWeight: FontWeight.bold),
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
         ),
         const SizedBox(height: 4),
         Text(
@@ -175,42 +174,56 @@ class DashboardScreen extends StatelessWidget {
               title: '4 Players',
               subtitle: 'Minimal bracket, no BYEs',
               accentColor: Colors.blue,
-              onTap: () => _navigateToDemoBracketViewer(context,
-                  bracketFormat: BracketFormat.singleElimination, playerCount: 4),
+              onTap: () => _navigateToDemoBracketViewer(
+                context,
+                bracketFormat: BracketFormat.singleElimination,
+                playerCount: 4,
+              ),
             ),
             _DemoCard(
               icon: Icons.account_tree_outlined,
               title: '8 Players',
               subtitle: 'Perfect bracket, no BYEs',
               accentColor: Colors.blue,
-              onTap: () => _navigateToDemoBracketViewer(context,
-                  bracketFormat: BracketFormat.singleElimination, playerCount: 8),
+              onTap: () => _navigateToDemoBracketViewer(
+                context,
+                bracketFormat: BracketFormat.singleElimination,
+                playerCount: 8,
+              ),
             ),
             _DemoCard(
               icon: Icons.account_tree_outlined,
               title: '5 Players',
               subtitle: 'BYEs in action',
               accentColor: Colors.indigo,
-              onTap: () => _navigateToDemoBracketViewer(context,
-                  bracketFormat: BracketFormat.singleElimination, playerCount: 5),
+              onTap: () => _navigateToDemoBracketViewer(
+                context,
+                bracketFormat: BracketFormat.singleElimination,
+                playerCount: 5,
+              ),
             ),
             _DemoCard(
               icon: Icons.account_tree_outlined,
               title: '16 Players',
               subtitle: 'Large bracket, full draw',
               accentColor: Colors.blue,
-              onTap: () => _navigateToDemoBracketViewer(context,
-                  bracketFormat: BracketFormat.singleElimination, playerCount: 16),
+              onTap: () => _navigateToDemoBracketViewer(
+                context,
+                bracketFormat: BracketFormat.singleElimination,
+                playerCount: 16,
+              ),
             ),
             _DemoCard(
               icon: Icons.emoji_events_outlined,
               title: '8P + 3rd Place',
               subtitle: 'Bronze medal match',
               accentColor: Colors.amber.shade700,
-              onTap: () => _navigateToDemoBracketViewer(context,
-                  bracketFormat: BracketFormat.singleElimination,
-                  playerCount: 8,
-                  includeThirdPlaceMatch: true),
+              onTap: () => _navigateToDemoBracketViewer(
+                context,
+                bracketFormat: BracketFormat.singleElimination,
+                playerCount: 8,
+                includeThirdPlaceMatch: true,
+              ),
             ),
           ],
         ),
@@ -234,24 +247,33 @@ class DashboardScreen extends StatelessWidget {
               title: '4 Players',
               subtitle: 'Minimal DE bracket',
               accentColor: Colors.teal,
-              onTap: () => _navigateToDemoBracketViewer(context,
-                  bracketFormat: BracketFormat.doubleElimination, playerCount: 4),
+              onTap: () => _navigateToDemoBracketViewer(
+                context,
+                bracketFormat: BracketFormat.doubleElimination,
+                playerCount: 4,
+              ),
             ),
             _DemoCard(
               icon: Icons.repeat,
               title: '8 Players',
               subtitle: 'Standard DE bracket',
               accentColor: Colors.teal,
-              onTap: () => _navigateToDemoBracketViewer(context,
-                  bracketFormat: BracketFormat.doubleElimination, playerCount: 8),
+              onTap: () => _navigateToDemoBracketViewer(
+                context,
+                bracketFormat: BracketFormat.doubleElimination,
+                playerCount: 8,
+              ),
             ),
             _DemoCard(
               icon: Icons.repeat,
               title: '6 Players',
               subtitle: 'DE with BYEs',
               accentColor: Colors.cyan.shade700,
-              onTap: () => _navigateToDemoBracketViewer(context,
-                  bracketFormat: BracketFormat.doubleElimination, playerCount: 6),
+              onTap: () => _navigateToDemoBracketViewer(
+                context,
+                bracketFormat: BracketFormat.doubleElimination,
+                playerCount: 6,
+              ),
             ),
           ],
         ),
@@ -382,10 +404,7 @@ class _DemoCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   subtitle,
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 12,
-                  ),
+                  style: TextStyle(color: Colors.grey[600], fontSize: 12),
                 ),
               ],
             ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:tkd_saas/core/config/app_config.dart';
 import 'package:tkd_saas/core/di/injection.dart';
 import 'package:tkd_saas/core/router/app_router.dart';
 import 'package:tkd_saas/core/theme/app_theme.dart';
@@ -13,11 +14,18 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   usePathUrlStrategy();
 
-  await Supabase.initialize(
-    url: 'https://lldlunqzkltclpfzpjxh.supabase.co',
-    anonKey: 'sb_publishable_Kf90GkwrSzNySWSCqhJT8Q_9b94d-UM',
-  );
+  if (AppConfig.isAuthenticationEnabled) {
+    await Supabase.initialize(
+      url: 'https://lldlunqzkltclpfzpjxh.supabase.co',
+      anonKey: 'sb_publishable_Kf90GkwrSzNySWSCqhJT8Q_9b94d-UM',
+    );
+  }
 
+  // DI must ALWAYS be wired — non-auth services (BracketBloc, Uuid,
+  // bracket generators, TournamentBloc) are resolved throughout the app.
+  // Auth-related registrations (SupabaseClient, AuthenticationRepository,
+  // AuthenticationBloc) use lazySingletons/factories, so they won't
+  // instantiate unless explicitly resolved.
   configureDependencies();
 
   runApp(const TkdTournamentApp());
@@ -28,22 +36,26 @@ class TkdTournamentApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MultiBlocProvider(
-      providers: [
+    // When auth is disabled, skip the AuthenticationBloc provider entirely
+    // and pass null to the router so all redirect guards are bypassed.
+    final List<BlocProvider> blocProviders = [
+      if (AppConfig.isAuthenticationEnabled)
         BlocProvider<AuthenticationBloc>(
-          create: (_) => getIt<AuthenticationBloc>()
-            ..add(const AuthenticationSubscriptionRequested()),
+          create: (_) =>
+              getIt<AuthenticationBloc>()
+                ..add(const AuthenticationSubscriptionRequested()),
         ),
-        BlocProvider<TournamentBloc>(
-          create: (_) => getIt<TournamentBloc>(),
-        ),
-      ],
+      BlocProvider<TournamentBloc>(create: (_) => getIt<TournamentBloc>()),
+    ];
+
+    return MultiBlocProvider(
+      providers: blocProviders,
       child: Builder(
         builder: (BuildContext context) {
-          // The router must be created inside the widget tree so it can
-          // access the AuthenticationBloc for redirect decisions.
-          final AuthenticationBloc authenticationBloc =
-              context.read<AuthenticationBloc>();
+          final AuthenticationBloc? authenticationBloc =
+              AppConfig.isAuthenticationEnabled
+              ? context.read<AuthenticationBloc>()
+              : null;
 
           return MaterialApp.router(
             title: 'TKD Tournament Manager',
