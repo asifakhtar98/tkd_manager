@@ -2,6 +2,7 @@ import 'dart:math';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import '../../domain/entities/match_entity.dart';
+import '../../domain/services/match_numbering_utility.dart';
 import '../../../tournament/domain/entities/tournament_entity.dart';
 import '../../../participant/domain/entities/participant_entity.dart';
 import 'participant_slot_hit_area.dart';
@@ -507,18 +508,18 @@ class TieSheetPainter extends CustomPainter {
     return Size(max(width, 700), max(height, 500));
   }
 
+  /// Delegates global match numbering to [MatchNumberingUtility].
   void _buildGlobalMatchNumbers() {
-    _matchGlobalNumbers.clear();
-    final sorted = List<MatchEntity>.from(matches)
-      ..sort((a, b) {
-        if (a.roundNumber != b.roundNumber) {
-          return a.roundNumber.compareTo(b.roundNumber);
-        }
-        return a.matchNumberInRound.compareTo(b.matchNumberInRound);
-      });
-    for (var i = 0; i < sorted.length; i++) {
-      _matchGlobalNumbers[sorted[i].id] = i + 1;
-    }
+    _matchGlobalNumbers
+      ..clear()
+      ..addAll(
+        MatchNumberingUtility.buildGlobalMatchNumbers(
+          matches: matches,
+          isDoubleElimination: _isDouble,
+          winnersBracketId: winnersBracketId,
+          losersBracketId: losersBracketId,
+        ),
+      );
   }
 
   // ── 3d  Paint entry-point ──────────────────────────────────────────────────
