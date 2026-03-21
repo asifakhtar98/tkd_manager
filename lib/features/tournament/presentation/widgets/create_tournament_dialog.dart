@@ -1,6 +1,21 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:tkd_saas/features/tournament/domain/entities/tournament_entity.dart';
 import 'package:uuid/uuid.dart';
+
+/// Default Supabase-hosted logo URLs used when creating new tournaments.
+abstract final class TournamentLogoDefaults {
+  static const String leftLogoUrl =
+      'https://lldlunqzkltclpfzpjxh.supabase.co/storage/v1/object/public/assets/India_Taekwondo_logo_5346.png';
+  static const String rightLogoUrl =
+      'https://lldlunqzkltclpfzpjxh.supabase.co/storage/v1/object/public/assets/World_Taekwondo+logo_356345.png';
+
+  /// Returns `true` if the given [url] is a base64 data URI.
+  static bool isDataUri(String url) => url.startsWith('data:');
+}
 
 /// Modal dialog to create or edit a [TournamentEntity].
 ///
@@ -30,6 +45,11 @@ class _CreateTournamentDialogState extends State<CreateTournamentDialog> {
   late final TextEditingController _divisionController;
   late final TextEditingController _weightDivisionController;
 
+  /// Current logo URL/data-URI values. Mutable so they can be swapped by
+  /// the file picker without needing a TextEditingController.
+  late String _leftLogoUrl;
+  late String _rightLogoUrl;
+
   bool get _isEditing => widget.existing != null;
 
   @override
@@ -57,6 +77,10 @@ class _CreateTournamentDialogState extends State<CreateTournamentDialog> {
     _weightDivisionController = TextEditingController(
       text: existingTournament?.weightDivisionLabel ?? '',
     );
+    _leftLogoUrl = existingTournament?.leftLogoUrl ??
+        TournamentLogoDefaults.leftLogoUrl;
+    _rightLogoUrl = existingTournament?.rightLogoUrl ??
+        TournamentLogoDefaults.rightLogoUrl;
   }
 
   @override
@@ -85,10 +109,40 @@ class _CreateTournamentDialogState extends State<CreateTournamentDialog> {
       ageCategoryLabel: _ageCategoryController.text.trim(),
       genderLabel: _divisionController.text.trim(),
       weightDivisionLabel: _weightDivisionController.text.trim(),
+      leftLogoUrl: _leftLogoUrl,
+      rightLogoUrl: _rightLogoUrl,
       createdAt: existingTournament?.createdAt ?? DateTime.now(),
     );
 
     Navigator.pop(context, tournament);
+  }
+
+  /// Opens a file picker to select an image and converts the result to a
+  /// base64 data URI string.
+  Future<String?> _pickImageAsDataUri() async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.image,
+      allowMultiple: false,
+      withData: true,
+    );
+    if (result == null || result.files.isEmpty) return null;
+
+    final pickedFile = result.files.first;
+    final Uint8List? fileBytes = pickedFile.bytes;
+    if (fileBytes == null) return null;
+
+    // Detect MIME from extension or default to png.
+    final extension = pickedFile.extension?.toLowerCase() ?? 'png';
+    final mimeType = switch (extension) {
+      'jpg' || 'jpeg' => 'image/jpeg',
+      'gif' => 'image/gif',
+      'webp' => 'image/webp',
+      'svg' => 'image/svg+xml',
+      _ => 'image/png',
+    };
+
+    final base64Data = base64Encode(fileBytes);
+    return 'data:$mimeType;base64,$base64Data';
   }
 
   @override
@@ -96,12 +150,13 @@ class _CreateTournamentDialogState extends State<CreateTournamentDialog> {
     return AlertDialog(
       title: Text(_isEditing ? 'Edit Tournament' : 'New Tournament'),
       content: SizedBox(
-        width: 480,
+        width: 540,
         child: Form(
           key: _formKey,
           child: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 TextFormField(
                   controller: _nameController,
@@ -157,6 +212,9 @@ class _CreateTournamentDialogState extends State<CreateTournamentDialog> {
                   textInputAction: TextInputAction.done,
                   onSubmitted: (_) => _submitTournamentForm(),
                 ),
+                const SizedBox(height: 20),
+                // ── Tournament Logos Section ──
+                _buildTournamentLogosSection(),
               ],
             ),
           ),
@@ -172,6 +230,257 @@ class _CreateTournamentDialogState extends State<CreateTournamentDialog> {
           child: Text(_isEditing ? 'Save' : 'Create'),
         ),
       ],
+    );
+  }
+
+  Widget _buildTournamentLogosSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(Icons.image_outlined, size: 18, color: Colors.grey.shade600),
+            const SizedBox(width: 6),
+            Text(
+              'Tournament Logos',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey.shade700,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Displayed at the top of the tie sheet. Tap the image to change, or reset to the default.',
+          style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: _LogoPickerCard(
+                label: 'Left Logo',
+                currentUrl: _leftLogoUrl,
+                defaultUrl: TournamentLogoDefaults.leftLogoUrl,
+                onPickImage: () async {
+                  final dataUri = await _pickImageAsDataUri();
+                  if (dataUri != null) {
+                    setState(() => _leftLogoUrl = dataUri);
+                  }
+                },
+                onResetToDefault: () {
+                  setState(() {
+                    _leftLogoUrl = TournamentLogoDefaults.leftLogoUrl;
+                  });
+                },
+                onRemove: () {
+                  setState(() => _leftLogoUrl = '');
+                },
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _LogoPickerCard(
+                label: 'Right Logo',
+                currentUrl: _rightLogoUrl,
+                defaultUrl: TournamentLogoDefaults.rightLogoUrl,
+                onPickImage: () async {
+                  final dataUri = await _pickImageAsDataUri();
+                  if (dataUri != null) {
+                    setState(() => _rightLogoUrl = dataUri);
+                  }
+                },
+                onResetToDefault: () {
+                  setState(() {
+                    _rightLogoUrl = TournamentLogoDefaults.rightLogoUrl;
+                  });
+                },
+                onRemove: () {
+                  setState(() => _rightLogoUrl = '');
+                },
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+/// Compact card showing a logo preview with pick / reset / remove controls.
+class _LogoPickerCard extends StatelessWidget {
+  const _LogoPickerCard({
+    required this.label,
+    required this.currentUrl,
+    required this.defaultUrl,
+    required this.onPickImage,
+    required this.onResetToDefault,
+    required this.onRemove,
+  });
+
+  final String label;
+  final String currentUrl;
+  final String defaultUrl;
+  final VoidCallback onPickImage;
+  final VoidCallback onResetToDefault;
+  final VoidCallback onRemove;
+
+  bool get _isDefault => currentUrl == defaultUrl;
+  bool get _hasLogo => currentUrl.isNotEmpty;
+
+  /// Builds the appropriate image widget for a URL or data URI.
+  Widget _buildPreviewImage(String url) {
+    if (TournamentLogoDefaults.isDataUri(url)) {
+      // Decode base64 data URI → Uint8List → MemoryImage.
+      final commaIndex = url.indexOf(',');
+      if (commaIndex == -1) return _buildBrokenIcon();
+      final base64String = url.substring(commaIndex + 1);
+      try {
+        final bytes = base64Decode(base64String);
+        return Image.memory(
+          bytes,
+          fit: BoxFit.contain,
+          errorBuilder: (_, __, ___) => _buildBrokenIcon(),
+        );
+      } catch (_) {
+        return _buildBrokenIcon();
+      }
+    }
+    // Regular network URL.
+    return Image.network(
+      url,
+      fit: BoxFit.contain,
+      errorBuilder: (_, __, ___) => _buildBrokenIcon(),
+      loadingBuilder: (_, child, loadingProgress) {
+        if (loadingProgress == null) return child;
+        return const Center(
+          child: SizedBox(
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+        );
+      },
+    );
+  }
+
+  static Widget _buildBrokenIcon() => const Center(
+        child: Icon(
+          Icons.broken_image_outlined,
+          size: 28,
+          color: Colors.redAccent,
+        ),
+      );
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey.shade300),
+        borderRadius: BorderRadius.circular(8),
+        color: Colors.grey.shade50,
+      ),
+      child: Column(
+        children: [
+          // ── Clickable Preview ──
+          InkWell(
+            borderRadius: BorderRadius.circular(6),
+            onTap: onPickImage,
+            child: Container(
+              height: 64,
+              width: 64,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: Colors.grey.shade200),
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: _hasLogo
+                  ? _buildPreviewImage(currentUrl)
+                  : const Center(
+                      child: Icon(
+                        Icons.add_photo_alternate_outlined,
+                        size: 28,
+                        color: Colors.grey,
+                      ),
+                    ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          // ── Label ──
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 6),
+          // ── Action Buttons ──
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _MiniActionButton(
+                icon: Icons.upload_file_outlined,
+                tooltip: 'Choose image',
+                onTap: onPickImage,
+              ),
+              if (!_isDefault) ...[
+                const SizedBox(width: 4),
+                _MiniActionButton(
+                  icon: Icons.restart_alt,
+                  tooltip: 'Reset to default',
+                  onTap: onResetToDefault,
+                  color: Colors.blue.shade600,
+                ),
+              ],
+              if (_hasLogo && !_isDefault) ...[
+                const SizedBox(width: 4),
+                _MiniActionButton(
+                  icon: Icons.close,
+                  tooltip: 'Remove logo',
+                  onTap: onRemove,
+                  color: Colors.red.shade400,
+                ),
+              ],
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 24×24 icon button used for the logo card action row.
+class _MiniActionButton extends StatelessWidget {
+  const _MiniActionButton({
+    required this.icon,
+    required this.tooltip,
+    required this.onTap,
+    this.color,
+  });
+
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback onTap;
+  final Color? color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: tooltip,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(4),
+          child: Icon(icon, size: 16, color: color ?? Colors.grey.shade700),
+        ),
+      ),
     );
   }
 }

@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:math';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
@@ -65,18 +66,104 @@ class _TieSheetCanvasWidgetState extends State<TieSheetCanvasWidget> {
   List<MapEntry<String, Rect>> _hitAreas = [];
   List<ParticipantSlotHitArea> _participantSlotHitAreas = [];
 
+  /// Pre-decoded logo images for the [TieSheetPainter].
+  ui.Image? _leftLogoImage;
+  ui.Image? _rightLogoImage;
+
   @override
   void initState() {
     super.initState();
+    _loadLogoImages();
     WidgetsBinding.instance.addPostFrameCallback((_) => _rebuildHitAreas());
   }
 
   @override
   void didUpdateWidget(covariant TieSheetCanvasWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
+    // Reload logos if the tournament URLs changed.
+    if (oldWidget.tournament.leftLogoUrl != widget.tournament.leftLogoUrl ||
+        oldWidget.tournament.rightLogoUrl != widget.tournament.rightLogoUrl) {
+      _loadLogoImages();
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _rebuildHitAreas();
     });
+  }
+
+  @override
+  void dispose() {
+    _leftLogoImage?.dispose();
+    _rightLogoImage?.dispose();
+    super.dispose();
+  }
+
+  /// Asynchronously downloads and decodes logo images from network URLs.
+  /// On completion triggers a repaint so the painter can draw them.
+  ///
+  /// Clears existing image references first so stale logos are not
+  /// displayed while new ones load.
+  void _loadLogoImages() {
+    // Dispose previous images to free GPU memory.
+    _leftLogoImage?.dispose();
+    _rightLogoImage?.dispose();
+    _leftLogoImage = null;
+    _rightLogoImage = null;
+
+    _loadSingleLogoImage(
+      widget.tournament.leftLogoUrl,
+      (image) {
+        if (mounted) setState(() => _leftLogoImage = image);
+      },
+    );
+    _loadSingleLogoImage(
+      widget.tournament.rightLogoUrl,
+      (image) {
+        if (mounted) setState(() => _rightLogoImage = image);
+      },
+    );
+  }
+
+  /// Loads a single logo image and delivers the decoded [ui.Image] via
+  /// [onLoaded]. Supports both HTTP(S) URLs and `data:` base64 URIs.
+  /// Silently ignores failures (logo simply won't appear).
+  void _loadSingleLogoImage(String url, void Function(ui.Image) onLoaded) {
+    if (url.isEmpty) return;
+
+    if (url.startsWith('data:')) {
+      _loadDataUriImage(url, onLoaded);
+    } else {
+      _loadNetworkImage(url, onLoaded);
+    }
+  }
+
+  /// Decodes a base64 data URI into a [ui.Image].
+  void _loadDataUriImage(String dataUri, void Function(ui.Image) onLoaded) {
+    try {
+      final commaIndex = dataUri.indexOf(',');
+      if (commaIndex == -1) return;
+      final base64String = dataUri.substring(commaIndex + 1);
+      final bytes = base64Decode(base64String);
+      ui.decodeImageFromList(bytes, onLoaded);
+    } catch (_) {
+      // Malformed data URI — silently skip.
+    }
+  }
+
+  /// Loads a network image via [NetworkImage] and delivers the [ui.Image].
+  void _loadNetworkImage(String url, void Function(ui.Image) onLoaded) {
+    final imageStream = NetworkImage(url).resolve(ImageConfiguration.empty);
+    late ImageStreamListener listener;
+    listener = ImageStreamListener(
+      (imageInfo, _) {
+        onLoaded(imageInfo.image);
+        imageStream.removeListener(listener);
+      },
+      onError: (_, __) {
+        // Logo failed to load — degrade gracefully without the logo.
+        imageStream.removeListener(listener);
+      },
+    );
+    imageStream.addListener(listener);
   }
 
   void _rebuildHitAreas() {
@@ -109,6 +196,8 @@ class _TieSheetCanvasWidgetState extends State<TieSheetCanvasWidget> {
     losersBracketId: widget.losersBracketId,
     isEditModeEnabled: widget.isEditModeEnabled,
     themeConfig: widget.themeConfig,
+    leftLogoImage: _leftLogoImage,
+    rightLogoImage: _rightLogoImage,
   );
 
   @override
@@ -314,6 +403,10 @@ class TieSheetPainter extends CustomPainter {
   final bool isEditModeEnabled;
   final TieSheetThemeConfig themeConfig;
 
+  /// Pre-decoded logo images rendered above the header banner.
+  final ui.Image? leftLogoImage;
+  final ui.Image? rightLogoImage;
+
   final List<MapEntry<String, Rect>> matchHitAreas = [];
   final List<ParticipantSlotHitArea> participantSlotHitAreas = [];
   final Map<String, int> _matchGlobalNumbers = {};
@@ -337,6 +430,10 @@ class TieSheetPainter extends CustomPainter {
   static const double _cardRadius = 6.0;
   static const double _accentStripW = 4.0;
 
+  /// Vertical space reserved for the logo row above the header banner.
+  /// 60px image + 12px bottom padding.
+  static const double logoRowHeight = 72.0;
+
   static const double listW = noColW + nameColW + regIdColW;
 
   // Medal-table dimensions.
@@ -356,7 +453,12 @@ class TieSheetPainter extends CustomPainter {
     this.losersBracketId,
     this.isEditModeEnabled = false,
     this.themeConfig = const TieSheetThemeConfig.defaultMode(),
+    this.leftLogoImage,
+    this.rightLogoImage,
   });
+
+  /// Whether at least one logo image has been loaded.
+  bool get _hasLogos => leftLogoImage != null || rightLogoImage != null;
 
   bool get _isDouble => winnersBracketId != null && losersBracketId != null;
 
@@ -458,7 +560,8 @@ class TieSheetPainter extends CustomPainter {
       _computeOneSidedHeight(rightR1),
     );
 
-    final height = margin + headerH + tableH + 60 + medalH + margin;
+    final effectiveLogoRowHeight = _hasLogos ? logoRowHeight : 0.0;
+    final height = margin + effectiveLogoRowHeight + headerH + tableH + 60 + medalH + margin;
     return Size(max(width, 700), max(height, 500));
   }
 
@@ -494,8 +597,10 @@ class TieSheetPainter extends CustomPainter {
         ? 80
         : (lbR1.length * 2 * rowH + (lbR1.length - 1) * pairGap);
 
+    final effectiveLogoRowHeight = _hasLogos ? logoRowHeight : 0.0;
     final height =
         margin +
+        effectiveLogoRowHeight +
         headerH +
         sectionLabelH +
         wbH +
@@ -1137,6 +1242,36 @@ class TieSheetPainter extends CustomPainter {
   double _paintHeader(Canvas canvas, Size size, double startY, Paint thickPen) {
     var y = startY;
 
+    // ── Logo row (above the banner) ──
+    if (_hasLogos) {
+      const double logoMaxHeight = 60.0;
+      const double logoPadding = 12.0;
+      final double headerLeft = margin;
+      final double headerRight = size.width - margin;
+
+      if (leftLogoImage != null) {
+        _paintLogoImage(
+          canvas,
+          leftLogoImage!,
+          logoMaxHeight,
+          headerLeft,
+          y,
+        );
+      }
+      if (rightLogoImage != null) {
+        final double rightLogoWidth =
+            (rightLogoImage!.width / rightLogoImage!.height) * logoMaxHeight;
+        _paintLogoImage(
+          canvas,
+          rightLogoImage!,
+          logoMaxHeight,
+          headerRight - rightLogoWidth,
+          y,
+        );
+      }
+      y += logoMaxHeight + logoPadding;
+    }
+
     // ── Dark header banner with tournament info ──
     final bannerH = 64.0;
     final bannerRect = RRect.fromLTRBR(
@@ -1287,6 +1422,32 @@ class TieSheetPainter extends CustomPainter {
     );
 
     return infoRowBottom + 12;
+  }
+
+  /// Draws a [ui.Image] on the canvas scaled to fit within [maxHeight],
+  /// preserving the original aspect ratio.
+  void _paintLogoImage(
+    Canvas canvas,
+    ui.Image image,
+    double maxHeight,
+    double x,
+    double y,
+  ) {
+    // Guard against degenerate images with zero dimensions.
+    if (image.width <= 0 || image.height <= 0) return;
+
+    final double aspectRatio = image.width / image.height;
+    final double drawHeight = maxHeight;
+    final double drawWidth = drawHeight * aspectRatio;
+
+    final srcRect = Rect.fromLTWH(
+      0,
+      0,
+      image.width.toDouble(),
+      image.height.toDouble(),
+    );
+    final dstRect = Rect.fromLTWH(x, y, drawWidth, drawHeight);
+    canvas.drawImageRect(image, srcRect, dstRect, Paint());
   }
 
   void _paintParticipantRow(
@@ -2210,5 +2371,7 @@ class TieSheetPainter extends CustomPainter {
       old.bracketType != bracketType ||
       old.includeThirdPlaceMatch != includeThirdPlaceMatch ||
       old.isEditModeEnabled != isEditModeEnabled ||
-      old.themeConfig != themeConfig;
+      old.themeConfig != themeConfig ||
+      !identical(old.leftLogoImage, leftLogoImage) ||
+      !identical(old.rightLogoImage, rightLogoImage);
 }
