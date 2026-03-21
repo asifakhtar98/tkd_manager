@@ -5,6 +5,7 @@ import '../../domain/entities/match_entity.dart';
 import '../../../tournament/domain/entities/tournament_entity.dart';
 import '../../../participant/domain/entities/participant_entity.dart';
 import 'participant_slot_hit_area.dart';
+import 'tie_sheet_theme_config.dart';
 
 // ══════════════════════════════════════════════════════════════════════════════
 // SECTION 1 — WIDGET  (TieSheetCanvasWidget + _TieSheetCanvasWidgetState)
@@ -25,6 +26,9 @@ class TieSheetCanvasWidget extends StatefulWidget {
 
   /// Whether bracket edit mode is active (enables drag-swap and tap-edit).
   final bool isEditModeEnabled;
+
+  /// Optional theme configuration for the canvas (default vs print mode).
+  final TieSheetThemeConfig themeConfig;
 
   /// Called when a participant slot swap is completed via drag-and-drop.
   final void Function(
@@ -47,6 +51,7 @@ class TieSheetCanvasWidget extends StatefulWidget {
     this.winnersBracketId,
     this.losersBracketId,
     this.isEditModeEnabled = false,
+    this.themeConfig = const TieSheetThemeConfig.defaultMode(),
     this.onParticipantSlotSwapped,
     this.onParticipantSlotTapped,
   });
@@ -102,6 +107,7 @@ class _TieSheetCanvasWidgetState extends State<TieSheetCanvasWidget> {
     winnersBracketId: widget.winnersBracketId,
     losersBracketId: widget.losersBracketId,
     isEditModeEnabled: widget.isEditModeEnabled,
+    themeConfig: widget.themeConfig,
   );
 
   @override
@@ -109,6 +115,8 @@ class _TieSheetCanvasWidgetState extends State<TieSheetCanvasWidget> {
     final painter = _createPainter();
     final size = painter.calculateCanvasSize();
     final isEditMode = widget.isEditModeEnabled;
+
+    final isPrintMode = widget.themeConfig.isInteractivityDisabled;
 
     return RepaintBoundary(
       key: widget.printKey,
@@ -120,8 +128,8 @@ class _TieSheetCanvasWidgetState extends State<TieSheetCanvasWidget> {
             willChange: false,
             child: SizedBox(width: size.width, height: size.height),
           ),
-          // ── Match hit areas (disabled during edit mode) ──
-          if (!isEditMode)
+          // ── Match hit areas (disabled during edit mode and print mode) ──
+          if (!isEditMode && !isPrintMode)
             ..._hitAreas.map((entry) {
               final rect = entry.value;
               final matchId = entry.key;
@@ -146,8 +154,8 @@ class _TieSheetCanvasWidgetState extends State<TieSheetCanvasWidget> {
                 ),
               );
             }),
-          // ── Participant slot hit areas (edit mode only) ──
-          if (isEditMode)
+          // ── Participant slot hit areas (edit mode only, not in print) ──
+          if (isEditMode && !isPrintMode)
             ..._participantSlotHitAreas
                 .where((slot) => slot.participantId != null)
                 .map((slot) => _buildEditModeSlotOverlay(slot)),
@@ -248,39 +256,11 @@ class _TieSheetCanvasWidgetState extends State<TieSheetCanvasWidget> {
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-// SECTION 2 — COLOURS & PAINT UTILITIES
+// SECTION 2 — PAINT UTILITIES
 // ══════════════════════════════════════════════════════════════════════════════
-
-/// All design-token colours used across the bracket canvas.
-/// Centralising them here means a palette tweak is a one-line edit.
-abstract final class _BracketColors {
-  static const blue = Color(0xFF2563EB); // Chung / Blue corner
-  static const red = Color(0xFFDC2626); // Hong  / Red  corner
-  static const pending = Color(0xFFCBD5E1); // unresolved lines / TBD outlines
-  static const muted = Color(0xFF94A3B8); // dashed BYE lines, TBD text
-  static const ink = Color(0xFF1E293B); // primary text
-
-  static const subtle = Color(0xFF64748B); // secondary text
-  static const rowFill = Color(0xFFF8FAFC); // participant row background
-  static const hdrFill = Color(0xFFE2E8F0); // table-header background
-  static const tbdFill = Color(0xFFF1F5F9); // TBD placeholder background
-  static const cardBorder = Color(0xFFCBD5E1); // soft card border
-  static const connector = Color(0xFF94A3B8); // default connector stroke
-  static const connectorWon = Color(0xFF475569); // resolved connector stroke
-  static const canvasBg = Color(0xFFFFFEFC); // warm white canvas
-  static const gold = Color(0xFFFEF9C3);
-  static const silver = Color(0xFFF1F5F9);
-  static const bronze = Color(0xFFFED7AA);
-  static const goldText = Color(0xFF92400E);
-  static const silverText = Color(0xFF475569);
-  static const bronzeText = Color(0xFF9A3412);
-  static const goldAccent = Color(0xFFF59E0B);
-  static const silverAccent = Color(0xFF94A3B8);
-  static const bronzeAccent = Color(0xFFF97316);
-  static const wbLabel = Color(0xFF2563EB);
-  static const lbLabel = Color(0xFFDC2626);
-  static const headerBg = Color(0xFF1E293B); // dark header banner
-}
+//
+// All colour tokens now live in [TieSheetThemeConfig].
+// The former `_BracketColors` class has been removed.
 
 /// Lightweight [Paint] factories for recurring stroke/fill profiles.
 abstract final class _Pens {
@@ -331,6 +311,7 @@ class TieSheetPainter extends CustomPainter {
   final String? winnersBracketId;
   final String? losersBracketId;
   final bool isEditModeEnabled;
+  final TieSheetThemeConfig themeConfig;
 
   final List<MapEntry<String, Rect>> matchHitAreas = [];
   final List<ParticipantSlotHitArea> participantSlotHitAreas = [];
@@ -373,9 +354,36 @@ class TieSheetPainter extends CustomPainter {
     this.winnersBracketId,
     this.losersBracketId,
     this.isEditModeEnabled = false,
+    this.themeConfig = const TieSheetThemeConfig.defaultMode(),
   });
 
   bool get _isDouble => winnersBracketId != null && losersBracketId != null;
+
+  /// Whether `connectorStrokeWidth > 0`, meaning all connector lines use a
+  /// single uniform width (print mode).
+  bool get _isUniformStroke => themeConfig.connectorStrokeWidth > 0;
+
+  /// Pending / unresolved connector pen. In uniform-stroke mode, width is
+  /// overridden to [TieSheetThemeConfig.connectorStrokeWidth].
+  Paint get _pendingConnectorPen => _isUniformStroke
+      ? _Pens.thick(themeConfig.pendingColor, w: themeConfig.connectorStrokeWidth)
+      : _Pens.thin(themeConfig.pendingColor);
+
+  /// Won / resolved connector pen. In uniform-stroke mode, width is
+  /// overridden to [TieSheetThemeConfig.connectorStrokeWidth].
+  Paint get _wonConnectorPen => _isUniformStroke
+      ? _Pens.thick(themeConfig.connectorWonColor, w: themeConfig.connectorStrokeWidth)
+      : _Pens.round(themeConfig.connectorWonColor);
+
+  /// BYE advancement dashed-line pen.
+  Paint get _byeConnectorPen => _isUniformStroke
+      ? _Pens.thick(themeConfig.mutedColor, w: themeConfig.connectorStrokeWidth)
+      : _Pens.thin(themeConfig.mutedColor, w: 1.5);
+
+  /// Generic connector pen (vertical trunk between arms).
+  Paint get _genericConnectorPen => _isUniformStroke
+      ? _Pens.thick(themeConfig.connectorColor, w: themeConfig.connectorStrokeWidth)
+      : _Pens.thin(themeConfig.connectorColor);
 
   // ── 3b  Data helpers ───────────────────────────────────────────────────────
 
@@ -523,10 +531,12 @@ class TieSheetPainter extends CustomPainter {
 
     canvas.drawRect(
       Rect.fromLTWH(0, 0, size.width, size.height),
-      _Pens.fill(_BracketColors.canvasBg),
+      _Pens.fill(themeConfig.canvasBackgroundColor),
     );
 
-    final thickPen = _Pens.thick(_BracketColors.cardBorder);
+    final thickPen = _isUniformStroke
+        ? _Pens.thick(themeConfig.cardBorderColor, w: themeConfig.connectorStrokeWidth)
+        : _Pens.thick(themeConfig.cardBorderColor);
 
     if (_isDouble) {
       _paintDE(canvas, size, thickPen);
@@ -545,14 +555,23 @@ class TieSheetPainter extends CustomPainter {
     startY = _paintHeader(canvas, size, startY, thickPen);
 
     // Subtle separator line between left and right participant tables.
-    _drawDashedLine(
-      canvas,
-      Offset(margin + listW + 20, startY),
-      Offset(size.width - margin - listW - 20, startY),
-      _Pens.thin(_BracketColors.pending),
-      dashWidth: 8,
-      gapWidth: 6,
-    );
+    // In print mode (uniform stroke), draw a solid line instead of dashes.
+    if (_isUniformStroke) {
+      canvas.drawLine(
+        Offset(margin + listW + 20, startY),
+        Offset(size.width - margin - listW - 20, startY),
+        _genericConnectorPen,
+      );
+    } else {
+      _drawDashedLine(
+        canvas,
+        Offset(margin + listW + 20, startY),
+        Offset(size.width - margin - listW - 20, startY),
+        _Pens.thin(themeConfig.pendingColor),
+        dashWidth: 8,
+        gapWidth: 6,
+      );
+    }
     final tableTop = startY + 12;
 
     // Exclude the 3rd-place match from the main bracket tree.
@@ -736,7 +755,7 @@ class TieSheetPainter extends CustomPainter {
       margin,
       startY,
       size.width - margin * 2,
-      _BracketColors.wbLabel,
+      themeConfig.winnersLabelColor,
     );
     final wbTableTop = startY + sectionLabelH + 8;
 
@@ -773,7 +792,7 @@ class TieSheetPainter extends CustomPainter {
       margin,
       lbSectionTop,
       size.width - margin * 2,
-      _BracketColors.lbLabel,
+      themeConfig.losersLabelColor,
     );
     final lbTableTop = lbSectionTop + sectionLabelH + 8;
 
@@ -905,8 +924,8 @@ class TieSheetPainter extends CustomPainter {
         _nodeOffsets['${gf2.id}_output'] = Offset(resetX, gfMidY);
         // Explicit horizontal connector from GF output to Reset input.
         final gfOutputPen = gf1.winnerId != null
-            ? _Pens.round(_BracketColors.connectorWon)
-            : _Pens.thin(_BracketColors.pending);
+            ? _wonConnectorPen
+            : _pendingConnectorPen;
         canvas.drawLine(
           Offset(gfX + 40, gfMidY),
           Offset(resetX, gfMidY),
@@ -957,7 +976,7 @@ class TieSheetPainter extends CustomPainter {
       y + 8,
       TextStyle(
         color: color,
-        fontSize: 14,
+        fontSize: _fontSize(14),
         fontWeight: FontWeight.bold,
         fontFamily: 'Roboto',
       ),
@@ -976,8 +995,8 @@ class TieSheetPainter extends CustomPainter {
     List<void Function()> deferredDecorations, {
     bool drawInputs = true,
   }) {
-    final pendingPen = _Pens.thin(_BracketColors.pending);
-    final winnerPen = _Pens.round(_BracketColors.connectorWon);
+    final pendingPen = _pendingConnectorPen;
+    final winnerPen = _wonConnectorPen;
     final midY = (topY + botY) / 2;
 
     canvas.drawLine(Offset(x, topY), Offset(x, botY), pen);
@@ -1013,8 +1032,8 @@ class TieSheetPainter extends CustomPainter {
 
     deferredDecorations.add(() {
       _drawText(canvas, label, x, topY - 20, _bold(10), center: true);
-      _drawBadge(canvas, 'B', _BracketColors.blue, x + 16, topY - 6);
-      _drawBadge(canvas, 'R', _BracketColors.red, x + 16, botY + 14);
+      _drawBadge(canvas, 'B', themeConfig.blueCornerColor, x + 16, topY - 6);
+      _drawBadge(canvas, 'R', themeConfig.redCornerColor, x + 16, botY + 14);
 
       if (gNum != null) _drawMatchPill(canvas, '$gNum', x + 18, midY);
       if (wName != null) {
@@ -1043,8 +1062,8 @@ class TieSheetPainter extends CustomPainter {
   ) {
     if (match.resultType == MatchResultType.bye) return;
 
-    final pendingPen = _Pens.thin(_BracketColors.pending);
-    final winnerPen = _Pens.round(_BracketColors.connectorWon);
+    final pendingPen = _pendingConnectorPen;
+    final winnerPen = _wonConnectorPen;
     final topPen = match.participantBlueId != null ? winnerPen : pendingPen;
     final botPen = match.participantRedId != null ? winnerPen : pendingPen;
 
@@ -1067,7 +1086,7 @@ class TieSheetPainter extends CustomPainter {
     canvas.drawLine(
       Offset(junctionX, realTopY),
       Offset(junctionX, realBotY),
-      _Pens.thin(_BracketColors.connector),
+      _genericConnectorPen,
     );
 
     _nodeOffsets['${match.id}_output'] = Offset(junctionX, rawMidY);
@@ -1083,11 +1102,11 @@ class TieSheetPainter extends CustomPainter {
       _drawBadge(
         canvas,
         'B',
-        _BracketColors.blue,
+        themeConfig.blueCornerColor,
         junctionX - 20,
         topArmY - 14,
       );
-      _drawBadge(canvas, 'R', _BracketColors.red, junctionX + 20, botArmY + 14);
+      _drawBadge(canvas, 'R', themeConfig.redCornerColor, junctionX + 20, botArmY + 14);
 
       if (wName != null) {
         // Draw centered slightly above the junction
@@ -1126,7 +1145,8 @@ class TieSheetPainter extends CustomPainter {
       y + bannerH,
       const Radius.circular(8),
     );
-    canvas.drawRRect(bannerRect, _Pens.fill(_BracketColors.headerBg));
+    canvas.drawRRect(bannerRect, _Pens.fill(themeConfig.headerBannerBackgroundColor));
+    canvas.drawRRect(bannerRect, _Pens.thin(themeConfig.cardBorderColor));
 
     final title =
         (tournament.name.isNotEmpty ? tournament.name : 'TOURNAMENT NAME')
@@ -1136,9 +1156,9 @@ class TieSheetPainter extends CustomPainter {
       title,
       size.width / 2,
       y + 12,
-      const TextStyle(
-        color: Colors.white,
-        fontSize: 18,
+      TextStyle(
+        color: themeConfig.headerBannerTextColor,
+        fontSize: _fontSize(18),
         fontWeight: FontWeight.bold,
         fontFamily: 'Roboto',
         letterSpacing: 1.2,
@@ -1157,8 +1177,9 @@ class TieSheetPainter extends CustomPainter {
         size.width / 2,
         y + 34,
         TextStyle(
-          color: Colors.white.withValues(alpha: 0.7),
-          fontSize: 11,
+          color: themeConfig.headerBannerTextColor.withValues(alpha: 0.7),
+          fontSize: _fontSize(11),
+          fontWeight: themeConfig.isTextForceBold ? FontWeight.bold : FontWeight.normal,
           fontFamily: 'Roboto',
           letterSpacing: 0.5,
         ),
@@ -1172,8 +1193,9 @@ class TieSheetPainter extends CustomPainter {
         size.width / 2,
         y + 48,
         TextStyle(
-          color: Colors.white.withValues(alpha: 0.55),
-          fontSize: 10,
+          color: themeConfig.headerBannerTextColor.withValues(alpha: 0.55),
+          fontSize: _fontSize(10),
+          fontWeight: themeConfig.isTextForceBold ? FontWeight.bold : FontWeight.normal,
           fontFamily: 'Roboto',
         ),
         center: true,
@@ -1193,8 +1215,8 @@ class TieSheetPainter extends CustomPainter {
       infoRowBottom,
       const Radius.circular(_cardRadius),
     );
-    canvas.drawRRect(infoRect, _Pens.fill(_BracketColors.hdrFill));
-    canvas.drawRRect(infoRect, _Pens.thin(_BracketColors.cardBorder));
+    canvas.drawRRect(infoRect, _Pens.fill(themeConfig.headerFillColor));
+    canvas.drawRRect(infoRect, _Pens.thin(themeConfig.cardBorderColor));
 
     final ageCategory = tournament.ageCategoryLabel.isNotEmpty
         ? tournament.ageCategoryLabel.toUpperCase()
@@ -1216,17 +1238,17 @@ class TieSheetPainter extends CustomPainter {
     canvas.drawLine(
       Offset(infoLeft + infoColNoW, infoRowTop + 3),
       Offset(infoLeft + infoColNoW, infoRowBottom - 3),
-      _Pens.thin(_BracketColors.pending),
+      _Pens.thin(themeConfig.cardBorderColor),
     );
     canvas.drawLine(
       Offset(infoLeft + infoColNoW + infoColW, infoRowTop + 3),
       Offset(infoLeft + infoColNoW + infoColW, infoRowBottom - 3),
-      _Pens.thin(_BracketColors.pending),
+      _Pens.thin(themeConfig.cardBorderColor),
     );
     canvas.drawLine(
       Offset(infoLeft + infoColNoW + infoColW * 2, infoRowTop + 3),
       Offset(infoLeft + infoColNoW + infoColW * 2, infoRowBottom - 3),
-      _Pens.thin(_BracketColors.pending),
+      _Pens.thin(themeConfig.cardBorderColor),
     );
 
     // Column text
@@ -1288,10 +1310,10 @@ class TieSheetPainter extends CustomPainter {
       );
       canvas.drawRRect(
         cardRect.shift(const Offset(1, 2)),
-        _Pens.shadow(blur: 4),
+        _themedShadow(blur: 4),
       );
-      canvas.drawRRect(cardRect, _Pens.fill(_BracketColors.rowFill));
-      canvas.drawRRect(cardRect, _Pens.thin(_BracketColors.cardBorder));
+      canvas.drawRRect(cardRect, _Pens.fill(themeConfig.rowFillColor));
+      canvas.drawRRect(cardRect, _Pens.thin(themeConfig.cardBorderColor));
 
       // ── Blue accent strip on left edge ──
       final accentRect = RRect.fromLTRBAndCorners(
@@ -1302,18 +1324,18 @@ class TieSheetPainter extends CustomPainter {
         topLeft: const Radius.circular(_cardRadius),
         bottomLeft: const Radius.circular(_cardRadius),
       );
-      canvas.drawRRect(accentRect, _Pens.fill(_BracketColors.blue));
+      canvas.drawRRect(accentRect, _Pens.fill(themeConfig.participantAccentStripColor));
 
       // ── Column divider ──
       canvas.drawLine(
         Offset(x + noColW, y + 4),
         Offset(x + noColW, y + rowH - 4),
-        _Pens.thin(_BracketColors.pending),
+        _Pens.thin(themeConfig.cardBorderColor),
       );
       canvas.drawLine(
         Offset(x + noColW + nameColW, y + 4),
         Offset(x + noColW + nameColW, y + rowH - 4),
-        _Pens.thin(_BracketColors.pending),
+        _Pens.thin(themeConfig.cardBorderColor),
       );
 
       // ── Text ──
@@ -1348,10 +1370,10 @@ class TieSheetPainter extends CustomPainter {
       );
       canvas.drawRRect(
         cardRect.shift(const Offset(-1, 2)),
-        _Pens.shadow(blur: 4),
+        _themedShadow(blur: 4),
       );
-      canvas.drawRRect(cardRect, _Pens.fill(_BracketColors.rowFill));
-      canvas.drawRRect(cardRect, _Pens.thin(_BracketColors.cardBorder));
+      canvas.drawRRect(cardRect, _Pens.fill(themeConfig.rowFillColor));
+      canvas.drawRRect(cardRect, _Pens.thin(themeConfig.cardBorderColor));
 
       // ── Blue accent strip on right edge ──
       final accentRect = RRect.fromLTRBAndCorners(
@@ -1362,18 +1384,18 @@ class TieSheetPainter extends CustomPainter {
         topRight: const Radius.circular(_cardRadius),
         bottomRight: const Radius.circular(_cardRadius),
       );
-      canvas.drawRRect(accentRect, _Pens.fill(_BracketColors.blue));
+      canvas.drawRRect(accentRect, _Pens.fill(themeConfig.participantAccentStripColor));
 
       // ── Column divider ──
       canvas.drawLine(
         Offset(x + regIdColW, y + 4),
         Offset(x + regIdColW, y + rowH - 4),
-        _Pens.thin(_BracketColors.pending),
+        _Pens.thin(themeConfig.cardBorderColor),
       );
       canvas.drawLine(
         Offset(x + regIdColW + nameColW, y + 4),
         Offset(x + regIdColW + nameColW, y + rowH - 4),
-        _Pens.thin(_BracketColors.pending),
+        _Pens.thin(themeConfig.cardBorderColor),
       );
 
       // ── Text ──
@@ -1411,8 +1433,8 @@ class TieSheetPainter extends CustomPainter {
       y + rowH - 1,
       const Radius.circular(_cardRadius),
     );
-    canvas.drawRRect(cardRect, _Pens.fill(_BracketColors.tbdFill));
-    canvas.drawRRect(cardRect, _Pens.thin(_BracketColors.pending));
+    canvas.drawRRect(cardRect, _Pens.fill(themeConfig.tbdFillColor));
+    canvas.drawRRect(cardRect, _Pens.thin(themeConfig.pendingColor));
 
     // ── Gray accent strip ──
     final accentRect = RRect.fromLTRBAndCorners(
@@ -1423,7 +1445,7 @@ class TieSheetPainter extends CustomPainter {
       topLeft: const Radius.circular(_cardRadius),
       bottomLeft: const Radius.circular(_cardRadius),
     );
-    canvas.drawRRect(accentRect, _Pens.fill(_BracketColors.muted));
+    canvas.drawRRect(accentRect, _Pens.fill(themeConfig.mutedColor));
 
     final textY = y + rowH / 2 - 6;
     _drawText(
@@ -1431,10 +1453,10 @@ class TieSheetPainter extends CustomPainter {
       '$idx',
       x + noColW / 2,
       textY,
-      const TextStyle(
-        fontSize: 10,
+      TextStyle(
+        fontSize: _fontSize(10),
         fontWeight: FontWeight.bold,
-        color: _BracketColors.muted,
+        color: themeConfig.mutedColor,
       ),
       center: true,
     );
@@ -1443,11 +1465,11 @@ class TieSheetPainter extends CustomPainter {
       'TBD',
       x + noColW + 8,
       textY,
-      const TextStyle(
-        fontSize: 10,
+      TextStyle(
+        fontSize: _fontSize(10),
         fontWeight: FontWeight.w600,
         fontStyle: FontStyle.italic,
-        color: _BracketColors.muted,
+        color: themeConfig.mutedColor,
       ),
     );
   }
@@ -1517,8 +1539,8 @@ class TieSheetPainter extends CustomPainter {
     required bool mirrored,
     required List<void Function()> deferredDecorations,
   }) {
-    final pendingPen = _Pens.thin(_BracketColors.pending);
-    final winnerPen = _Pens.round(_BracketColors.connectorWon);
+    final pendingPen = _pendingConnectorPen;
+    final winnerPen = _wonConnectorPen;
 
     final topPen = match.participantBlueId != null ? winnerPen : pendingPen;
     final botPen = match.participantRedId != null ? winnerPen : pendingPen;
@@ -1532,13 +1554,22 @@ class TieSheetPainter extends CustomPainter {
             ? junctionX - roundColW
             : junctionX + roundColW;
         // Dashed line signals a BYE advancement (no real match played).
-        final byePen = _Pens.thin(_BracketColors.muted, w: 1.5);
-        _drawDashedLine(
-          canvas,
-          Offset(junctionX, topIn.dy),
-          Offset(nextJunctionX, topIn.dy),
-          byePen,
-        );
+        // In print mode, draw a solid line instead.
+        final byePen = _byeConnectorPen;
+        if (_isUniformStroke) {
+          canvas.drawLine(
+            Offset(junctionX, topIn.dy),
+            Offset(nextJunctionX, topIn.dy),
+            byePen,
+          );
+        } else {
+          _drawDashedLine(
+            canvas,
+            Offset(junctionX, topIn.dy),
+            Offset(nextJunctionX, topIn.dy),
+            byePen,
+          );
+        }
         _nodeOffsets['${match.id}_output'] = Offset(nextJunctionX, topIn.dy);
         matchHitAreas.add(
           MapEntry(
@@ -1626,16 +1657,16 @@ class TieSheetPainter extends CustomPainter {
       _drawBadge(
         canvas,
         'B',
-        _BracketColors.blue,
+        themeConfig.blueCornerColor,
         badgeX,
         effectiveTop.dy - 14,
       );
-      _drawBadge(canvas, 'R', _BracketColors.red, badgeX, effectiveBot.dy + 14);
+      _drawBadge(canvas, 'R', themeConfig.redCornerColor, badgeX, effectiveBot.dy + 14);
 
       final labelDxOffset = mirrored ? 10.0 : -10.0;
       final alignRight = !mirrored;
-      const missingLabelStyle = TextStyle(
-        color: _BracketColors.muted,
+      final missingLabelStyle = TextStyle(
+        color: themeConfig.mutedColor,
         fontSize: 9,
         fontStyle: FontStyle.italic,
         fontWeight: FontWeight.bold,
@@ -1797,10 +1828,10 @@ class TieSheetPainter extends CustomPainter {
       'B',
       x + 4,
       y - 34,
-      const TextStyle(
-        color: _BracketColors.blue,
+      TextStyle(
+        color: themeConfig.blueCornerColor,
         fontWeight: FontWeight.bold,
-        fontSize: 9,
+        fontSize: _fontSize(9),
       ),
     );
     _drawText(
@@ -1808,10 +1839,10 @@ class TieSheetPainter extends CustomPainter {
       'R',
       x + 4,
       y + 22,
-      const TextStyle(
-        color: _BracketColors.red,
+      TextStyle(
+        color: themeConfig.redCornerColor,
         fontWeight: FontWeight.bold,
-        fontSize: 9,
+        fontSize: _fontSize(9),
       ),
     );
 
@@ -1828,16 +1859,16 @@ class TieSheetPainter extends CustomPainter {
     final y = size.height - medalH - margin + 10;
 
     final accentColors = [
-      _BracketColors.goldAccent,
-      _BracketColors.silverAccent,
-      _BracketColors.bronzeAccent,
-      _BracketColors.bronzeAccent,
+      themeConfig.medalGoldAccentColor,
+      themeConfig.medalSilverAccentColor,
+      themeConfig.medalBronzeAccentColor,
+      themeConfig.medalBronzeAccentColor,
     ];
     final fills = [
-      _Pens.fill(_BracketColors.gold),
-      _Pens.fill(_BracketColors.silver),
-      _Pens.fill(_BracketColors.bronze),
-      _Pens.fill(_BracketColors.bronze),
+      _Pens.fill(themeConfig.medalGoldFillColor),
+      _Pens.fill(themeConfig.medalSilverFillColor),
+      _Pens.fill(themeConfig.medalBronzeFillColor),
+      _Pens.fill(themeConfig.medalBronzeFillColor),
     ];
 
     for (var row = 0; row < 4; row++) {
@@ -1853,7 +1884,7 @@ class TieSheetPainter extends CustomPainter {
       );
       canvas.drawRRect(
         fullRect.shift(const Offset(1, 2)),
-        _Pens.shadow(blur: 3),
+        _themedShadow(blur: 3),
       );
 
       // Name area
@@ -1865,7 +1896,7 @@ class TieSheetPainter extends CustomPainter {
         topLeft: const Radius.circular(_cardRadius),
         bottomLeft: const Radius.circular(_cardRadius),
       );
-      canvas.drawRRect(nameRect, _Pens.fill(_BracketColors.rowFill));
+      canvas.drawRRect(nameRect, _Pens.fill(themeConfig.rowFillColor));
 
       // Label area
       final labelRect = RRect.fromLTRBAndCorners(
@@ -1879,11 +1910,11 @@ class TieSheetPainter extends CustomPainter {
       canvas.drawRRect(labelRect, fills[row]);
 
       // Border
-      canvas.drawRRect(fullRect, _Pens.thin(_BracketColors.cardBorder));
+      canvas.drawRRect(fullRect, _Pens.thin(themeConfig.cardBorderColor));
       canvas.drawLine(
         Offset(x + _medalBlankW + _medalNameW, rY),
         Offset(x + _medalBlankW + _medalNameW, rY + _medalRowH),
-        _Pens.thin(_BracketColors.pending),
+        _Pens.thin(themeConfig.cardBorderColor),
       );
 
       // ── Accent strip ──
@@ -1900,32 +1931,32 @@ class TieSheetPainter extends CustomPainter {
 
     final labelX = x + _medalBlankW + _medalNameW + _medalLabelW / 2;
     final textStyles = [
-      const TextStyle(
-        color: _BracketColors.goldText,
-        fontSize: 12,
+      TextStyle(
+        color: themeConfig.medalGoldTextColor,
+        fontSize: _fontSize(12),
         fontWeight: FontWeight.bold,
         fontFamily: 'Roboto',
       ),
-      const TextStyle(
-        color: _BracketColors.silverText,
-        fontSize: 12,
+      TextStyle(
+        color: themeConfig.medalSilverTextColor,
+        fontSize: _fontSize(12),
         fontWeight: FontWeight.bold,
         fontFamily: 'Roboto',
       ),
-      const TextStyle(
-        color: _BracketColors.bronzeText,
-        fontSize: 12,
+      TextStyle(
+        color: themeConfig.medalBronzeTextColor,
+        fontSize: _fontSize(12),
         fontWeight: FontWeight.bold,
         fontFamily: 'Roboto',
       ),
-      const TextStyle(
-        color: _BracketColors.bronzeText,
-        fontSize: 12,
+      TextStyle(
+        color: themeConfig.medalBronzeTextColor,
+        fontSize: _fontSize(12),
         fontWeight: FontWeight.bold,
         fontFamily: 'Roboto',
       ),
     ];
-    final labels = ['Gold', 'Silver', 'Bronze', 'Bronze'];
+    final labels = ['Gold', 'Silver', '1st Bronze', '2nd Bronze'];
     for (var row = 0; row < 4; row++) {
       final rY = y + row * (_medalRowH + 4);
       _drawText(
@@ -2010,15 +2041,21 @@ class TieSheetPainter extends CustomPainter {
 
   String _pName(ParticipantEntity p) => p.fullName.toUpperCase();
 
+  /// Resolves the effective font size, applying [themeConfig.uniformFontSize]
+  /// override when it is greater than zero.
+  double _fontSize(double defaultSize) =>
+      themeConfig.uniformFontSize > 0 ? themeConfig.uniformFontSize : defaultSize;
+
   TextStyle _bold(double size) => TextStyle(
-    color: _BracketColors.ink,
-    fontSize: size,
+    color: themeConfig.primaryTextColor,
+    fontSize: _fontSize(size),
     fontWeight: FontWeight.bold,
     fontFamily: 'Roboto',
   );
   TextStyle _normal(double size) => TextStyle(
-    color: _BracketColors.subtle,
-    fontSize: size,
+    color: themeConfig.secondaryTextColor,
+    fontSize: _fontSize(size),
+    fontWeight: themeConfig.isTextForceBold ? FontWeight.bold : FontWeight.normal,
     fontFamily: 'Roboto',
   );
 
@@ -2040,9 +2077,9 @@ class TieSheetPainter extends CustomPainter {
       text,
       cx,
       cy - 5,
-      const TextStyle(
+      TextStyle(
         color: Colors.white,
-        fontSize: 9,
+        fontSize: _fontSize(9),
         fontWeight: FontWeight.bold,
         fontFamily: 'Roboto',
       ),
@@ -2061,18 +2098,18 @@ class TieSheetPainter extends CustomPainter {
     );
     canvas.drawRRect(
       pillRect.shift(const Offset(0.5, 1)),
-      _Pens.shadow(blur: 2),
+      _themedShadow(blur: 2),
     );
     canvas.drawRRect(pillRect, _Pens.fill(Colors.white));
-    canvas.drawRRect(pillRect, _Pens.thin(_BracketColors.connector));
+    canvas.drawRRect(pillRect, _genericConnectorPen);
     _drawText(
       canvas,
       text,
       cx,
       cy - 6,
-      const TextStyle(
-        color: _BracketColors.ink,
-        fontSize: 10,
+      TextStyle(
+        color: themeConfig.primaryTextColor,
+        fontSize: _fontSize(10),
         fontWeight: FontWeight.bold,
         fontFamily: 'Roboto',
       ),
@@ -2149,6 +2186,21 @@ class TieSheetPainter extends CustomPainter {
     );
   }
 
+  // ── Themed shadow helper ──────────────────────────────────────────────────
+
+  /// Returns a shadow [Paint] whose opacity is scaled by
+  /// [themeConfig.shadowOpacityMultiplier].
+  Paint _themedShadow({
+    double blur = 6.0,
+    Color color = const Color(0x1A000000),
+  }) {
+    final scaledAlpha = (color.a * themeConfig.shadowOpacityMultiplier).clamp(0.0, 1.0);
+    return _Pens.shadow(
+      blur: blur,
+      color: color.withValues(alpha: scaledAlpha),
+    );
+  }
+
   @override
   // Repaint only when the data that drives the visual output actually changes.
   bool shouldRepaint(covariant TieSheetPainter old) =>
@@ -2156,5 +2208,6 @@ class TieSheetPainter extends CustomPainter {
       old.participants != participants ||
       old.bracketType != bracketType ||
       old.includeThirdPlaceMatch != includeThirdPlaceMatch ||
-      old.isEditModeEnabled != isEditModeEnabled;
+      old.isEditModeEnabled != isEditModeEnabled ||
+      old.themeConfig != themeConfig;
 }

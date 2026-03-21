@@ -7,6 +7,7 @@ import 'package:tkd_saas/features/bracket/data/services/double_elimination_brack
 import 'package:tkd_saas/features/bracket/data/services/match_progression_service_implementation.dart';
 import 'package:tkd_saas/features/bracket/domain/entities/match_entity.dart';
 import 'package:tkd_saas/features/bracket/presentation/widgets/tie_sheet_canvas_widget.dart';
+import 'package:tkd_saas/features/bracket/presentation/widgets/tie_sheet_theme_config.dart';
 import 'package:tkd_saas/features/participant/domain/entities/participant_entity.dart';
 
 void main() {
@@ -386,6 +387,49 @@ void main() {
       playerCount: 14,
       roundsToResolve: [1],
       goldenFileName: '14_player_with_r1_results_golden.png',
+    );
+  });
+
+  // ─────────────────────────────────────────────────────────────
+  // PRINT MODE THEME GOLDEN
+  // ─────────────────────────────────────────────────────────────
+
+  testWidgets('8-player bracket in print mode', (tester) async {
+    final participants = makeParticipants(8);
+    final result = generator.generate(
+      genderId: 'div1',
+      participantIds: participants.map((p) => p.id).toList(),
+      bracketId: uuid.v4(),
+      includeThirdPlaceMatch: false,
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: SingleChildScrollView(
+              child: TieSheetCanvasWidget(
+                tournament: defaultTournament,
+                matches: result.matches,
+                participants: participants,
+                bracketType: 'Single Elimination',
+                onMatchTap: (_) {},
+                printKey: GlobalKey(),
+                includeThirdPlaceMatch: false,
+                themeConfig: const TieSheetThemeConfig.printMode(),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byType(CustomPaint), findsWidgets);
+    await expectLater(
+      find.byType(TieSheetCanvasWidget),
+      matchesGoldenFile('../../../goldens/8_player_print_mode_golden.png'),
     );
   });
 }

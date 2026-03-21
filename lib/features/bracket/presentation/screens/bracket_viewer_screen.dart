@@ -16,6 +16,7 @@ import 'package:tkd_saas/features/bracket/presentation/widgets/participant_edit_
 import 'package:tkd_saas/features/bracket/presentation/widgets/participant_slot_hit_area.dart';
 import 'package:tkd_saas/features/bracket/presentation/widgets/score_entry_dialog.dart';
 import 'package:tkd_saas/features/bracket/presentation/widgets/tie_sheet_canvas_widget.dart';
+import 'package:tkd_saas/features/bracket/presentation/widgets/tie_sheet_theme_config.dart';
 import 'package:tkd_saas/features/participant/domain/entities/participant_entity.dart';
 import 'package:tkd_saas/features/tournament/domain/entities/bracket_snapshot.dart';
 import 'package:tkd_saas/features/tournament/domain/entities/tournament_entity.dart';
@@ -65,6 +66,9 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
   double? _pdfExportProgress;
   String _pdfExportStatusMessage = '';
 
+  /// The currently active tie-sheet visual theme mode.
+  TieSheetThemeMode _activeTieSheetThemeMode = TieSheetThemeMode.defaultMode;
+
   bool get _isExportingPdf => _pdfExportProgress != null;
 
   static const _uuid = Uuid();
@@ -88,7 +92,7 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
   /// Each heavy step is followed by a microtask yield so the event loop can
   /// repaint the progress overlay — critical on web where there is no
   /// background isolate.
-  Future<void> _exportPdf(String title) async {
+  Future<void> _exportPdf() async {
     _updateExportProgress(0.0, 'Capturing bracket image…');
     await Future<void>.delayed(Duration.zero);
 
@@ -130,40 +134,17 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
           pageFormat: PdfPageFormat.a4.landscape,
           margin: const pw.EdgeInsets.all(24),
           build: (pw.Context ctx) {
-            return pw.Column(
-              crossAxisAlignment: pw.CrossAxisAlignment.start,
-              children: [
-                pw.Text(
-                  title,
-                  style: pw.TextStyle(
-                    fontSize: 18,
-                    fontWeight: pw.FontWeight.bold,
-                  ),
-                ),
-                pw.Text(
-                  widget.bracketFormat.displayLabel,
-                  style: const pw.TextStyle(fontSize: 12),
-                ),
-                pw.SizedBox(height: 12),
-                pw.Divider(),
-                pw.SizedBox(height: 12),
-                if (bracketImage != null)
-                  pw.Expanded(
-                    child: pw.Center(
-                      child: pw.Image(bracketImage, fit: pw.BoxFit.contain),
-                    ),
-                  )
-                else
-                  pw.Expanded(
-                    child: pw.Center(
-                      child: pw.Text(
-                        'Bracket image could not be captured.\n'
-                        'Please try again after the bracket has fully rendered.',
-                        textAlign: pw.TextAlign.center,
-                      ),
-                    ),
-                  ),
-              ],
+            if (bracketImage != null) {
+              return pw.Center(
+                child: pw.Image(bracketImage, fit: pw.BoxFit.contain),
+              );
+            }
+            return pw.Center(
+              child: pw.Text(
+                'Bracket image could not be captured.\n'
+                'Please try again after the bracket has fully rendered.',
+                textAlign: pw.TextAlign.center,
+              ),
             );
           },
         ),
@@ -356,7 +337,7 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
       isEditModeEnabled: isEditModeEnabled,
     );
 
-    final tournamentTitle = widget.tournament?.name ?? 'Tournament';
+
 
     final bool canUndo = historyPointer >= 0 && !isReplayInProgress;
     final bool canRedo =
@@ -483,12 +464,46 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
             child: const Text('Regenerate'),
           ),
 
+          // ── Canvas Theme Toggle ──
+          SegmentedButton<TieSheetThemeMode>(
+            segments: TieSheetThemeMode.values
+                .map(
+                  (mode) => ButtonSegment<TieSheetThemeMode>(
+                    value: mode,
+                    icon: Icon(
+                      mode == TieSheetThemeMode.defaultMode
+                          ? Icons.visibility
+                          : Icons.print,
+                      size: 16,
+                    ),
+                    label: Text(
+                      mode.label,
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                  ),
+                )
+                .toList(),
+            selected: {_activeTieSheetThemeMode},
+            onSelectionChanged: (selected) {
+              setState(() => _activeTieSheetThemeMode = selected.first);
+            },
+            style: const ButtonStyle(
+              visualDensity: VisualDensity.compact,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              padding: WidgetStatePropertyAll(
+                EdgeInsets.symmetric(horizontal: 8),
+              ),
+            ),
+          ),
+
+          const SizedBox(width: 8),
+
           // ── Export PDF ──
           TextButton(
             style: actionButtonStyle,
             onPressed: _isExportingPdf
                 ? null
-                : () => _exportPdf(tournamentTitle),
+                : () => _exportPdf(),
             child: _isExportingPdf
                 ? const SizedBox(
                     width: 16,
@@ -629,6 +644,9 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
             winnersBracketId: winnersBracketId,
             losersBracketId: losersBracketId,
             isEditModeEnabled: isEditModeEnabled,
+            themeConfig: TieSheetThemeConfig.fromMode(
+              _activeTieSheetThemeMode,
+            ),
             onParticipantSlotSwapped: (source, target) {
               _handleParticipantSwap(
                 context,
