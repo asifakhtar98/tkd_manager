@@ -37,13 +37,15 @@ final class AuthenticationSignUpRequested extends AuthenticationEvent {
   const AuthenticationSignUpRequested({
     required this.email,
     required this.password,
+    required this.organizationName,
   });
 
   final String email;
   final String password;
+  final String organizationName;
 
   @override
-  List<Object?> get props => [email, password];
+  List<Object?> get props => [email, password, organizationName];
 }
 
 /// User requested to sign out (e.g. from an AppBar action).

@@ -158,7 +158,7 @@ class _TieSheetCanvasWidgetState extends State<TieSheetCanvasWidget> {
         onLoaded(imageInfo.image);
         imageStream.removeListener(listener);
       },
-      onError: (_, __) {
+      onError: (exception, stackTrace) {
         // Logo failed to load — degrade gracefully without the logo.
         imageStream.removeListener(listener);
       },

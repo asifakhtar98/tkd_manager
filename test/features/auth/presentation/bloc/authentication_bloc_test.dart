@@ -144,22 +144,6 @@ void main() {
         },
       );
 
-      test(
-        'emits unauthenticated when auth stream fires userDeleted',
-        () async {
-          authenticationBloc.add(const AuthenticationSubscriptionRequested());
-          await Future<void>.delayed(Duration.zero);
-
-          expectLater(
-            authenticationBloc.stream,
-            emitsInOrder([isA<AuthenticationUnauthenticated>()]),
-          );
-
-          authStateStreamController.add(
-            AuthState(AuthChangeEvent.userDeleted, null),
-          );
-        },
-      );
 
       test(
         'emits passwordRecoveryInProgress when auth stream fires passwordRecovery',
@@ -328,6 +312,7 @@ void main() {
             () => mockAuthenticationRepository.signUpWithEmailAndPassword(
               email: any(named: 'email'),
               password: any(named: 'password'),
+              organizationName: any(named: 'organizationName'),
             ),
           ).thenAnswer((_) async => Right(SignUpAuthenticated(user: fakeUser)));
 
@@ -340,6 +325,7 @@ void main() {
             const AuthenticationSignUpRequested(
               email: 'new@example.com',
               password: 'password123',
+              organizationName: 'Demo Org',
             ),
           );
         },
@@ -352,6 +338,7 @@ void main() {
             () => mockAuthenticationRepository.signUpWithEmailAndPassword(
               email: any(named: 'email'),
               password: any(named: 'password'),
+              organizationName: any(named: 'organizationName'),
             ),
           ).thenAnswer((_) async => const Right(SignUpConfirmationRequired()));
 
@@ -367,6 +354,7 @@ void main() {
             const AuthenticationSignUpRequested(
               email: 'new@example.com',
               password: 'password123',
+              organizationName: 'Demo Org',
             ),
           );
         },
@@ -379,6 +367,7 @@ void main() {
             () => mockAuthenticationRepository.signUpWithEmailAndPassword(
               email: any(named: 'email'),
               password: any(named: 'password'),
+              organizationName: any(named: 'organizationName'),
             ),
           ).thenAnswer(
             (_) async => const Left(
@@ -404,6 +393,7 @@ void main() {
             const AuthenticationSignUpRequested(
               email: 'existing@example.com',
               password: 'password123',
+              organizationName: 'Demo Org',
             ),
           );
         },

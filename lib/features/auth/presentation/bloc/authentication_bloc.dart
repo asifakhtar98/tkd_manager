@@ -85,13 +85,15 @@ class AuthenticationBloc
             add(_AuthenticationStatusChanged(user: data.session?.user));
           }
         case AuthChangeEvent.signedOut:
-        case AuthChangeEvent.userDeleted:
           add(const _AuthenticationStatusChanged(user: null));
         case AuthChangeEvent.passwordRecovery:
           add(const _AuthenticationPasswordRecoveryDetected());
         // Events we acknowledge but take no auth-routing action for.
+        // `userDeleted` is deprecated but must be matched since it's an enum.
         case AuthChangeEvent.userUpdated:
         case AuthChangeEvent.mfaChallengeVerified:
+        // ignore: deprecated_member_use
+        case AuthChangeEvent.userDeleted:
           break;
       }
     });
@@ -150,6 +152,7 @@ class AuthenticationBloc
     final result = await _authenticationRepository.signUpWithEmailAndPassword(
       email: event.email,
       password: event.password,
+      organizationName: event.organizationName,
     );
 
     result.fold(

@@ -54,11 +54,13 @@ class AuthenticationRepositoryImplementation
   Future<Either<Failure, SignUpResult>> signUpWithEmailAndPassword({
     required String email,
     required String password,
+    required String organizationName,
   }) async {
     try {
       final AuthResponse response = await _supabaseClient.auth.signUp(
         email: email,
         password: password,
+        data: {'display_name': organizationName},
         emailRedirectTo: _emailConfirmationRedirectUrl,
       );
 

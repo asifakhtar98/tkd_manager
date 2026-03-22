@@ -24,6 +24,7 @@ abstract interface class AuthenticationRepository {
   Future<Either<Failure, SignUpResult>> signUpWithEmailAndPassword({
     required String email,
     required String password,
+    required String organizationName,
   });
 
   /// Sends a password reset email to the given [email] address.

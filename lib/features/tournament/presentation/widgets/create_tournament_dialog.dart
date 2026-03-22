@@ -343,7 +343,7 @@ class _LogoPickerCard extends StatelessWidget {
         return Image.memory(
           bytes,
           fit: BoxFit.contain,
-          errorBuilder: (_, __, ___) => _buildBrokenIcon(),
+          errorBuilder: (context, error, stackTrace) => _buildBrokenIcon(),
         );
       } catch (_) {
         return _buildBrokenIcon();
@@ -353,8 +353,8 @@ class _LogoPickerCard extends StatelessWidget {
     return Image.network(
       url,
       fit: BoxFit.contain,
-      errorBuilder: (_, __, ___) => _buildBrokenIcon(),
-      loadingBuilder: (_, child, loadingProgress) {
+      errorBuilder: (context, error, stackTrace) => _buildBrokenIcon(),
+      loadingBuilder: (context, child, loadingProgress) {
         if (loadingProgress == null) return child;
         return const Center(
           child: SizedBox(

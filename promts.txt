@@ -30,3 +30,5 @@ The loop stops only when all completed epics are fully usable and testable in re
 -Enhance dx experience, refractoring across all modules and features. Like a senior dev. No user pov change . Use skill when needed@beautifulMention . Create solid verbose implementation plan. Delete orphans at the end (dont delete any non code files)
 
 - This will be a flutter website, do web style asthetics and ui structuring when working on ui. 
+
+- do exhaustive code review to the changes/implementation. fix all issues found. dont overcommunicate

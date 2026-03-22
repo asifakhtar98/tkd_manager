@@ -32,6 +32,9 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _passwordController = TextEditingController(
     text: kDebugMode ? '123456' : null,
   );
+  final TextEditingController _organizationNameController = TextEditingController(
+    text: kDebugMode ? 'Demo Org' : null,
+  );
 
   _AuthMode _authMode = _AuthMode.signIn;
 
@@ -39,6 +42,7 @@ class _LoginScreenState extends State<LoginScreen> {
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _organizationNameController.dispose();
     super.dispose();
   }
 
@@ -65,6 +69,7 @@ class _LoginScreenState extends State<LoginScreen> {
           AuthenticationSignUpRequested(
             email: email,
             password: _passwordController.text,
+            organizationName: _organizationNameController.text.trim(),
           ),
         );
       case _AuthMode.forgotPassword:
@@ -79,6 +84,7 @@ class _LoginScreenState extends State<LoginScreen> {
       // typed in one mode don't leak into another.
       _formKey.currentState?.reset();
       _passwordController.clear();
+      _organizationNameController.clear();
     });
   }
 
@@ -191,6 +197,28 @@ class _LoginScreenState extends State<LoginScreen> {
                                       ? (_) => _submitForm()
                                       : null,
                                 ),
+
+                                // ── Organization Name field (sign-up mode only) ──
+                                if (_authMode == _AuthMode.signUp) ...[
+                                  const SizedBox(height: 20),
+                                  TextFormField(
+                                    controller: _organizationNameController,
+                                    keyboardType: TextInputType.name,
+                                    textInputAction: TextInputAction.next,
+                                    autofillHints: const [AutofillHints.organizationName],
+                                    enabled: !isLoading,
+                                    decoration: const InputDecoration(
+                                      labelText: 'Organization Name',
+                                      prefixIcon: Icon(Icons.business_outlined),
+                                    ),
+                                    validator: (value) {
+                                      if (value == null || value.trim().isEmpty) {
+                                        return 'Please enter your organization name';
+                                      }
+                                      return null;
+                                    },
+                                  ),
+                                ],
 
                                 // ── Password field (hidden in forgot-password mode) ──
                                 if (_authMode != _AuthMode.forgotPassword) ...[
