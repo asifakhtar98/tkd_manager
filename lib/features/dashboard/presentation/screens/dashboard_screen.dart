@@ -173,7 +173,7 @@ class DashboardScreen extends StatelessWidget {
               icon: Icons.account_tree_outlined,
               title: '4 Players',
               subtitle: 'Minimal bracket, no BYEs',
-              accentColor: Colors.blue,
+              accentColor: Colors.grey.shade800,
               onTap: () => _navigateToDemoBracketViewer(
                 context,
                 bracketFormat: BracketFormat.singleElimination,
@@ -184,7 +184,7 @@ class DashboardScreen extends StatelessWidget {
               icon: Icons.account_tree_outlined,
               title: '8 Players',
               subtitle: 'Perfect bracket, no BYEs',
-              accentColor: Colors.blue,
+              accentColor: Colors.grey.shade800,
               onTap: () => _navigateToDemoBracketViewer(
                 context,
                 bracketFormat: BracketFormat.singleElimination,
@@ -195,7 +195,7 @@ class DashboardScreen extends StatelessWidget {
               icon: Icons.account_tree_outlined,
               title: '5 Players',
               subtitle: 'BYEs in action',
-              accentColor: Colors.indigo,
+              accentColor: Colors.grey.shade800,
               onTap: () => _navigateToDemoBracketViewer(
                 context,
                 bracketFormat: BracketFormat.singleElimination,
@@ -206,7 +206,7 @@ class DashboardScreen extends StatelessWidget {
               icon: Icons.account_tree_outlined,
               title: '16 Players',
               subtitle: 'Large bracket, full draw',
-              accentColor: Colors.blue,
+              accentColor: Colors.grey.shade800,
               onTap: () => _navigateToDemoBracketViewer(
                 context,
                 bracketFormat: BracketFormat.singleElimination,
@@ -217,7 +217,7 @@ class DashboardScreen extends StatelessWidget {
               icon: Icons.emoji_events_outlined,
               title: '8P + 3rd Place',
               subtitle: 'Bronze medal match',
-              accentColor: Colors.amber.shade700,
+              accentColor: Colors.grey.shade800,
               onTap: () => _navigateToDemoBracketViewer(
                 context,
                 bracketFormat: BracketFormat.singleElimination,
@@ -246,7 +246,7 @@ class DashboardScreen extends StatelessWidget {
               icon: Icons.repeat,
               title: '4 Players',
               subtitle: 'Minimal DE bracket',
-              accentColor: Colors.teal,
+              accentColor: Colors.grey.shade800,
               onTap: () => _navigateToDemoBracketViewer(
                 context,
                 bracketFormat: BracketFormat.doubleElimination,
@@ -257,7 +257,7 @@ class DashboardScreen extends StatelessWidget {
               icon: Icons.repeat,
               title: '8 Players',
               subtitle: 'Standard DE bracket',
-              accentColor: Colors.teal,
+              accentColor: Colors.grey.shade800,
               onTap: () => _navigateToDemoBracketViewer(
                 context,
                 bracketFormat: BracketFormat.doubleElimination,
@@ -268,7 +268,7 @@ class DashboardScreen extends StatelessWidget {
               icon: Icons.repeat,
               title: '6 Players',
               subtitle: 'DE with BYEs',
-              accentColor: Colors.cyan.shade700,
+              accentColor: Colors.grey.shade800,
               onTap: () => _navigateToDemoBracketViewer(
                 context,
                 bracketFormat: BracketFormat.doubleElimination,
@@ -373,7 +373,7 @@ class _DemoCard extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.onTap,
-    this.accentColor = Colors.blueAccent,
+    this.accentColor = Colors.grey,
   });
 
   final IconData icon;

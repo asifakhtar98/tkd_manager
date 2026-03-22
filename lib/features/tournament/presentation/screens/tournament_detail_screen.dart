@@ -140,7 +140,7 @@ class TournamentDetailScreen extends StatelessWidget {
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
+              backgroundColor: Colors.grey.shade800,
               foregroundColor: Colors.white,
             ),
             onPressed: () => Navigator.pop(c, true),
@@ -262,7 +262,7 @@ class _BracketSnapshotCard extends StatelessWidget {
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
+              backgroundColor: Colors.grey.shade800,
               foregroundColor: Colors.white,
             ),
             onPressed: () => Navigator.pop(c, true),
@@ -306,7 +306,7 @@ class _BracketSnapshotCard extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             IconButton(
-              icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+              icon: Icon(Icons.delete_outline, color: Colors.grey.shade800),
               tooltip: 'Remove bracket',
               onPressed: () => _confirmDelete(context),
             ),

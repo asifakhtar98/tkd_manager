@@ -190,7 +190,7 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(errorMessage),
-                backgroundColor: Colors.redAccent,
+                backgroundColor: Colors.grey.shade800,
               ),
             );
             // Clear the error so it doesn't re-fire on rebuild.
@@ -230,10 +230,10 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.error_outline,
                     size: 48,
-                    color: Colors.redAccent,
+                    color: Colors.grey.shade800,
                   ),
                   const SizedBox(height: 16),
                   Text(message, textAlign: TextAlign.center),
@@ -415,7 +415,7 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
           TextButton(
             style: TextButton.styleFrom(
               foregroundColor: isEditModeEnabled
-                  ? Colors.amber
+                  ? Colors.grey.shade400
                   : Colors.white,
               disabledForegroundColor: Colors.grey,
             ),
@@ -540,7 +540,7 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
                     horizontal: 16,
                     vertical: 8,
                   ),
-                  color: Colors.amber.shade100,
+                  color: Colors.grey.shade300,
                   child: const Row(
                     children: [
                       Icon(Icons.edit, size: 16, color: Color(0xFF92400E)),

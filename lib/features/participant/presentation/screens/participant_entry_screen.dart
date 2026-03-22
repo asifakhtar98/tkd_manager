@@ -219,19 +219,18 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                       ? 'Add at least 2 players to generate a bracket'
                       : 'Generate Bracket',
                   child: ElevatedButton.icon(
-                    icon: Icon(
+                    icon: const Icon(
                       Icons.bolt,
-                      color: canGenerate ? Colors.yellow : Colors.grey,
                     ),
                     label: const Text(
                       'GENERATE',
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: canGenerate
-                          ? Colors.blueAccent
-                          : Colors.grey[800],
-                      foregroundColor: canGenerate ? Colors.white : Colors.grey,
+                      backgroundColor: Colors.grey.shade800,
+                      foregroundColor: Colors.white,
+                      disabledBackgroundColor: Colors.grey.shade300,
+                      disabledForegroundColor: Colors.grey.shade600,
                     ),
                     onPressed: canGenerate
                         ? () => _handleGenerateBracketRequested(context, state)
@@ -315,14 +314,14 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                       isExpanded: true,
                       isDense: true,
                       items: [
-                        const DropdownMenuItem(
+                        DropdownMenuItem(
                           value: _createNewSentinel,
                           child: Row(
                             children: [
                               Icon(
                                 Icons.add_circle_outline,
                                 size: 18,
-                                color: Colors.blueAccent,
+                                color: Colors.grey.shade800,
                               ),
                               SizedBox(width: 8),
                               Flexible(
@@ -330,7 +329,7 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                                   '+ Create New Tournament',
                                   overflow: TextOverflow.ellipsis,
                                   style: TextStyle(
-                                    color: Colors.blueAccent,
+                                    color: Colors.grey.shade800,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
@@ -630,10 +629,10 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
               ),
             ),
             TextButton.icon(
-              icon: const Icon(Icons.delete_sweep, color: Colors.red),
-              label: const Text(
+              icon: Icon(Icons.delete_sweep, color: Colors.grey.shade800),
+              label: Text(
                 'Clear All',
-                style: TextStyle(color: Colors.red),
+                style: TextStyle(color: Colors.grey.shade800),
               ),
               onPressed: _participants.isEmpty
                   ? null
@@ -653,7 +652,7 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                             ),
                             ElevatedButton(
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.red,
+                                backgroundColor: Colors.grey.shade800,
                                 foregroundColor: Colors.white,
                               ),
                               onPressed: () => Navigator.pop(c, true),
@@ -699,7 +698,7 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                       margin: const EdgeInsets.symmetric(vertical: 4),
                       child: ListTile(
                         leading: CircleAvatar(
-                          backgroundColor: Colors.blueAccent,
+                          backgroundColor: Colors.grey.shade800,
                           child: Text('${index + 1}'),
                         ),
                         title: Text(
@@ -721,9 +720,9 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                           children: [
                             const Icon(Icons.drag_handle, color: Colors.grey),
                             IconButton(
-                              icon: const Icon(
+                              icon: Icon(
                                 Icons.close,
-                                color: Colors.redAccent,
+                                color: Colors.grey.shade800,
                               ),
                               onPressed: () => _removeParticipant(index),
                             ),

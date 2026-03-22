@@ -367,11 +367,11 @@ class _LogoPickerCard extends StatelessWidget {
     );
   }
 
-  static Widget _buildBrokenIcon() => const Center(
+  static Widget _buildBrokenIcon() => Center(
         child: Icon(
           Icons.broken_image_outlined,
           size: 28,
-          color: Colors.redAccent,
+          color: Colors.grey.shade600,
         ),
       );
 
@@ -435,7 +435,7 @@ class _LogoPickerCard extends StatelessWidget {
                   icon: Icons.restart_alt,
                   tooltip: 'Reset to default',
                   onTap: onResetToDefault,
-                  color: Colors.blue.shade600,
+                  color: Colors.grey.shade600,
                 ),
               ],
               if (_hasLogo && !_isDefault) ...[
@@ -444,7 +444,7 @@ class _LogoPickerCard extends StatelessWidget {
                   icon: Icons.close,
                   tooltip: 'Remove logo',
                   onTap: onRemove,
-                  color: Colors.red.shade400,
+                  color: Colors.grey.shade600,
                 ),
               ],
             ],
