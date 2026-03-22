@@ -78,9 +78,12 @@ class TieSheetThemeConfig {
   /// the font-weight specified by the painter.
   final bool isTextForceBold;
 
-  /// When greater than `0`, **every** text span is rendered at this
-  /// fixed font size instead of the painter-specified size.
-  final double uniformFontSize;
+  /// Additive font-size adjustment applied to **every** text span.
+  ///
+  /// A positive value increases all rendered text sizes by this many
+  /// logical pixels while preserving the relative hierarchy between
+  /// headings, body text, and badges.
+  final double fontSizeDelta;
 
   // ── Fill tokens ───────────────────────────────────────────────────────────
 
@@ -145,7 +148,7 @@ class TieSheetThemeConfig {
     required this.primaryTextColor,
     required this.secondaryTextColor,
     required this.isTextForceBold,
-    required this.uniformFontSize,
+    required this.fontSizeDelta,
     required this.rowFillColor,
     required this.headerFillColor,
     required this.tbdFillColor,
@@ -183,7 +186,7 @@ class TieSheetThemeConfig {
         primaryTextColor = const Color(0xFF1E293B),
         secondaryTextColor = const Color(0xFF64748B),
         isTextForceBold = false,
-        uniformFontSize = 0.0,
+        fontSizeDelta = 4.0,
         rowFillColor = const Color(0xFFF8FAFC),
         headerFillColor = const Color(0xFFE2E8F0),
         tbdFillColor = const Color(0xFFF1F5F9),
@@ -219,7 +222,7 @@ class TieSheetThemeConfig {
         primaryTextColor = const Color(0xFF000000),
         secondaryTextColor = const Color(0xFF000000),
         isTextForceBold = true,
-        uniformFontSize = 10.0,
+        fontSizeDelta = 8.0,
         rowFillColor = const Color(0xFFFFFFFF),
         headerFillColor = const Color(0xFFFFFFFF),
         tbdFillColor = const Color(0xFFFFFFFF),
@@ -269,7 +272,7 @@ class TieSheetThemeConfig {
           primaryTextColor == other.primaryTextColor &&
           secondaryTextColor == other.secondaryTextColor &&
           isTextForceBold == other.isTextForceBold &&
-          uniformFontSize == other.uniformFontSize &&
+          fontSizeDelta == other.fontSizeDelta &&
           rowFillColor == other.rowFillColor &&
           headerFillColor == other.headerFillColor &&
           tbdFillColor == other.tbdFillColor &&
@@ -304,7 +307,7 @@ class TieSheetThemeConfig {
         primaryTextColor,
         secondaryTextColor,
         isTextForceBold,
-        uniformFontSize,
+        fontSizeDelta,
         rowFillColor,
         headerFillColor,
         tbdFillColor,

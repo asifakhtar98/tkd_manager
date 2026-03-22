@@ -412,21 +412,31 @@ class TieSheetPainter extends CustomPainter {
   final Map<String, int> _matchGlobalNumbers = {};
   final Map<String, Offset> _nodeOffsets = {};
 
-  // ── Layout constants ───────────────────────────────────────────────────────
-  static const double rowH = 42.0;
-  static const double rowGap = 35.0;
-  static const double pairGap = 100.0;
-  static const double noColW = 32.0;
-  static const double nameColW = 200.0;
-  static const double regIdColW = 120.0;
-  static const double roundColW = 170.0;
-  static const double headerH = 100.0;
-  static const double subHeaderH = 28.0;
-  static const double medalH = 170.0;
+  // ── Layout dimensions ──────────────────────────────────────────────────────
+  //
+  // Text-containing elements scale with [themeConfig.fontSizeDelta] so that
+  // larger text fits without overflow. Each getter uses a per-delta multiplier
+  // tuned for its content type.
+
+  /// Shorthand for the additive font-size delta from the active theme.
+  double get _delta => themeConfig.fontSizeDelta;
+
+  double get rowH => 42.0 + _delta * 2.0;
+  double get rowGap => 35.0 + _delta * 1.0;
+  double get pairGap => 100.0 + _delta * 2.0;
+  double get noColW => 32.0 + _delta * 1.0;
+  double get nameColW => 200.0 + _delta * 3.0;
+  double get regIdColW => 120.0 + _delta * 2.0;
+  double get roundColW => 170.0 + _delta * 2.0;
+  double get headerH => 100.0 + _delta * 2.0;
+  double get subHeaderH => 28.0 + _delta * 2.0;
+  double get medalH => 170.0 + _delta * 2.0;
+  double get centerGap => 340.0 + _delta * 4.0;
+  double get sectionLabelH => 32.0 + _delta * 1.0;
+
+  // Non-text constants — no scaling required.
   static const double margin = 36.0;
-  static const double centerGap = 340.0;
   static const double sectionGap = 50.0;
-  static const double sectionLabelH = 32.0;
   static const double _cardRadius = 6.0;
   static const double _accentStripW = 4.0;
 
@@ -434,14 +444,15 @@ class TieSheetPainter extends CustomPainter {
   /// 60px image + 12px bottom padding.
   static const double logoRowHeight = 72.0;
 
-  static const double listW = noColW + nameColW + regIdColW;
+  /// Sum of the three participant-list column widths.
+  double get listW => noColW + nameColW + regIdColW;
 
   // Medal-table dimensions.
-  static const double _medalTableW = 440.0;
-  static const double _medalRowH = 36.0;
-  static const double _medalNameW = 250.0;
-  static const double _medalLabelW = 80.0;
-  static const double _medalBlankW = _medalTableW - _medalNameW - _medalLabelW;
+  double get _medalTableW => 440.0 + _delta * 4.0;
+  double get _medalRowH => 36.0 + _delta * 2.0;
+  double get _medalNameW => 250.0 + _delta * 3.0;
+  double get _medalLabelW => 80.0 + _delta * 1.0;
+  double get _medalBlankW => _medalTableW - _medalNameW - _medalLabelW;
 
   TieSheetPainter({
     required this.tournament,
@@ -660,24 +671,6 @@ class TieSheetPainter extends CustomPainter {
     double startY = margin;
     startY = _paintHeader(canvas, size, startY, thickPen);
 
-    // Subtle separator line between left and right participant tables.
-    // In print mode (uniform stroke), draw a solid line instead of dashes.
-    if (_isUniformStroke) {
-      canvas.drawLine(
-        Offset(margin + listW + 20, startY),
-        Offset(size.width - margin - listW - 20, startY),
-        _genericConnectorPen,
-      );
-    } else {
-      _drawDashedLine(
-        canvas,
-        Offset(margin + listW + 20, startY),
-        Offset(size.width - margin - listW - 20, startY),
-        _Pens.thin(themeConfig.pendingColor),
-        dashWidth: 8,
-        gapWidth: 6,
-      );
-    }
     final tableTop = startY + 12;
 
     // Exclude the 3rd-place match from the main bracket tree.
@@ -1079,7 +1072,7 @@ class TieSheetPainter extends CustomPainter {
       canvas,
       label,
       x + width / 2,
-      y + 8,
+      _centeredTextY(y, sectionLabelH, _fontSize(14)),
       TextStyle(
         color: color,
         fontSize: _fontSize(14),
@@ -1273,7 +1266,7 @@ class TieSheetPainter extends CustomPainter {
     }
 
     // ── Dark header banner with tournament info ──
-    final bannerH = 64.0;
+    final bannerH = 64.0 + _delta * 2.0;
     final bannerRect = RRect.fromLTRBR(
       margin,
       y,
@@ -1291,7 +1284,7 @@ class TieSheetPainter extends CustomPainter {
       canvas,
       title,
       size.width / 2,
-      y + 12,
+      y + 8 + _delta * 0.5,
       TextStyle(
         color: themeConfig.headerBannerTextColor,
         fontSize: _fontSize(18),
@@ -1311,11 +1304,11 @@ class TieSheetPainter extends CustomPainter {
         canvas,
         sub.toUpperCase(),
         size.width / 2,
-        y + 34,
+        y + 30 + _delta * 1.0,
         TextStyle(
           color: themeConfig.headerBannerTextColor.withValues(alpha: 0.7),
           fontSize: _fontSize(11),
-          fontWeight: themeConfig.isTextForceBold ? FontWeight.bold : FontWeight.normal,
+          fontWeight: themeConfig.isTextForceBold ? FontWeight.w900 : FontWeight.normal,
           fontFamily: 'Roboto',
           letterSpacing: 0.5,
         ),
@@ -1327,11 +1320,11 @@ class TieSheetPainter extends CustomPainter {
         canvas,
         'Organised by ${tournament.organizer.toUpperCase()}',
         size.width / 2,
-        y + 48,
+        y + 46 + _delta * 1.5,
         TextStyle(
           color: themeConfig.headerBannerTextColor.withValues(alpha: 0.55),
           fontSize: _fontSize(10),
-          fontWeight: themeConfig.isTextForceBold ? FontWeight.bold : FontWeight.normal,
+          fontWeight: themeConfig.isTextForceBold ? FontWeight.w900 : FontWeight.normal,
           fontFamily: 'Roboto',
         ),
         center: true,
@@ -1363,7 +1356,7 @@ class TieSheetPainter extends CustomPainter {
     final weightDivision = tournament.weightDivisionLabel.isNotEmpty
         ? tournament.weightDivisionLabel.toUpperCase()
         : 'WEIGHT DIVISION';
-    final infoTextY = infoRowTop + subHeaderH / 2 - 6;
+    final infoTextY = _centeredTextY(infoRowTop, subHeaderH, _fontSize(11));
 
     // Column layout: No. | Age Category | Gender | Weight Division
     final infoColNoW = noColW;
@@ -1501,7 +1494,7 @@ class TieSheetPainter extends CustomPainter {
       );
 
       // ── Text ──
-      final textY = y + rowH / 2 - 6;
+      final textY = _centeredTextY(y, rowH, _fontSize(10));
       _drawText(
         canvas,
         '$idx',
@@ -1561,7 +1554,7 @@ class TieSheetPainter extends CustomPainter {
       );
 
       // ── Text ──
-      final textY = y + rowH / 2 - 6;
+      final textY = _centeredTextY(y, rowH, _fontSize(10));
       if (p.registrationId != null && p.registrationId!.isNotEmpty) {
         _drawText(canvas, p.registrationId!, x + 8, textY, _normal(9));
       }
@@ -1609,7 +1602,7 @@ class TieSheetPainter extends CustomPainter {
     );
     canvas.drawRRect(accentRect, _Pens.fill(themeConfig.mutedColor));
 
-    final textY = y + rowH / 2 - 6;
+    final textY = _centeredTextY(y, rowH, _fontSize(10));
     _drawText(
       canvas,
       '$idx',
@@ -2125,7 +2118,7 @@ class TieSheetPainter extends CustomPainter {
         canvas,
         labels[row],
         labelX,
-        rY + _medalRowH / 2 - 7,
+        _centeredTextY(rY, _medalRowH, _fontSize(12)),
         textStyles[row],
         center: true,
       );
@@ -2147,7 +2140,7 @@ class TieSheetPainter extends CustomPainter {
           canvas,
           _pName(gold),
           x + _medalBlankW + 14,
-          y + _medalRowH / 2 - 7,
+           _centeredTextY(y, _medalRowH, _fontSize(11)),
           _bold(11),
         );
       }
@@ -2156,7 +2149,7 @@ class TieSheetPainter extends CustomPainter {
           canvas,
           _pName(silver),
           x + _medalBlankW + 14,
-          y + (_medalRowH + 4) + _medalRowH / 2 - 7,
+           _centeredTextY(y + (_medalRowH + 4), _medalRowH, _fontSize(11)),
           _bold(11),
         );
       }
@@ -2173,7 +2166,7 @@ class TieSheetPainter extends CustomPainter {
             canvas,
             _pName(bronze1),
             x + _medalBlankW + 14,
-            y + 2 * (_medalRowH + 4) + _medalRowH / 2 - 7,
+            _centeredTextY(y + 2 * (_medalRowH + 4), _medalRowH, _fontSize(11)),
             _bold(11),
           );
         }
@@ -2188,7 +2181,7 @@ class TieSheetPainter extends CustomPainter {
             canvas,
             _pName(bronze2),
             x + _medalBlankW + 14,
-            y + 3 * (_medalRowH + 4) + _medalRowH / 2 - 7,
+            _centeredTextY(y + 3 * (_medalRowH + 4), _medalRowH, _fontSize(11)),
             _bold(11),
           );
         }
@@ -2203,21 +2196,29 @@ class TieSheetPainter extends CustomPainter {
 
   String _pName(ParticipantEntity p) => p.fullName.toUpperCase();
 
-  /// Resolves the effective font size, applying [themeConfig.uniformFontSize]
-  /// override when it is greater than zero.
-  double _fontSize(double defaultSize) =>
-      themeConfig.uniformFontSize > 0 ? themeConfig.uniformFontSize : defaultSize;
+  /// Resolves the effective font size by adding [themeConfig.fontSizeDelta]
+  /// to the painter-specified [defaultSize].
+  double _fontSize(double defaultSize) => defaultSize + themeConfig.fontSizeDelta;
+
+  /// Y-coordinate for vertically centering text of [fontSize] within a
+  /// container that starts at [containerY] with the given [containerHeight].
+  double _centeredTextY(
+    double containerY,
+    double containerHeight,
+    double fontSize,
+  ) =>
+      containerY + (containerHeight - fontSize) / 2;
 
   TextStyle _bold(double size) => TextStyle(
     color: themeConfig.primaryTextColor,
     fontSize: _fontSize(size),
-    fontWeight: FontWeight.bold,
+    fontWeight: themeConfig.isTextForceBold ? FontWeight.w900 : FontWeight.bold,
     fontFamily: 'Roboto',
   );
   TextStyle _normal(double size) => TextStyle(
     color: themeConfig.secondaryTextColor,
     fontSize: _fontSize(size),
-    fontWeight: themeConfig.isTextForceBold ? FontWeight.bold : FontWeight.normal,
+    fontWeight: themeConfig.isTextForceBold ? FontWeight.w800 : FontWeight.normal,
     fontFamily: 'Roboto',
   );
 

@@ -49,8 +49,8 @@ void main() {
       test('isInteractivityDisabled is false', () {
         expect(config.isInteractivityDisabled, isFalse);
       });
-      test('uniformFontSize is zero (varied sizes)', () {
-        expect(config.uniformFontSize, 0.0);
+      test('fontSizeDelta adds 4px in default mode', () {
+        expect(config.fontSizeDelta, 4.0);
       });
 
       // ── Text tokens ──
@@ -165,8 +165,8 @@ void main() {
       test('isInteractivityDisabled is true', () {
         expect(config.isInteractivityDisabled, isTrue);
       });
-      test('uniformFontSize is 10.0', () {
-        expect(config.uniformFontSize, 10.0);
+      test('fontSizeDelta adds 8px in print mode', () {
+        expect(config.fontSizeDelta, 8.0);
       });
 
       // ── Text — all black + bold ──
@@ -291,7 +291,7 @@ void main() {
           primaryTextColor: Color(0xFF1E293B),
           secondaryTextColor: Color(0xFF64748B),
           isTextForceBold: false,
-          uniformFontSize: 0.0,
+          fontSizeDelta: 4.0,
           rowFillColor: Color(0xFFF8FAFC),
           headerFillColor: Color(0xFFE2E8F0),
           tbdFillColor: Color(0xFFF1F5F9),
