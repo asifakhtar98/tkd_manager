@@ -21,16 +21,16 @@ void main() {
 
       // ── Connector / junction tokens ──
       test('connectorColor matches original slate', () {
-        expect(config.connectorColor, const Color(0xFF94A3B8));
+        expect(config.connectorColor, const Color(0xFF64748B));
       });
       test('connectorWonColor matches original dark-slate', () {
-        expect(config.connectorWonColor, const Color(0xFF475569));
+        expect(config.connectorWonColor, const Color(0xFF334155));
       });
       test('pendingColor matches original light-slate', () {
-        expect(config.pendingColor, const Color(0xFFCBD5E1));
+        expect(config.pendingColor, const Color(0xFF94A3B8));
       });
       test('mutedColor matches original slate', () {
-        expect(config.mutedColor, const Color(0xFF94A3B8));
+        expect(config.mutedColor, const Color(0xFF64748B));
       });
 
       // ── Canvas & card tokens ──
@@ -38,7 +38,7 @@ void main() {
         expect(config.canvasBackgroundColor, const Color(0xFFFFFEFC));
       });
       test('cardBorderColor matches original light-slate', () {
-        expect(config.cardBorderColor, const Color(0xFFCBD5E1));
+        expect(config.cardBorderColor, const Color(0xFF94A3B8));
       });
       test('shadowOpacityMultiplier is full', () {
         expect(config.shadowOpacityMultiplier, 1.0);
@@ -130,6 +130,95 @@ void main() {
       test('medalBronzeAccentColor matches original', () {
         expect(config.medalBronzeAccentColor, const Color(0xFFF97316));
       });
+
+      // ── Shape / radius tokens ──
+      test('cardBorderRadius is 6', () {
+        expect(config.cardBorderRadius, 6.0);
+      });
+      test('sectionLabelBorderRadius is 6', () {
+        expect(config.sectionLabelBorderRadius, 6.0);
+      });
+      test('headerBannerBorderRadius is 8', () {
+        expect(config.headerBannerBorderRadius, 8.0);
+      });
+      test('junctionCornerRadius is 10', () {
+        expect(config.junctionCornerRadius, 10.0);
+      });
+
+      // ── Stroke width tokens ──
+      test('thickStrokeWidth is 3.5', () {
+        expect(config.thickStrokeWidth, 3.5);
+      });
+      test('thinStrokeWidth is 3.0', () {
+        expect(config.thinStrokeWidth, 3.0);
+      });
+      test('wonConnectorStrokeWidth is 4.0', () {
+        expect(config.wonConnectorStrokeWidth, 4.0);
+      });
+      test('byeConnectorStrokeWidth is 1.5', () {
+        expect(config.byeConnectorStrokeWidth, 1.5);
+      });
+
+      // ── Spacing tokens ──
+      test('canvasMargin is 36', () {
+        expect(config.canvasMargin, 36.0);
+      });
+      test('sectionGapHeight is 50', () {
+        expect(config.sectionGapHeight, 50.0);
+      });
+      test('accentStripWidth is 4', () {
+        expect(config.accentStripWidth, 4.0);
+      });
+      test('logoRowHeight is 72', () {
+        expect(config.logoRowHeight, 72.0);
+      });
+
+      // ── Badge & pill sizing tokens ──
+      test('badgeMinRadius is 10', () {
+        expect(config.badgeMinRadius, 10.0);
+      });
+      test('badgePadding is 4', () {
+        expect(config.badgePadding, 4.0);
+      });
+      test('matchPillMinHalfWidth is 16', () {
+        expect(config.matchPillMinHalfWidth, 16.0);
+      });
+      test('matchPillHorizontalPadding is 8', () {
+        expect(config.matchPillHorizontalPadding, 8.0);
+      });
+      test('matchPillMinHalfHeight is 11', () {
+        expect(config.matchPillMinHalfHeight, 11.0);
+      });
+      test('matchPillVerticalPadding is 4', () {
+        expect(config.matchPillVerticalPadding, 4.0);
+      });
+
+      // ── Dashed line tokens ──
+      test('dashedLineDashWidth is 6', () {
+        expect(config.dashedLineDashWidth, 6.0);
+      });
+      test('dashedLineGapWidth is 4', () {
+        expect(config.dashedLineGapWidth, 4.0);
+      });
+
+      // ── Shadow tokens ──
+      test('shadowBlurRadius is 6', () {
+        expect(config.shadowBlurRadius, 6.0);
+      });
+      test('shadowColor is translucent black', () {
+        expect(config.shadowColor, const Color(0x1A000000));
+      });
+
+      // ── Typography tokens ──
+      test('fontFamily is Roboto', () {
+        expect(config.fontFamily, 'Roboto');
+      });
+      test('headerLetterSpacing is 1.2', () {
+        expect(config.headerLetterSpacing, 1.2);
+      });
+      test('subHeaderLetterSpacing is 0.5', () {
+        expect(config.subHeaderLetterSpacing, 0.5);
+      });
     });
 
     group('printMode preset', () {
@@ -142,11 +231,11 @@ void main() {
       test('connectorWonColor is black', () {
         expect(config.connectorWonColor, const Color(0xFF000000));
       });
-      test('pendingColor is dark gray', () {
-        expect(config.pendingColor, const Color(0xFF4B5563));
+      test('pendingColor is black', () {
+        expect(config.pendingColor, const Color(0xFF000000));
       });
-      test('mutedColor is dark', () {
-        expect(config.mutedColor, const Color(0xFF374151));
+      test('mutedColor is black', () {
+        expect(config.mutedColor, const Color(0xFF000000));
       });
 
       // ── Canvas & card ──
@@ -159,8 +248,8 @@ void main() {
       test('shadowOpacityMultiplier is zero (no shadows)', () {
         expect(config.shadowOpacityMultiplier, 0.0);
       });
-      test('connectorStrokeWidth is uniform 1.5', () {
-        expect(config.connectorStrokeWidth, 1.5);
+      test('connectorStrokeWidth is uniform 3.0', () {
+        expect(config.connectorStrokeWidth, 3.0);
       });
       test('isInteractivityDisabled is true', () {
         expect(config.isInteractivityDisabled, isTrue);
@@ -235,9 +324,36 @@ void main() {
         expect(config.medalBronzeAccentColor, const Color(0xFF000000));
       });
 
+      // ── Shape / radius tokens (same geometry as default) ──
+      test('cardBorderRadius is 6', () {
+        expect(config.cardBorderRadius, 6.0);
+      });
+      test('headerBannerBorderRadius is 8', () {
+        expect(config.headerBannerBorderRadius, 8.0);
+      });
+      test('junctionCornerRadius is 10', () {
+        expect(config.junctionCornerRadius, 10.0);
+      });
+
+      // ── Spacing tokens (same as default) ──
+      test('canvasMargin is 36', () {
+        expect(config.canvasMargin, 36.0);
+      });
+      test('logoRowHeight is 72', () {
+        expect(config.logoRowHeight, 72.0);
+      });
+
+      // ── Typography tokens (same as default) ──
+      test('fontFamily is Roboto', () {
+        expect(config.fontFamily, 'Roboto');
+      });
+      test('headerLetterSpacing is 1.2', () {
+        expect(config.headerLetterSpacing, 1.2);
+      });
+
       // ── Luminance checks: print mode darker than default ──
       test('connectorColor luminance lower than default', () {
-        const defaultConnector = Color(0xFF94A3B8);
+        const defaultConnector = Color(0xFF64748B);
         expect(
           config.connectorColor.computeLuminance(),
           lessThan(defaultConnector.computeLuminance()),
@@ -279,12 +395,12 @@ void main() {
       test('custom config with same values as preset is equal', () {
         const preset = TieSheetThemeConfig.defaultMode();
         const custom = TieSheetThemeConfig(
-          connectorColor: Color(0xFF94A3B8),
-          connectorWonColor: Color(0xFF475569),
-          pendingColor: Color(0xFFCBD5E1),
-          mutedColor: Color(0xFF94A3B8),
+          connectorColor: Color(0xFF64748B),
+          connectorWonColor: Color(0xFF334155),
+          pendingColor: Color(0xFF94A3B8),
+          mutedColor: Color(0xFF64748B),
           canvasBackgroundColor: Color(0xFFFFFEFC),
-          cardBorderColor: Color(0xFFCBD5E1),
+          cardBorderColor: Color(0xFF94A3B8),
           shadowOpacityMultiplier: 1.0,
           connectorStrokeWidth: 0.0,
           isInteractivityDisabled: false,
@@ -311,6 +427,38 @@ void main() {
           medalGoldAccentColor: Color(0xFFF59E0B),
           medalSilverAccentColor: Color(0xFF94A3B8),
           medalBronzeAccentColor: Color(0xFFF97316),
+          // Shape / radius
+          cardBorderRadius: 6.0,
+          sectionLabelBorderRadius: 6.0,
+          headerBannerBorderRadius: 8.0,
+          junctionCornerRadius: 10.0,
+          // Stroke widths
+          thickStrokeWidth: 3.5,
+          thinStrokeWidth: 3.0,
+          wonConnectorStrokeWidth: 4.0,
+          byeConnectorStrokeWidth: 1.5,
+          // Spacing
+          canvasMargin: 36.0,
+          sectionGapHeight: 50.0,
+          accentStripWidth: 4.0,
+          logoRowHeight: 72.0,
+          // Badge & pill
+          badgeMinRadius: 10.0,
+          badgePadding: 4.0,
+          matchPillMinHalfWidth: 16.0,
+          matchPillHorizontalPadding: 8.0,
+          matchPillMinHalfHeight: 11.0,
+          matchPillVerticalPadding: 4.0,
+          // Dashed line
+          dashedLineDashWidth: 6.0,
+          dashedLineGapWidth: 4.0,
+          // Shadow
+          shadowBlurRadius: 6.0,
+          shadowColor: Color(0x1A000000),
+          // Typography
+          fontFamily: 'Roboto',
+          headerLetterSpacing: 1.2,
+          subHeaderLetterSpacing: 0.5,
         );
         expect(custom, equals(preset));
       });

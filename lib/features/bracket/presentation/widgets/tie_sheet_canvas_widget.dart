@@ -355,20 +355,20 @@ class _TieSheetCanvasWidgetState extends State<TieSheetCanvasWidget> {
 /// Lightweight [Paint] factories for recurring stroke/fill profiles.
 abstract final class _Pens {
   /// Solid stroke, round caps — grid lines and outlines.
-  static Paint thick(Color c, {double w = 3.5}) => Paint()
+  static Paint thick(Color c, {required double w}) => Paint()
     ..color = c
     ..strokeWidth = w
     ..strokeCap = StrokeCap.round
     ..style = PaintingStyle.stroke;
 
-  /// 1 px solid stroke — dividers and pending match lines.
-  static Paint thin(Color c, {double w = 3.0}) => Paint()
+  /// Solid stroke — dividers and pending match lines.
+  static Paint thin(Color c, {required double w}) => Paint()
     ..color = c
     ..strokeWidth = w
     ..style = PaintingStyle.stroke;
 
   /// Stroke with round caps — winner / resolved advancement lines.
-  static Paint round(Color c, {double w = 4.0}) => Paint()
+  static Paint round(Color c, {required double w}) => Paint()
     ..color = c
     ..strokeWidth = w
     ..strokeCap = StrokeCap.round
@@ -381,8 +381,8 @@ abstract final class _Pens {
 
   /// Soft shadow paint for card elevation.
   static Paint shadow({
-    double blur = 6.0,
-    Color color = const Color(0x1A000000),
+    required double blur,
+    required Color color,
   }) => Paint()
     ..color = color
     ..maskFilter = MaskFilter.blur(BlurStyle.normal, blur);
@@ -434,15 +434,11 @@ class TieSheetPainter extends CustomPainter {
   double get centerGap => 340.0 + _delta * 4.0;
   double get sectionLabelH => 32.0 + _delta * 1.0;
 
-  // Non-text constants — no scaling required.
-  static const double margin = 36.0;
-  static const double sectionGap = 50.0;
-  static const double _cardRadius = 6.0;
-  static const double _accentStripW = 4.0;
+  // ── Convenience getters — delegate to themeConfig ─────────────────────────
 
-  /// Vertical space reserved for the logo row above the header banner.
-  /// 60px image + 12px bottom padding.
-  static const double logoRowHeight = 72.0;
+  double get margin => themeConfig.canvasMargin;
+  double get sectionGap => themeConfig.sectionGapHeight;
+  double get logoRowHeight => themeConfig.logoRowHeight;
 
   /// Sum of the three participant-list column widths.
   double get listW => noColW + nameColW + regIdColW;
@@ -477,11 +473,12 @@ class TieSheetPainter extends CustomPainter {
   /// single uniform width (print mode).
   bool get _isUniformStroke => themeConfig.connectorStrokeWidth > 0;
 
-  Paint _getThinPen(Color color, {double w = 1.0}) {
+  Paint _getThinPen(Color color, {double? w}) {
+    final effectiveWidth = w ?? themeConfig.thinStrokeWidth;
     if (_isUniformStroke) {
       return _Pens.thick(color, w: themeConfig.connectorStrokeWidth);
     }
-    return _Pens.thin(color, w: w);
+    return _Pens.thin(color, w: effectiveWidth);
   }
 
   /// Pending / unresolved connector pen. In uniform-stroke mode, width is
@@ -492,10 +489,10 @@ class TieSheetPainter extends CustomPainter {
   /// overridden to [TieSheetThemeConfig.connectorStrokeWidth].
   Paint get _wonConnectorPen => _isUniformStroke
       ? _Pens.thick(themeConfig.connectorWonColor, w: themeConfig.connectorStrokeWidth)
-      : _Pens.round(themeConfig.connectorWonColor);
+      : _Pens.round(themeConfig.connectorWonColor, w: themeConfig.wonConnectorStrokeWidth);
 
   /// BYE advancement dashed-line pen.
-  Paint get _byeConnectorPen => _getThinPen(themeConfig.mutedColor, w: 1.5);
+  Paint get _byeConnectorPen => _getThinPen(themeConfig.mutedColor, w: themeConfig.byeConnectorStrokeWidth);
 
   /// Generic connector pen (vertical trunk between arms).
   Paint get _genericConnectorPen => _getThinPen(themeConfig.connectorColor);
@@ -654,7 +651,7 @@ class TieSheetPainter extends CustomPainter {
 
     final thickPen = _isUniformStroke
         ? _Pens.thick(themeConfig.cardBorderColor, w: themeConfig.connectorStrokeWidth)
-        : _Pens.thick(themeConfig.cardBorderColor);
+        : _Pens.thick(themeConfig.cardBorderColor, w: themeConfig.thickStrokeWidth);
 
     if (_isDouble) {
       _paintDE(canvas, size, thickPen);
@@ -1020,7 +1017,7 @@ class TieSheetPainter extends CustomPainter {
       y,
       x + width,
       y + sectionLabelH,
-      const Radius.circular(6),
+      Radius.circular(themeConfig.sectionLabelBorderRadius),
     );
     canvas.drawRRect(rect, _Pens.fill(color.withValues(alpha: 0.1)));
     canvas.drawRRect(rect, _getThinPen(color, w: 1.5));
@@ -1033,7 +1030,7 @@ class TieSheetPainter extends CustomPainter {
         color: color,
         fontSize: _fontSize(14),
         fontWeight: FontWeight.bold,
-        fontFamily: 'Roboto',
+        fontFamily: themeConfig.fontFamily,
       ),
       center: true,
     );
@@ -1228,7 +1225,7 @@ class TieSheetPainter extends CustomPainter {
       y,
       size.width - margin,
       y + bannerH,
-      const Radius.circular(8),
+      Radius.circular(themeConfig.headerBannerBorderRadius),
     );
     canvas.drawRRect(bannerRect, _Pens.fill(themeConfig.headerBannerBackgroundColor));
     canvas.drawRRect(bannerRect, _getThinPen(themeConfig.cardBorderColor));
@@ -1245,8 +1242,8 @@ class TieSheetPainter extends CustomPainter {
         color: themeConfig.headerBannerTextColor,
         fontSize: _fontSize(18),
         fontWeight: FontWeight.bold,
-        fontFamily: 'Roboto',
-        letterSpacing: 1.2,
+        fontFamily: themeConfig.fontFamily,
+        letterSpacing: themeConfig.headerLetterSpacing,
       ),
       center: true,
     );
@@ -1265,8 +1262,8 @@ class TieSheetPainter extends CustomPainter {
           color: themeConfig.headerBannerTextColor.withValues(alpha: 0.7),
           fontSize: _fontSize(11),
           fontWeight: themeConfig.isTextForceBold ? FontWeight.w900 : FontWeight.normal,
-          fontFamily: 'Roboto',
-          letterSpacing: 0.5,
+          fontFamily: themeConfig.fontFamily,
+          letterSpacing: themeConfig.subHeaderLetterSpacing,
         ),
         center: true,
       );
@@ -1281,7 +1278,7 @@ class TieSheetPainter extends CustomPainter {
           color: themeConfig.headerBannerTextColor.withValues(alpha: 0.55),
           fontSize: _fontSize(10),
           fontWeight: themeConfig.isTextForceBold ? FontWeight.w900 : FontWeight.normal,
-          fontFamily: 'Roboto',
+          fontFamily: themeConfig.fontFamily,
         ),
         center: true,
       );
@@ -1298,7 +1295,7 @@ class TieSheetPainter extends CustomPainter {
       infoRowTop,
       infoRight,
       infoRowBottom,
-      const Radius.circular(_cardRadius),
+      Radius.circular(themeConfig.cardBorderRadius),
     );
     canvas.drawRRect(infoRect, _Pens.fill(themeConfig.headerFillColor));
     canvas.drawRRect(infoRect, _getThinPen(themeConfig.cardBorderColor));
@@ -1417,7 +1414,7 @@ class TieSheetPainter extends CustomPainter {
         y + 1,
         right,
         y + rowH - 1,
-        const Radius.circular(_cardRadius),
+        Radius.circular(themeConfig.cardBorderRadius),
       );
       canvas.drawRRect(
         cardRect.shift(const Offset(1, 2)),
@@ -1430,10 +1427,10 @@ class TieSheetPainter extends CustomPainter {
       final accentRect = RRect.fromLTRBAndCorners(
         x,
         y + 1,
-        x + _accentStripW,
+        x + themeConfig.accentStripWidth,
         y + rowH - 1,
-        topLeft: const Radius.circular(_cardRadius),
-        bottomLeft: const Radius.circular(_cardRadius),
+        topLeft: Radius.circular(themeConfig.cardBorderRadius),
+        bottomLeft: Radius.circular(themeConfig.cardBorderRadius),
       );
       canvas.drawRRect(accentRect, _Pens.fill(themeConfig.participantAccentStripColor));
 
@@ -1477,7 +1474,7 @@ class TieSheetPainter extends CustomPainter {
         y + 1,
         right,
         y + rowH - 1,
-        const Radius.circular(_cardRadius),
+        Radius.circular(themeConfig.cardBorderRadius),
       );
       canvas.drawRRect(
         cardRect.shift(const Offset(-1, 2)),
@@ -1488,12 +1485,12 @@ class TieSheetPainter extends CustomPainter {
 
       // ── Blue accent strip on right edge ──
       final accentRect = RRect.fromLTRBAndCorners(
-        right - _accentStripW,
+        right - themeConfig.accentStripWidth,
         y + 1,
         right,
         y + rowH - 1,
-        topRight: const Radius.circular(_cardRadius),
-        bottomRight: const Radius.circular(_cardRadius),
+        topRight: Radius.circular(themeConfig.cardBorderRadius),
+        bottomRight: Radius.circular(themeConfig.cardBorderRadius),
       );
       canvas.drawRRect(accentRect, _Pens.fill(themeConfig.participantAccentStripColor));
 
@@ -1542,7 +1539,7 @@ class TieSheetPainter extends CustomPainter {
       y + 1,
       right,
       y + rowH - 1,
-      const Radius.circular(_cardRadius),
+      Radius.circular(themeConfig.cardBorderRadius),
     );
     canvas.drawRRect(cardRect, _Pens.fill(themeConfig.tbdFillColor));
     canvas.drawRRect(cardRect, _getThinPen(themeConfig.pendingColor));
@@ -1551,10 +1548,10 @@ class TieSheetPainter extends CustomPainter {
     final accentRect = RRect.fromLTRBAndCorners(
       x,
       y + 1,
-      x + _accentStripW,
+      x + themeConfig.accentStripWidth,
       y + rowH - 1,
-      topLeft: const Radius.circular(_cardRadius),
-      bottomLeft: const Radius.circular(_cardRadius),
+      topLeft: Radius.circular(themeConfig.cardBorderRadius),
+      bottomLeft: Radius.circular(themeConfig.cardBorderRadius),
     );
     canvas.drawRRect(accentRect, _Pens.fill(themeConfig.mutedColor));
 
@@ -1765,14 +1762,14 @@ class TieSheetPainter extends CustomPainter {
     final output = Offset(junctionX, midY);
     _nodeOffsets['${match.id}_output'] = output;
 
-    const r = 10.0; // corner-radius for Bezier arms
+    final r = themeConfig.junctionCornerRadius; // corner-radius for Bezier arms
 
     final pathT = Path()
       ..moveTo(effectiveTop.dx, effectiveTop.dy)
       ..lineTo(junctionX - (mirrored ? -r : r), effectiveTop.dy)
       ..arcToPoint(
         Offset(junctionX, effectiveTop.dy + r),
-        radius: const Radius.circular(r),
+        radius: Radius.circular(r),
         clockwise: !mirrored,
       )
       ..lineTo(junctionX, midY);
@@ -1783,7 +1780,7 @@ class TieSheetPainter extends CustomPainter {
       ..lineTo(junctionX - (mirrored ? -r : r), effectiveBot.dy)
       ..arcToPoint(
         Offset(junctionX, effectiveBot.dy - r),
-        radius: const Radius.circular(r),
+        radius: Radius.circular(r),
         clockwise: mirrored,
       )
       ..lineTo(junctionX, midY);
@@ -1808,10 +1805,10 @@ class TieSheetPainter extends CustomPainter {
       final alignRight = !mirrored;
       final missingLabelStyle = TextStyle(
         color: themeConfig.mutedColor,
-        fontSize: 9,
+        fontSize: _fontSize(9),
         fontStyle: FontStyle.italic,
         fontWeight: FontWeight.bold,
-        fontFamily: 'Roboto',
+        fontFamily: themeConfig.fontFamily,
       );
 
       if (missingTopLabel != null) {
@@ -2021,7 +2018,7 @@ class TieSheetPainter extends CustomPainter {
         rY,
         x + _medalTableW,
         rY + _medalRowH,
-        const Radius.circular(_cardRadius),
+        Radius.circular(themeConfig.cardBorderRadius),
       );
       canvas.drawRRect(
         fullRect.shift(const Offset(1, 2)),
@@ -2034,8 +2031,8 @@ class TieSheetPainter extends CustomPainter {
         rY,
         x + _medalBlankW + _medalNameW,
         rY + _medalRowH,
-        topLeft: const Radius.circular(_cardRadius),
-        bottomLeft: const Radius.circular(_cardRadius),
+        topLeft: Radius.circular(themeConfig.cardBorderRadius),
+        bottomLeft: Radius.circular(themeConfig.cardBorderRadius),
       );
       canvas.drawRRect(nameRect, _Pens.fill(themeConfig.rowFillColor));
 
@@ -2045,8 +2042,8 @@ class TieSheetPainter extends CustomPainter {
         rY,
         x + _medalTableW,
         rY + _medalRowH,
-        topRight: const Radius.circular(_cardRadius),
-        bottomRight: const Radius.circular(_cardRadius),
+        topRight: Radius.circular(themeConfig.cardBorderRadius),
+        bottomRight: Radius.circular(themeConfig.cardBorderRadius),
       );
       canvas.drawRRect(labelRect, fills[row]);
 
@@ -2062,10 +2059,10 @@ class TieSheetPainter extends CustomPainter {
       final accentRect = RRect.fromLTRBAndCorners(
         x + _medalBlankW,
         rY,
-        x + _medalBlankW + _accentStripW,
+        x + _medalBlankW + themeConfig.accentStripWidth,
         rY + _medalRowH,
-        topLeft: const Radius.circular(_cardRadius),
-        bottomLeft: const Radius.circular(_cardRadius),
+        topLeft: Radius.circular(themeConfig.cardBorderRadius),
+        bottomLeft: Radius.circular(themeConfig.cardBorderRadius),
       );
       canvas.drawRRect(accentRect, _Pens.fill(accentColors[row]));
     }
@@ -2076,25 +2073,25 @@ class TieSheetPainter extends CustomPainter {
         color: themeConfig.medalGoldTextColor,
         fontSize: _fontSize(12),
         fontWeight: FontWeight.bold,
-        fontFamily: 'Roboto',
+        fontFamily: themeConfig.fontFamily,
       ),
       TextStyle(
         color: themeConfig.medalSilverTextColor,
         fontSize: _fontSize(12),
         fontWeight: FontWeight.bold,
-        fontFamily: 'Roboto',
+        fontFamily: themeConfig.fontFamily,
       ),
       TextStyle(
         color: themeConfig.medalBronzeTextColor,
         fontSize: _fontSize(12),
         fontWeight: FontWeight.bold,
-        fontFamily: 'Roboto',
+        fontFamily: themeConfig.fontFamily,
       ),
       TextStyle(
         color: themeConfig.medalBronzeTextColor,
         fontSize: _fontSize(12),
         fontWeight: FontWeight.bold,
-        fontFamily: 'Roboto',
+        fontFamily: themeConfig.fontFamily,
       ),
     ];
     final labels = ['Gold', 'Silver', '1st Bronze', '2nd Bronze'];
@@ -2199,13 +2196,13 @@ class TieSheetPainter extends CustomPainter {
     color: themeConfig.primaryTextColor,
     fontSize: _fontSize(size),
     fontWeight: themeConfig.isTextForceBold ? FontWeight.w900 : FontWeight.bold,
-    fontFamily: 'Roboto',
+    fontFamily: themeConfig.fontFamily,
   );
   TextStyle _normal(double size) => TextStyle(
     color: themeConfig.secondaryTextColor,
     fontSize: _fontSize(size),
     fontWeight: themeConfig.isTextForceBold ? FontWeight.w800 : FontWeight.normal,
-    fontFamily: 'Roboto',
+    fontFamily: themeConfig.fontFamily,
   );
 
   void _drawBadge(
@@ -2219,7 +2216,7 @@ class TieSheetPainter extends CustomPainter {
       color: Colors.white,
       fontSize: _fontSize(9),
       fontWeight: FontWeight.bold,
-      fontFamily: 'Roboto',
+      fontFamily: themeConfig.fontFamily,
     );
     final tp = TextPainter(
       text: TextSpan(text: text, style: style),
@@ -2227,7 +2224,7 @@ class TieSheetPainter extends CustomPainter {
     );
     tp.layout();
     
-    final radius = max(10.0, max(tp.width, tp.height) / 2 + 4.0);
+    final radius = max(themeConfig.badgeMinRadius, max(tp.width, tp.height) / 2 + themeConfig.badgePadding);
     
     canvas.drawCircle(Offset(cx, cy), radius, _Pens.fill(color));
     canvas.drawCircle(
@@ -2245,7 +2242,7 @@ class TieSheetPainter extends CustomPainter {
       color: themeConfig.primaryTextColor,
       fontSize: _fontSize(10),
       fontWeight: FontWeight.bold,
-      fontFamily: 'Roboto',
+      fontFamily: themeConfig.fontFamily,
     );
     final tp = TextPainter(
       text: TextSpan(text: text, style: style),
@@ -2253,8 +2250,8 @@ class TieSheetPainter extends CustomPainter {
     );
     tp.layout();
 
-    final halfWidth = max(16.0, tp.width / 2 + 8.0);
-    final halfHeight = max(11.0, tp.height / 2 + 4.0);
+    final halfWidth = max(themeConfig.matchPillMinHalfWidth, tp.width / 2 + themeConfig.matchPillHorizontalPadding);
+    final halfHeight = max(themeConfig.matchPillMinHalfHeight, tp.height / 2 + themeConfig.matchPillVerticalPadding);
 
     final pillRect = RRect.fromLTRBR(
       cx - halfWidth,
@@ -2298,9 +2295,11 @@ class TieSheetPainter extends CustomPainter {
     Offset from,
     Offset to,
     Paint paint, {
-    double dashWidth = 6,
-    double gapWidth = 4,
+    double? dashWidth,
+    double? gapWidth,
   }) {
+    final effectiveDashWidth = dashWidth ?? themeConfig.dashedLineDashWidth;
+    final effectiveGapWidth = gapWidth ?? themeConfig.dashedLineGapWidth;
     final dx = to.dx - from.dx;
     final dy = to.dy - from.dy;
     final distance = sqrt(dx * dx + dy * dy);
@@ -2310,13 +2309,13 @@ class TieSheetPainter extends CustomPainter {
     var x = from.dx;
     var y = from.dy;
     while (drawn < distance) {
-      final end = min(drawn + dashWidth, distance);
+      final end = min(drawn + effectiveDashWidth, distance);
       canvas.drawLine(
         Offset(x, y),
         Offset(from.dx + stepX * end, from.dy + stepY * end),
         paint,
       );
-      drawn = end + gapWidth;
+      drawn = end + effectiveGapWidth;
       x = from.dx + stepX * drawn;
       y = from.dy + stepY * drawn;
     }
@@ -2347,13 +2346,15 @@ class TieSheetPainter extends CustomPainter {
   /// Returns a shadow [Paint] whose opacity is scaled by
   /// [themeConfig.shadowOpacityMultiplier].
   Paint _themedShadow({
-    double blur = 6.0,
-    Color color = const Color(0x1A000000),
+    double? blur,
+    Color? color,
   }) {
-    final scaledAlpha = (color.a * themeConfig.shadowOpacityMultiplier).clamp(0.0, 1.0);
+    final effectiveBlur = blur ?? themeConfig.shadowBlurRadius;
+    final effectiveColor = color ?? themeConfig.shadowColor;
+    final scaledAlpha = (effectiveColor.a * themeConfig.shadowOpacityMultiplier).clamp(0.0, 1.0);
     return _Pens.shadow(
-      blur: blur,
-      color: color.withValues(alpha: scaledAlpha),
+      blur: effectiveBlur,
+      color: effectiveColor.withValues(alpha: scaledAlpha),
     );
   }
 
