@@ -174,12 +174,12 @@ class TieSheetThemeConfig {
 
   /// Standard on-screen palette — matches the original hardcoded values.
   const TieSheetThemeConfig.defaultMode()
-      : connectorColor = const Color(0xFF94A3B8),
-        connectorWonColor = const Color(0xFF475569),
-        pendingColor = const Color(0xFFCBD5E1),
-        mutedColor = const Color(0xFF94A3B8),
+      : connectorColor = const Color(0xFF64748B),
+        connectorWonColor = const Color(0xFF334155),
+        pendingColor = const Color(0xFF94A3B8),
+        mutedColor = const Color(0xFF64748B),
         canvasBackgroundColor = const Color(0xFFFFFEFC),
-        cardBorderColor = const Color(0xFFCBD5E1),
+        cardBorderColor = const Color(0xFF94A3B8),
         shadowOpacityMultiplier = 1.0,
         connectorStrokeWidth = 0.0,
         isInteractivityDisabled = false,

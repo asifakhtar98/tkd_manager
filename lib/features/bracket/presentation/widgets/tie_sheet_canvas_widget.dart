@@ -355,20 +355,20 @@ class _TieSheetCanvasWidgetState extends State<TieSheetCanvasWidget> {
 /// Lightweight [Paint] factories for recurring stroke/fill profiles.
 abstract final class _Pens {
   /// Solid stroke, round caps — grid lines and outlines.
-  static Paint thick(Color c, {double w = 1.5}) => Paint()
+  static Paint thick(Color c, {double w = 3.5}) => Paint()
     ..color = c
     ..strokeWidth = w
     ..strokeCap = StrokeCap.round
     ..style = PaintingStyle.stroke;
 
   /// 1 px solid stroke — dividers and pending match lines.
-  static Paint thin(Color c, {double w = 1.0}) => Paint()
+  static Paint thin(Color c, {double w = 3.0}) => Paint()
     ..color = c
     ..strokeWidth = w
     ..style = PaintingStyle.stroke;
 
   /// Stroke with round caps — winner / resolved advancement lines.
-  static Paint round(Color c, {double w = 2.0}) => Paint()
+  static Paint round(Color c, {double w = 4.0}) => Paint()
     ..color = c
     ..strokeWidth = w
     ..strokeCap = StrokeCap.round
@@ -430,7 +430,7 @@ class TieSheetPainter extends CustomPainter {
   double get roundColW => 170.0 + _delta * 2.0;
   double get headerH => 100.0 + _delta * 2.0;
   double get subHeaderH => 28.0 + _delta * 2.0;
-  double get medalH => 170.0 + _delta * 2.0;
+  double get medalH => (4 * _medalRowH) + 30.0;
   double get centerGap => 340.0 + _delta * 4.0;
   double get sectionLabelH => 32.0 + _delta * 1.0;
 
