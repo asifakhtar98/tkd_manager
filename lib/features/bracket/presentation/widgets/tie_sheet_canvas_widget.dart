@@ -450,8 +450,8 @@ class TieSheetPainter extends CustomPainter {
   // Medal-table dimensions.
   double get _medalTableW => 440.0 + _delta * 4.0;
   double get _medalRowH => 36.0 + _delta * 2.0;
-  double get _medalNameW => 250.0 + _delta * 3.0;
-  double get _medalLabelW => 80.0 + _delta * 1.0;
+  double get _medalNameW => 250.0 + _delta * 2.5;
+  double get _medalLabelW => 100.0 + _delta * 1.5;
   double get _medalBlankW => _medalTableW - _medalNameW - _medalLabelW;
 
   TieSheetPainter({
@@ -477,11 +477,16 @@ class TieSheetPainter extends CustomPainter {
   /// single uniform width (print mode).
   bool get _isUniformStroke => themeConfig.connectorStrokeWidth > 0;
 
+  Paint _getThinPen(Color color, {double w = 1.0}) {
+    if (_isUniformStroke) {
+      return _Pens.thick(color, w: themeConfig.connectorStrokeWidth);
+    }
+    return _Pens.thin(color, w: w);
+  }
+
   /// Pending / unresolved connector pen. In uniform-stroke mode, width is
   /// overridden to [TieSheetThemeConfig.connectorStrokeWidth].
-  Paint get _pendingConnectorPen => _isUniformStroke
-      ? _Pens.thick(themeConfig.pendingColor, w: themeConfig.connectorStrokeWidth)
-      : _Pens.thin(themeConfig.pendingColor);
+  Paint get _pendingConnectorPen => _getThinPen(themeConfig.pendingColor);
 
   /// Won / resolved connector pen. In uniform-stroke mode, width is
   /// overridden to [TieSheetThemeConfig.connectorStrokeWidth].
@@ -490,14 +495,10 @@ class TieSheetPainter extends CustomPainter {
       : _Pens.round(themeConfig.connectorWonColor);
 
   /// BYE advancement dashed-line pen.
-  Paint get _byeConnectorPen => _isUniformStroke
-      ? _Pens.thick(themeConfig.mutedColor, w: themeConfig.connectorStrokeWidth)
-      : _Pens.thin(themeConfig.mutedColor, w: 1.5);
+  Paint get _byeConnectorPen => _getThinPen(themeConfig.mutedColor, w: 1.5);
 
   /// Generic connector pen (vertical trunk between arms).
-  Paint get _genericConnectorPen => _isUniformStroke
-      ? _Pens.thick(themeConfig.connectorColor, w: themeConfig.connectorStrokeWidth)
-      : _Pens.thin(themeConfig.connectorColor);
+  Paint get _genericConnectorPen => _getThinPen(themeConfig.connectorColor);
 
   // ── 3b  Data helpers ───────────────────────────────────────────────────────
 
@@ -518,13 +519,13 @@ class TieSheetPainter extends CustomPainter {
   }
 
   /// Total pixel height consumed by a one-sided R1 participant table.
-  double _computeOneSidedHeight(List<MatchEntity> r1Matches) {
+  double _computeOneSidedHeight(List<MatchEntity> r1Matches, {bool drawTbdSlots = false}) {
     double h = 0;
     for (var i = 0; i < r1Matches.length; i++) {
       final m = r1Matches[i];
-      final rowCount =
-          (m.participantBlueId != null ? 1 : 0) +
-          (m.participantRedId != null ? 1 : 0);
+      final b = m.participantBlueId != null || drawTbdSlots;
+      final r = m.participantRedId != null || drawTbdSlots;
+      final rowCount = (b ? 1 : 0) + (r ? 1 : 0);
       h += rowCount * rowH;
       if (rowCount == 2) h += rowGap; // gap between blue & red within the pair
       if (i < r1Matches.length - 1) h += pairGap;
@@ -605,8 +606,8 @@ class TieSheetPainter extends CustomPainter {
     final lbR1 = _groupByRound(lbMatches)[1] ?? [];
     final wbH = _computeOneSidedHeight(wbR1);
     final lbH = lbR1.isEmpty
-        ? 80
-        : (lbR1.length * 2 * rowH + (lbR1.length - 1) * pairGap);
+        ? 80.0
+        : _computeOneSidedHeight(lbR1, drawTbdSlots: true);
 
     final effectiveLogoRowHeight = _hasLogos ? logoRowHeight : 0.0;
     final height =
@@ -900,63 +901,18 @@ class TieSheetPainter extends CustomPainter {
     // so junctions always have a valid node offset to connect to.
     final lbR1 = lbByRound[1] ?? [];
     var lbIdx = wbNextIdx;
-    double lbY = lbTableTop;
-    final lbNodeX = margin + listW;
-    for (final m in lbR1) {
-      final b = _findP(m.participantBlueId);
-      final r = _findP(m.participantRedId);
+    final lbY = lbTableTop;
 
-      lbIdx++;
-      if (b != null) {
-        _paintParticipantRow(
-          canvas,
-          lbIdx,
-          b,
-          margin,
-          lbY,
-          thickPen,
-          mirrored: false,
-        );
-        _registerParticipantSlotHitArea(
-          matchId: m.id,
-          slotPosition: 'blue',
-          participantId: m.participantBlueId,
-          x: margin,
-          y: lbY,
-          serialNumber: lbIdx,
-        );
-      } else {
-        _paintTbdRow(canvas, lbIdx, margin, lbY);
-      }
-      _nodeOffsets['${m.id}_top_input'] = Offset(lbNodeX, lbY + rowH / 2);
-      lbY += rowH;
-
-      lbIdx++;
-      if (r != null) {
-        _paintParticipantRow(
-          canvas,
-          lbIdx,
-          r,
-          margin,
-          lbY,
-          thickPen,
-          mirrored: false,
-        );
-        _registerParticipantSlotHitArea(
-          matchId: m.id,
-          slotPosition: 'red',
-          participantId: m.participantRedId,
-          x: margin,
-          y: lbY,
-          serialNumber: lbIdx,
-        );
-      } else {
-        _paintTbdRow(canvas, lbIdx, margin, lbY);
-      }
-      _nodeOffsets['${m.id}_bot_input'] = Offset(lbNodeX, lbY + rowH / 2);
-      lbY += rowH;
-      lbY += pairGap;
-    }
+    lbIdx = _paintParticipantList(
+      canvas,
+      lbR1,
+      margin,
+      lbY,
+      thickPen,
+      mirrored: false,
+      startIdx: lbIdx,
+      drawTbdSlots: true,
+    );
 
     for (var r = 1; r <= lbRounds; r++) {
       final junctionX = margin + listW + (r * roundColW);
@@ -1067,7 +1023,7 @@ class TieSheetPainter extends CustomPainter {
       const Radius.circular(6),
     );
     canvas.drawRRect(rect, _Pens.fill(color.withValues(alpha: 0.1)));
-    canvas.drawRRect(rect, _Pens.thin(color, w: 1.5));
+    canvas.drawRRect(rect, _getThinPen(color, w: 1.5));
     _drawText(
       canvas,
       label,
@@ -1275,7 +1231,7 @@ class TieSheetPainter extends CustomPainter {
       const Radius.circular(8),
     );
     canvas.drawRRect(bannerRect, _Pens.fill(themeConfig.headerBannerBackgroundColor));
-    canvas.drawRRect(bannerRect, _Pens.thin(themeConfig.cardBorderColor));
+    canvas.drawRRect(bannerRect, _getThinPen(themeConfig.cardBorderColor));
 
     final title =
         (tournament.name.isNotEmpty ? tournament.name : 'TOURNAMENT NAME')
@@ -1345,7 +1301,7 @@ class TieSheetPainter extends CustomPainter {
       const Radius.circular(_cardRadius),
     );
     canvas.drawRRect(infoRect, _Pens.fill(themeConfig.headerFillColor));
-    canvas.drawRRect(infoRect, _Pens.thin(themeConfig.cardBorderColor));
+    canvas.drawRRect(infoRect, _getThinPen(themeConfig.cardBorderColor));
 
     final ageCategory = tournament.ageCategoryLabel.isNotEmpty
         ? tournament.ageCategoryLabel.toUpperCase()
@@ -1367,17 +1323,17 @@ class TieSheetPainter extends CustomPainter {
     canvas.drawLine(
       Offset(infoLeft + infoColNoW, infoRowTop + 3),
       Offset(infoLeft + infoColNoW, infoRowBottom - 3),
-      _Pens.thin(themeConfig.cardBorderColor),
+      _getThinPen(themeConfig.cardBorderColor),
     );
     canvas.drawLine(
       Offset(infoLeft + infoColNoW + infoColW, infoRowTop + 3),
       Offset(infoLeft + infoColNoW + infoColW, infoRowBottom - 3),
-      _Pens.thin(themeConfig.cardBorderColor),
+      _getThinPen(themeConfig.cardBorderColor),
     );
     canvas.drawLine(
       Offset(infoLeft + infoColNoW + infoColW * 2, infoRowTop + 3),
       Offset(infoLeft + infoColNoW + infoColW * 2, infoRowBottom - 3),
-      _Pens.thin(themeConfig.cardBorderColor),
+      _getThinPen(themeConfig.cardBorderColor),
     );
 
     // Column text
@@ -1468,7 +1424,7 @@ class TieSheetPainter extends CustomPainter {
         _themedShadow(blur: 4),
       );
       canvas.drawRRect(cardRect, _Pens.fill(themeConfig.rowFillColor));
-      canvas.drawRRect(cardRect, _Pens.thin(themeConfig.cardBorderColor));
+      canvas.drawRRect(cardRect, _getThinPen(themeConfig.cardBorderColor));
 
       // ── Blue accent strip on left edge ──
       final accentRect = RRect.fromLTRBAndCorners(
@@ -1485,12 +1441,12 @@ class TieSheetPainter extends CustomPainter {
       canvas.drawLine(
         Offset(x + noColW, y + 4),
         Offset(x + noColW, y + rowH - 4),
-        _Pens.thin(themeConfig.cardBorderColor),
+        _getThinPen(themeConfig.cardBorderColor),
       );
       canvas.drawLine(
         Offset(x + noColW + nameColW, y + 4),
         Offset(x + noColW + nameColW, y + rowH - 4),
-        _Pens.thin(themeConfig.cardBorderColor),
+        _getThinPen(themeConfig.cardBorderColor),
       );
 
       // ── Text ──
@@ -1528,7 +1484,7 @@ class TieSheetPainter extends CustomPainter {
         _themedShadow(blur: 4),
       );
       canvas.drawRRect(cardRect, _Pens.fill(themeConfig.rowFillColor));
-      canvas.drawRRect(cardRect, _Pens.thin(themeConfig.cardBorderColor));
+      canvas.drawRRect(cardRect, _getThinPen(themeConfig.cardBorderColor));
 
       // ── Blue accent strip on right edge ──
       final accentRect = RRect.fromLTRBAndCorners(
@@ -1545,12 +1501,12 @@ class TieSheetPainter extends CustomPainter {
       canvas.drawLine(
         Offset(x + regIdColW, y + 4),
         Offset(x + regIdColW, y + rowH - 4),
-        _Pens.thin(themeConfig.cardBorderColor),
+        _getThinPen(themeConfig.cardBorderColor),
       );
       canvas.drawLine(
         Offset(x + regIdColW + nameColW, y + 4),
         Offset(x + regIdColW + nameColW, y + rowH - 4),
-        _Pens.thin(themeConfig.cardBorderColor),
+        _getThinPen(themeConfig.cardBorderColor),
       );
 
       // ── Text ──
@@ -1589,7 +1545,7 @@ class TieSheetPainter extends CustomPainter {
       const Radius.circular(_cardRadius),
     );
     canvas.drawRRect(cardRect, _Pens.fill(themeConfig.tbdFillColor));
-    canvas.drawRRect(cardRect, _Pens.thin(themeConfig.pendingColor));
+    canvas.drawRRect(cardRect, _getThinPen(themeConfig.pendingColor));
 
     // ── Gray accent strip ──
     final accentRect = RRect.fromLTRBAndCorners(
@@ -1601,6 +1557,19 @@ class TieSheetPainter extends CustomPainter {
       bottomLeft: const Radius.circular(_cardRadius),
     );
     canvas.drawRRect(accentRect, _Pens.fill(themeConfig.mutedColor));
+
+    // ── Vertical dividers ──
+    final dividerPen = _getThinPen(themeConfig.pendingColor);
+    canvas.drawLine(
+      Offset(x + noColW, y + 4),
+      Offset(x + noColW, y + rowH - 4),
+      dividerPen,
+    );
+    canvas.drawLine(
+      Offset(x + noColW + nameColW, y + 4),
+      Offset(x + noColW + nameColW, y + rowH - 4),
+      dividerPen,
+    );
 
     final textY = _centeredTextY(y, rowH, _fontSize(10));
     _drawText(
@@ -1642,6 +1611,7 @@ class TieSheetPainter extends CustomPainter {
     Paint pen, {
     required bool mirrored,
     int startIdx = 0,
+    bool drawTbdSlots = false,
   }) {
     var idx = startIdx;
     var y = startY;
@@ -1651,33 +1621,49 @@ class TieSheetPainter extends CustomPainter {
     for (final m in r1Matches) {
       final b = _findP(m.participantBlueId);
       final r = _findP(m.participantRedId);
-      if (b != null) {
+      
+      final drawB = b != null || drawTbdSlots;
+      final drawR = r != null || drawTbdSlots;
+
+      if (drawB) {
         idx++;
-        _paintParticipantRow(canvas, idx, b, x, y, pen, mirrored: mirrored);
+        if (b != null) {
+          _paintParticipantRow(canvas, idx, b, x, y, pen, mirrored: mirrored);
+          _registerParticipantSlotHitArea(
+            matchId: m.id,
+            slotPosition: 'blue',
+            participantId: m.participantBlueId,
+            x: x,
+            y: y,
+            serialNumber: idx,
+          );
+        } else {
+          _paintTbdRow(canvas, idx, x, y);
+        }
         _nodeOffsets['${m.id}_top_input'] = Offset(nodeX, y + rowH / 2);
-        _registerParticipantSlotHitArea(
-          matchId: m.id,
-          slotPosition: 'blue',
-          participantId: m.participantBlueId,
-          x: x,
-          y: y,
-          serialNumber: idx,
-        );
         y += rowH;
-        if (r != null) y += rowGap; // intra-pair gap between blue & red rows
       }
-      if (r != null) {
+
+      if (drawB && drawR) {
+        y += rowGap; // intra-pair gap between blue & red rows
+      }
+
+      if (drawR) {
         idx++;
-        _paintParticipantRow(canvas, idx, r, x, y, pen, mirrored: mirrored);
+        if (r != null) {
+          _paintParticipantRow(canvas, idx, r, x, y, pen, mirrored: mirrored);
+          _registerParticipantSlotHitArea(
+            matchId: m.id,
+            slotPosition: 'red',
+            participantId: m.participantRedId,
+            x: x,
+            y: y,
+            serialNumber: idx,
+          );
+        } else {
+          _paintTbdRow(canvas, idx, x, y);
+        }
         _nodeOffsets['${m.id}_bot_input'] = Offset(nodeX, y + rowH / 2);
-        _registerParticipantSlotHitArea(
-          matchId: m.id,
-          slotPosition: 'red',
-          participantId: m.participantRedId,
-          x: x,
-          y: y,
-          serialNumber: idx,
-        );
         y += rowH;
       }
       y += pairGap;
@@ -2065,11 +2051,11 @@ class TieSheetPainter extends CustomPainter {
       canvas.drawRRect(labelRect, fills[row]);
 
       // Border
-      canvas.drawRRect(fullRect, _Pens.thin(themeConfig.cardBorderColor));
+      canvas.drawRRect(fullRect, _getThinPen(themeConfig.cardBorderColor));
       canvas.drawLine(
         Offset(x + _medalBlankW + _medalNameW, rY),
         Offset(x + _medalBlankW + _medalNameW, rY + _medalRowH),
-        _Pens.thin(themeConfig.cardBorderColor),
+        _getThinPen(themeConfig.cardBorderColor),
       );
 
       // ── Accent strip ──
@@ -2229,35 +2215,53 @@ class TieSheetPainter extends CustomPainter {
     double cx,
     double cy,
   ) {
-    canvas.drawCircle(Offset(cx, cy), 10.0, _Pens.fill(color));
+    final style = TextStyle(
+      color: Colors.white,
+      fontSize: _fontSize(9),
+      fontWeight: FontWeight.bold,
+      fontFamily: 'Roboto',
+    );
+    final tp = TextPainter(
+      text: TextSpan(text: text, style: style),
+      textDirection: TextDirection.ltr,
+    );
+    tp.layout();
+    
+    final radius = max(10.0, max(tp.width, tp.height) / 2 + 4.0);
+    
+    canvas.drawCircle(Offset(cx, cy), radius, _Pens.fill(color));
     canvas.drawCircle(
       Offset(cx, cy),
-      10.0,
-      _Pens.thin(color.withValues(alpha: 0.3)),
+      radius,
+      _getThinPen(color.withValues(alpha: 0.3)),
     );
-    _drawText(
-      canvas,
-      text,
-      cx,
-      cy - 5,
-      TextStyle(
-        color: Colors.white,
-        fontSize: _fontSize(9),
-        fontWeight: FontWeight.bold,
-        fontFamily: 'Roboto',
-      ),
-      center: true,
-    );
+    
+    tp.paint(canvas, Offset(cx - tp.width / 2, cy - tp.height / 2));
   }
 
   /// Match number display as a small rounded pill.
   void _drawMatchPill(Canvas canvas, String text, double cx, double cy) {
+    final style = TextStyle(
+      color: themeConfig.primaryTextColor,
+      fontSize: _fontSize(10),
+      fontWeight: FontWeight.bold,
+      fontFamily: 'Roboto',
+    );
+    final tp = TextPainter(
+      text: TextSpan(text: text, style: style),
+      textDirection: TextDirection.ltr,
+    );
+    tp.layout();
+
+    final halfWidth = max(16.0, tp.width / 2 + 8.0);
+    final halfHeight = max(11.0, tp.height / 2 + 4.0);
+
     final pillRect = RRect.fromLTRBR(
-      cx - 16,
-      cy - 11,
-      cx + 16,
-      cy + 11,
-      const Radius.circular(11),
+      cx - halfWidth,
+      cy - halfHeight,
+      cx + halfWidth,
+      cy + halfHeight,
+      Radius.circular(halfHeight),
     );
     canvas.drawRRect(
       pillRect.shift(const Offset(0.5, 1)),
@@ -2265,19 +2269,8 @@ class TieSheetPainter extends CustomPainter {
     );
     canvas.drawRRect(pillRect, _Pens.fill(Colors.white));
     canvas.drawRRect(pillRect, _genericConnectorPen);
-    _drawText(
-      canvas,
-      text,
-      cx,
-      cy - 6,
-      TextStyle(
-        color: themeConfig.primaryTextColor,
-        fontSize: _fontSize(10),
-        fontWeight: FontWeight.bold,
-        fontFamily: 'Roboto',
-      ),
-      center: true,
-    );
+
+    tp.paint(canvas, Offset(cx - tp.width / 2, cy - tp.height / 2));
   }
 
   void _drawText(

@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:injectable/injectable.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -121,6 +121,11 @@ class AuthenticationRepositoryImplementation
     required String newPassword,
   }) async {
     try {
+      if (_supabaseClient.auth.currentUser == null) {
+        return const Left(
+          AuthenticationFailure('Session expired. Please sign in again.'),
+        );
+      }
       await _supabaseClient.auth.updateUser(
         UserAttributes(password: newPassword),
       );
@@ -140,13 +145,10 @@ class AuthenticationRepositoryImplementation
   Future<void> signOut() async {
     try {
       await _supabaseClient.auth.signOut();
-    } on AuthException {
-      // Sign-out failures (e.g. network) should not block the user.
-      // The local session is already discarded by `signOut` even if the
-      // server-side revocation fails.
-    } on Exception {
-      // Defensive: swallow unexpected errors during sign-out so the UI
-      // can always transition to the unauthenticated state.
+    } on AuthException catch (e) {
+      debugPrint('AuthException during sign out: $e');
+    } on Exception catch (e) {
+      debugPrint('Exception during sign out: $e');
     }
   }
 

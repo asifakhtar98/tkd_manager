@@ -486,7 +486,7 @@ void main() {
       });
 
       test(
-        'emits inProgress then authenticationFailure when currentUser is null',
+        'emits inProgress then unauthenticated when currentUser is unexpectedly null',
         () async {
           when(
             () => mockAuthenticationRepository.updatePassword(
@@ -500,11 +500,7 @@ void main() {
             authenticationBloc.stream,
             emitsInOrder([
               isA<AuthenticationInProgress>(),
-              isA<AuthenticationFailureState>().having(
-                (AuthenticationFailureState s) => s.message,
-                'message',
-                'Your session has expired. Please sign in again.',
-              ),
+              isA<AuthenticationUnauthenticated>(),
             ]),
           );
 

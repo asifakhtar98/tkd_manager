@@ -33,33 +33,33 @@ class DemoData {
 
   // ── Participants ───────────────────────────────────────────────────────
 
-  /// Korean-inspired demo full names for realistic bracket previews.
+  /// Indian-inspired demo full names for realistic bracket previews.
   static const _fullNames = [
-    'Jimin Park',
-    'Seoyeon Kim',
-    'Taeyang Lee',
-    'Hana Choi',
-    'Minho Jung',
-    'Yuna Kang',
-    'Jisoo Yoon',
-    'Donghyun Shin',
-    'Soojin Han',
-    'Hyunjin Oh',
-    'Yeji Seo',
-    'Wooyoung Jang',
-    'Dahyun Hwang',
-    'Jaehyun Baek',
-    'Sana Kwon',
-    'Jungkook Im',
+    'Aarav Patel',
+    'Diya Sharma',
+    'Vihaan Singh',
+    'Aanya Gupta',
+    'Arjun Kumar',
+    'Kiara Reddy',
+    'Rohan Desai',
+    'Isha Joshi',
+    'Aditya Verma',
+    'Meera Nair',
+    'Kabir Das',
+    'Ananya Rao',
+    'Dhruv Iyer',
+    'Neha Pillai',
+    'Aryan Mehta',
+    'Riya Kapoor',
   ];
 
   static const _schools = [
-    'Dragon TKD',
-    'Eagle Martial Arts',
-    'Phoenix Academy',
-    'Tiger Clan',
-    'Hawk Taekwondo',
-    'Panther Dojang',
+    'Kerala Martial Arts',
+    'Mumbai Taekwondo',
+    'Delhi Sports Club',
+    'Bengaluru Dojang',
+    'Chennai Dragons',
+    'Punjab Tigers',
   ];
 
   /// Builds a deterministic list of [count] participants.

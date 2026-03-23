@@ -99,20 +99,20 @@ class AuthenticationBloc
     });
   }
 
-  /// Returns `true` when the app was opened via a Supabase email-confirmation
-  /// redirect — the browser URL path is `/email-confirmed` (set by the
-  /// distinct `emailRedirectTo` used during sign-up).
-  ///
-  /// Password-recovery redirects land on the origin (`/`) and are NOT matched
-  /// here, preventing the bug where a recovery PKCE code was incorrectly
-  /// treated as an email-confirmation redirect.
   bool get _isEmailConfirmationRedirect {
     if (_emailConfirmationCodeConsumed) return false;
     if (_isEmailConfirmationRedirectOverride != null) {
       return _isEmailConfirmationRedirectOverride();
     }
     if (!kIsWeb) return false;
-    return Uri.base.path == '/email-confirmed';
+    
+    final bool isCorrectPath = Uri.base.path == '/email-confirmed';
+    // Validate it's an actual PKCE redirect via URL parameters
+    final bool hasCodeAndType = Uri.base.queryParameters.containsKey('code');
+    // Mobile links might return parameters in the fragment, but we only target Web here: `#access_token=...`
+    final bool hasFragment = Uri.base.fragment.contains('access_token=');
+    
+    return isCorrectPath && (hasCodeAndType || hasFragment);
   }
 
   // ───────────────────────────────────────────────────────────────────────────
@@ -204,21 +204,14 @@ class AuthenticationBloc
       (failure) => emit(
         AuthenticationState.authenticationFailure(message: failure.message),
       ),
-      // Password updated — force an authenticated state so the router
-      // redirects to the dashboard immediately.
+      // Password updated — repo guarantees `currentUser` exists if this succeeds.
       (_) {
         final User? currentUser = _authenticationRepository.currentUser;
         if (currentUser != null) {
           emit(AuthenticationState.authenticated(user: currentUser));
         } else {
-          // The recovery session expired between submitting and completion.
-          // Emit a failure so the user sees an error instead of an
-          // infinite loading spinner.
-          emit(
-            const AuthenticationState.authenticationFailure(
-              message: 'Your session has expired. Please sign in again.',
-            ),
-          );
+          // Fallback, though shouldn't be reached due to repo checks.
+          emit(const AuthenticationState.unauthenticated());
         }
       },
     );
