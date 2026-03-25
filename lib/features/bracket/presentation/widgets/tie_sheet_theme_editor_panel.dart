@@ -40,11 +40,35 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
 
   // ── Preset reset helpers ──────────────────────────────────────────────────
 
-  void _resetToScreenPreset() =>
-      onThemeConfigChanged(const TieSheetThemeConfig.defaultMode());
-
-  void _resetToPrintPreset() =>
-      onThemeConfigChanged(const TieSheetThemeConfig.printMode());
+  void _confirmAndResetToPreset(
+    BuildContext context, {
+    required String presetName,
+    required TieSheetThemeConfig presetConfig,
+  }) {
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text('Reset to $presetName'),
+        content: Text(
+          'This will replace all your current customisations '
+          'with the $presetName preset. This action cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () {
+              onThemeConfigChanged(presetConfig);
+              Navigator.of(dialogContext).pop();
+            },
+            child: const Text('Reset'),
+          ),
+        ],
+      ),
+    );
+  }
 
   // ── Colour picker dialog ──────────────────────────────────────────────────
 
@@ -152,25 +176,42 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: _resetToScreenPreset,
-                  icon: const Icon(Icons.visibility, size: 14),
-                  label: const Text('Screen', style: TextStyle(fontSize: 12)),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 6),
-                    visualDensity: VisualDensity.compact,
+                child: Tooltip(
+                  message: 'Revert all tokens to the default screen preset',
+                  child: OutlinedButton.icon(
+                    onPressed: () => _confirmAndResetToPreset(
+                      context,
+                      presetName: 'Screen',
+                      presetConfig: const TieSheetThemeConfig.defaultMode(),
+                    ),
+                    icon: const Icon(Icons.visibility, size: 14),
+                    label:
+                        const Text('Screen', style: TextStyle(fontSize: 12)),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      visualDensity: VisualDensity.compact,
+                    ),
                   ),
                 ),
               ),
               const SizedBox(width: 8),
               Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: _resetToPrintPreset,
-                  icon: const Icon(Icons.print, size: 14),
-                  label: const Text('Print', style: TextStyle(fontSize: 12)),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 6),
-                    visualDensity: VisualDensity.compact,
+                child: Tooltip(
+                  message:
+                      'Revert all tokens to the high-contrast print preset',
+                  child: OutlinedButton.icon(
+                    onPressed: () => _confirmAndResetToPreset(
+                      context,
+                      presetName: 'Print',
+                      presetConfig: const TieSheetThemeConfig.printMode(),
+                    ),
+                    icon: const Icon(Icons.print, size: 14),
+                    label:
+                        const Text('Print', style: TextStyle(fontSize: 12)),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      visualDensity: VisualDensity.compact,
+                    ),
                   ),
                 ),
               ),
@@ -337,8 +378,8 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
           label: 'Font Size Delta',
           value: currentThemeConfig.fontSizeDelta,
           min: 0.0,
-          max: 16.0,
-          divisions: 32,
+          max: 32.0,
+          divisions: 64,
           onChanged: (value) => onThemeConfigChanged(
             currentThemeConfig.copyWith(fontSizeDelta: value),
           ),
@@ -536,8 +577,8 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
           label: 'Element Border Radius',
           value: currentThemeConfig.elementBorderRadius,
           min: 0,
-          max: 24,
-          divisions: 48,
+          max: 48,
+          divisions: 96,
           onChanged: (value) => onThemeConfigChanged(
             currentThemeConfig.copyWith(elementBorderRadius: value),
           ),
@@ -546,8 +587,8 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
           label: 'Junction Corner Radius',
           value: currentThemeConfig.junctionCornerRadius,
           min: 0,
-          max: 30,
-          divisions: 60,
+          max: 60,
+          divisions: 120,
           onChanged: (value) => onThemeConfigChanged(
             currentThemeConfig.copyWith(junctionCornerRadius: value),
           ),
@@ -567,8 +608,8 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
           label: 'Border Stroke',
           value: currentThemeConfig.borderStrokeWidth,
           min: 0.5,
-          max: 10,
-          divisions: 19,
+          max: 16,
+          divisions: 31,
           onChanged: (value) => onThemeConfigChanged(
             currentThemeConfig.copyWith(borderStrokeWidth: value),
           ),
@@ -577,8 +618,8 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
           label: 'Subtle Stroke',
           value: currentThemeConfig.subtleStrokeWidth,
           min: 0.5,
-          max: 10,
-          divisions: 19,
+          max: 16,
+          divisions: 31,
           onChanged: (value) => onThemeConfigChanged(
             currentThemeConfig.copyWith(subtleStrokeWidth: value),
           ),
@@ -587,8 +628,8 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
           label: 'Won Connector Stroke',
           value: currentThemeConfig.wonConnectorStrokeWidth,
           min: 0.5,
-          max: 10,
-          divisions: 19,
+          max: 16,
+          divisions: 31,
           onChanged: (value) => onThemeConfigChanged(
             currentThemeConfig.copyWith(wonConnectorStrokeWidth: value),
           ),
@@ -597,8 +638,8 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
           label: 'Uniform Connector Override',
           value: currentThemeConfig.connectorStrokeWidth,
           min: 0,
-          max: 10,
-          divisions: 20,
+          max: 16,
+          divisions: 32,
           onChanged: (value) => onThemeConfigChanged(
             currentThemeConfig.copyWith(connectorStrokeWidth: value),
           ),
@@ -608,8 +649,8 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
           label: 'Dash Width',
           value: currentThemeConfig.dashedLineDashWidth,
           min: 1,
-          max: 20,
-          divisions: 38,
+          max: 40,
+          divisions: 78,
           onChanged: (value) => onThemeConfigChanged(
             currentThemeConfig.copyWith(dashedLineDashWidth: value),
           ),
@@ -618,8 +659,8 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
           label: 'Gap Width',
           value: currentThemeConfig.dashedLineGapWidth,
           min: 1,
-          max: 20,
-          divisions: 38,
+          max: 40,
+          divisions: 78,
           onChanged: (value) => onThemeConfigChanged(
             currentThemeConfig.copyWith(dashedLineGapWidth: value),
           ),
@@ -639,7 +680,7 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
           label: 'Canvas Margin',
           value: currentThemeConfig.canvasMargin,
           min: 0,
-          max: 100,
+          max: 200,
           divisions: 100,
           onChanged: (value) => onThemeConfigChanged(
             currentThemeConfig.copyWith(canvasMargin: value),
@@ -649,8 +690,8 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
           label: 'Section Gap Height',
           value: currentThemeConfig.sectionGapHeight,
           min: 0,
-          max: 120,
-          divisions: 60,
+          max: 250,
+          divisions: 125,
           onChanged: (value) => onThemeConfigChanged(
             currentThemeConfig.copyWith(sectionGapHeight: value),
           ),
@@ -659,8 +700,8 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
           label: 'Accent Strip Width',
           value: currentThemeConfig.accentStripWidth,
           min: 0,
-          max: 16,
-          divisions: 32,
+          max: 32,
+          divisions: 64,
           onChanged: (value) => onThemeConfigChanged(
             currentThemeConfig.copyWith(accentStripWidth: value),
           ),
@@ -669,8 +710,8 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
           label: 'Logo Padding',
           value: currentThemeConfig.logoPadding,
           min: 0,
-          max: 32,
-          divisions: 32,
+          max: 64,
+          divisions: 64,
           onChanged: (value) => onThemeConfigChanged(
             currentThemeConfig.copyWith(logoPadding: value),
           ),
@@ -690,8 +731,8 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
           label: 'Badge Min Radius',
           value: currentThemeConfig.badgeMinRadius,
           min: 4,
-          max: 24,
-          divisions: 40,
+          max: 48,
+          divisions: 88,
           onChanged: (value) => onThemeConfigChanged(
             currentThemeConfig.copyWith(badgeMinRadius: value),
           ),
@@ -700,8 +741,8 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
           label: 'Badge Padding',
           value: currentThemeConfig.badgePadding,
           min: 0,
-          max: 12,
-          divisions: 24,
+          max: 24,
+          divisions: 48,
           onChanged: (value) => onThemeConfigChanged(
             currentThemeConfig.copyWith(badgePadding: value),
           ),
@@ -710,8 +751,8 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
           label: 'Pill Min Half‑Width',
           value: currentThemeConfig.matchPillMinHalfWidth,
           min: 8,
-          max: 40,
-          divisions: 32,
+          max: 80,
+          divisions: 72,
           onChanged: (value) => onThemeConfigChanged(
             currentThemeConfig.copyWith(matchPillMinHalfWidth: value),
           ),
@@ -720,8 +761,8 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
           label: 'Pill H‑Padding',
           value: currentThemeConfig.matchPillHorizontalPadding,
           min: 0,
-          max: 20,
-          divisions: 40,
+          max: 40,
+          divisions: 80,
           onChanged: (value) => onThemeConfigChanged(
             currentThemeConfig.copyWith(matchPillHorizontalPadding: value),
           ),
@@ -730,8 +771,8 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
           label: 'Pill Min Half‑Height',
           value: currentThemeConfig.matchPillMinHalfHeight,
           min: 4,
-          max: 24,
-          divisions: 40,
+          max: 48,
+          divisions: 88,
           onChanged: (value) => onThemeConfigChanged(
             currentThemeConfig.copyWith(matchPillMinHalfHeight: value),
           ),
@@ -740,8 +781,8 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
           label: 'Pill V‑Padding',
           value: currentThemeConfig.matchPillVerticalPadding,
           min: 0,
-          max: 12,
-          divisions: 24,
+          max: 24,
+          divisions: 48,
           onChanged: (value) => onThemeConfigChanged(
             currentThemeConfig.copyWith(matchPillVerticalPadding: value),
           ),
@@ -772,8 +813,8 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
           label: 'Blur Radius',
           value: currentThemeConfig.shadowBlurRadius,
           min: 0,
-          max: 20,
-          divisions: 40,
+          max: 40,
+          divisions: 80,
           onChanged: (value) => onThemeConfigChanged(
             currentThemeConfig.copyWith(shadowBlurRadius: value),
           ),
@@ -790,8 +831,8 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
           label: 'Offset X',
           value: currentThemeConfig.shadowOffsetX,
           min: 0,
-          max: 8,
-          divisions: 16,
+          max: 20,
+          divisions: 40,
           onChanged: (value) => onThemeConfigChanged(
             currentThemeConfig.copyWith(shadowOffsetX: value),
           ),
@@ -800,8 +841,8 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
           label: 'Offset Y',
           value: currentThemeConfig.shadowOffsetY,
           min: 0,
-          max: 8,
-          divisions: 16,
+          max: 20,
+          divisions: 40,
           onChanged: (value) => onThemeConfigChanged(
             currentThemeConfig.copyWith(shadowOffsetY: value),
           ),
@@ -827,8 +868,8 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
           label: 'Header Letter Spacing',
           value: currentThemeConfig.headerLetterSpacing,
           min: 0,
-          max: 4,
-          divisions: 40,
+          max: 10,
+          divisions: 100,
           onChanged: (value) => onThemeConfigChanged(
             currentThemeConfig.copyWith(headerLetterSpacing: value),
           ),
@@ -837,8 +878,8 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
           label: 'Sub-Header Letter Spacing',
           value: currentThemeConfig.subHeaderLetterSpacing,
           min: 0,
-          max: 4,
-          divisions: 40,
+          max: 10,
+          divisions: 100,
           onChanged: (value) => onThemeConfigChanged(
             currentThemeConfig.copyWith(subHeaderLetterSpacing: value),
           ),
@@ -859,8 +900,8 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
           label: 'Row Height',
           value: currentThemeConfig.rowHeight,
           min: 20,
-          max: 80,
-          divisions: 60,
+          max: 120,
+          divisions: 100,
           onChanged: (value) => onThemeConfigChanged(
             currentThemeConfig.copyWith(rowHeight: value),
           ),
@@ -869,8 +910,8 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
           label: 'Intra-Match Gap Height',
           value: currentThemeConfig.intraMatchGapHeight,
           min: 10,
-          max: 80,
-          divisions: 70,
+          max: 150,
+          divisions: 140,
           onChanged: (value) => onThemeConfigChanged(
             currentThemeConfig.copyWith(intraMatchGapHeight: value),
           ),
@@ -879,8 +920,8 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
           label: 'Inter-Match Gap Height',
           value: currentThemeConfig.interMatchGapHeight,
           min: 40,
-          max: 200,
-          divisions: 80,
+          max: 400,
+          divisions: 180,
           onChanged: (value) => onThemeConfigChanged(
             currentThemeConfig.copyWith(interMatchGapHeight: value),
           ),
@@ -889,8 +930,8 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
           label: 'Number Column Width',
           value: currentThemeConfig.numberColumnWidth,
           min: 16,
-          max: 64,
-          divisions: 48,
+          max: 120,
+          divisions: 104,
           onChanged: (value) => onThemeConfigChanged(
             currentThemeConfig.copyWith(numberColumnWidth: value),
           ),
@@ -899,8 +940,8 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
           label: 'Name Column Width',
           value: currentThemeConfig.nameColumnWidth,
           min: 100,
-          max: 400,
-          divisions: 60,
+          max: 600,
+          divisions: 100,
           onChanged: (value) => onThemeConfigChanged(
             currentThemeConfig.copyWith(nameColumnWidth: value),
           ),
@@ -909,8 +950,8 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
           label: 'Registration ID Column Width',
           value: currentThemeConfig.registrationIdColumnWidth,
           min: 60,
-          max: 240,
-          divisions: 36,
+          max: 400,
+          divisions: 68,
           onChanged: (value) => onThemeConfigChanged(
             currentThemeConfig.copyWith(registrationIdColumnWidth: value),
           ),
@@ -919,8 +960,8 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
           label: 'Round Column Width',
           value: currentThemeConfig.roundColumnWidth,
           min: 80,
-          max: 300,
-          divisions: 44,
+          max: 500,
+          divisions: 84,
           onChanged: (value) => onThemeConfigChanged(
             currentThemeConfig.copyWith(roundColumnWidth: value),
           ),
@@ -929,8 +970,8 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
           label: 'Header Total Height',
           value: currentThemeConfig.headerTotalHeight,
           min: 60,
-          max: 200,
-          divisions: 28,
+          max: 300,
+          divisions: 48,
           onChanged: (value) => onThemeConfigChanged(
             currentThemeConfig.copyWith(headerTotalHeight: value),
           ),
@@ -939,8 +980,8 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
           label: 'Sub-Header Row Height',
           value: currentThemeConfig.subHeaderRowHeight,
           min: 16,
-          max: 60,
-          divisions: 44,
+          max: 100,
+          divisions: 84,
           onChanged: (value) => onThemeConfigChanged(
             currentThemeConfig.copyWith(subHeaderRowHeight: value),
           ),
@@ -949,8 +990,8 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
           label: 'Center Gap Width',
           value: currentThemeConfig.centerGapWidth,
           min: 100,
-          max: 600,
-          divisions: 50,
+          max: 800,
+          divisions: 70,
           onChanged: (value) => onThemeConfigChanged(
             currentThemeConfig.copyWith(centerGapWidth: value),
           ),
@@ -959,8 +1000,8 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
           label: 'Section Label Height',
           value: currentThemeConfig.sectionLabelHeight,
           min: 20,
-          max: 60,
-          divisions: 40,
+          max: 100,
+          divisions: 80,
           onChanged: (value) => onThemeConfigChanged(
             currentThemeConfig.copyWith(sectionLabelHeight: value),
           ),
@@ -970,8 +1011,8 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
           label: 'Medal Table Width',
           value: currentThemeConfig.medalTableWidth,
           min: 200,
-          max: 700,
-          divisions: 50,
+          max: 1000,
+          divisions: 80,
           onChanged: (value) => onThemeConfigChanged(
             currentThemeConfig.copyWith(medalTableWidth: value),
           ),
@@ -980,8 +1021,8 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
           label: 'Medal Row Height',
           value: currentThemeConfig.medalRowHeight,
           min: 20,
-          max: 60,
-          divisions: 40,
+          max: 100,
+          divisions: 80,
           onChanged: (value) => onThemeConfigChanged(
             currentThemeConfig.copyWith(medalRowHeight: value),
           ),
@@ -990,8 +1031,8 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
           label: 'Medal Name Column Width',
           value: currentThemeConfig.medalNameColumnWidth,
           min: 120,
-          max: 400,
-          divisions: 56,
+          max: 600,
+          divisions: 96,
           onChanged: (value) => onThemeConfigChanged(
             currentThemeConfig.copyWith(medalNameColumnWidth: value),
           ),
@@ -1000,8 +1041,8 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
           label: 'Medal Label Column Width',
           value: currentThemeConfig.medalLabelColumnWidth,
           min: 50,
-          max: 200,
-          divisions: 30,
+          max: 400,
+          divisions: 70,
           onChanged: (value) => onThemeConfigChanged(
             currentThemeConfig.copyWith(medalLabelColumnWidth: value),
           ),
@@ -1010,8 +1051,8 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
           label: 'Medal Row Gap',
           value: currentThemeConfig.medalRowGap,
           min: 0,
-          max: 16,
-          divisions: 16,
+          max: 32,
+          divisions: 32,
           onChanged: (value) => onThemeConfigChanged(
             currentThemeConfig.copyWith(medalRowGap: value),
           ),
@@ -1021,8 +1062,8 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
           label: 'Center Final Min Span',
           value: currentThemeConfig.centerFinalMinimumSpan,
           min: 20,
-          max: 200,
-          divisions: 36,
+          max: 300,
+          divisions: 56,
           onChanged: (value) => onThemeConfigChanged(
             currentThemeConfig.copyWith(centerFinalMinimumSpan: value),
           ),
@@ -1031,8 +1072,8 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
           label: 'Grand Final Arm Length',
           value: currentThemeConfig.grandFinalOutputArmLength,
           min: 10,
-          max: 100,
-          divisions: 18,
+          max: 200,
+          divisions: 38,
           onChanged: (value) => onThemeConfigChanged(
             currentThemeConfig.copyWith(grandFinalOutputArmLength: value),
           ),
@@ -1042,8 +1083,8 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
           label: 'Canvas Min Width',
           value: currentThemeConfig.canvasMinimumWidth,
           min: 400,
-          max: 2000,
-          divisions: 32,
+          max: 4000,
+          divisions: 72,
           onChanged: (value) => onThemeConfigChanged(
             currentThemeConfig.copyWith(canvasMinimumWidth: value),
           ),
@@ -1052,8 +1093,8 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
           label: 'Canvas Min Height',
           value: currentThemeConfig.canvasMinimumHeight,
           min: 300,
-          max: 1500,
-          divisions: 24,
+          max: 3000,
+          divisions: 54,
           onChanged: (value) => onThemeConfigChanged(
             currentThemeConfig.copyWith(canvasMinimumHeight: value),
           ),
@@ -1081,8 +1122,8 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
           label: 'Header Banner Height',
           value: currentThemeConfig.headerBannerHeight,
           min: 40,
-          max: 120,
-          divisions: 40,
+          max: 200,
+          divisions: 80,
           onChanged: (value) => onThemeConfigChanged(
             currentThemeConfig.copyWith(headerBannerHeight: value),
           ),
@@ -1091,8 +1132,8 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
           label: 'Logo Max Height',
           value: currentThemeConfig.logoMaxHeight,
           min: 20,
-          max: 120,
-          divisions: 20,
+          max: 200,
+          divisions: 36,
           onChanged: (value) => onThemeConfigChanged(
             currentThemeConfig.copyWith(logoMaxHeight: value),
           ),
@@ -1101,8 +1142,8 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
           label: 'Logo Padding',
           value: currentThemeConfig.logoPadding,
           min: 0,
-          max: 40,
-          divisions: 40,
+          max: 64,
+          divisions: 64,
           onChanged: (value) => onThemeConfigChanged(
             currentThemeConfig.copyWith(logoPadding: value),
           ),
@@ -1251,13 +1292,24 @@ class _ColorPickerTile extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
           child: Row(
             children: [
-              Container(
-                width: 24,
-                height: 24,
-                decoration: BoxDecoration(
-                  color: currentColor,
-                  borderRadius: BorderRadius.circular(4),
-                  border: Border.all(color: Colors.grey.shade400, width: 0.5),
+              // Checkerboard behind the swatch shows transparency.
+              ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CustomPaint(
+                    painter: _CheckerboardPainter(),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: currentColor,
+                        border: Border.all(
+                          color: Colors.grey.shade400,
+                          width: 0.5,
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(width: 10),
@@ -1284,7 +1336,7 @@ class _ColorPickerTile extends StatelessWidget {
   }
 }
 
-/// Slider tile with label + current numeric value display.
+/// Slider tile with label, current numeric value display, and range indicators.
 class _SliderTile extends StatelessWidget {
   const _SliderTile({
     required this.label,
@@ -1302,8 +1354,17 @@ class _SliderTile extends StatelessWidget {
   final int divisions;
   final ValueChanged<double> onChanged;
 
+  String _formatValue(double v) {
+    return v == v.roundToDouble() ? v.toInt().toString() : v.toStringAsFixed(1);
+  }
+
   @override
   Widget build(BuildContext context) {
+    final rangeTextStyle = TextStyle(
+      fontSize: 9,
+      fontFamily: 'monospace',
+      color: Colors.grey.shade500,
+    );
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: Column(
@@ -1314,24 +1375,44 @@ class _SliderTile extends StatelessWidget {
               Expanded(
                 child: Text(label, style: const TextStyle(fontSize: 12)),
               ),
-              Text(
-                value.toStringAsFixed(1),
-                style: TextStyle(
-                  fontSize: 11,
-                  fontFamily: 'monospace',
-                  color: Colors.grey.shade600,
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                decoration: BoxDecoration(
+                  color: Theme.of(context)
+                      .colorScheme
+                      .primaryContainer
+                      .withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  _formatValue(value),
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    fontFamily: 'monospace',
+                    color: Theme.of(context).colorScheme.onPrimaryContainer,
+                  ),
                 ),
               ),
             ],
           ),
           SizedBox(
             height: 28,
-            child: Slider(
-              value: value.clamp(min, max),
-              min: min,
-              max: max,
-              divisions: divisions,
-              onChanged: onChanged,
+            child: Row(
+              children: [
+                Text(_formatValue(min), style: rangeTextStyle),
+                Expanded(
+                  child: Slider(
+                    value: value.clamp(min, max),
+                    min: min,
+                    max: max,
+                    divisions: divisions,
+                    onChanged: onChanged,
+                  ),
+                ),
+                Text(_formatValue(max), style: rangeTextStyle),
+              ],
             ),
           ),
         ],
@@ -1418,4 +1499,29 @@ class _FontFamilyDropdownTile extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Paints a small checkerboard pattern behind colour swatches so the user
+/// can distingush transparent / semi-transparent colours from opaque ones.
+class _CheckerboardPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    const cellSize = 4.0;
+    final lightPaint = Paint()..color = const Color(0xFFFFFFFF);
+    final darkPaint = Paint()..color = const Color(0xFFCCCCCC);
+
+    for (var y = 0.0; y < size.height; y += cellSize) {
+      for (var x = 0.0; x < size.width; x += cellSize) {
+        final isEvenColumn = (x / cellSize).floor() % 2 == 0;
+        final isEvenRow = (y / cellSize).floor() % 2 == 0;
+        canvas.drawRect(
+          Rect.fromLTWH(x, y, cellSize, cellSize),
+          isEvenColumn == isEvenRow ? lightPaint : darkPaint,
+        );
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
