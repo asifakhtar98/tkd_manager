@@ -36,7 +36,8 @@ class TieSheetCanvasWidget extends StatefulWidget {
   final void Function(
     ParticipantSlotHitArea source,
     ParticipantSlotHitArea target,
-  )? onParticipantSlotSwapped;
+  )?
+  onParticipantSlotSwapped;
 
   /// Called when a participant slot is tapped in edit mode.
   final void Function(ParticipantSlotHitArea slot)? onParticipantSlotTapped;
@@ -109,18 +110,12 @@ class _TieSheetCanvasWidgetState extends State<TieSheetCanvasWidget> {
     _leftLogoImage = null;
     _rightLogoImage = null;
 
-    _loadSingleLogoImage(
-      widget.tournament.leftLogoUrl,
-      (image) {
-        if (mounted) setState(() => _leftLogoImage = image);
-      },
-    );
-    _loadSingleLogoImage(
-      widget.tournament.rightLogoUrl,
-      (image) {
-        if (mounted) setState(() => _rightLogoImage = image);
-      },
-    );
+    _loadSingleLogoImage(widget.tournament.leftLogoUrl, (image) {
+      if (mounted) setState(() => _leftLogoImage = image);
+    });
+    _loadSingleLogoImage(widget.tournament.rightLogoUrl, (image) {
+      if (mounted) setState(() => _rightLogoImage = image);
+    });
   }
 
   /// Loads a single logo image and delivers the decoded [ui.Image] via
@@ -179,9 +174,7 @@ class _TieSheetCanvasWidgetState extends State<TieSheetCanvasWidget> {
     if (mounted) {
       setState(() {
         _hitAreas = List.from(painter.matchHitAreas);
-        _participantSlotHitAreas = List.from(
-          painter.participantSlotHitAreas,
-        );
+        _participantSlotHitAreas = List.from(painter.participantSlotHitAreas);
       });
     }
   }
@@ -380,10 +373,7 @@ abstract final class _Pens {
     ..style = PaintingStyle.fill;
 
   /// Soft shadow paint for card elevation.
-  static Paint shadow({
-    required double blur,
-    required Color color,
-  }) => Paint()
+  static Paint shadow({required double blur, required Color color}) => Paint()
     ..color = color
     ..maskFilter = MaskFilter.blur(BlurStyle.normal, blur);
 }
@@ -421,18 +411,18 @@ class TieSheetPainter extends CustomPainter {
   /// Shorthand for the additive font-size delta from the active theme.
   double get _delta => themeConfig.fontSizeDelta;
 
-  double get rowH => 42.0 + _delta * 2.0;
-  double get rowGap => 35.0 + _delta * 1.0;
-  double get pairGap => 100.0 + _delta * 2.0;
-  double get noColW => 32.0 + _delta * 1.0;
-  double get nameColW => 200.0 + _delta * 3.0;
-  double get regIdColW => 120.0 + _delta * 2.0;
-  double get roundColW => 170.0 + _delta * 2.0;
-  double get headerH => 100.0 + _delta * 2.0;
-  double get subHeaderH => 28.0 + _delta * 2.0;
+  double get rowH => themeConfig.rowHeight + _delta * 2.0;
+  double get rowGap => themeConfig.intraMatchGapHeight + _delta * 1.0;
+  double get pairGap => themeConfig.interMatchGapHeight + _delta * 2.0;
+  double get noColW => themeConfig.numberColumnWidth + _delta * 1.0;
+  double get nameColW => themeConfig.nameColumnWidth + _delta * 3.0;
+  double get regIdColW => themeConfig.registrationIdColumnWidth + _delta * 2.0;
+  double get roundColW => themeConfig.roundColumnWidth + _delta * 2.0;
+  double get headerH => themeConfig.headerTotalHeight + _delta * 2.0;
+  double get subHeaderH => themeConfig.subHeaderRowHeight + _delta * 2.0;
   double get medalH => (4 * _medalRowH) + 30.0;
-  double get centerGap => 340.0 + _delta * 4.0;
-  double get sectionLabelH => 32.0 + _delta * 1.0;
+  double get centerGap => themeConfig.centerGapWidth + _delta * 4.0;
+  double get sectionLabelH => themeConfig.sectionLabelHeight + _delta * 1.0;
 
   // ── Convenience getters — delegate to themeConfig ─────────────────────────
 
@@ -444,10 +434,10 @@ class TieSheetPainter extends CustomPainter {
   double get listW => noColW + nameColW + regIdColW;
 
   // Medal-table dimensions.
-  double get _medalTableW => 440.0 + _delta * 4.0;
-  double get _medalRowH => 36.0 + _delta * 2.0;
-  double get _medalNameW => 250.0 + _delta * 2.5;
-  double get _medalLabelW => 100.0 + _delta * 1.5;
+  double get _medalTableW => themeConfig.medalTableWidth + _delta * 4.0;
+  double get _medalRowH => themeConfig.medalRowHeight + _delta * 2.0;
+  double get _medalNameW => themeConfig.medalNameColumnWidth + _delta * 2.5;
+  double get _medalLabelW => themeConfig.medalLabelColumnWidth + _delta * 1.5;
   double get _medalBlankW => _medalTableW - _medalNameW - _medalLabelW;
 
   TieSheetPainter({
@@ -488,11 +478,20 @@ class TieSheetPainter extends CustomPainter {
   /// Won / resolved connector pen. In uniform-stroke mode, width is
   /// overridden to [TieSheetThemeConfig.connectorStrokeWidth].
   Paint get _wonConnectorPen => _isUniformStroke
-      ? _Pens.thick(themeConfig.connectorWonColor, w: themeConfig.connectorStrokeWidth)
-      : _Pens.round(themeConfig.connectorWonColor, w: themeConfig.wonConnectorStrokeWidth);
+      ? _Pens.thick(
+          themeConfig.connectorWonColor,
+          w: themeConfig.connectorStrokeWidth,
+        )
+      : _Pens.round(
+          themeConfig.connectorWonColor,
+          w: themeConfig.wonConnectorStrokeWidth,
+        );
 
   /// BYE advancement dashed-line pen.
-  Paint get _byeConnectorPen => _getThinPen(themeConfig.mutedColor, w: themeConfig.byeConnectorStrokeWidth);
+  Paint get _byeConnectorPen => _getThinPen(
+    themeConfig.mutedColor,
+    w: themeConfig.byeConnectorStrokeWidth,
+  );
 
   /// Generic connector pen (vertical trunk between arms).
   Paint get _genericConnectorPen => _getThinPen(themeConfig.connectorColor);
@@ -516,7 +515,10 @@ class TieSheetPainter extends CustomPainter {
   }
 
   /// Total pixel height consumed by a one-sided R1 participant table.
-  double _computeOneSidedHeight(List<MatchEntity> r1Matches, {bool drawTbdSlots = false}) {
+  double _computeOneSidedHeight(
+    List<MatchEntity> r1Matches, {
+    bool drawTbdSlots = false,
+  }) {
     double h = 0;
     for (var i = 0; i < r1Matches.length; i++) {
       final m = r1Matches[i];
@@ -570,8 +572,18 @@ class TieSheetPainter extends CustomPainter {
     );
 
     final effectiveLogoRowHeight = _hasLogos ? logoRowHeight : 0.0;
-    final height = margin + effectiveLogoRowHeight + headerH + tableH + 60 + medalH + margin;
-    return Size(max(width, 700), max(height, 500));
+    final height =
+        margin +
+        effectiveLogoRowHeight +
+        headerH +
+        tableH +
+        60 +
+        medalH +
+        margin;
+    return Size(
+      max(width, themeConfig.canvasMinimumWidth),
+      max(height, themeConfig.canvasMinimumHeight),
+    );
   }
 
   Size _calculateDECanvasSize() {
@@ -619,7 +631,10 @@ class TieSheetPainter extends CustomPainter {
         60 +
         medalH +
         margin;
-    return Size(max(width, 700), max(height, 500));
+    return Size(
+      max(width, themeConfig.canvasMinimumWidth),
+      max(height, themeConfig.canvasMinimumHeight),
+    );
   }
 
   /// Delegates global match numbering to [MatchNumberingUtility].
@@ -650,8 +665,14 @@ class TieSheetPainter extends CustomPainter {
     );
 
     final thickPen = _isUniformStroke
-        ? _Pens.thick(themeConfig.cardBorderColor, w: themeConfig.connectorStrokeWidth)
-        : _Pens.thick(themeConfig.cardBorderColor, w: themeConfig.thickStrokeWidth);
+        ? _Pens.thick(
+            themeConfig.cardBorderColor,
+            w: themeConfig.connectorStrokeWidth,
+          )
+        : _Pens.thick(
+            themeConfig.cardBorderColor,
+            w: themeConfig.thickStrokeWidth,
+          );
 
     if (_isDouble) {
       _paintDE(canvas, size, thickPen);
@@ -1019,7 +1040,12 @@ class TieSheetPainter extends CustomPainter {
       y + sectionLabelH,
       Radius.circular(themeConfig.sectionLabelBorderRadius),
     );
-    canvas.drawRRect(rect, _Pens.fill(color.withValues(alpha: 0.1)));
+    canvas.drawRRect(
+      rect,
+      _Pens.fill(
+        color.withValues(alpha: themeConfig.sectionLabelBackgroundOpacity),
+      ),
+    );
     canvas.drawRRect(rect, _getThinPen(color, w: 1.5));
     _drawText(
       canvas,
@@ -1158,7 +1184,13 @@ class TieSheetPainter extends CustomPainter {
         junctionX - 20,
         topArmY - 14,
       );
-      _drawBadge(canvas, 'R', themeConfig.redCornerColor, junctionX + 20, botArmY + 14);
+      _drawBadge(
+        canvas,
+        'R',
+        themeConfig.redCornerColor,
+        junctionX + 20,
+        botArmY + 14,
+      );
 
       if (wName != null) {
         // Draw centered slightly above the junction
@@ -1190,19 +1222,13 @@ class TieSheetPainter extends CustomPainter {
 
     // ── Logo row (above the banner) ──
     if (_hasLogos) {
-      const double logoMaxHeight = 60.0;
-      const double logoPadding = 12.0;
+      final double logoMaxHeight = themeConfig.logoMaxHeight;
+      final double logoPadding = themeConfig.logoPadding;
       final double headerLeft = margin;
       final double headerRight = size.width - margin;
 
       if (leftLogoImage != null) {
-        _paintLogoImage(
-          canvas,
-          leftLogoImage!,
-          logoMaxHeight,
-          headerLeft,
-          y,
-        );
+        _paintLogoImage(canvas, leftLogoImage!, logoMaxHeight, headerLeft, y);
       }
       if (rightLogoImage != null) {
         final double rightLogoWidth =
@@ -1219,7 +1245,7 @@ class TieSheetPainter extends CustomPainter {
     }
 
     // ── Dark header banner with tournament info ──
-    final bannerH = 64.0 + _delta * 2.0;
+    final bannerH = themeConfig.headerBannerHeight + _delta * 2.0;
     final bannerRect = RRect.fromLTRBR(
       margin,
       y,
@@ -1227,7 +1253,10 @@ class TieSheetPainter extends CustomPainter {
       y + bannerH,
       Radius.circular(themeConfig.headerBannerBorderRadius),
     );
-    canvas.drawRRect(bannerRect, _Pens.fill(themeConfig.headerBannerBackgroundColor));
+    canvas.drawRRect(
+      bannerRect,
+      _Pens.fill(themeConfig.headerBannerBackgroundColor),
+    );
     canvas.drawRRect(bannerRect, _getThinPen(themeConfig.cardBorderColor));
 
     final title =
@@ -1259,9 +1288,13 @@ class TieSheetPainter extends CustomPainter {
         size.width / 2,
         y + 30 + _delta * 1.0,
         TextStyle(
-          color: themeConfig.headerBannerTextColor.withValues(alpha: 0.7),
+          color: themeConfig.headerBannerTextColor.withValues(
+            alpha: themeConfig.headerSubtitleOpacity,
+          ),
           fontSize: _fontSize(11),
-          fontWeight: themeConfig.isTextForceBold ? FontWeight.w900 : FontWeight.normal,
+          fontWeight: themeConfig.isTextForceBold
+              ? FontWeight.w900
+              : FontWeight.normal,
           fontFamily: themeConfig.fontFamily,
           letterSpacing: themeConfig.subHeaderLetterSpacing,
         ),
@@ -1275,9 +1308,13 @@ class TieSheetPainter extends CustomPainter {
         size.width / 2,
         y + 46 + _delta * 1.5,
         TextStyle(
-          color: themeConfig.headerBannerTextColor.withValues(alpha: 0.55),
+          color: themeConfig.headerBannerTextColor.withValues(
+            alpha: themeConfig.headerOrganizerOpacity,
+          ),
           fontSize: _fontSize(10),
-          fontWeight: themeConfig.isTextForceBold ? FontWeight.w900 : FontWeight.normal,
+          fontWeight: themeConfig.isTextForceBold
+              ? FontWeight.w900
+              : FontWeight.normal,
           fontFamily: themeConfig.fontFamily,
         ),
         center: true,
@@ -1432,7 +1469,10 @@ class TieSheetPainter extends CustomPainter {
         topLeft: Radius.circular(themeConfig.cardBorderRadius),
         bottomLeft: Radius.circular(themeConfig.cardBorderRadius),
       );
-      canvas.drawRRect(accentRect, _Pens.fill(themeConfig.participantAccentStripColor));
+      canvas.drawRRect(
+        accentRect,
+        _Pens.fill(themeConfig.participantAccentStripColor),
+      );
 
       // ── Column divider ──
       canvas.drawLine(
@@ -1492,7 +1532,10 @@ class TieSheetPainter extends CustomPainter {
         topRight: Radius.circular(themeConfig.cardBorderRadius),
         bottomRight: Radius.circular(themeConfig.cardBorderRadius),
       );
-      canvas.drawRRect(accentRect, _Pens.fill(themeConfig.participantAccentStripColor));
+      canvas.drawRRect(
+        accentRect,
+        _Pens.fill(themeConfig.participantAccentStripColor),
+      );
 
       // ── Column divider ──
       canvas.drawLine(
@@ -1618,7 +1661,7 @@ class TieSheetPainter extends CustomPainter {
     for (final m in r1Matches) {
       final b = _findP(m.participantBlueId);
       final r = _findP(m.participantRedId);
-      
+
       final drawB = b != null || drawTbdSlots;
       final drawR = r != null || drawTbdSlots;
 
@@ -1799,7 +1842,13 @@ class TieSheetPainter extends CustomPainter {
         badgeX,
         effectiveTop.dy - 14,
       );
-      _drawBadge(canvas, 'R', themeConfig.redCornerColor, badgeX, effectiveBot.dy + 14);
+      _drawBadge(
+        canvas,
+        'R',
+        themeConfig.redCornerColor,
+        badgeX,
+        effectiveBot.dy + 14,
+      );
 
       final labelDxOffset = mirrored ? 10.0 : -10.0;
       final alignRight = !mirrored;
@@ -2010,7 +2059,7 @@ class TieSheetPainter extends CustomPainter {
     ];
 
     for (var row = 0; row < 4; row++) {
-      final rY = y + row * (_medalRowH + 4);
+      final rY = y + row * (_medalRowH + themeConfig.medalRowGap);
 
       // ── Shadow + Card ──
       final fullRect = RRect.fromLTRBR(
@@ -2096,7 +2145,7 @@ class TieSheetPainter extends CustomPainter {
     ];
     final labels = ['Gold', 'Silver', '1st Bronze', '2nd Bronze'];
     for (var row = 0; row < 4; row++) {
-      final rY = y + row * (_medalRowH + 4);
+      final rY = y + row * (_medalRowH + themeConfig.medalRowGap);
       _drawText(
         canvas,
         labels[row],
@@ -2123,7 +2172,7 @@ class TieSheetPainter extends CustomPainter {
           canvas,
           _pName(gold),
           x + _medalBlankW + 14,
-           _centeredTextY(y, _medalRowH, _fontSize(11)),
+          _centeredTextY(y, _medalRowH, _fontSize(11)),
           _bold(11),
         );
       }
@@ -2132,7 +2181,11 @@ class TieSheetPainter extends CustomPainter {
           canvas,
           _pName(silver),
           x + _medalBlankW + 14,
-           _centeredTextY(y + (_medalRowH + 4), _medalRowH, _fontSize(11)),
+          _centeredTextY(
+            y + (_medalRowH + themeConfig.medalRowGap),
+            _medalRowH,
+            _fontSize(11),
+          ),
           _bold(11),
         );
       }
@@ -2149,7 +2202,11 @@ class TieSheetPainter extends CustomPainter {
             canvas,
             _pName(bronze1),
             x + _medalBlankW + 14,
-            _centeredTextY(y + 2 * (_medalRowH + 4), _medalRowH, _fontSize(11)),
+            _centeredTextY(
+              y + 2 * (_medalRowH + themeConfig.medalRowGap),
+              _medalRowH,
+              _fontSize(11),
+            ),
             _bold(11),
           );
         }
@@ -2164,7 +2221,11 @@ class TieSheetPainter extends CustomPainter {
             canvas,
             _pName(bronze2),
             x + _medalBlankW + 14,
-            _centeredTextY(y + 3 * (_medalRowH + 4), _medalRowH, _fontSize(11)),
+            _centeredTextY(
+              y + 3 * (_medalRowH + themeConfig.medalRowGap),
+              _medalRowH,
+              _fontSize(11),
+            ),
             _bold(11),
           );
         }
@@ -2181,7 +2242,8 @@ class TieSheetPainter extends CustomPainter {
 
   /// Resolves the effective font size by adding [themeConfig.fontSizeDelta]
   /// to the painter-specified [defaultSize].
-  double _fontSize(double defaultSize) => defaultSize + themeConfig.fontSizeDelta;
+  double _fontSize(double defaultSize) =>
+      defaultSize + themeConfig.fontSizeDelta;
 
   /// Y-coordinate for vertically centering text of [fontSize] within a
   /// container that starts at [containerY] with the given [containerHeight].
@@ -2189,8 +2251,7 @@ class TieSheetPainter extends CustomPainter {
     double containerY,
     double containerHeight,
     double fontSize,
-  ) =>
-      containerY + (containerHeight - fontSize) / 2;
+  ) => containerY + (containerHeight - fontSize) / 2;
 
   TextStyle _bold(double size) => TextStyle(
     color: themeConfig.primaryTextColor,
@@ -2201,7 +2262,9 @@ class TieSheetPainter extends CustomPainter {
   TextStyle _normal(double size) => TextStyle(
     color: themeConfig.secondaryTextColor,
     fontSize: _fontSize(size),
-    fontWeight: themeConfig.isTextForceBold ? FontWeight.w800 : FontWeight.normal,
+    fontWeight: themeConfig.isTextForceBold
+        ? FontWeight.w800
+        : FontWeight.normal,
     fontFamily: themeConfig.fontFamily,
   );
 
@@ -2213,7 +2276,7 @@ class TieSheetPainter extends CustomPainter {
     double cy,
   ) {
     final style = TextStyle(
-      color: Colors.white,
+      color: themeConfig.badgeTextColor,
       fontSize: _fontSize(9),
       fontWeight: FontWeight.bold,
       fontFamily: themeConfig.fontFamily,
@@ -2223,16 +2286,19 @@ class TieSheetPainter extends CustomPainter {
       textDirection: TextDirection.ltr,
     );
     tp.layout();
-    
-    final radius = max(themeConfig.badgeMinRadius, max(tp.width, tp.height) / 2 + themeConfig.badgePadding);
-    
+
+    final radius = max(
+      themeConfig.badgeMinRadius,
+      max(tp.width, tp.height) / 2 + themeConfig.badgePadding,
+    );
+
     canvas.drawCircle(Offset(cx, cy), radius, _Pens.fill(color));
     canvas.drawCircle(
       Offset(cx, cy),
       radius,
       _getThinPen(color.withValues(alpha: 0.3)),
     );
-    
+
     tp.paint(canvas, Offset(cx - tp.width / 2, cy - tp.height / 2));
   }
 
@@ -2250,8 +2316,14 @@ class TieSheetPainter extends CustomPainter {
     );
     tp.layout();
 
-    final halfWidth = max(themeConfig.matchPillMinHalfWidth, tp.width / 2 + themeConfig.matchPillHorizontalPadding);
-    final halfHeight = max(themeConfig.matchPillMinHalfHeight, tp.height / 2 + themeConfig.matchPillVerticalPadding);
+    final halfWidth = max(
+      themeConfig.matchPillMinHalfWidth,
+      tp.width / 2 + themeConfig.matchPillHorizontalPadding,
+    );
+    final halfHeight = max(
+      themeConfig.matchPillMinHalfHeight,
+      tp.height / 2 + themeConfig.matchPillVerticalPadding,
+    );
 
     final pillRect = RRect.fromLTRBR(
       cx - halfWidth,
@@ -2264,7 +2336,7 @@ class TieSheetPainter extends CustomPainter {
       pillRect.shift(const Offset(0.5, 1)),
       _themedShadow(blur: 2),
     );
-    canvas.drawRRect(pillRect, _Pens.fill(Colors.white));
+    canvas.drawRRect(pillRect, _Pens.fill(themeConfig.matchPillFillColor));
     canvas.drawRRect(pillRect, _genericConnectorPen);
 
     tp.paint(canvas, Offset(cx - tp.width / 2, cy - tp.height / 2));
@@ -2345,13 +2417,11 @@ class TieSheetPainter extends CustomPainter {
 
   /// Returns a shadow [Paint] whose opacity is scaled by
   /// [themeConfig.shadowOpacityMultiplier].
-  Paint _themedShadow({
-    double? blur,
-    Color? color,
-  }) {
+  Paint _themedShadow({double? blur, Color? color}) {
     final effectiveBlur = blur ?? themeConfig.shadowBlurRadius;
     final effectiveColor = color ?? themeConfig.shadowColor;
-    final scaledAlpha = (effectiveColor.a * themeConfig.shadowOpacityMultiplier).clamp(0.0, 1.0);
+    final scaledAlpha = (effectiveColor.a * themeConfig.shadowOpacityMultiplier)
+        .clamp(0.0, 1.0);
     return _Pens.shadow(
       blur: effectiveBlur,
       color: effectiveColor.withValues(alpha: scaledAlpha),

@@ -8,10 +8,11 @@ void main() {
     test('has correct labels', () {
       expect(TieSheetThemeMode.defaultMode.label, 'Screen');
       expect(TieSheetThemeMode.printMode.label, 'Print');
+      expect(TieSheetThemeMode.customMode.label, 'Custom');
     });
 
-    test('values list has exactly two entries', () {
-      expect(TieSheetThemeMode.values, hasLength(2));
+    test('values list has exactly three entries', () {
+      expect(TieSheetThemeMode.values, hasLength(3));
     });
   });
 
@@ -375,6 +376,13 @@ void main() {
         );
         expect(config, const TieSheetThemeConfig.printMode());
       });
+
+      test('customMode returns defaultMode as starting base', () {
+        final config = TieSheetThemeConfig.fromMode(
+          TieSheetThemeMode.customMode,
+        );
+        expect(config, const TieSheetThemeConfig.defaultMode());
+      });
     });
 
     group('equality', () {
@@ -459,8 +467,312 @@ void main() {
           fontFamily: 'Roboto',
           headerLetterSpacing: 1.2,
           subHeaderLetterSpacing: 0.5,
+          // Layout dimensions
+          rowHeight: 42.0,
+          intraMatchGapHeight: 35.0,
+          interMatchGapHeight: 100.0,
+          numberColumnWidth: 32.0,
+          nameColumnWidth: 200.0,
+          registrationIdColumnWidth: 120.0,
+          roundColumnWidth: 170.0,
+          headerTotalHeight: 100.0,
+          subHeaderRowHeight: 28.0,
+          centerGapWidth: 340.0,
+          sectionLabelHeight: 32.0,
+          // Medal table layout
+          medalTableWidth: 440.0,
+          medalRowHeight: 36.0,
+          medalNameColumnWidth: 250.0,
+          medalLabelColumnWidth: 100.0,
+          medalRowGap: 4.0,
+          // Banner & logo
+          headerBannerHeight: 64.0,
+          logoMaxHeight: 60.0,
+          logoPadding: 12.0,
+          // Additional colours
+          matchPillFillColor: Color(0xFFFFFFFF),
+          badgeTextColor: Color(0xFFFFFFFF),
+          // Opacity
+          sectionLabelBackgroundOpacity: 0.1,
+          headerSubtitleOpacity: 0.7,
+          headerOrganizerOpacity: 0.55,
+          // Canvas constraints
+          canvasMinimumWidth: 700.0,
+          canvasMinimumHeight: 500.0,
         );
         expect(custom, equals(preset));
+      });
+    });
+
+    group('copyWith', () {
+      const baseConfig = TieSheetThemeConfig.defaultMode();
+
+      test('returns identical config when no arguments are provided', () {
+        final copied = baseConfig.copyWith();
+        expect(copied, equals(baseConfig));
+        expect(copied.hashCode, baseConfig.hashCode);
+      });
+
+      test('overrides only the specified colour field', () {
+        const overrideColor = Color(0xFFFF0000);
+        final copied = baseConfig.copyWith(primaryTextColor: overrideColor);
+        expect(copied.primaryTextColor, overrideColor);
+        // All other fields remain unchanged.
+        expect(copied.connectorColor, baseConfig.connectorColor);
+        expect(copied.cardBorderRadius, baseConfig.cardBorderRadius);
+        expect(copied.fontFamily, baseConfig.fontFamily);
+      });
+
+      test('overrides only the specified double field', () {
+        final copied = baseConfig.copyWith(cardBorderRadius: 20.0);
+        expect(copied.cardBorderRadius, 20.0);
+        expect(copied.primaryTextColor, baseConfig.primaryTextColor);
+      });
+
+      test('overrides only the specified boolean field', () {
+        final copied = baseConfig.copyWith(isTextForceBold: true);
+        expect(copied.isTextForceBold, isTrue);
+        expect(copied.fontSizeDelta, baseConfig.fontSizeDelta);
+      });
+
+      test('overrides only the specified string field', () {
+        final copied = baseConfig.copyWith(fontFamily: 'Inter');
+        expect(copied.fontFamily, 'Inter');
+        expect(copied.headerLetterSpacing, baseConfig.headerLetterSpacing);
+      });
+
+      test('multiple fields can be overridden simultaneously', () {
+        const newColor = Color(0xFF00FF00);
+        final copied = baseConfig.copyWith(
+          canvasBackgroundColor: newColor,
+          shadowOpacityMultiplier: 0.0,
+          isInteractivityDisabled: true,
+          fontFamily: 'Montserrat',
+        );
+        expect(copied.canvasBackgroundColor, newColor);
+        expect(copied.shadowOpacityMultiplier, 0.0);
+        expect(copied.isInteractivityDisabled, isTrue);
+        expect(copied.fontFamily, 'Montserrat');
+        // Untouched fields.
+        expect(copied.connectorColor, baseConfig.connectorColor);
+        expect(copied.cardBorderRadius, baseConfig.cardBorderRadius);
+      });
+
+      test('chained copyWith calls accumulate overrides', () {
+        final step1 = baseConfig.copyWith(thickStrokeWidth: 5.0);
+        final step2 = step1.copyWith(thinStrokeWidth: 2.0);
+        expect(step2.thickStrokeWidth, 5.0);
+        expect(step2.thinStrokeWidth, 2.0);
+        expect(step2.connectorColor, baseConfig.connectorColor);
+      });
+
+      test('every field in copyWith is correctly wired', () {
+        // Use a unique sentinel value for every field so we can verify
+        // that each copyWith parameter maps to its correct property.
+        const c1 = Color(0xFF010101);
+        const c2 = Color(0xFF020202);
+        const c3 = Color(0xFF030303);
+        const c4 = Color(0xFF040404);
+        const c5 = Color(0xFF050505);
+        const c6 = Color(0xFF060606);
+        const c7 = Color(0xFF070707);
+        const c8 = Color(0xFF080808);
+        const c9 = Color(0xFF090909);
+        const c10 = Color(0xFF0A0A0A);
+        const c11 = Color(0xFF0B0B0B);
+        const c12 = Color(0xFF0C0C0C);
+        const c13 = Color(0xFF0D0D0D);
+        const c14 = Color(0xFF0E0E0E);
+        const c15 = Color(0xFF0F0F0F);
+        const c16 = Color(0xFF101010);
+        const c17 = Color(0xFF111111);
+        const c18 = Color(0xFF121212);
+        const c19 = Color(0xFF131313);
+        const c20 = Color(0xFF141414);
+        const c21 = Color(0xFF151515);
+        const c22 = Color(0xFF161616);
+        const c23 = Color(0xFF171717);
+        const c24 = Color(0xFF181818);
+        const c25 = Color(0xFF191919);
+        const c26 = Color(0xFF1A1A1A);
+        const c27 = Color(0xFF1B1B1B);
+        const c28 = Color(0xFF1C1C1C);
+        const c29 = Color(0xFF1D1D1D);
+
+        final overridden = baseConfig.copyWith(
+          connectorColor: c1,
+          connectorWonColor: c2,
+          pendingColor: c3,
+          mutedColor: c4,
+          canvasBackgroundColor: c5,
+          cardBorderColor: c6,
+          shadowOpacityMultiplier: 0.42,
+          connectorStrokeWidth: 7.7,
+          isInteractivityDisabled: true,
+          primaryTextColor: c7,
+          secondaryTextColor: c8,
+          isTextForceBold: true,
+          fontSizeDelta: 12.0,
+          rowFillColor: c9,
+          headerFillColor: c10,
+          tbdFillColor: c11,
+          headerBannerBackgroundColor: c12,
+          headerBannerTextColor: c13,
+          participantAccentStripColor: c14,
+          blueCornerColor: c15,
+          redCornerColor: c16,
+          winnersLabelColor: c17,
+          losersLabelColor: c18,
+          medalGoldFillColor: c19,
+          medalSilverFillColor: c20,
+          medalBronzeFillColor: c21,
+          medalGoldTextColor: c22,
+          medalSilverTextColor: c23,
+          medalBronzeTextColor: c24,
+          medalGoldAccentColor: c25,
+          medalSilverAccentColor: c26,
+          medalBronzeAccentColor: c27,
+          cardBorderRadius: 99.0,
+          sectionLabelBorderRadius: 98.0,
+          headerBannerBorderRadius: 97.0,
+          junctionCornerRadius: 96.0,
+          thickStrokeWidth: 95.0,
+          thinStrokeWidth: 94.0,
+          wonConnectorStrokeWidth: 93.0,
+          byeConnectorStrokeWidth: 92.0,
+          canvasMargin: 91.0,
+          sectionGapHeight: 90.0,
+          accentStripWidth: 89.0,
+          logoRowHeight: 88.0,
+          badgeMinRadius: 87.0,
+          badgePadding: 86.0,
+          matchPillMinHalfWidth: 85.0,
+          matchPillHorizontalPadding: 84.0,
+          matchPillMinHalfHeight: 83.0,
+          matchPillVerticalPadding: 82.0,
+          dashedLineDashWidth: 81.0,
+          dashedLineGapWidth: 80.0,
+          shadowBlurRadius: 79.0,
+          shadowColor: c1,
+          fontFamily: 'TestFont',
+          headerLetterSpacing: 77.0,
+          subHeaderLetterSpacing: 76.0,
+          // New tokens
+          rowHeight: 75.0,
+          intraMatchGapHeight: 74.0,
+          interMatchGapHeight: 73.0,
+          numberColumnWidth: 72.0,
+          nameColumnWidth: 71.0,
+          registrationIdColumnWidth: 70.0,
+          roundColumnWidth: 69.0,
+          headerTotalHeight: 68.0,
+          subHeaderRowHeight: 67.0,
+          centerGapWidth: 66.0,
+          sectionLabelHeight: 65.0,
+          medalTableWidth: 64.0,
+          medalRowHeight: 63.0,
+          medalNameColumnWidth: 62.0,
+          medalLabelColumnWidth: 61.0,
+          medalRowGap: 60.0,
+          headerBannerHeight: 59.0,
+          logoMaxHeight: 58.0,
+          logoPadding: 57.0,
+          matchPillFillColor: c28,
+          badgeTextColor: c29,
+          sectionLabelBackgroundOpacity: 0.56,
+          headerSubtitleOpacity: 0.55,
+          headerOrganizerOpacity: 0.54,
+          canvasMinimumWidth: 53.0,
+          canvasMinimumHeight: 52.0,
+        );
+
+        // Verify every colour field
+        expect(overridden.connectorColor, c1);
+        expect(overridden.connectorWonColor, c2);
+        expect(overridden.pendingColor, c3);
+        expect(overridden.mutedColor, c4);
+        expect(overridden.canvasBackgroundColor, c5);
+        expect(overridden.cardBorderColor, c6);
+        expect(overridden.primaryTextColor, c7);
+        expect(overridden.secondaryTextColor, c8);
+        expect(overridden.rowFillColor, c9);
+        expect(overridden.headerFillColor, c10);
+        expect(overridden.tbdFillColor, c11);
+        expect(overridden.headerBannerBackgroundColor, c12);
+        expect(overridden.headerBannerTextColor, c13);
+        expect(overridden.participantAccentStripColor, c14);
+        expect(overridden.blueCornerColor, c15);
+        expect(overridden.redCornerColor, c16);
+        expect(overridden.winnersLabelColor, c17);
+        expect(overridden.losersLabelColor, c18);
+        expect(overridden.medalGoldFillColor, c19);
+        expect(overridden.medalSilverFillColor, c20);
+        expect(overridden.medalBronzeFillColor, c21);
+        expect(overridden.medalGoldTextColor, c22);
+        expect(overridden.medalSilverTextColor, c23);
+        expect(overridden.medalBronzeTextColor, c24);
+        expect(overridden.medalGoldAccentColor, c25);
+        expect(overridden.medalSilverAccentColor, c26);
+        expect(overridden.medalBronzeAccentColor, c27);
+        expect(overridden.matchPillFillColor, c28);
+        expect(overridden.badgeTextColor, c29);
+
+        // Verify every scalar field
+        expect(overridden.shadowOpacityMultiplier, 0.42);
+        expect(overridden.connectorStrokeWidth, 7.7);
+        expect(overridden.isInteractivityDisabled, isTrue);
+        expect(overridden.isTextForceBold, isTrue);
+        expect(overridden.fontSizeDelta, 12.0);
+        expect(overridden.cardBorderRadius, 99.0);
+        expect(overridden.sectionLabelBorderRadius, 98.0);
+        expect(overridden.headerBannerBorderRadius, 97.0);
+        expect(overridden.junctionCornerRadius, 96.0);
+        expect(overridden.thickStrokeWidth, 95.0);
+        expect(overridden.thinStrokeWidth, 94.0);
+        expect(overridden.wonConnectorStrokeWidth, 93.0);
+        expect(overridden.byeConnectorStrokeWidth, 92.0);
+        expect(overridden.canvasMargin, 91.0);
+        expect(overridden.sectionGapHeight, 90.0);
+        expect(overridden.accentStripWidth, 89.0);
+        expect(overridden.logoRowHeight, 88.0);
+        expect(overridden.badgeMinRadius, 87.0);
+        expect(overridden.badgePadding, 86.0);
+        expect(overridden.matchPillMinHalfWidth, 85.0);
+        expect(overridden.matchPillHorizontalPadding, 84.0);
+        expect(overridden.matchPillMinHalfHeight, 83.0);
+        expect(overridden.matchPillVerticalPadding, 82.0);
+        expect(overridden.dashedLineDashWidth, 81.0);
+        expect(overridden.dashedLineGapWidth, 80.0);
+        expect(overridden.shadowBlurRadius, 79.0);
+        expect(overridden.shadowColor, c1);
+        expect(overridden.fontFamily, 'TestFont');
+        expect(overridden.headerLetterSpacing, 77.0);
+        expect(overridden.subHeaderLetterSpacing, 76.0);
+        // New tokens
+        expect(overridden.rowHeight, 75.0);
+        expect(overridden.intraMatchGapHeight, 74.0);
+        expect(overridden.interMatchGapHeight, 73.0);
+        expect(overridden.numberColumnWidth, 72.0);
+        expect(overridden.nameColumnWidth, 71.0);
+        expect(overridden.registrationIdColumnWidth, 70.0);
+        expect(overridden.roundColumnWidth, 69.0);
+        expect(overridden.headerTotalHeight, 68.0);
+        expect(overridden.subHeaderRowHeight, 67.0);
+        expect(overridden.centerGapWidth, 66.0);
+        expect(overridden.sectionLabelHeight, 65.0);
+        expect(overridden.medalTableWidth, 64.0);
+        expect(overridden.medalRowHeight, 63.0);
+        expect(overridden.medalNameColumnWidth, 62.0);
+        expect(overridden.medalLabelColumnWidth, 61.0);
+        expect(overridden.medalRowGap, 60.0);
+        expect(overridden.headerBannerHeight, 59.0);
+        expect(overridden.logoMaxHeight, 58.0);
+        expect(overridden.logoPadding, 57.0);
+        expect(overridden.sectionLabelBackgroundOpacity, 0.56);
+        expect(overridden.headerSubtitleOpacity, 0.55);
+        expect(overridden.headerOrganizerOpacity, 0.54);
+        expect(overridden.canvasMinimumWidth, 53.0);
+        expect(overridden.canvasMinimumHeight, 52.0);
       });
     });
   });

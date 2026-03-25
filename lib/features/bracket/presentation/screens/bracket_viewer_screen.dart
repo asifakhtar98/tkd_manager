@@ -17,6 +17,7 @@ import 'package:tkd_saas/features/bracket/presentation/widgets/participant_slot_
 import 'package:tkd_saas/features/bracket/presentation/widgets/score_entry_dialog.dart';
 import 'package:tkd_saas/features/bracket/presentation/widgets/tie_sheet_canvas_widget.dart';
 import 'package:tkd_saas/features/bracket/presentation/widgets/tie_sheet_theme_config.dart';
+import 'package:tkd_saas/features/bracket/presentation/widgets/tie_sheet_theme_editor_panel.dart';
 import 'package:tkd_saas/features/participant/domain/entities/participant_entity.dart';
 import 'package:tkd_saas/features/tournament/domain/entities/bracket_snapshot.dart';
 import 'package:tkd_saas/features/tournament/domain/entities/tournament_entity.dart';
@@ -69,7 +70,22 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
   /// The currently active tie-sheet visual theme mode.
   TieSheetThemeMode _activeTieSheetThemeMode = TieSheetThemeMode.defaultMode;
 
+  /// The user-customised theme config, mutated via the editor panel.
+  /// Starts from the default preset and accumulates per-token overrides.
+  TieSheetThemeConfig _customThemeConfig =
+      const TieSheetThemeConfig.defaultMode();
+
   bool get _isExportingPdf => _pdfExportProgress != null;
+
+  /// Returns the theme config that the canvas should render with.
+  /// For Screen / Print modes, uses the preset. For Custom mode,
+  /// returns the user-edited [_customThemeConfig].
+  TieSheetThemeConfig get _resolvedThemeConfig {
+    if (_activeTieSheetThemeMode == TieSheetThemeMode.customMode) {
+      return _customThemeConfig;
+    }
+    return TieSheetThemeConfig.fromMode(_activeTieSheetThemeMode);
+  }
 
   static const _uuid = Uuid();
 
@@ -338,7 +354,6 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
     );
 
 
-
     final bool canUndo = historyPointer >= 0 && !isReplayInProgress;
     final bool canRedo =
         historyPointer < actionHistory.length - 1 && !isReplayInProgress;
@@ -471,9 +486,11 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
                   (mode) => ButtonSegment<TieSheetThemeMode>(
                     value: mode,
                     icon: Icon(
-                      mode == TieSheetThemeMode.defaultMode
-                          ? Icons.visibility
-                          : Icons.print,
+                      switch (mode) {
+                        TieSheetThemeMode.defaultMode => Icons.visibility,
+                        TieSheetThemeMode.printMode => Icons.print,
+                        TieSheetThemeMode.customMode => Icons.tune,
+                      },
                       size: 16,
                     ),
                     label: Text(
@@ -530,42 +547,59 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
       ),
       body: Stack(
         children: [
-          Column(
+          Row(
             children: [
-              // ── Edit mode info banner ──
-              if (isEditModeEnabled)
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  ),
-                  color: Colors.grey.shade300,
-                  child: const Row(
-                    children: [
-                      Icon(Icons.edit, size: 16, color: Color(0xFF92400E)),
-                      SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'Edit Mode — Tap a participant to edit details, '
-                          'or long-press and drag to swap positions.',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Color(0xFF92400E),
-                          ),
+              Expanded(
+                child: Column(
+                  children: [
+                    // ── Edit mode info banner ──
+                    if (isEditModeEnabled)
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                        color: Colors.grey.shade300,
+                        child: const Row(
+                          children: [
+                            Icon(Icons.edit, size: 16, color: Color(0xFF92400E)),
+                            SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'Edit Mode — Tap a participant to edit details, '
+                                'or long-press and drag to swap positions.',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Color(0xFF92400E),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    ],
+                    // ── Replay progress indicator ──
+                    if (isReplayInProgress && actionHistory.isNotEmpty)
+                      LinearProgressIndicator(
+                        value: (historyPointer + 1) / actionHistory.length,
+                        minHeight: 4,
+                      ),
+                    // ── Bracket canvas ──
+                    Expanded(child: view),
+                  ],
+                ),
+              ),
+              // ── Custom theme editor side panel ──
+              if (_activeTieSheetThemeMode == TieSheetThemeMode.customMode)
+                SizedBox(
+                  width: 340,
+                  child: TieSheetThemeEditorPanel(
+                    currentThemeConfig: _customThemeConfig,
+                    onThemeConfigChanged: (newConfig) {
+                      setState(() => _customThemeConfig = newConfig);
+                    },
                   ),
                 ),
-              // ── Replay progress indicator ──
-              if (isReplayInProgress && actionHistory.isNotEmpty)
-                LinearProgressIndicator(
-                  value: (historyPointer + 1) / actionHistory.length,
-                  minHeight: 4,
-                ),
-              // ── Bracket canvas ──
-              Expanded(child: view),
             ],
           ),
           // ── PDF export loading overlay ──
@@ -644,9 +678,7 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
             winnersBracketId: winnersBracketId,
             losersBracketId: losersBracketId,
             isEditModeEnabled: isEditModeEnabled,
-            themeConfig: TieSheetThemeConfig.fromMode(
-              _activeTieSheetThemeMode,
-            ),
+            themeConfig: _resolvedThemeConfig,
             onParticipantSlotSwapped: (source, target) {
               _handleParticipantSwap(
                 context,
