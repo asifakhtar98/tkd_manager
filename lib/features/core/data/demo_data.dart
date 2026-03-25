@@ -34,6 +34,9 @@ class DemoData {
   // ── Participants ───────────────────────────────────────────────────────
 
   /// Indian-inspired demo full names for realistic bracket previews.
+  ///
+  /// 64 unique names to support brackets up to 64 participants without
+  /// repeating entries in a single draw.
   static const _fullNames = [
     'Aarav Patel',
     'Diya Sharma',
@@ -51,8 +54,57 @@ class DemoData {
     'Neha Pillai',
     'Aryan Mehta',
     'Riya Kapoor',
+    'Siddharth Thakur',
+    'Priya Menon',
+    'Tanish Bhatt',
+    'Kavya Sethi',
+    'Ishaan Saxena',
+    'Shruti Bose',
+    'Harsh Choudhary',
+    'Pooja Mishra',
+    'Vivek Malhotra',
+    'Simran Kaur',
+    'Manav Tiwari',
+    'Deepika Hegde',
+    'Yash Pandey',
+    'Ritika Narayan',
+    'Karan Bhatia',
+    'Sneha Kulkarni',
+    'Nikhil Chatterjee',
+    'Tanya Srinivasan',
+    'Rahul Agarwal',
+    'Meghna Deshpande',
+    'Samar Bajaj',
+    'Nikita Ranganathan',
+    'Pranav Khanna',
+    'Aditi Venkatesh',
+    'Kunal Banerjee',
+    'Swati Raghavan',
+    'Ajay Chauhan',
+    'Pallavi Suresh',
+    'Dev Rajput',
+    'Nandini Gopalan',
+    'Vikram Soni',
+    'Lakshmi Ramesh',
+    'Abhishek Dalal',
+    'Gayatri Sundaram',
+    'Tarun Jain',
+    'Shweta Chandra',
+    'Mayank Trivedi',
+    'Divya Mahajan',
+    'Rohit Khatri',
+    'Kamini Shukla',
+    'Gaurav Vohra',
+    'Aparna Subramaniam',
+    'Sachin Parikh',
+    'Jyoti Mukherjee',
+    'Ankur Grover',
+    'Varsha Krishnan',
+    'Nitin Walia',
+    'Sonal Pathak',
   ];
 
+  /// 12 unique schools / dojangs for realistic affiliation variety.
   static const _schools = [
     'Kerala Martial Arts',
     'Mumbai Taekwondo',
@@ -60,6 +112,12 @@ class DemoData {
     'Bengaluru Dojang',
     'Chennai Dragons',
     'Punjab Tigers',
+    'Hyderabad Warriors',
+    'Kolkata Kicks',
+    'Jaipur Dojang',
+    'Lucknow Academy',
+    'Pune Power TKD',
+    'Ahmedabad Strikers',
   ];
 
   /// Builds a deterministic list of [count] participants.

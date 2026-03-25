@@ -157,13 +157,7 @@ class DashboardScreen extends StatelessWidget {
 
         // ── Single Elimination ──
         const SizedBox(height: 24),
-        Text(
-          'Single Elimination',
-          style: theme.textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.w600,
-            color: theme.colorScheme.primary,
-          ),
-        ),
+        _buildSectionHeader(theme, 'Single Elimination', theme.colorScheme.primary),
         const SizedBox(height: 12),
         Wrap(
           spacing: 12,
@@ -171,24 +165,24 @@ class DashboardScreen extends StatelessWidget {
           children: [
             _DemoCard(
               icon: Icons.account_tree_outlined,
+              title: '3 Players',
+              subtitle: 'Minimal with 1 BYE',
+              accentColor: Colors.grey.shade800,
+              onTap: () => _navigateToDemoBracketViewer(
+                context,
+                bracketFormat: BracketFormat.singleElimination,
+                playerCount: 3,
+              ),
+            ),
+            _DemoCard(
+              icon: Icons.account_tree_outlined,
               title: '4 Players',
-              subtitle: 'Minimal bracket, no BYEs',
+              subtitle: 'Perfect small bracket',
               accentColor: Colors.grey.shade800,
               onTap: () => _navigateToDemoBracketViewer(
                 context,
                 bracketFormat: BracketFormat.singleElimination,
                 playerCount: 4,
-              ),
-            ),
-            _DemoCard(
-              icon: Icons.account_tree_outlined,
-              title: '8 Players',
-              subtitle: 'Perfect bracket, no BYEs',
-              accentColor: Colors.grey.shade800,
-              onTap: () => _navigateToDemoBracketViewer(
-                context,
-                bracketFormat: BracketFormat.singleElimination,
-                playerCount: 8,
               ),
             ),
             _DemoCard(
@@ -204,19 +198,97 @@ class DashboardScreen extends StatelessWidget {
             ),
             _DemoCard(
               icon: Icons.account_tree_outlined,
-              title: '16 Players',
-              subtitle: 'Large bracket, full draw',
+              title: '7 Players',
+              subtitle: 'Odd count, many BYEs',
               accentColor: Colors.grey.shade800,
               onTap: () => _navigateToDemoBracketViewer(
                 context,
                 bracketFormat: BracketFormat.singleElimination,
-                playerCount: 16,
+                playerCount: 7,
+              ),
+            ),
+            _DemoCard(
+              icon: Icons.account_tree_outlined,
+              title: '8 Players',
+              subtitle: 'Perfect bracket',
+              accentColor: Colors.grey.shade800,
+              onTap: () => _navigateToDemoBracketViewer(
+                context,
+                bracketFormat: BracketFormat.singleElimination,
+                playerCount: 8,
+              ),
+            ),
+            _DemoCard(
+              icon: Icons.account_tree_outlined,
+              title: '20 Players',
+              subtitle: 'Mid-size with BYEs',
+              accentColor: Colors.grey.shade800,
+              onTap: () => _navigateToDemoBracketViewer(
+                context,
+                bracketFormat: BracketFormat.singleElimination,
+                playerCount: 20,
+              ),
+            ),
+            _DemoCard(
+              icon: Icons.account_tree_outlined,
+              title: '24 Players',
+              subtitle: 'Large non-power-of-2',
+              accentColor: Colors.grey.shade800,
+              onTap: () => _navigateToDemoBracketViewer(
+                context,
+                bracketFormat: BracketFormat.singleElimination,
+                playerCount: 24,
+              ),
+            ),
+            _DemoCard(
+              icon: Icons.account_tree_outlined,
+              title: '32 Players',
+              subtitle: 'Full 5-round draw',
+              accentColor: Colors.grey.shade800,
+              onTap: () => _navigateToDemoBracketViewer(
+                context,
+                bracketFormat: BracketFormat.singleElimination,
+                playerCount: 32,
+              ),
+            ),
+            _DemoCard(
+              icon: Icons.account_tree_outlined,
+              title: '64 Players',
+              subtitle: 'Large-scale tournament',
+              accentColor: Colors.grey.shade800,
+              onTap: () => _navigateToDemoBracketViewer(
+                context,
+                bracketFormat: BracketFormat.singleElimination,
+                playerCount: 64,
+              ),
+            ),
+          ],
+        ),
+
+        // ── SE + 3rd Place Match ──
+        const SizedBox(height: 32),
+        _buildSectionHeader(theme, 'Single Elimination + 3rd Place', theme.colorScheme.primary),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: [
+            _DemoCard(
+              icon: Icons.emoji_events_outlined,
+              title: '4P + 3rd Place',
+              subtitle: 'Bronze match, small draw',
+              accentColor: Colors.grey.shade800,
+              onTap: () => _navigateToDemoBracketViewer(
+                context,
+                bracketFormat: BracketFormat.singleElimination,
+                playerCount: 4,
+                includeThirdPlaceMatch: true,
               ),
             ),
             _DemoCard(
               icon: Icons.emoji_events_outlined,
               title: '8P + 3rd Place',
-              subtitle: 'Bronze medal match',
+              subtitle: 'Bronze match, standard',
               accentColor: Colors.grey.shade800,
               onTap: () => _navigateToDemoBracketViewer(
                 context,
@@ -225,18 +297,24 @@ class DashboardScreen extends StatelessWidget {
                 includeThirdPlaceMatch: true,
               ),
             ),
+            _DemoCard(
+              icon: Icons.emoji_events_outlined,
+              title: '32P + 3rd Place',
+              subtitle: 'Bronze match, large draw',
+              accentColor: Colors.grey.shade800,
+              onTap: () => _navigateToDemoBracketViewer(
+                context,
+                bracketFormat: BracketFormat.singleElimination,
+                playerCount: 32,
+                includeThirdPlaceMatch: true,
+              ),
+            ),
           ],
         ),
 
         // ── Double Elimination ──
         const SizedBox(height: 32),
-        Text(
-          'Double Elimination',
-          style: theme.textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.w600,
-            color: theme.colorScheme.secondary,
-          ),
-        ),
+        _buildSectionHeader(theme, 'Double Elimination', theme.colorScheme.secondary),
         const SizedBox(height: 12),
         Wrap(
           spacing: 12,
@@ -255,13 +333,13 @@ class DashboardScreen extends StatelessWidget {
             ),
             _DemoCard(
               icon: Icons.repeat,
-              title: '8 Players',
-              subtitle: 'Standard DE bracket',
+              title: '5 Players',
+              subtitle: 'DE with odd count',
               accentColor: Colors.grey.shade800,
               onTap: () => _navigateToDemoBracketViewer(
                 context,
                 bracketFormat: BracketFormat.doubleElimination,
-                playerCount: 8,
+                playerCount: 5,
               ),
             ),
             _DemoCard(
@@ -275,9 +353,121 @@ class DashboardScreen extends StatelessWidget {
                 playerCount: 6,
               ),
             ),
+            _DemoCard(
+              icon: Icons.repeat,
+              title: '8 Players',
+              subtitle: 'Standard DE bracket',
+              accentColor: Colors.grey.shade800,
+              onTap: () => _navigateToDemoBracketViewer(
+                context,
+                bracketFormat: BracketFormat.doubleElimination,
+                playerCount: 8,
+              ),
+            ),
+            _DemoCard(
+              icon: Icons.repeat,
+              title: '20 Players',
+              subtitle: 'Mid-size DE with BYEs',
+              accentColor: Colors.grey.shade800,
+              onTap: () => _navigateToDemoBracketViewer(
+                context,
+                bracketFormat: BracketFormat.doubleElimination,
+                playerCount: 20,
+              ),
+            ),
+            _DemoCard(
+              icon: Icons.repeat,
+              title: '24 Players',
+              subtitle: 'Large DE non-power-of-2',
+              accentColor: Colors.grey.shade800,
+              onTap: () => _navigateToDemoBracketViewer(
+                context,
+                bracketFormat: BracketFormat.doubleElimination,
+                playerCount: 24,
+              ),
+            ),
+            _DemoCard(
+              icon: Icons.repeat,
+              title: '32 Players',
+              subtitle: 'Full-scale DE draw',
+              accentColor: Colors.grey.shade800,
+              onTap: () => _navigateToDemoBracketViewer(
+                context,
+                bracketFormat: BracketFormat.doubleElimination,
+                playerCount: 32,
+              ),
+            ),
+          ],
+        ),
+
+        // ── No Dojang Separation ──
+        const SizedBox(height: 32),
+        _buildSectionHeader(theme, 'No Dojang Separation', theme.colorScheme.tertiary),
+        const SizedBox(height: 4),
+        Text(
+          'Brackets seeded without dojang-based separation logic.',
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: [
+            _DemoCard(
+              icon: Icons.shuffle,
+              title: 'SE · 8 Players',
+              subtitle: 'Random seed, no separation',
+              accentColor: Colors.grey.shade800,
+              onTap: () => _navigateToDemoBracketViewer(
+                context,
+                bracketFormat: BracketFormat.singleElimination,
+                playerCount: 8,
+                dojangSeparation: false,
+              ),
+            ),
+            _DemoCard(
+              icon: Icons.shuffle,
+              title: 'SE · 32 Players',
+              subtitle: 'Large draw, no separation',
+              accentColor: Colors.grey.shade800,
+              onTap: () => _navigateToDemoBracketViewer(
+                context,
+                bracketFormat: BracketFormat.singleElimination,
+                playerCount: 32,
+                dojangSeparation: false,
+              ),
+            ),
+            _DemoCard(
+              icon: Icons.shuffle,
+              title: 'DE · 8 Players',
+              subtitle: 'DE, no separation',
+              accentColor: Colors.grey.shade800,
+              onTap: () => _navigateToDemoBracketViewer(
+                context,
+                bracketFormat: BracketFormat.doubleElimination,
+                playerCount: 8,
+                dojangSeparation: false,
+              ),
+            ),
           ],
         ),
       ],
+    );
+  }
+
+  Widget _buildSectionHeader(
+    ThemeData theme,
+    String title,
+    Color color,
+  ) {
+    return Text(
+      title,
+      style: theme.textTheme.titleSmall?.copyWith(
+        fontWeight: FontWeight.w600,
+        color: color,
+      ),
     );
   }
 }
