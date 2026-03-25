@@ -89,6 +89,43 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
 
   static const _uuid = Uuid();
 
+  /// Fallback tournament entity used for demo brackets that lack a parent
+  /// [TournamentEntity]. Centralised to avoid scattered duplicate literals.
+  TournamentEntity get _fallbackDemoTournament =>
+      widget.tournament ??
+      TournamentEntity(
+        id: 'demo',
+        name: 'Demo Tournament',
+        createdAt: DateTime(2026),
+      );
+
+  /// Extracts the flat match list and optional bracket IDs from a
+  /// [BracketResult].  Used by both the on-screen viewer and PDF export.
+  ({
+    List<MatchEntity> allMatches,
+    String? winnersBracketId,
+    String? losersBracketId,
+  })
+  _extractBracketDataFromResult(BracketResult result) {
+    final List<MatchEntity> allMatches = switch (result) {
+      SingleEliminationResult(:final data) => data.matches,
+      DoubleEliminationResult(:final data) => data.allMatches,
+    };
+
+    String? winnersBracketId;
+    String? losersBracketId;
+    if (result case DoubleEliminationResult(:final data)) {
+      winnersBracketId = data.winnersBracket.id;
+      losersBracketId = data.losersBracket.id;
+    }
+
+    return (
+      allMatches: allMatches,
+      winnersBracketId: winnersBracketId,
+      losersBracketId: losersBracketId,
+    );
+  }
+
   void _updateExportProgress(double progress, String message) {
     if (!mounted) return;
     setState(() {
@@ -130,31 +167,16 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
         return;
       }
 
-      final List<MatchEntity> allMatches = switch (blocState.result) {
-        SingleEliminationResult(:final data) => data.matches,
-        DoubleEliminationResult(:final data) => data.allMatches,
-      };
-
-      String? winnersBracketId;
-      String? losersBracketId;
-      if (blocState.result case DoubleEliminationResult(:final data)) {
-        winnersBracketId = data.winnersBracket.id;
-        losersBracketId = data.losersBracket.id;
-      }
+      final bracketData = _extractBracketDataFromResult(blocState.result);
 
       final exportPainter = TieSheetPainter(
-        tournament: widget.tournament ??
-            TournamentEntity(
-              id: 'demo',
-              name: 'Demo Tournament',
-              createdAt: DateTime(2026),
-            ),
-        matches: allMatches,
+        tournament: _fallbackDemoTournament,
+        matches: bracketData.allMatches,
         participants: blocState.participants,
         bracketType: widget.bracketFormat.displayLabel,
         includeThirdPlaceMatch: widget.includeThirdPlaceMatch,
-        winnersBracketId: winnersBracketId,
-        losersBracketId: losersBracketId,
+        winnersBracketId: bracketData.winnersBracketId,
+        losersBracketId: bracketData.losersBracketId,
         isEditModeEnabled: false,
         themeConfig: _resolvedThemeConfig,
         // Logo images are loaded inside TieSheetCanvasWidget state and not
@@ -203,9 +225,7 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
       Uint8List? capturedImageBytes;
       try {
         final ui.Image image = await picture.toImage(imageWidth, imageHeight);
-        final byteData = await image.toByteData(
-          format: ui.ImageByteFormat.png,
-        );
+        final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
         if (byteData != null) {
           capturedImageBytes = byteData.buffer.asUint8List();
         }
@@ -225,9 +245,7 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
 
       // Dynamically compute the PDF page format from the bracket canvas
       // dimensions so the entire bracket fits on one page without cropping.
-      final dynamicPageFormat = _computePdfPageFormatFromCanvasSize(
-        canvasSize,
-      );
+      final dynamicPageFormat = _computePdfPageFormatFromCanvasSize(canvasSize);
 
       final doc = pw.Document();
       doc.addPage(
@@ -433,28 +451,15 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
     required bool isReplayInProgress,
     required bool isEditModeEnabled,
   }) {
-    // Gather all matches for the score entry handler.
-    final List<MatchEntity> allMatches = switch (result) {
-      SingleEliminationResult(:final data) => data.matches,
-      DoubleEliminationResult(:final data) => data.allMatches,
-    };
-
-    // Both SE and DE render a single canvas — no tabs.
-    String? winnersBracketId;
-    String? losersBracketId;
-    if (result case DoubleEliminationResult(:final data)) {
-      winnersBracketId = data.winnersBracket.id;
-      losersBracketId = data.losersBracket.id;
-    }
+    final bracketData = _extractBracketDataFromResult(result);
 
     final view = _buildBracketView(
-      allMatches,
+      bracketData.allMatches,
       participants,
-      winnersBracketId: winnersBracketId,
-      losersBracketId: losersBracketId,
+      winnersBracketId: bracketData.winnersBracketId,
+      losersBracketId: bracketData.losersBracketId,
       isEditModeEnabled: isEditModeEnabled,
     );
-
 
     final bool canUndo = historyPointer >= 0 && !isReplayInProgress;
     final bool canRedo =
@@ -587,14 +592,11 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
                 .map(
                   (mode) => ButtonSegment<TieSheetThemeMode>(
                     value: mode,
-                    icon: Icon(
-                      switch (mode) {
-                        TieSheetThemeMode.defaultMode => Icons.visibility,
-                        TieSheetThemeMode.printMode => Icons.print,
-                        TieSheetThemeMode.customMode => Icons.tune,
-                      },
-                      size: 16,
-                    ),
+                    icon: Icon(switch (mode) {
+                      TieSheetThemeMode.defaultMode => Icons.visibility,
+                      TieSheetThemeMode.printMode => Icons.print,
+                      TieSheetThemeMode.customMode => Icons.tune,
+                    }, size: 16),
                     label: Text(
                       mode.label,
                       style: const TextStyle(fontSize: 12),
@@ -620,9 +622,7 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
           // ── Export PDF ──
           TextButton(
             style: actionButtonStyle,
-            onPressed: _isExportingPdf
-                ? null
-                : () => _exportPdf(),
+            onPressed: _isExportingPdf ? null : () => _exportPdf(),
             child: _isExportingPdf
                 ? const SizedBox(
                     width: 16,
@@ -665,7 +665,11 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
                         color: Colors.grey.shade300,
                         child: const Row(
                           children: [
-                            Icon(Icons.edit, size: 16, color: Color(0xFF92400E)),
+                            Icon(
+                              Icons.edit,
+                              size: 16,
+                              color: Color(0xFF92400E),
+                            ),
                             SizedBox(width: 8),
                             Expanded(
                               child: Text(
@@ -763,13 +767,7 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
         child: Padding(
           padding: const EdgeInsets.all(40.0),
           child: TieSheetCanvasWidget(
-            tournament:
-                widget.tournament ??
-                TournamentEntity(
-                  id: 'demo',
-                  name: 'Demo Tournament',
-                  createdAt: DateTime(2026),
-                ),
+            tournament: _fallbackDemoTournament,
             matches: matches,
             participants: participants,
             bracketType: widget.bracketFormat.displayLabel,
@@ -903,19 +901,18 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
         .firstOrNull;
     if (participant == null) return;
 
-    ParticipantEditDialog.show(
-      context: context,
-      participant: participant,
-    ).then((result) {
-      if (result != null && context.mounted) {
-        context.read<BracketBloc>().add(
-          BracketEvent.participantDetailsUpdated(
-            participantId: participant.id,
-            updatedFullName: result.updatedFullName,
-            updatedRegistrationId: result.updatedRegistrationId,
-          ),
-        );
-      }
-    });
+    ParticipantEditDialog.show(context: context, participant: participant).then(
+      (result) {
+        if (result != null && context.mounted) {
+          context.read<BracketBloc>().add(
+            BracketEvent.participantDetailsUpdated(
+              participantId: participant.id,
+              updatedFullName: result.updatedFullName,
+              updatedRegistrationId: result.updatedRegistrationId,
+            ),
+          );
+        }
+      },
+    );
   }
 }
