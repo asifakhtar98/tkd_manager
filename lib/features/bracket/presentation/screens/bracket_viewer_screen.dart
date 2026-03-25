@@ -1,7 +1,7 @@
+import 'dart:math';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:pdf/pdf.dart';
@@ -105,38 +105,117 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
 
   /// Exports the currently visible bracket as a real PDF.
   ///
+  /// Instead of capturing from the render tree (which is subject to WebGL
+  /// `MAX_TEXTURE_SIZE` limits and silently crops large brackets), this method
+  /// creates a fresh [TieSheetPainter] from the current bloc state, renders it
+  /// off-screen via [ui.PictureRecorder] with a scale transform that keeps the
+  /// output image within safe GPU texture bounds, and feeds the resulting PNG
+  /// into the PDF document.
+  ///
   /// Each heavy step is followed by a microtask yield so the event loop can
   /// repaint the progress overlay — critical on web where there is no
   /// background isolate.
   Future<void> _exportPdf() async {
-    _updateExportProgress(0.0, 'Capturing bracket image…');
+    // Read bloc state synchronously before any awaits to avoid using
+    // BuildContext across async gaps.
+    final blocState = context.read<BracketBloc>().state;
+
+    _updateExportProgress(0.0, 'Preparing bracket for export…');
     await Future<void>.delayed(Duration.zero);
 
     try {
-      // ── Step 1: Capture bracket image (main thread, needs render tree) ──
-      Uint8List? capturedImageBytes;
-      try {
-        final boundary =
-            _printKey.currentContext?.findRenderObject()
-                as RenderRepaintBoundary?;
-        if (boundary != null) {
-          final ui.Image image = await boundary.toImage(pixelRatio: 2.0);
-          _updateExportProgress(0.15, 'Converting image…');
-          await Future<void>.delayed(Duration.zero);
-
-          final byteData = await image.toByteData(
-            format: ui.ImageByteFormat.png,
-          );
-          if (byteData != null) {
-            capturedImageBytes = byteData.buffer.asUint8List();
-          }
-        }
-      } catch (_) {
-        // Capture failed — fall back to text-only export.
+      // ── Step 1: Build a TieSheetPainter from current bloc state ──
+      if (blocState is! BracketLoadSuccess) {
+        _updateExportProgress(1.0, 'No bracket data available.');
+        return;
       }
 
-      // ── Step 2: Build PDF page layout ──
-      _updateExportProgress(0.35, 'Building PDF layout…');
+      final List<MatchEntity> allMatches = switch (blocState.result) {
+        SingleEliminationResult(:final data) => data.matches,
+        DoubleEliminationResult(:final data) => data.allMatches,
+      };
+
+      String? winnersBracketId;
+      String? losersBracketId;
+      if (blocState.result case DoubleEliminationResult(:final data)) {
+        winnersBracketId = data.winnersBracket.id;
+        losersBracketId = data.losersBracket.id;
+      }
+
+      final exportPainter = TieSheetPainter(
+        tournament: widget.tournament ??
+            TournamentEntity(
+              id: 'demo',
+              name: 'Demo Tournament',
+              createdAt: DateTime(2026),
+            ),
+        matches: allMatches,
+        participants: blocState.participants,
+        bracketType: widget.bracketFormat.displayLabel,
+        includeThirdPlaceMatch: widget.includeThirdPlaceMatch,
+        winnersBracketId: winnersBracketId,
+        losersBracketId: losersBracketId,
+        isEditModeEnabled: false,
+        themeConfig: _resolvedThemeConfig,
+        // Logo images are loaded inside TieSheetCanvasWidget state and not
+        // accessible here. They are omitted from the PDF export — a minor
+        // cosmetic tradeoff for guaranteed full-bracket capture.
+      );
+
+      final Size canvasSize = exportPainter.calculateCanvasSize();
+
+      _updateExportProgress(0.15, 'Rendering bracket image…');
+      await Future<void>.delayed(Duration.zero);
+
+      // ── Step 2: Render the painter off-screen via PictureRecorder ──
+      //
+      // WebGL's MAX_TEXTURE_SIZE (often 4096) limits the pixel dimensions of
+      // any single GPU texture.  For large brackets the canvas can easily
+      // exceed this, causing `toImage` to silently clip.  We apply a scale
+      // transform so the rasterised image always fits within a safe bound.
+      const double safeMaxTextureDimension = 4000.0;
+      final double scaleFactor = min(
+        1.0,
+        min(
+          safeMaxTextureDimension / canvasSize.width,
+          safeMaxTextureDimension / canvasSize.height,
+        ),
+      );
+
+      final int imageWidth = (canvasSize.width * scaleFactor).ceil();
+      final int imageHeight = (canvasSize.height * scaleFactor).ceil();
+
+      final recorder = ui.PictureRecorder();
+      final recordingCanvas = Canvas(
+        recorder,
+        Rect.fromLTWH(0, 0, imageWidth.toDouble(), imageHeight.toDouble()),
+      );
+
+      // Scale the canvas so the full bracket paints inside [imageWidth × imageHeight].
+      recordingCanvas.scale(scaleFactor);
+      exportPainter.paint(recordingCanvas, canvasSize);
+
+      final ui.Picture picture = recorder.endRecording();
+
+      _updateExportProgress(0.35, 'Converting to image…');
+      await Future<void>.delayed(Duration.zero);
+
+      Uint8List? capturedImageBytes;
+      try {
+        final ui.Image image = await picture.toImage(imageWidth, imageHeight);
+        final byteData = await image.toByteData(
+          format: ui.ImageByteFormat.png,
+        );
+        if (byteData != null) {
+          capturedImageBytes = byteData.buffer.asUint8List();
+        }
+        image.dispose();
+      } finally {
+        picture.dispose();
+      }
+
+      // ── Step 3: Build PDF page layout ──
+      _updateExportProgress(0.55, 'Building PDF layout…');
       await Future<void>.delayed(Duration.zero);
 
       pw.ImageProvider? bracketImage;
@@ -144,10 +223,16 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
         bracketImage = pw.MemoryImage(capturedImageBytes);
       }
 
+      // Dynamically compute the PDF page format from the bracket canvas
+      // dimensions so the entire bracket fits on one page without cropping.
+      final dynamicPageFormat = _computePdfPageFormatFromCanvasSize(
+        canvasSize,
+      );
+
       final doc = pw.Document();
       doc.addPage(
         pw.Page(
-          pageFormat: PdfPageFormat.a4.landscape,
+          pageFormat: dynamicPageFormat,
           margin: const pw.EdgeInsets.all(24),
           build: (pw.Context ctx) {
             if (bracketImage != null) {
@@ -166,14 +251,14 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
         ),
       );
 
-      // ── Step 3: Serialize PDF to bytes ──
-      _updateExportProgress(0.6, 'Generating PDF bytes…');
+      // ── Step 4: Serialize PDF to bytes ──
+      _updateExportProgress(0.75, 'Generating PDF bytes…');
       await Future<void>.delayed(Duration.zero);
 
       final pdfBytes = await doc.save();
 
-      // ── Step 4: Show native print / share dialog ──
-      _updateExportProgress(0.85, 'Opening print dialog…');
+      // ── Step 5: Show native print / share dialog ──
+      _updateExportProgress(0.9, 'Opening print dialog…');
       await Future<void>.delayed(Duration.zero);
 
       await Printing.layoutPdf(
@@ -187,6 +272,23 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
         });
       }
     }
+  }
+
+  /// Computes a [PdfPageFormat] that fits the full bracket canvas on a single
+  /// page while maintaining its aspect ratio.
+  ///
+  /// The page dimensions are set to match the canvas logical pixel dimensions
+  /// 1:1 as PDF points. When physically printing, the printer's "fit to page"
+  /// option will scale down to the paper being used. Falls back to A4
+  /// landscape if the canvas size is unavailable.
+  PdfPageFormat _computePdfPageFormatFromCanvasSize(Size canvasSize) {
+    if (canvasSize == Size.zero ||
+        canvasSize.width <= 0 ||
+        canvasSize.height <= 0) {
+      return PdfPageFormat.a4.landscape;
+    }
+
+    return PdfPageFormat(canvasSize.width, canvasSize.height);
   }
 
   @override

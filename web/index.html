@@ -33,6 +33,15 @@
   <link rel="manifest" href="manifest.json">
 </head>
 <body>
-  <script src="flutter_bootstrap.js" async></script>
+  <script>
+    {{flutter_js}}
+    {{flutter_build_config}}
+
+    _flutter.loader.load({
+      config: {
+        renderer: "skwasm",
+      },
+    });
+  </script>
 </body>
 </html>
