@@ -120,14 +120,11 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
                 _buildStrokeWidthsSection(context),
                 _buildSpacingSection(context),
                 _buildBadgePillSizingSection(context),
-                _buildDashedLinesSection(context),
                 _buildShadowsSection(context),
                 _buildTypographySection(context),
-                _buildInteractivitySection(context),
                 _buildLayoutDimensionsSection(context),
                 _buildBannerAndLogoSection(context),
                 _buildAdditionalColorsAndOpacitySection(context),
-                _buildCanvasConstraintsSection(context),
                 const SizedBox(height: 24),
               ],
             ),
@@ -230,9 +227,9 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
         _buildColorPickerTile(
           context,
           label: 'Card Border',
-          currentColor: currentThemeConfig.cardBorderColor,
+          currentColor: currentThemeConfig.borderColor,
           onColorSelected: (color) => onThemeConfigChanged(
-            currentThemeConfig.copyWith(cardBorderColor: color),
+            currentThemeConfig.copyWith(borderColor: color),
           ),
         ),
         _buildColorPickerTile(
@@ -273,9 +270,9 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
         _buildColorPickerTile(
           context,
           label: 'Connector',
-          currentColor: currentThemeConfig.connectorColor,
+          currentColor: currentThemeConfig.mutedColor,
           onColorSelected: (color) => onThemeConfigChanged(
-            currentThemeConfig.copyWith(connectorColor: color),
+            currentThemeConfig.copyWith(mutedColor: color),
           ),
         ),
         _buildColorPickerTile(
@@ -288,10 +285,10 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
         ),
         _buildColorPickerTile(
           context,
-          label: 'Pending',
-          currentColor: currentThemeConfig.pendingColor,
+          label: 'Border',
+          currentColor: currentThemeConfig.borderColor,
           onColorSelected: (color) => onThemeConfigChanged(
-            currentThemeConfig.copyWith(pendingColor: color),
+            currentThemeConfig.copyWith(borderColor: color),
           ),
         ),
         _buildColorPickerTile(
@@ -536,33 +533,13 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
       icon: Icons.rounded_corner,
       children: [
         _SliderTile(
-          label: 'Card Border Radius',
-          value: currentThemeConfig.cardBorderRadius,
+          label: 'Element Border Radius',
+          value: currentThemeConfig.elementBorderRadius,
           min: 0,
           max: 24,
           divisions: 48,
           onChanged: (value) => onThemeConfigChanged(
-            currentThemeConfig.copyWith(cardBorderRadius: value),
-          ),
-        ),
-        _SliderTile(
-          label: 'Section Label Radius',
-          value: currentThemeConfig.sectionLabelBorderRadius,
-          min: 0,
-          max: 24,
-          divisions: 48,
-          onChanged: (value) => onThemeConfigChanged(
-            currentThemeConfig.copyWith(sectionLabelBorderRadius: value),
-          ),
-        ),
-        _SliderTile(
-          label: 'Header Banner Radius',
-          value: currentThemeConfig.headerBannerBorderRadius,
-          min: 0,
-          max: 24,
-          divisions: 48,
-          onChanged: (value) => onThemeConfigChanged(
-            currentThemeConfig.copyWith(headerBannerBorderRadius: value),
+            currentThemeConfig.copyWith(elementBorderRadius: value),
           ),
         ),
         _SliderTile(
@@ -587,23 +564,23 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
       icon: Icons.line_weight,
       children: [
         _SliderTile(
-          label: 'Thick Stroke',
-          value: currentThemeConfig.thickStrokeWidth,
+          label: 'Border Stroke',
+          value: currentThemeConfig.borderStrokeWidth,
           min: 0.5,
           max: 10,
           divisions: 19,
           onChanged: (value) => onThemeConfigChanged(
-            currentThemeConfig.copyWith(thickStrokeWidth: value),
+            currentThemeConfig.copyWith(borderStrokeWidth: value),
           ),
         ),
         _SliderTile(
-          label: 'Thin Stroke',
-          value: currentThemeConfig.thinStrokeWidth,
+          label: 'Subtle Stroke',
+          value: currentThemeConfig.subtleStrokeWidth,
           min: 0.5,
           max: 10,
           divisions: 19,
           onChanged: (value) => onThemeConfigChanged(
-            currentThemeConfig.copyWith(thinStrokeWidth: value),
+            currentThemeConfig.copyWith(subtleStrokeWidth: value),
           ),
         ),
         _SliderTile(
@@ -617,16 +594,6 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
           ),
         ),
         _SliderTile(
-          label: 'BYE Connector Stroke',
-          value: currentThemeConfig.byeConnectorStrokeWidth,
-          min: 0.5,
-          max: 10,
-          divisions: 19,
-          onChanged: (value) => onThemeConfigChanged(
-            currentThemeConfig.copyWith(byeConnectorStrokeWidth: value),
-          ),
-        ),
-        _SliderTile(
           label: 'Uniform Connector Override',
           value: currentThemeConfig.connectorStrokeWidth,
           min: 0,
@@ -634,6 +601,27 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
           divisions: 20,
           onChanged: (value) => onThemeConfigChanged(
             currentThemeConfig.copyWith(connectorStrokeWidth: value),
+          ),
+        ),
+        const _SectionSubHeader(label: 'Dashed Lines'),
+        _SliderTile(
+          label: 'Dash Width',
+          value: currentThemeConfig.dashedLineDashWidth,
+          min: 1,
+          max: 20,
+          divisions: 38,
+          onChanged: (value) => onThemeConfigChanged(
+            currentThemeConfig.copyWith(dashedLineDashWidth: value),
+          ),
+        ),
+        _SliderTile(
+          label: 'Gap Width',
+          value: currentThemeConfig.dashedLineGapWidth,
+          min: 1,
+          max: 20,
+          divisions: 38,
+          onChanged: (value) => onThemeConfigChanged(
+            currentThemeConfig.copyWith(dashedLineGapWidth: value),
           ),
         ),
       ],
@@ -678,13 +666,13 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
           ),
         ),
         _SliderTile(
-          label: 'Logo Row Height',
-          value: currentThemeConfig.logoRowHeight,
+          label: 'Logo Padding',
+          value: currentThemeConfig.logoPadding,
           min: 0,
-          max: 120,
-          divisions: 60,
+          max: 32,
+          divisions: 32,
           onChanged: (value) => onThemeConfigChanged(
-            currentThemeConfig.copyWith(logoRowHeight: value),
+            currentThemeConfig.copyWith(logoPadding: value),
           ),
         ),
       ],
@@ -762,36 +750,6 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
     );
   }
 
-  // ── Dashed Lines ──────────────────────────────────────────────────────────
-
-  Widget _buildDashedLinesSection(BuildContext context) {
-    return _ThemeEditorExpansionSection(
-      title: 'Dashed Lines',
-      icon: Icons.more_horiz,
-      children: [
-        _SliderTile(
-          label: 'Dash Width',
-          value: currentThemeConfig.dashedLineDashWidth,
-          min: 1,
-          max: 20,
-          divisions: 38,
-          onChanged: (value) => onThemeConfigChanged(
-            currentThemeConfig.copyWith(dashedLineDashWidth: value),
-          ),
-        ),
-        _SliderTile(
-          label: 'Gap Width',
-          value: currentThemeConfig.dashedLineGapWidth,
-          min: 1,
-          max: 20,
-          divisions: 38,
-          onChanged: (value) => onThemeConfigChanged(
-            currentThemeConfig.copyWith(dashedLineGapWidth: value),
-          ),
-        ),
-      ],
-    );
-  }
 
   // ── Shadows ───────────────────────────────────────────────────────────────
 
@@ -826,6 +784,26 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
           currentColor: currentThemeConfig.shadowColor,
           onColorSelected: (color) => onThemeConfigChanged(
             currentThemeConfig.copyWith(shadowColor: color),
+          ),
+        ),
+        _SliderTile(
+          label: 'Offset X',
+          value: currentThemeConfig.shadowOffsetX,
+          min: 0,
+          max: 8,
+          divisions: 16,
+          onChanged: (value) => onThemeConfigChanged(
+            currentThemeConfig.copyWith(shadowOffsetX: value),
+          ),
+        ),
+        _SliderTile(
+          label: 'Offset Y',
+          value: currentThemeConfig.shadowOffsetY,
+          min: 0,
+          max: 8,
+          divisions: 16,
+          onChanged: (value) => onThemeConfigChanged(
+            currentThemeConfig.copyWith(shadowOffsetY: value),
           ),
         ),
       ],
@@ -869,23 +847,6 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
     );
   }
 
-  // ── Interactivity ─────────────────────────────────────────────────────────
-
-  Widget _buildInteractivitySection(BuildContext context) {
-    return _ThemeEditorExpansionSection(
-      title: 'Interactivity',
-      icon: Icons.touch_app_outlined,
-      children: [
-        _ToggleSwitchTile(
-          label: 'Disable Interactivity',
-          value: currentThemeConfig.isInteractivityDisabled,
-          onChanged: (value) => onThemeConfigChanged(
-            currentThemeConfig.copyWith(isInteractivityDisabled: value),
-          ),
-        ),
-      ],
-    );
-  }
 
   // ── Layout Dimensions ──────────────────────────────────────────────────────
 
@@ -1055,6 +1016,56 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
             currentThemeConfig.copyWith(medalRowGap: value),
           ),
         ),
+        const _SectionSubHeader(label: 'Junction Geometry'),
+        _SliderTile(
+          label: 'Center Final Min Span',
+          value: currentThemeConfig.centerFinalMinimumSpan,
+          min: 20,
+          max: 200,
+          divisions: 36,
+          onChanged: (value) => onThemeConfigChanged(
+            currentThemeConfig.copyWith(centerFinalMinimumSpan: value),
+          ),
+        ),
+        _SliderTile(
+          label: 'Grand Final Arm Length',
+          value: currentThemeConfig.grandFinalOutputArmLength,
+          min: 10,
+          max: 100,
+          divisions: 18,
+          onChanged: (value) => onThemeConfigChanged(
+            currentThemeConfig.copyWith(grandFinalOutputArmLength: value),
+          ),
+        ),
+        const _SectionSubHeader(label: 'Canvas Constraints'),
+        _SliderTile(
+          label: 'Canvas Min Width',
+          value: currentThemeConfig.canvasMinimumWidth,
+          min: 400,
+          max: 2000,
+          divisions: 32,
+          onChanged: (value) => onThemeConfigChanged(
+            currentThemeConfig.copyWith(canvasMinimumWidth: value),
+          ),
+        ),
+        _SliderTile(
+          label: 'Canvas Min Height',
+          value: currentThemeConfig.canvasMinimumHeight,
+          min: 300,
+          max: 1500,
+          divisions: 24,
+          onChanged: (value) => onThemeConfigChanged(
+            currentThemeConfig.copyWith(canvasMinimumHeight: value),
+          ),
+        ),
+        const _SectionSubHeader(label: 'Behaviour'),
+        _ToggleSwitchTile(
+          label: 'Disable Interactivity',
+          value: currentThemeConfig.isInteractivityDisabled,
+          onChanged: (value) => onThemeConfigChanged(
+            currentThemeConfig.copyWith(isInteractivityDisabled: value),
+          ),
+        ),
       ],
     );
   }
@@ -1134,54 +1145,23 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
           ),
         ),
         _SliderTile(
-          label: 'Header Subtitle Opacity',
-          value: currentThemeConfig.headerSubtitleOpacity,
+          label: 'Header Secondary Text',
+          value: currentThemeConfig.headerSecondaryTextOpacity,
           min: 0,
           max: 1,
           divisions: 20,
           onChanged: (value) => onThemeConfigChanged(
-            currentThemeConfig.copyWith(headerSubtitleOpacity: value),
+            currentThemeConfig.copyWith(headerSecondaryTextOpacity: value),
           ),
         ),
         _SliderTile(
-          label: 'Header Organizer Opacity',
-          value: currentThemeConfig.headerOrganizerOpacity,
+          label: 'Badge Outline Opacity',
+          value: currentThemeConfig.badgeOutlineOpacity,
           min: 0,
           max: 1,
           divisions: 20,
           onChanged: (value) => onThemeConfigChanged(
-            currentThemeConfig.copyWith(headerOrganizerOpacity: value),
-          ),
-        ),
-      ],
-    );
-  }
-
-  // ── Canvas Constraints ────────────────────────────────────────────────────
-
-  Widget _buildCanvasConstraintsSection(BuildContext context) {
-    return _ThemeEditorExpansionSection(
-      title: 'Canvas Constraints',
-      icon: Icons.crop_outlined,
-      children: [
-        _SliderTile(
-          label: 'Canvas Min Width',
-          value: currentThemeConfig.canvasMinimumWidth,
-          min: 400,
-          max: 2000,
-          divisions: 32,
-          onChanged: (value) => onThemeConfigChanged(
-            currentThemeConfig.copyWith(canvasMinimumWidth: value),
-          ),
-        ),
-        _SliderTile(
-          label: 'Canvas Min Height',
-          value: currentThemeConfig.canvasMinimumHeight,
-          min: 300,
-          max: 1500,
-          divisions: 24,
-          onChanged: (value) => onThemeConfigChanged(
-            currentThemeConfig.copyWith(canvasMinimumHeight: value),
+            currentThemeConfig.copyWith(badgeOutlineOpacity: value),
           ),
         ),
       ],

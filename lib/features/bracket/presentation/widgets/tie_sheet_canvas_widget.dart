@@ -464,7 +464,7 @@ class TieSheetPainter extends CustomPainter {
   bool get _isUniformStroke => themeConfig.connectorStrokeWidth > 0;
 
   Paint _getThinPen(Color color, {double? w}) {
-    final effectiveWidth = w ?? themeConfig.thinStrokeWidth;
+    final effectiveWidth = w ?? themeConfig.borderStrokeWidth;
     if (_isUniformStroke) {
       return _Pens.thick(color, w: themeConfig.connectorStrokeWidth);
     }
@@ -473,7 +473,7 @@ class TieSheetPainter extends CustomPainter {
 
   /// Pending / unresolved connector pen. In uniform-stroke mode, width is
   /// overridden to [TieSheetThemeConfig.connectorStrokeWidth].
-  Paint get _pendingConnectorPen => _getThinPen(themeConfig.pendingColor);
+  Paint get _pendingConnectorPen => _getThinPen(themeConfig.borderColor);
 
   /// Won / resolved connector pen. In uniform-stroke mode, width is
   /// overridden to [TieSheetThemeConfig.connectorStrokeWidth].
@@ -490,11 +490,11 @@ class TieSheetPainter extends CustomPainter {
   /// BYE advancement dashed-line pen.
   Paint get _byeConnectorPen => _getThinPen(
     themeConfig.mutedColor,
-    w: themeConfig.byeConnectorStrokeWidth,
+    w: themeConfig.subtleStrokeWidth,
   );
 
   /// Generic connector pen (vertical trunk between arms).
-  Paint get _genericConnectorPen => _getThinPen(themeConfig.connectorColor);
+  Paint get _genericConnectorPen => _getThinPen(themeConfig.mutedColor);
 
   // ── 3b  Data helpers ───────────────────────────────────────────────────────
 
@@ -666,12 +666,12 @@ class TieSheetPainter extends CustomPainter {
 
     final thickPen = _isUniformStroke
         ? _Pens.thick(
-            themeConfig.cardBorderColor,
+            themeConfig.borderColor,
             w: themeConfig.connectorStrokeWidth,
           )
         : _Pens.thick(
-            themeConfig.cardBorderColor,
-            w: themeConfig.thickStrokeWidth,
+            themeConfig.borderColor,
+            w: themeConfig.borderStrokeWidth,
           );
 
     if (_isDouble) {
@@ -1038,7 +1038,7 @@ class TieSheetPainter extends CustomPainter {
       y,
       x + width,
       y + sectionLabelH,
-      Radius.circular(themeConfig.sectionLabelBorderRadius),
+      Radius.circular(themeConfig.elementBorderRadius),
     );
     canvas.drawRRect(
       rect,
@@ -1046,7 +1046,7 @@ class TieSheetPainter extends CustomPainter {
         color.withValues(alpha: themeConfig.sectionLabelBackgroundOpacity),
       ),
     );
-    canvas.drawRRect(rect, _getThinPen(color, w: 1.5));
+    canvas.drawRRect(rect, _getThinPen(color, w: themeConfig.subtleStrokeWidth));
     _drawText(
       canvas,
       label,
@@ -1100,7 +1100,7 @@ class TieSheetPainter extends CustomPainter {
 
     canvas.drawLine(
       Offset(x, midY),
-      Offset(x + 40, midY),
+      Offset(x + themeConfig.grandFinalOutputArmLength, midY),
       match.winnerId != null ? winnerPen : pendingPen,
     );
 
@@ -1150,7 +1150,7 @@ class TieSheetPainter extends CustomPainter {
     if (topIn == null || botIn == null) return;
 
     final rawMidY = (topIn.dy + botIn.dy) / 2;
-    const minSpan = 60.0;
+    final minSpan = themeConfig.centerFinalMinimumSpan;
     final actualSpan = (botIn.dy - topIn.dy).abs();
     final halfSpan = max(actualSpan, minSpan) / 2;
     final topArmY = rawMidY - halfSpan;
@@ -1251,13 +1251,13 @@ class TieSheetPainter extends CustomPainter {
       y,
       size.width - margin,
       y + bannerH,
-      Radius.circular(themeConfig.headerBannerBorderRadius),
+      Radius.circular(themeConfig.elementBorderRadius),
     );
     canvas.drawRRect(
       bannerRect,
       _Pens.fill(themeConfig.headerBannerBackgroundColor),
     );
-    canvas.drawRRect(bannerRect, _getThinPen(themeConfig.cardBorderColor));
+    canvas.drawRRect(bannerRect, _getThinPen(themeConfig.borderColor));
 
     final title =
         (tournament.name.isNotEmpty ? tournament.name : 'TOURNAMENT NAME')
@@ -1289,7 +1289,7 @@ class TieSheetPainter extends CustomPainter {
         y + 30 + _delta * 1.0,
         TextStyle(
           color: themeConfig.headerBannerTextColor.withValues(
-            alpha: themeConfig.headerSubtitleOpacity,
+            alpha: themeConfig.headerSecondaryTextOpacity,
           ),
           fontSize: _fontSize(11),
           fontWeight: themeConfig.isTextForceBold
@@ -1309,7 +1309,7 @@ class TieSheetPainter extends CustomPainter {
         y + 46 + _delta * 1.5,
         TextStyle(
           color: themeConfig.headerBannerTextColor.withValues(
-            alpha: themeConfig.headerOrganizerOpacity,
+            alpha: themeConfig.headerSecondaryTextOpacity,
           ),
           fontSize: _fontSize(10),
           fontWeight: themeConfig.isTextForceBold
@@ -1332,10 +1332,10 @@ class TieSheetPainter extends CustomPainter {
       infoRowTop,
       infoRight,
       infoRowBottom,
-      Radius.circular(themeConfig.cardBorderRadius),
+      Radius.circular(themeConfig.elementBorderRadius),
     );
     canvas.drawRRect(infoRect, _Pens.fill(themeConfig.headerFillColor));
-    canvas.drawRRect(infoRect, _getThinPen(themeConfig.cardBorderColor));
+    canvas.drawRRect(infoRect, _getThinPen(themeConfig.borderColor));
 
     final ageCategory = tournament.ageCategoryLabel.isNotEmpty
         ? tournament.ageCategoryLabel.toUpperCase()
@@ -1357,17 +1357,17 @@ class TieSheetPainter extends CustomPainter {
     canvas.drawLine(
       Offset(infoLeft + infoColNoW, infoRowTop + 3),
       Offset(infoLeft + infoColNoW, infoRowBottom - 3),
-      _getThinPen(themeConfig.cardBorderColor),
+      _getThinPen(themeConfig.borderColor),
     );
     canvas.drawLine(
       Offset(infoLeft + infoColNoW + infoColW, infoRowTop + 3),
       Offset(infoLeft + infoColNoW + infoColW, infoRowBottom - 3),
-      _getThinPen(themeConfig.cardBorderColor),
+      _getThinPen(themeConfig.borderColor),
     );
     canvas.drawLine(
       Offset(infoLeft + infoColNoW + infoColW * 2, infoRowTop + 3),
       Offset(infoLeft + infoColNoW + infoColW * 2, infoRowBottom - 3),
-      _getThinPen(themeConfig.cardBorderColor),
+      _getThinPen(themeConfig.borderColor),
     );
 
     // Column text
@@ -1451,14 +1451,14 @@ class TieSheetPainter extends CustomPainter {
         y + 1,
         right,
         y + rowH - 1,
-        Radius.circular(themeConfig.cardBorderRadius),
+        Radius.circular(themeConfig.elementBorderRadius),
       );
       canvas.drawRRect(
-        cardRect.shift(const Offset(1, 2)),
-        _themedShadow(blur: 4),
+        cardRect.shift(Offset(themeConfig.shadowOffsetX, themeConfig.shadowOffsetY)),
+        _themedShadow(),
       );
       canvas.drawRRect(cardRect, _Pens.fill(themeConfig.rowFillColor));
-      canvas.drawRRect(cardRect, _getThinPen(themeConfig.cardBorderColor));
+      canvas.drawRRect(cardRect, _getThinPen(themeConfig.borderColor));
 
       // ── Blue accent strip on left edge ──
       final accentRect = RRect.fromLTRBAndCorners(
@@ -1466,8 +1466,8 @@ class TieSheetPainter extends CustomPainter {
         y + 1,
         x + themeConfig.accentStripWidth,
         y + rowH - 1,
-        topLeft: Radius.circular(themeConfig.cardBorderRadius),
-        bottomLeft: Radius.circular(themeConfig.cardBorderRadius),
+        topLeft: Radius.circular(themeConfig.elementBorderRadius),
+        bottomLeft: Radius.circular(themeConfig.elementBorderRadius),
       );
       canvas.drawRRect(
         accentRect,
@@ -1478,12 +1478,12 @@ class TieSheetPainter extends CustomPainter {
       canvas.drawLine(
         Offset(x + noColW, y + 4),
         Offset(x + noColW, y + rowH - 4),
-        _getThinPen(themeConfig.cardBorderColor),
+        _getThinPen(themeConfig.borderColor),
       );
       canvas.drawLine(
         Offset(x + noColW + nameColW, y + 4),
         Offset(x + noColW + nameColW, y + rowH - 4),
-        _getThinPen(themeConfig.cardBorderColor),
+        _getThinPen(themeConfig.borderColor),
       );
 
       // ── Text ──
@@ -1514,14 +1514,14 @@ class TieSheetPainter extends CustomPainter {
         y + 1,
         right,
         y + rowH - 1,
-        Radius.circular(themeConfig.cardBorderRadius),
+        Radius.circular(themeConfig.elementBorderRadius),
       );
       canvas.drawRRect(
-        cardRect.shift(const Offset(-1, 2)),
-        _themedShadow(blur: 4),
+        cardRect.shift(Offset(-themeConfig.shadowOffsetX, themeConfig.shadowOffsetY)),
+        _themedShadow(),
       );
       canvas.drawRRect(cardRect, _Pens.fill(themeConfig.rowFillColor));
-      canvas.drawRRect(cardRect, _getThinPen(themeConfig.cardBorderColor));
+      canvas.drawRRect(cardRect, _getThinPen(themeConfig.borderColor));
 
       // ── Blue accent strip on right edge ──
       final accentRect = RRect.fromLTRBAndCorners(
@@ -1529,8 +1529,8 @@ class TieSheetPainter extends CustomPainter {
         y + 1,
         right,
         y + rowH - 1,
-        topRight: Radius.circular(themeConfig.cardBorderRadius),
-        bottomRight: Radius.circular(themeConfig.cardBorderRadius),
+        topRight: Radius.circular(themeConfig.elementBorderRadius),
+        bottomRight: Radius.circular(themeConfig.elementBorderRadius),
       );
       canvas.drawRRect(
         accentRect,
@@ -1541,12 +1541,12 @@ class TieSheetPainter extends CustomPainter {
       canvas.drawLine(
         Offset(x + regIdColW, y + 4),
         Offset(x + regIdColW, y + rowH - 4),
-        _getThinPen(themeConfig.cardBorderColor),
+        _getThinPen(themeConfig.borderColor),
       );
       canvas.drawLine(
         Offset(x + regIdColW + nameColW, y + 4),
         Offset(x + regIdColW + nameColW, y + rowH - 4),
-        _getThinPen(themeConfig.cardBorderColor),
+        _getThinPen(themeConfig.borderColor),
       );
 
       // ── Text ──
@@ -1582,10 +1582,10 @@ class TieSheetPainter extends CustomPainter {
       y + 1,
       right,
       y + rowH - 1,
-      Radius.circular(themeConfig.cardBorderRadius),
+      Radius.circular(themeConfig.elementBorderRadius),
     );
     canvas.drawRRect(cardRect, _Pens.fill(themeConfig.tbdFillColor));
-    canvas.drawRRect(cardRect, _getThinPen(themeConfig.pendingColor));
+    canvas.drawRRect(cardRect, _getThinPen(themeConfig.borderColor));
 
     // ── Gray accent strip ──
     final accentRect = RRect.fromLTRBAndCorners(
@@ -1593,13 +1593,13 @@ class TieSheetPainter extends CustomPainter {
       y + 1,
       x + themeConfig.accentStripWidth,
       y + rowH - 1,
-      topLeft: Radius.circular(themeConfig.cardBorderRadius),
-      bottomLeft: Radius.circular(themeConfig.cardBorderRadius),
+      topLeft: Radius.circular(themeConfig.elementBorderRadius),
+      bottomLeft: Radius.circular(themeConfig.elementBorderRadius),
     );
     canvas.drawRRect(accentRect, _Pens.fill(themeConfig.mutedColor));
 
     // ── Vertical dividers ──
-    final dividerPen = _getThinPen(themeConfig.pendingColor);
+    final dividerPen = _getThinPen(themeConfig.borderColor);
     canvas.drawLine(
       Offset(x + noColW, y + 4),
       Offset(x + noColW, y + rowH - 4),
@@ -2067,11 +2067,11 @@ class TieSheetPainter extends CustomPainter {
         rY,
         x + _medalTableW,
         rY + _medalRowH,
-        Radius.circular(themeConfig.cardBorderRadius),
+        Radius.circular(themeConfig.elementBorderRadius),
       );
       canvas.drawRRect(
-        fullRect.shift(const Offset(1, 2)),
-        _themedShadow(blur: 3),
+        fullRect.shift(Offset(themeConfig.shadowOffsetX, themeConfig.shadowOffsetY)),
+        _themedShadow(),
       );
 
       // Name area
@@ -2080,8 +2080,8 @@ class TieSheetPainter extends CustomPainter {
         rY,
         x + _medalBlankW + _medalNameW,
         rY + _medalRowH,
-        topLeft: Radius.circular(themeConfig.cardBorderRadius),
-        bottomLeft: Radius.circular(themeConfig.cardBorderRadius),
+        topLeft: Radius.circular(themeConfig.elementBorderRadius),
+        bottomLeft: Radius.circular(themeConfig.elementBorderRadius),
       );
       canvas.drawRRect(nameRect, _Pens.fill(themeConfig.rowFillColor));
 
@@ -2091,17 +2091,17 @@ class TieSheetPainter extends CustomPainter {
         rY,
         x + _medalTableW,
         rY + _medalRowH,
-        topRight: Radius.circular(themeConfig.cardBorderRadius),
-        bottomRight: Radius.circular(themeConfig.cardBorderRadius),
+        topRight: Radius.circular(themeConfig.elementBorderRadius),
+        bottomRight: Radius.circular(themeConfig.elementBorderRadius),
       );
       canvas.drawRRect(labelRect, fills[row]);
 
       // Border
-      canvas.drawRRect(fullRect, _getThinPen(themeConfig.cardBorderColor));
+      canvas.drawRRect(fullRect, _getThinPen(themeConfig.borderColor));
       canvas.drawLine(
         Offset(x + _medalBlankW + _medalNameW, rY),
         Offset(x + _medalBlankW + _medalNameW, rY + _medalRowH),
-        _getThinPen(themeConfig.cardBorderColor),
+        _getThinPen(themeConfig.borderColor),
       );
 
       // ── Accent strip ──
@@ -2110,8 +2110,8 @@ class TieSheetPainter extends CustomPainter {
         rY,
         x + _medalBlankW + themeConfig.accentStripWidth,
         rY + _medalRowH,
-        topLeft: Radius.circular(themeConfig.cardBorderRadius),
-        bottomLeft: Radius.circular(themeConfig.cardBorderRadius),
+        topLeft: Radius.circular(themeConfig.elementBorderRadius),
+        bottomLeft: Radius.circular(themeConfig.elementBorderRadius),
       );
       canvas.drawRRect(accentRect, _Pens.fill(accentColors[row]));
     }
@@ -2296,7 +2296,7 @@ class TieSheetPainter extends CustomPainter {
     canvas.drawCircle(
       Offset(cx, cy),
       radius,
-      _getThinPen(color.withValues(alpha: 0.3)),
+      _getThinPen(color.withValues(alpha: themeConfig.badgeOutlineOpacity)),
     );
 
     tp.paint(canvas, Offset(cx - tp.width / 2, cy - tp.height / 2));
@@ -2333,8 +2333,8 @@ class TieSheetPainter extends CustomPainter {
       Radius.circular(halfHeight),
     );
     canvas.drawRRect(
-      pillRect.shift(const Offset(0.5, 1)),
-      _themedShadow(blur: 2),
+      pillRect.shift(Offset(themeConfig.shadowOffsetX * 0.5, themeConfig.shadowOffsetY * 0.5)),
+      _themedShadow(),
     );
     canvas.drawRRect(pillRect, _Pens.fill(themeConfig.matchPillFillColor));
     canvas.drawRRect(pillRect, _genericConnectorPen);

@@ -21,25 +21,22 @@ void main() {
       const config = TieSheetThemeConfig.defaultMode();
 
       // ── Connector / junction tokens ──
-      test('connectorColor matches original slate', () {
-        expect(config.connectorColor, const Color(0xFF64748B));
+      test('mutedColor matches original slate', () {
+        expect(config.mutedColor, const Color(0xFF64748B));
       });
       test('connectorWonColor matches original dark-slate', () {
         expect(config.connectorWonColor, const Color(0xFF334155));
       });
-      test('pendingColor matches original light-slate', () {
-        expect(config.pendingColor, const Color(0xFF94A3B8));
-      });
-      test('mutedColor matches original slate', () {
-        expect(config.mutedColor, const Color(0xFF64748B));
+      test('borderColor matches original light-slate', () {
+        expect(config.borderColor, const Color(0xFF94A3B8));
       });
 
       // ── Canvas & card tokens ──
       test('canvasBackgroundColor is warm white', () {
         expect(config.canvasBackgroundColor, const Color(0xFFFFFEFC));
       });
-      test('cardBorderColor matches original light-slate', () {
-        expect(config.cardBorderColor, const Color(0xFF94A3B8));
+      test('borderColor matches original light-slate', () {
+        expect(config.borderColor, const Color(0xFF94A3B8));
       });
       test('shadowOpacityMultiplier is full', () {
         expect(config.shadowOpacityMultiplier, 1.0);
@@ -133,31 +130,22 @@ void main() {
       });
 
       // ── Shape / radius tokens ──
-      test('cardBorderRadius is 6', () {
-        expect(config.cardBorderRadius, 6.0);
-      });
-      test('sectionLabelBorderRadius is 6', () {
-        expect(config.sectionLabelBorderRadius, 6.0);
-      });
-      test('headerBannerBorderRadius is 8', () {
-        expect(config.headerBannerBorderRadius, 8.0);
+      test('elementBorderRadius is 6', () {
+        expect(config.elementBorderRadius, 6.0);
       });
       test('junctionCornerRadius is 10', () {
         expect(config.junctionCornerRadius, 10.0);
       });
 
       // ── Stroke width tokens ──
-      test('thickStrokeWidth is 3.5', () {
-        expect(config.thickStrokeWidth, 3.5);
+      test('borderStrokeWidth is 3.5', () {
+        expect(config.borderStrokeWidth, 3.5);
       });
-      test('thinStrokeWidth is 3.0', () {
-        expect(config.thinStrokeWidth, 3.0);
+      test('subtleStrokeWidth is 1.5', () {
+        expect(config.subtleStrokeWidth, 1.5);
       });
       test('wonConnectorStrokeWidth is 4.0', () {
         expect(config.wonConnectorStrokeWidth, 4.0);
-      });
-      test('byeConnectorStrokeWidth is 1.5', () {
-        expect(config.byeConnectorStrokeWidth, 1.5);
       });
 
       // ── Spacing tokens ──
@@ -170,8 +158,9 @@ void main() {
       test('accentStripWidth is 4', () {
         expect(config.accentStripWidth, 4.0);
       });
-      test('logoRowHeight is 72', () {
-        expect(config.logoRowHeight, 72.0);
+      test('logoRowHeight is derived from logoMaxHeight + logoPadding*2', () {
+        // logoMaxHeight=60, logoPadding=12 → 60+24=84
+        expect(config.logoMaxHeight + config.logoPadding * 2, 84.0);
       });
 
       // ── Badge & pill sizing tokens ──
@@ -226,25 +215,19 @@ void main() {
       const config = TieSheetThemeConfig.printMode();
 
       // ── All connectors are black ──
-      test('connectorColor is black', () {
-        expect(config.connectorColor, const Color(0xFF000000));
+      test('mutedColor is black', () {
+        expect(config.mutedColor, const Color(0xFF000000));
       });
       test('connectorWonColor is black', () {
         expect(config.connectorWonColor, const Color(0xFF000000));
-      });
-      test('pendingColor is black', () {
-        expect(config.pendingColor, const Color(0xFF000000));
-      });
-      test('mutedColor is black', () {
-        expect(config.mutedColor, const Color(0xFF000000));
       });
 
       // ── Canvas & card ──
       test('canvasBackgroundColor is pure white', () {
         expect(config.canvasBackgroundColor, const Color(0xFFFFFFFF));
       });
-      test('cardBorderColor is black', () {
-        expect(config.cardBorderColor, const Color(0xFF000000));
+      test('borderColor is black', () {
+        expect(config.borderColor, const Color(0xFF000000));
       });
       test('shadowOpacityMultiplier is zero (no shadows)', () {
         expect(config.shadowOpacityMultiplier, 0.0);
@@ -326,11 +309,8 @@ void main() {
       });
 
       // ── Shape / radius tokens (same geometry as default) ──
-      test('cardBorderRadius is 6', () {
-        expect(config.cardBorderRadius, 6.0);
-      });
-      test('headerBannerBorderRadius is 8', () {
-        expect(config.headerBannerBorderRadius, 8.0);
+      test('elementBorderRadius is 6', () {
+        expect(config.elementBorderRadius, 6.0);
       });
       test('junctionCornerRadius is 10', () {
         expect(config.junctionCornerRadius, 10.0);
@@ -340,8 +320,8 @@ void main() {
       test('canvasMargin is 36', () {
         expect(config.canvasMargin, 36.0);
       });
-      test('logoRowHeight is 72', () {
-        expect(config.logoRowHeight, 72.0);
+      test('logoRowHeight is derived from components', () {
+        expect(config.logoMaxHeight + config.logoPadding * 2, 84.0);
       });
 
       // ── Typography tokens (same as default) ──
@@ -353,10 +333,10 @@ void main() {
       });
 
       // ── Luminance checks: print mode darker than default ──
-      test('connectorColor luminance lower than default', () {
+      test('mutedColor luminance lower than default', () {
         const defaultConnector = Color(0xFF64748B);
         expect(
-          config.connectorColor.computeLuminance(),
+          config.mutedColor.computeLuminance(),
           lessThan(defaultConnector.computeLuminance()),
         );
       });
@@ -403,12 +383,10 @@ void main() {
       test('custom config with same values as preset is equal', () {
         const preset = TieSheetThemeConfig.defaultMode();
         const custom = TieSheetThemeConfig(
-          connectorColor: Color(0xFF64748B),
-          connectorWonColor: Color(0xFF334155),
-          pendingColor: Color(0xFF94A3B8),
           mutedColor: Color(0xFF64748B),
+          connectorWonColor: Color(0xFF334155),
           canvasBackgroundColor: Color(0xFFFFFEFC),
-          cardBorderColor: Color(0xFF94A3B8),
+          borderColor: Color(0xFF94A3B8),
           shadowOpacityMultiplier: 1.0,
           connectorStrokeWidth: 0.0,
           isInteractivityDisabled: false,
@@ -436,20 +414,16 @@ void main() {
           medalSilverAccentColor: Color(0xFF94A3B8),
           medalBronzeAccentColor: Color(0xFFF97316),
           // Shape / radius
-          cardBorderRadius: 6.0,
-          sectionLabelBorderRadius: 6.0,
-          headerBannerBorderRadius: 8.0,
+          elementBorderRadius: 6.0,
           junctionCornerRadius: 10.0,
           // Stroke widths
-          thickStrokeWidth: 3.5,
-          thinStrokeWidth: 3.0,
+          borderStrokeWidth: 3.5,
+          subtleStrokeWidth: 1.5,
           wonConnectorStrokeWidth: 4.0,
-          byeConnectorStrokeWidth: 1.5,
           // Spacing
           canvasMargin: 36.0,
           sectionGapHeight: 50.0,
           accentStripWidth: 4.0,
-          logoRowHeight: 72.0,
           // Badge & pill
           badgeMinRadius: 10.0,
           badgePadding: 4.0,
@@ -463,6 +437,8 @@ void main() {
           // Shadow
           shadowBlurRadius: 6.0,
           shadowColor: Color(0x1A000000),
+          shadowOffsetX: 1.0,
+          shadowOffsetY: 2.0,
           // Typography
           fontFamily: 'Roboto',
           headerLetterSpacing: 1.2,
@@ -485,6 +461,9 @@ void main() {
           medalNameColumnWidth: 250.0,
           medalLabelColumnWidth: 100.0,
           medalRowGap: 4.0,
+          // Junction geometry
+          centerFinalMinimumSpan: 60.0,
+          grandFinalOutputArmLength: 40.0,
           // Banner & logo
           headerBannerHeight: 64.0,
           logoMaxHeight: 60.0,
@@ -494,8 +473,8 @@ void main() {
           badgeTextColor: Color(0xFFFFFFFF),
           // Opacity
           sectionLabelBackgroundOpacity: 0.1,
-          headerSubtitleOpacity: 0.7,
-          headerOrganizerOpacity: 0.55,
+          headerSecondaryTextOpacity: 0.65,
+          badgeOutlineOpacity: 0.3,
           // Canvas constraints
           canvasMinimumWidth: 700.0,
           canvasMinimumHeight: 500.0,
@@ -518,14 +497,14 @@ void main() {
         final copied = baseConfig.copyWith(primaryTextColor: overrideColor);
         expect(copied.primaryTextColor, overrideColor);
         // All other fields remain unchanged.
-        expect(copied.connectorColor, baseConfig.connectorColor);
-        expect(copied.cardBorderRadius, baseConfig.cardBorderRadius);
+        expect(copied.mutedColor, baseConfig.mutedColor);
+        expect(copied.elementBorderRadius, baseConfig.elementBorderRadius);
         expect(copied.fontFamily, baseConfig.fontFamily);
       });
 
       test('overrides only the specified double field', () {
-        final copied = baseConfig.copyWith(cardBorderRadius: 20.0);
-        expect(copied.cardBorderRadius, 20.0);
+        final copied = baseConfig.copyWith(elementBorderRadius: 20.0);
+        expect(copied.elementBorderRadius, 20.0);
         expect(copied.primaryTextColor, baseConfig.primaryTextColor);
       });
 
@@ -554,16 +533,16 @@ void main() {
         expect(copied.isInteractivityDisabled, isTrue);
         expect(copied.fontFamily, 'Montserrat');
         // Untouched fields.
-        expect(copied.connectorColor, baseConfig.connectorColor);
-        expect(copied.cardBorderRadius, baseConfig.cardBorderRadius);
+        expect(copied.mutedColor, baseConfig.mutedColor);
+        expect(copied.elementBorderRadius, baseConfig.elementBorderRadius);
       });
 
       test('chained copyWith calls accumulate overrides', () {
-        final step1 = baseConfig.copyWith(thickStrokeWidth: 5.0);
-        final step2 = step1.copyWith(thinStrokeWidth: 2.0);
-        expect(step2.thickStrokeWidth, 5.0);
-        expect(step2.thinStrokeWidth, 2.0);
-        expect(step2.connectorColor, baseConfig.connectorColor);
+        final step1 = baseConfig.copyWith(borderStrokeWidth: 5.0);
+        final step2 = step1.copyWith(subtleStrokeWidth: 2.0);
+        expect(step2.borderStrokeWidth, 5.0);
+        expect(step2.subtleStrokeWidth, 2.0);
+        expect(step2.mutedColor, baseConfig.mutedColor);
       });
 
       test('every field in copyWith is correctly wired', () {
@@ -571,8 +550,6 @@ void main() {
         // that each copyWith parameter maps to its correct property.
         const c1 = Color(0xFF010101);
         const c2 = Color(0xFF020202);
-        const c3 = Color(0xFF030303);
-        const c4 = Color(0xFF040404);
         const c5 = Color(0xFF050505);
         const c6 = Color(0xFF060606);
         const c7 = Color(0xFF070707);
@@ -600,12 +577,10 @@ void main() {
         const c29 = Color(0xFF1D1D1D);
 
         final overridden = baseConfig.copyWith(
-          connectorColor: c1,
+          mutedColor: c1,
           connectorWonColor: c2,
-          pendingColor: c3,
-          mutedColor: c4,
           canvasBackgroundColor: c5,
-          cardBorderColor: c6,
+          borderColor: c6,
           shadowOpacityMultiplier: 0.42,
           connectorStrokeWidth: 7.7,
           isInteractivityDisabled: true,
@@ -632,18 +607,14 @@ void main() {
           medalGoldAccentColor: c25,
           medalSilverAccentColor: c26,
           medalBronzeAccentColor: c27,
-          cardBorderRadius: 99.0,
-          sectionLabelBorderRadius: 98.0,
-          headerBannerBorderRadius: 97.0,
+          elementBorderRadius: 99.0,
           junctionCornerRadius: 96.0,
-          thickStrokeWidth: 95.0,
-          thinStrokeWidth: 94.0,
+          borderStrokeWidth: 95.0,
+          subtleStrokeWidth: 94.0,
           wonConnectorStrokeWidth: 93.0,
-          byeConnectorStrokeWidth: 92.0,
           canvasMargin: 91.0,
           sectionGapHeight: 90.0,
           accentStripWidth: 89.0,
-          logoRowHeight: 88.0,
           badgeMinRadius: 87.0,
           badgePadding: 86.0,
           matchPillMinHalfWidth: 85.0,
@@ -680,19 +651,16 @@ void main() {
           matchPillFillColor: c28,
           badgeTextColor: c29,
           sectionLabelBackgroundOpacity: 0.56,
-          headerSubtitleOpacity: 0.55,
-          headerOrganizerOpacity: 0.54,
+          headerSecondaryTextOpacity: 0.55,
           canvasMinimumWidth: 53.0,
           canvasMinimumHeight: 52.0,
         );
 
         // Verify every colour field
-        expect(overridden.connectorColor, c1);
+        expect(overridden.mutedColor, c1);
         expect(overridden.connectorWonColor, c2);
-        expect(overridden.pendingColor, c3);
-        expect(overridden.mutedColor, c4);
         expect(overridden.canvasBackgroundColor, c5);
-        expect(overridden.cardBorderColor, c6);
+        expect(overridden.borderColor, c6);
         expect(overridden.primaryTextColor, c7);
         expect(overridden.secondaryTextColor, c8);
         expect(overridden.rowFillColor, c9);
@@ -723,18 +691,14 @@ void main() {
         expect(overridden.isInteractivityDisabled, isTrue);
         expect(overridden.isTextForceBold, isTrue);
         expect(overridden.fontSizeDelta, 12.0);
-        expect(overridden.cardBorderRadius, 99.0);
-        expect(overridden.sectionLabelBorderRadius, 98.0);
-        expect(overridden.headerBannerBorderRadius, 97.0);
+        expect(overridden.elementBorderRadius, 99.0);
         expect(overridden.junctionCornerRadius, 96.0);
-        expect(overridden.thickStrokeWidth, 95.0);
-        expect(overridden.thinStrokeWidth, 94.0);
+        expect(overridden.borderStrokeWidth, 95.0);
+        expect(overridden.subtleStrokeWidth, 94.0);
         expect(overridden.wonConnectorStrokeWidth, 93.0);
-        expect(overridden.byeConnectorStrokeWidth, 92.0);
         expect(overridden.canvasMargin, 91.0);
         expect(overridden.sectionGapHeight, 90.0);
         expect(overridden.accentStripWidth, 89.0);
-        expect(overridden.logoRowHeight, 88.0);
         expect(overridden.badgeMinRadius, 87.0);
         expect(overridden.badgePadding, 86.0);
         expect(overridden.matchPillMinHalfWidth, 85.0);
@@ -769,8 +733,7 @@ void main() {
         expect(overridden.logoMaxHeight, 58.0);
         expect(overridden.logoPadding, 57.0);
         expect(overridden.sectionLabelBackgroundOpacity, 0.56);
-        expect(overridden.headerSubtitleOpacity, 0.55);
-        expect(overridden.headerOrganizerOpacity, 0.54);
+        expect(overridden.headerSecondaryTextOpacity, 0.55);
         expect(overridden.canvasMinimumWidth, 53.0);
         expect(overridden.canvasMinimumHeight, 52.0);
       });

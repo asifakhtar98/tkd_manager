@@ -35,25 +35,21 @@ enum TieSheetThemeMode {
 class TieSheetThemeConfig {
   // ── Connector / junction tokens ───────────────────────────────────────────
 
-  /// Default connector stroke colour (unresolved junction lines).
-  final Color connectorColor;
+  /// Muted colour used for generic connectors, BYE dashed lines,
+  /// TBD placeholder text, and unresolved junction lines.
+  final Color mutedColor;
 
   /// Resolved connector stroke colour (winner advancement lines).
   final Color connectorWonColor;
-
-  /// Pending / unresolved indicator colour (dashed outlines, TBD borders).
-  final Color pendingColor;
-
-  /// Muted colour for BYE dashed lines and TBD placeholder text.
-  final Color mutedColor;
 
   // ── Canvas & card tokens ──────────────────────────────────────────────────
 
   /// Canvas background fill.
   final Color canvasBackgroundColor;
 
-  /// Card / element border stroke colour.
-  final Color cardBorderColor;
+  /// Unified border stroke colour for cards, TBD outlines, and pending
+  /// dashed connectors.
+  final Color borderColor;
 
   /// Shadow paint opacity multiplier (0.0 = no shadow, 1.0 = full shadow).
   final double shadowOpacityMultiplier;
@@ -138,31 +134,25 @@ class TieSheetThemeConfig {
 
   // ── Shape / radius tokens ─────────────────────────────────────────────────
 
-  /// Border radius applied to participant cards, medal rows, and info rows.
-  final double cardBorderRadius;
-
-  /// Border radius applied to the section labels (Winners/Losers Bracket).
-  final double sectionLabelBorderRadius;
-
-  /// Border radius applied to the dark header banner.
-  final double headerBannerBorderRadius;
+  /// Unified border radius applied to all rectangular UI elements: cards,
+  /// section labels, medal rows, info rows, and the header banner.
+  final double elementBorderRadius;
 
   /// Corner radius for the Bezier curve arms on bracket junctions.
   final double junctionCornerRadius;
 
   // ── Stroke width tokens ───────────────────────────────────────────────────
 
-  /// Default stroke width for thick pens (borders and outlines).
-  final double thickStrokeWidth;
+  /// Primary stroke width for borders, outlines, dividers, and pending
+  /// connector lines.
+  final double borderStrokeWidth;
 
-  /// Default stroke width for thin pens (dividers and pending lines).
-  final double thinStrokeWidth;
+  /// Subtle stroke width for secondary borders: BYE dashed lines, section
+  /// label outlines, and other de-emphasised strokes.
+  final double subtleStrokeWidth;
 
   /// Stroke width for resolved / won connector lines.
   final double wonConnectorStrokeWidth;
-
-  /// Stroke width for BYE advancement dashed lines.
-  final double byeConnectorStrokeWidth;
 
   // ── Spacing tokens ────────────────────────────────────────────────────────
 
@@ -175,9 +165,8 @@ class TieSheetThemeConfig {
   /// Width of the coloured accent strip on participant card edges.
   final double accentStripWidth;
 
-  /// Total height reserved for the logo row above the header banner.
-  /// Includes the image height + bottom padding (e.g. 60px + 12px).
-  final double logoRowHeight;
+  /// Computed height of the logo row (logoMaxHeight + 2 × logoPadding).
+  double get logoRowHeight => logoMaxHeight + logoPadding * 2;
 
   // ── Badge & pill sizing tokens ────────────────────────────────────────────
 
@@ -214,6 +203,12 @@ class TieSheetThemeConfig {
 
   /// Base colour for card elevation shadows (before opacity scaling).
   final Color shadowColor;
+
+  /// Horizontal offset for card elevation shadows (px).
+  final double shadowOffsetX;
+
+  /// Vertical offset for card elevation shadows (px).
+  final double shadowOffsetY;
 
   // ── Typography tokens ─────────────────────────────────────────────────────
 
@@ -281,6 +276,14 @@ class TieSheetThemeConfig {
   /// Vertical gap between medal rows (px).
   final double medalRowGap;
 
+  // ── Junction geometry tokens ──────────────────────────────────────────────
+
+  /// Minimum vertical span for center-final junction arms (px).
+  final double centerFinalMinimumSpan;
+
+  /// Horizontal arm length for grand-final output connector (px).
+  final double grandFinalOutputArmLength;
+
   // ── Banner & logo layout tokens ───────────────────────────────────────────
 
   /// Base height of the dark header banner (before fontSizeDelta scaling, px).
@@ -305,11 +308,11 @@ class TieSheetThemeConfig {
   /// Background opacity for section label fill (0.0–1.0).
   final double sectionLabelBackgroundOpacity;
 
-  /// Text opacity for subtitle line in the header banner (0.0–1.0).
-  final double headerSubtitleOpacity;
+  /// Text opacity for secondary header text (subtitle + organizer, 0.0–1.0).
+  final double headerSecondaryTextOpacity;
 
-  /// Text opacity for organizer line in the header banner (0.0–1.0).
-  final double headerOrganizerOpacity;
+  /// Outline opacity for corner badges B/R (0.0–1.0).
+  final double badgeOutlineOpacity;
 
   // ── Canvas constraint tokens ──────────────────────────────────────────────
 
@@ -320,12 +323,10 @@ class TieSheetThemeConfig {
   final double canvasMinimumHeight;
 
   const TieSheetThemeConfig({
-    required this.connectorColor,
-    required this.connectorWonColor,
-    required this.pendingColor,
     required this.mutedColor,
+    required this.connectorWonColor,
     required this.canvasBackgroundColor,
-    required this.cardBorderColor,
+    required this.borderColor,
     required this.shadowOpacityMultiplier,
     required this.connectorStrokeWidth,
     required this.isInteractivityDisabled,
@@ -352,18 +353,14 @@ class TieSheetThemeConfig {
     required this.medalGoldAccentColor,
     required this.medalSilverAccentColor,
     required this.medalBronzeAccentColor,
-    required this.cardBorderRadius,
-    required this.sectionLabelBorderRadius,
-    required this.headerBannerBorderRadius,
+    required this.elementBorderRadius,
     required this.junctionCornerRadius,
-    required this.thickStrokeWidth,
-    required this.thinStrokeWidth,
+    required this.borderStrokeWidth,
+    required this.subtleStrokeWidth,
     required this.wonConnectorStrokeWidth,
-    required this.byeConnectorStrokeWidth,
     required this.canvasMargin,
     required this.sectionGapHeight,
     required this.accentStripWidth,
-    required this.logoRowHeight,
     required this.badgeMinRadius,
     required this.badgePadding,
     required this.matchPillMinHalfWidth,
@@ -374,10 +371,11 @@ class TieSheetThemeConfig {
     required this.dashedLineGapWidth,
     required this.shadowBlurRadius,
     required this.shadowColor,
+    required this.shadowOffsetX,
+    required this.shadowOffsetY,
     required this.fontFamily,
     required this.headerLetterSpacing,
     required this.subHeaderLetterSpacing,
-    // New tokens
     required this.rowHeight,
     required this.intraMatchGapHeight,
     required this.interMatchGapHeight,
@@ -394,14 +392,16 @@ class TieSheetThemeConfig {
     required this.medalNameColumnWidth,
     required this.medalLabelColumnWidth,
     required this.medalRowGap,
+    required this.centerFinalMinimumSpan,
+    required this.grandFinalOutputArmLength,
     required this.headerBannerHeight,
     required this.logoMaxHeight,
     required this.logoPadding,
     required this.matchPillFillColor,
     required this.badgeTextColor,
     required this.sectionLabelBackgroundOpacity,
-    required this.headerSubtitleOpacity,
-    required this.headerOrganizerOpacity,
+    required this.headerSecondaryTextOpacity,
+    required this.badgeOutlineOpacity,
     required this.canvasMinimumWidth,
     required this.canvasMinimumHeight,
   });
@@ -410,12 +410,10 @@ class TieSheetThemeConfig {
 
   /// Standard on-screen palette — matches the original hardcoded values.
   const TieSheetThemeConfig.defaultMode()
-    : connectorColor = const Color(0xFF64748B),
+    : mutedColor = const Color(0xFF64748B),
       connectorWonColor = const Color(0xFF334155),
-      pendingColor = const Color(0xFF94A3B8),
-      mutedColor = const Color(0xFF64748B),
       canvasBackgroundColor = const Color(0xFFFFFEFC),
-      cardBorderColor = const Color(0xFF94A3B8),
+      borderColor = const Color(0xFF94A3B8),
       shadowOpacityMultiplier = 1.0,
       connectorStrokeWidth = 0.0,
       isInteractivityDisabled = false,
@@ -443,20 +441,16 @@ class TieSheetThemeConfig {
       medalSilverAccentColor = const Color(0xFF94A3B8),
       medalBronzeAccentColor = const Color(0xFFF97316),
       // Shape / radius
-      cardBorderRadius = 6.0,
-      sectionLabelBorderRadius = 6.0,
-      headerBannerBorderRadius = 8.0,
+      elementBorderRadius = 6.0,
       junctionCornerRadius = 10.0,
       // Stroke widths
-      thickStrokeWidth = 3.5,
-      thinStrokeWidth = 3.0,
+      borderStrokeWidth = 3.5,
+      subtleStrokeWidth = 1.5,
       wonConnectorStrokeWidth = 4.0,
-      byeConnectorStrokeWidth = 1.5,
       // Spacing
       canvasMargin = 36.0,
       sectionGapHeight = 50.0,
       accentStripWidth = 4.0,
-      logoRowHeight = 72.0,
       // Badge & pill sizing
       badgeMinRadius = 10.0,
       badgePadding = 4.0,
@@ -470,6 +464,8 @@ class TieSheetThemeConfig {
       // Shadow
       shadowBlurRadius = 6.0,
       shadowColor = const Color(0x1A000000),
+      shadowOffsetX = 1.0,
+      shadowOffsetY = 2.0,
       // Typography
       fontFamily = 'Roboto',
       headerLetterSpacing = 1.2,
@@ -492,6 +488,9 @@ class TieSheetThemeConfig {
       medalNameColumnWidth = 250.0,
       medalLabelColumnWidth = 100.0,
       medalRowGap = 4.0,
+      // Junction geometry
+      centerFinalMinimumSpan = 60.0,
+      grandFinalOutputArmLength = 40.0,
       // Banner & logo
       headerBannerHeight = 64.0,
       logoMaxHeight = 60.0,
@@ -501,8 +500,8 @@ class TieSheetThemeConfig {
       badgeTextColor = const Color(0xFFFFFFFF),
       // Opacity
       sectionLabelBackgroundOpacity = 0.1,
-      headerSubtitleOpacity = 0.7,
-      headerOrganizerOpacity = 0.55,
+      headerSecondaryTextOpacity = 0.65,
+      badgeOutlineOpacity = 0.3,
       // Canvas constraints
       canvasMinimumWidth = 700.0,
       canvasMinimumHeight = 500.0;
@@ -510,12 +509,10 @@ class TieSheetThemeConfig {
   /// High-contrast print palette — pure black text, no background fills,
   /// borders-only elements, zero shadows. Optimised for monochrome printing.
   const TieSheetThemeConfig.printMode()
-    : connectorColor = const Color(0xFF000000),
+    : mutedColor = const Color(0xFF000000),
       connectorWonColor = const Color(0xFF000000),
-      pendingColor = const Color(0xFF000000),
-      mutedColor = const Color(0xFF000000),
       canvasBackgroundColor = const Color(0xFFFFFFFF),
-      cardBorderColor = const Color(0xFF000000),
+      borderColor = const Color(0xFF000000),
       shadowOpacityMultiplier = 0.0,
       connectorStrokeWidth = 3.0,
       isInteractivityDisabled = true,
@@ -543,20 +540,16 @@ class TieSheetThemeConfig {
       medalSilverAccentColor = const Color(0xFF000000),
       medalBronzeAccentColor = const Color(0xFF000000),
       // Shape / radius (same as default — geometry stays consistent)
-      cardBorderRadius = 6.0,
-      sectionLabelBorderRadius = 6.0,
-      headerBannerBorderRadius = 8.0,
+      elementBorderRadius = 6.0,
       junctionCornerRadius = 10.0,
       // Stroke widths (same as default — uniform override via connectorStrokeWidth)
-      thickStrokeWidth = 3.5,
-      thinStrokeWidth = 3.0,
+      borderStrokeWidth = 3.5,
+      subtleStrokeWidth = 1.5,
       wonConnectorStrokeWidth = 4.0,
-      byeConnectorStrokeWidth = 1.5,
       // Spacing
       canvasMargin = 36.0,
       sectionGapHeight = 50.0,
       accentStripWidth = 4.0,
-      logoRowHeight = 72.0,
       // Badge & pill sizing
       badgeMinRadius = 10.0,
       badgePadding = 4.0,
@@ -570,6 +563,8 @@ class TieSheetThemeConfig {
       // Shadow
       shadowBlurRadius = 6.0,
       shadowColor = const Color(0x1A000000),
+      shadowOffsetX = 1.0,
+      shadowOffsetY = 2.0,
       // Typography
       fontFamily = 'Roboto',
       headerLetterSpacing = 1.2,
@@ -592,6 +587,9 @@ class TieSheetThemeConfig {
       medalNameColumnWidth = 250.0,
       medalLabelColumnWidth = 100.0,
       medalRowGap = 4.0,
+      // Junction geometry
+      centerFinalMinimumSpan = 60.0,
+      grandFinalOutputArmLength = 40.0,
       // Banner & logo
       headerBannerHeight = 64.0,
       logoMaxHeight = 60.0,
@@ -601,8 +599,8 @@ class TieSheetThemeConfig {
       badgeTextColor = const Color(0xFFFFFFFF),
       // Opacity
       sectionLabelBackgroundOpacity = 0.1,
-      headerSubtitleOpacity = 0.7,
-      headerOrganizerOpacity = 0.55,
+      headerSecondaryTextOpacity = 0.65,
+      badgeOutlineOpacity = 0.3,
       // Canvas constraints
       canvasMinimumWidth = 700.0,
       canvasMinimumHeight = 500.0;
@@ -625,12 +623,10 @@ class TieSheetThemeConfig {
   /// Returns a new [TieSheetThemeConfig] with only the specified fields
   /// overridden. Unspecified fields retain their current values.
   TieSheetThemeConfig copyWith({
-    Color? connectorColor,
-    Color? connectorWonColor,
-    Color? pendingColor,
     Color? mutedColor,
+    Color? connectorWonColor,
     Color? canvasBackgroundColor,
-    Color? cardBorderColor,
+    Color? borderColor,
     double? shadowOpacityMultiplier,
     double? connectorStrokeWidth,
     bool? isInteractivityDisabled,
@@ -657,18 +653,14 @@ class TieSheetThemeConfig {
     Color? medalGoldAccentColor,
     Color? medalSilverAccentColor,
     Color? medalBronzeAccentColor,
-    double? cardBorderRadius,
-    double? sectionLabelBorderRadius,
-    double? headerBannerBorderRadius,
+    double? elementBorderRadius,
     double? junctionCornerRadius,
-    double? thickStrokeWidth,
-    double? thinStrokeWidth,
+    double? borderStrokeWidth,
+    double? subtleStrokeWidth,
     double? wonConnectorStrokeWidth,
-    double? byeConnectorStrokeWidth,
     double? canvasMargin,
     double? sectionGapHeight,
     double? accentStripWidth,
-    double? logoRowHeight,
     double? badgeMinRadius,
     double? badgePadding,
     double? matchPillMinHalfWidth,
@@ -679,10 +671,11 @@ class TieSheetThemeConfig {
     double? dashedLineGapWidth,
     double? shadowBlurRadius,
     Color? shadowColor,
+    double? shadowOffsetX,
+    double? shadowOffsetY,
     String? fontFamily,
     double? headerLetterSpacing,
     double? subHeaderLetterSpacing,
-    // New tokens
     double? rowHeight,
     double? intraMatchGapHeight,
     double? interMatchGapHeight,
@@ -699,25 +692,25 @@ class TieSheetThemeConfig {
     double? medalNameColumnWidth,
     double? medalLabelColumnWidth,
     double? medalRowGap,
+    double? centerFinalMinimumSpan,
+    double? grandFinalOutputArmLength,
     double? headerBannerHeight,
     double? logoMaxHeight,
     double? logoPadding,
     Color? matchPillFillColor,
     Color? badgeTextColor,
     double? sectionLabelBackgroundOpacity,
-    double? headerSubtitleOpacity,
-    double? headerOrganizerOpacity,
+    double? headerSecondaryTextOpacity,
+    double? badgeOutlineOpacity,
     double? canvasMinimumWidth,
     double? canvasMinimumHeight,
   }) {
     return TieSheetThemeConfig(
-      connectorColor: connectorColor ?? this.connectorColor,
-      connectorWonColor: connectorWonColor ?? this.connectorWonColor,
-      pendingColor: pendingColor ?? this.pendingColor,
       mutedColor: mutedColor ?? this.mutedColor,
+      connectorWonColor: connectorWonColor ?? this.connectorWonColor,
       canvasBackgroundColor:
           canvasBackgroundColor ?? this.canvasBackgroundColor,
-      cardBorderColor: cardBorderColor ?? this.cardBorderColor,
+      borderColor: borderColor ?? this.borderColor,
       shadowOpacityMultiplier:
           shadowOpacityMultiplier ?? this.shadowOpacityMultiplier,
       connectorStrokeWidth: connectorStrokeWidth ?? this.connectorStrokeWidth,
@@ -751,22 +744,15 @@ class TieSheetThemeConfig {
           medalSilverAccentColor ?? this.medalSilverAccentColor,
       medalBronzeAccentColor:
           medalBronzeAccentColor ?? this.medalBronzeAccentColor,
-      cardBorderRadius: cardBorderRadius ?? this.cardBorderRadius,
-      sectionLabelBorderRadius:
-          sectionLabelBorderRadius ?? this.sectionLabelBorderRadius,
-      headerBannerBorderRadius:
-          headerBannerBorderRadius ?? this.headerBannerBorderRadius,
+      elementBorderRadius: elementBorderRadius ?? this.elementBorderRadius,
       junctionCornerRadius: junctionCornerRadius ?? this.junctionCornerRadius,
-      thickStrokeWidth: thickStrokeWidth ?? this.thickStrokeWidth,
-      thinStrokeWidth: thinStrokeWidth ?? this.thinStrokeWidth,
+      borderStrokeWidth: borderStrokeWidth ?? this.borderStrokeWidth,
+      subtleStrokeWidth: subtleStrokeWidth ?? this.subtleStrokeWidth,
       wonConnectorStrokeWidth:
           wonConnectorStrokeWidth ?? this.wonConnectorStrokeWidth,
-      byeConnectorStrokeWidth:
-          byeConnectorStrokeWidth ?? this.byeConnectorStrokeWidth,
       canvasMargin: canvasMargin ?? this.canvasMargin,
       sectionGapHeight: sectionGapHeight ?? this.sectionGapHeight,
       accentStripWidth: accentStripWidth ?? this.accentStripWidth,
-      logoRowHeight: logoRowHeight ?? this.logoRowHeight,
       badgeMinRadius: badgeMinRadius ?? this.badgeMinRadius,
       badgePadding: badgePadding ?? this.badgePadding,
       matchPillMinHalfWidth:
@@ -781,11 +767,12 @@ class TieSheetThemeConfig {
       dashedLineGapWidth: dashedLineGapWidth ?? this.dashedLineGapWidth,
       shadowBlurRadius: shadowBlurRadius ?? this.shadowBlurRadius,
       shadowColor: shadowColor ?? this.shadowColor,
+      shadowOffsetX: shadowOffsetX ?? this.shadowOffsetX,
+      shadowOffsetY: shadowOffsetY ?? this.shadowOffsetY,
       fontFamily: fontFamily ?? this.fontFamily,
       headerLetterSpacing: headerLetterSpacing ?? this.headerLetterSpacing,
       subHeaderLetterSpacing:
           subHeaderLetterSpacing ?? this.subHeaderLetterSpacing,
-      // New tokens
       rowHeight: rowHeight ?? this.rowHeight,
       intraMatchGapHeight: intraMatchGapHeight ?? this.intraMatchGapHeight,
       interMatchGapHeight: interMatchGapHeight ?? this.interMatchGapHeight,
@@ -804,6 +791,10 @@ class TieSheetThemeConfig {
       medalLabelColumnWidth:
           medalLabelColumnWidth ?? this.medalLabelColumnWidth,
       medalRowGap: medalRowGap ?? this.medalRowGap,
+      centerFinalMinimumSpan:
+          centerFinalMinimumSpan ?? this.centerFinalMinimumSpan,
+      grandFinalOutputArmLength:
+          grandFinalOutputArmLength ?? this.grandFinalOutputArmLength,
       headerBannerHeight: headerBannerHeight ?? this.headerBannerHeight,
       logoMaxHeight: logoMaxHeight ?? this.logoMaxHeight,
       logoPadding: logoPadding ?? this.logoPadding,
@@ -811,10 +802,9 @@ class TieSheetThemeConfig {
       badgeTextColor: badgeTextColor ?? this.badgeTextColor,
       sectionLabelBackgroundOpacity:
           sectionLabelBackgroundOpacity ?? this.sectionLabelBackgroundOpacity,
-      headerSubtitleOpacity:
-          headerSubtitleOpacity ?? this.headerSubtitleOpacity,
-      headerOrganizerOpacity:
-          headerOrganizerOpacity ?? this.headerOrganizerOpacity,
+      headerSecondaryTextOpacity:
+          headerSecondaryTextOpacity ?? this.headerSecondaryTextOpacity,
+      badgeOutlineOpacity: badgeOutlineOpacity ?? this.badgeOutlineOpacity,
       canvasMinimumWidth: canvasMinimumWidth ?? this.canvasMinimumWidth,
       canvasMinimumHeight: canvasMinimumHeight ?? this.canvasMinimumHeight,
     );
@@ -827,12 +817,10 @@ class TieSheetThemeConfig {
       identical(this, other) ||
       other is TieSheetThemeConfig &&
           runtimeType == other.runtimeType &&
-          connectorColor == other.connectorColor &&
-          connectorWonColor == other.connectorWonColor &&
-          pendingColor == other.pendingColor &&
           mutedColor == other.mutedColor &&
+          connectorWonColor == other.connectorWonColor &&
           canvasBackgroundColor == other.canvasBackgroundColor &&
-          cardBorderColor == other.cardBorderColor &&
+          borderColor == other.borderColor &&
           shadowOpacityMultiplier == other.shadowOpacityMultiplier &&
           connectorStrokeWidth == other.connectorStrokeWidth &&
           isInteractivityDisabled == other.isInteractivityDisabled &&
@@ -859,18 +847,14 @@ class TieSheetThemeConfig {
           medalGoldAccentColor == other.medalGoldAccentColor &&
           medalSilverAccentColor == other.medalSilverAccentColor &&
           medalBronzeAccentColor == other.medalBronzeAccentColor &&
-          cardBorderRadius == other.cardBorderRadius &&
-          sectionLabelBorderRadius == other.sectionLabelBorderRadius &&
-          headerBannerBorderRadius == other.headerBannerBorderRadius &&
+          elementBorderRadius == other.elementBorderRadius &&
           junctionCornerRadius == other.junctionCornerRadius &&
-          thickStrokeWidth == other.thickStrokeWidth &&
-          thinStrokeWidth == other.thinStrokeWidth &&
+          borderStrokeWidth == other.borderStrokeWidth &&
+          subtleStrokeWidth == other.subtleStrokeWidth &&
           wonConnectorStrokeWidth == other.wonConnectorStrokeWidth &&
-          byeConnectorStrokeWidth == other.byeConnectorStrokeWidth &&
           canvasMargin == other.canvasMargin &&
           sectionGapHeight == other.sectionGapHeight &&
           accentStripWidth == other.accentStripWidth &&
-          logoRowHeight == other.logoRowHeight &&
           badgeMinRadius == other.badgeMinRadius &&
           badgePadding == other.badgePadding &&
           matchPillMinHalfWidth == other.matchPillMinHalfWidth &&
@@ -881,10 +865,11 @@ class TieSheetThemeConfig {
           dashedLineGapWidth == other.dashedLineGapWidth &&
           shadowBlurRadius == other.shadowBlurRadius &&
           shadowColor == other.shadowColor &&
+          shadowOffsetX == other.shadowOffsetX &&
+          shadowOffsetY == other.shadowOffsetY &&
           fontFamily == other.fontFamily &&
           headerLetterSpacing == other.headerLetterSpacing &&
           subHeaderLetterSpacing == other.subHeaderLetterSpacing &&
-          // New tokens
           rowHeight == other.rowHeight &&
           intraMatchGapHeight == other.intraMatchGapHeight &&
           interMatchGapHeight == other.interMatchGapHeight &&
@@ -901,6 +886,8 @@ class TieSheetThemeConfig {
           medalNameColumnWidth == other.medalNameColumnWidth &&
           medalLabelColumnWidth == other.medalLabelColumnWidth &&
           medalRowGap == other.medalRowGap &&
+          centerFinalMinimumSpan == other.centerFinalMinimumSpan &&
+          grandFinalOutputArmLength == other.grandFinalOutputArmLength &&
           headerBannerHeight == other.headerBannerHeight &&
           logoMaxHeight == other.logoMaxHeight &&
           logoPadding == other.logoPadding &&
@@ -908,19 +895,17 @@ class TieSheetThemeConfig {
           badgeTextColor == other.badgeTextColor &&
           sectionLabelBackgroundOpacity ==
               other.sectionLabelBackgroundOpacity &&
-          headerSubtitleOpacity == other.headerSubtitleOpacity &&
-          headerOrganizerOpacity == other.headerOrganizerOpacity &&
+          headerSecondaryTextOpacity == other.headerSecondaryTextOpacity &&
+          badgeOutlineOpacity == other.badgeOutlineOpacity &&
           canvasMinimumWidth == other.canvasMinimumWidth &&
           canvasMinimumHeight == other.canvasMinimumHeight;
 
   @override
   int get hashCode => Object.hashAll([
-    connectorColor,
-    connectorWonColor,
-    pendingColor,
     mutedColor,
+    connectorWonColor,
     canvasBackgroundColor,
-    cardBorderColor,
+    borderColor,
     shadowOpacityMultiplier,
     connectorStrokeWidth,
     isInteractivityDisabled,
@@ -947,18 +932,14 @@ class TieSheetThemeConfig {
     medalGoldAccentColor,
     medalSilverAccentColor,
     medalBronzeAccentColor,
-    cardBorderRadius,
-    sectionLabelBorderRadius,
-    headerBannerBorderRadius,
+    elementBorderRadius,
     junctionCornerRadius,
-    thickStrokeWidth,
-    thinStrokeWidth,
+    borderStrokeWidth,
+    subtleStrokeWidth,
     wonConnectorStrokeWidth,
-    byeConnectorStrokeWidth,
     canvasMargin,
     sectionGapHeight,
     accentStripWidth,
-    logoRowHeight,
     badgeMinRadius,
     badgePadding,
     matchPillMinHalfWidth,
@@ -969,10 +950,11 @@ class TieSheetThemeConfig {
     dashedLineGapWidth,
     shadowBlurRadius,
     shadowColor,
+    shadowOffsetX,
+    shadowOffsetY,
     fontFamily,
     headerLetterSpacing,
     subHeaderLetterSpacing,
-    // New tokens
     rowHeight,
     intraMatchGapHeight,
     interMatchGapHeight,
@@ -989,14 +971,16 @@ class TieSheetThemeConfig {
     medalNameColumnWidth,
     medalLabelColumnWidth,
     medalRowGap,
+    centerFinalMinimumSpan,
+    grandFinalOutputArmLength,
     headerBannerHeight,
     logoMaxHeight,
     logoPadding,
     matchPillFillColor,
     badgeTextColor,
     sectionLabelBackgroundOpacity,
-    headerSubtitleOpacity,
-    headerOrganizerOpacity,
+    headerSecondaryTextOpacity,
+    badgeOutlineOpacity,
     canvasMinimumWidth,
     canvasMinimumHeight,
   ]);
