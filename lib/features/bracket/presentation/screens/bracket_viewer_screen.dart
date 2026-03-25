@@ -8,11 +8,14 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:uuid/uuid.dart';
+import 'package:tkd_saas/features/bracket/data/services/bracket_pdf_generator_service.dart';
+import 'package:tkd_saas/features/bracket/presentation/models/print_export_settings.dart';
 import 'package:tkd_saas/features/bracket/domain/entities/match_entity.dart';
 import 'package:tkd_saas/core/router/app_routes.dart';
 import 'package:tkd_saas/features/bracket/presentation/bloc/bracket_bloc.dart';
 import 'package:tkd_saas/features/bracket/presentation/widgets/bracket_history_drawer.dart';
 import 'package:tkd_saas/features/bracket/presentation/widgets/participant_edit_dialog.dart';
+import 'package:tkd_saas/features/bracket/presentation/widgets/print_preview_dialog.dart';
 import 'package:tkd_saas/features/bracket/presentation/widgets/participant_slot_hit_area.dart';
 import 'package:tkd_saas/features/bracket/presentation/widgets/score_entry_dialog.dart';
 import 'package:tkd_saas/features/bracket/presentation/widgets/tie_sheet_canvas_widget.dart';
@@ -140,62 +143,77 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
     super.dispose();
   }
 
-  /// Exports the currently visible bracket as a real PDF.
-  ///
-  /// Instead of capturing from the render tree (which is subject to WebGL
-  /// `MAX_TEXTURE_SIZE` limits and silently crops large brackets), this method
-  /// creates a fresh [TieSheetPainter] from the current bloc state, renders it
-  /// off-screen via [ui.PictureRecorder] with a scale transform that keeps the
-  /// output image within safe GPU texture bounds, and feeds the resulting PNG
-  /// into the PDF document.
-  ///
-  /// Each heavy step is followed by a microtask yield so the event loop can
-  /// repaint the progress overlay — critical on web where there is no
-  /// background isolate.
-  Future<void> _exportPdf() async {
-    // Read bloc state synchronously before any awaits to avoid using
-    // BuildContext across async gaps.
+  /// Builds a [TieSheetPainter] from the current bloc state for PDF export.
+  /// Returns `null` if no bracket data is loaded.
+  TieSheetPainter? _buildExportPainter() {
     final blocState = context.read<BracketBloc>().state;
+    if (blocState is! BracketLoadSuccess) return null;
+
+    final bracketData = _extractBracketDataFromResult(blocState.result);
+
+    return TieSheetPainter(
+      tournament: _fallbackDemoTournament,
+      matches: bracketData.allMatches,
+      participants: blocState.participants,
+      bracketType: widget.bracketFormat.displayLabel,
+      includeThirdPlaceMatch: widget.includeThirdPlaceMatch,
+      winnersBracketId: bracketData.winnersBracketId,
+      losersBracketId: bracketData.losersBracketId,
+      isEditModeEnabled: false,
+      themeConfig: _resolvedThemeConfig,
+    );
+  }
+
+  /// Opens the full-screen [PrintPreviewDialog] where the user configures
+  /// paper size, orientation, fit mode, scale, and tile overlap.  When the
+  /// user confirms, delegates to [_generateAndPrintPdf] to build and print
+  /// the document.
+  Future<void> _showPrintPreview() async {
+    final exportPainter = _buildExportPainter();
+    if (exportPainter == null) return;
+
+    final canvasSize = exportPainter.calculateCanvasSize();
+
+    if (!mounted) return;
+
+    final confirmedSettings = await PrintPreviewDialog.show(
+      context: context,
+      painter: exportPainter,
+      canvasSize: canvasSize,
+    );
+
+    if (confirmedSettings == null || !mounted) return;
+
+    await _generateAndPrintPdf(
+      painter: exportPainter,
+      canvasSize: canvasSize,
+      settings: confirmedSettings,
+    );
+  }
+
+  /// Quick single-page export using the original inline PictureRecorder
+  /// approach with a dynamic page format that matches the canvas 1:1.
+  /// Opens the native print dialog immediately — no preview UI.
+  Future<void> _directExportPdf() async {
+    final exportPainter = _buildExportPainter();
 
     _updateExportProgress(0.0, 'Preparing bracket for export…');
     await Future<void>.delayed(Duration.zero);
 
     try {
-      // ── Step 1: Build a TieSheetPainter from current bloc state ──
-      if (blocState is! BracketLoadSuccess) {
+      if (exportPainter == null) {
         _updateExportProgress(1.0, 'No bracket data available.');
         return;
       }
-
-      final bracketData = _extractBracketDataFromResult(blocState.result);
-
-      final exportPainter = TieSheetPainter(
-        tournament: _fallbackDemoTournament,
-        matches: bracketData.allMatches,
-        participants: blocState.participants,
-        bracketType: widget.bracketFormat.displayLabel,
-        includeThirdPlaceMatch: widget.includeThirdPlaceMatch,
-        winnersBracketId: bracketData.winnersBracketId,
-        losersBracketId: bracketData.losersBracketId,
-        isEditModeEnabled: false,
-        themeConfig: _resolvedThemeConfig,
-        // Logo images are loaded inside TieSheetCanvasWidget state and not
-        // accessible here. They are omitted from the PDF export — a minor
-        // cosmetic tradeoff for guaranteed full-bracket capture.
-      );
 
       final Size canvasSize = exportPainter.calculateCanvasSize();
 
       _updateExportProgress(0.15, 'Rendering bracket image…');
       await Future<void>.delayed(Duration.zero);
 
-      // ── Step 2: Render the painter off-screen via PictureRecorder ──
-      //
-      // WebGL's MAX_TEXTURE_SIZE (often 4096) limits the pixel dimensions of
-      // any single GPU texture.  For large brackets the canvas can easily
-      // exceed this, causing `toImage` to silently clip.  We apply a scale
-      // transform so the rasterised image always fits within a safe bound.
-      const double safeMaxTextureDimension = 4000.0;
+      // Render off-screen via PictureRecorder with safe GPU texture scaling.
+      // Modern browsers with CanvasKit/Skwasm reliably support 8192.
+      const double safeMaxTextureDimension = 8192.0;
       final double scaleFactor = min(
         1.0,
         min(
@@ -213,7 +231,6 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
         Rect.fromLTWH(0, 0, imageWidth.toDouble(), imageHeight.toDouble()),
       );
 
-      // Scale the canvas so the full bracket paints inside [imageWidth × imageHeight].
       recordingCanvas.scale(scaleFactor);
       exportPainter.paint(recordingCanvas, canvasSize);
 
@@ -234,7 +251,7 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
         picture.dispose();
       }
 
-      // ── Step 3: Build PDF page layout ──
+      // Build PDF with dynamic page format matching canvas 1:1.
       _updateExportProgress(0.55, 'Building PDF layout…');
       await Future<void>.delayed(Duration.zero);
 
@@ -243,8 +260,6 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
         bracketImage = pw.MemoryImage(capturedImageBytes);
       }
 
-      // Dynamically compute the PDF page format from the bracket canvas
-      // dimensions so the entire bracket fits on one page without cropping.
       final dynamicPageFormat = _computePdfPageFormatFromCanvasSize(canvasSize);
 
       final doc = pw.Document();
@@ -269,13 +284,11 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
         ),
       );
 
-      // ── Step 4: Serialize PDF to bytes ──
       _updateExportProgress(0.75, 'Generating PDF bytes…');
       await Future<void>.delayed(Duration.zero);
 
       final pdfBytes = await doc.save();
 
-      // ── Step 5: Show native print / share dialog ──
       _updateExportProgress(0.9, 'Opening print dialog…');
       await Future<void>.delayed(Duration.zero);
 
@@ -293,20 +306,49 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
   }
 
   /// Computes a [PdfPageFormat] that fits the full bracket canvas on a single
-  /// page while maintaining its aspect ratio.
-  ///
-  /// The page dimensions are set to match the canvas logical pixel dimensions
-  /// 1:1 as PDF points. When physically printing, the printer's "fit to page"
-  /// option will scale down to the paper being used. Falls back to A4
-  /// landscape if the canvas size is unavailable.
+  /// page — dimensions match the canvas logical pixels 1:1 as PDF points.
   PdfPageFormat _computePdfPageFormatFromCanvasSize(Size canvasSize) {
     if (canvasSize == Size.zero ||
         canvasSize.width <= 0 ||
         canvasSize.height <= 0) {
       return PdfPageFormat.a4.landscape;
     }
-
     return PdfPageFormat(canvasSize.width, canvasSize.height);
+  }
+
+  /// Generates a PDF from the [painter] using the confirmed [settings] and
+  /// opens the native print / share dialog.
+  Future<void> _generateAndPrintPdf({
+    required TieSheetPainter painter,
+    required Size canvasSize,
+    required PrintExportSettings settings,
+  }) async {
+    _updateExportProgress(0.0, 'Preparing export…');
+    await Future<void>.delayed(Duration.zero);
+
+    try {
+      const pdfService = BracketPdfGeneratorService();
+      final pdfBytes = await pdfService.generatePdf(
+        painter: painter,
+        canvasSize: canvasSize,
+        settings: settings,
+        onProgress: _updateExportProgress,
+      );
+
+      _updateExportProgress(0.95, 'Opening print dialog…');
+      await Future<void>.delayed(Duration.zero);
+
+      await Printing.layoutPdf(
+        onLayout: (PdfPageFormat format) async => pdfBytes,
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _pdfExportProgress = null;
+          _pdfExportStatusMessage = '';
+        });
+      }
+    }
   }
 
   @override
@@ -620,19 +662,59 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
           const SizedBox(width: 8),
 
           // ── Export PDF ──
-          TextButton(
-            style: actionButtonStyle,
-            onPressed: _isExportingPdf ? null : () => _exportPdf(),
-            child: _isExportingPdf
-                ? const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Colors.white,
+          PopupMenuButton<String>(
+            enabled: !_isExportingPdf,
+            onSelected: (value) {
+              switch (value) {
+                case 'direct':
+                  _directExportPdf();
+                case 'advanced':
+                  _showPrintPreview();
+              }
+            },
+            itemBuilder: (_) => const [
+              PopupMenuItem(
+                value: 'direct',
+                child: ListTile(
+                  leading: Icon(Icons.print, size: 20),
+                  title: Text('Direct Print'),
+                  subtitle: Text('Single page, fit-to-page'),
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+              PopupMenuItem(
+                value: 'advanced',
+                child: ListTile(
+                  leading: Icon(Icons.dashboard_customize, size: 20),
+                  title: Text('Advanced Export'),
+                  subtitle: Text('Multi-page tiling, custom paper'),
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+            ],
+            child: TextButton(
+              style: actionButtonStyle,
+              onPressed: null,
+              child: _isExportingPdf
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text('Export PDF'),
+                        SizedBox(width: 4),
+                        Icon(Icons.arrow_drop_down, size: 18),
+                      ],
                     ),
-                  )
-                : const Text('Export PDF'),
+            ),
           ),
         ],
       ),

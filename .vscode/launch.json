@@ -2,6 +2,17 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "🚀 Dev (Web / Chrome + Canvas)",
+            "cwd": "${workspaceFolder}",
+            "request": "launch",
+            "type": "dart",
+            "program": "lib/main.dart",
+            "args": [
+                "-d", "chrome",
+                "--web-port", "51885"
+            ]
+        },
+        {
             "name": "🚀 Dev (Web / Chrome + Skwasm)",
             "cwd": "${workspaceFolder}",
             "request": "launch",
