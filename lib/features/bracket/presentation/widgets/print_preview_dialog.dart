@@ -203,6 +203,16 @@ class _PrintPreviewDialogState extends State<PrintPreviewDialog> {
             secondChild: const SizedBox.shrink(),
           ),
 
+          // Resolution Quality
+          _buildSettingLabel(
+            Icons.high_quality,
+            'Resolution Quality',
+            colorScheme,
+          ),
+          const SizedBox(height: 8),
+          _buildResolutionQualityToggle(colorScheme),
+          const SizedBox(height: 20),
+
           // Page grid info
           _buildPageGridInfo(colorScheme),
         ],
@@ -317,6 +327,34 @@ class _PrintPreviewDialogState extends State<PrintPreviewDialog> {
                 colorScheme: colorScheme,
                 onTap: () => setState(
                   () => _settings = _settings.copyWith(fitMode: mode),
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildResolutionQualityToggle(ColorScheme colorScheme) {
+    return Row(
+      children: [
+        for (final quality in PrintResolutionQuality.values)
+          Expanded(
+            child: Padding(
+              padding: EdgeInsets.only(
+                right: quality == PrintResolutionQuality.standard ? 4 : 0,
+                left: quality == PrintResolutionQuality.high ? 4 : 0,
+              ),
+              child: _ToggleChip(
+                label: quality.label,
+                icon: quality == PrintResolutionQuality.standard
+                    ? Icons.sd
+                    : Icons.hd,
+                isSelected: _settings.resolutionQuality == quality,
+                colorScheme: colorScheme,
+                onTap: () => setState(
+                  () => _settings =
+                      _settings.copyWith(resolutionQuality: quality),
                 ),
               ),
             ),
@@ -444,6 +482,13 @@ class _PrintPreviewDialogState extends State<PrintPreviewDialog> {
           _infoRow(
             'Total',
             '$_totalPages ${_totalPages == 1 ? 'page' : 'pages'}',
+            colorScheme,
+          ),
+          const SizedBox(height: 4),
+          _infoRow(
+            'Resolution',
+            '${_settings.resolutionQuality.label}'
+            ' (${_settings.resolutionQuality.maxTextureDimension.round()} px)',
             colorScheme,
           ),
         ],

@@ -47,6 +47,27 @@ enum PrintFitMode {
   final String label;
 }
 
+// ── Resolution Quality ──────────────────────────────────────────────────────
+
+/// Maximum GPU texture dimension used when rasterising the bracket for PDF.
+///
+/// Higher values produce sharper prints but require more GPU memory.
+enum PrintResolutionQuality {
+  /// 4 000 px — faster, lower memory, sufficient for most screens.
+  standard('Standard', 4000.0),
+
+  /// 8 192 px — maximum sharpness for high-DPI / large-format prints.
+  high('High', 8192.0);
+
+  const PrintResolutionQuality(this.label, this.maxTextureDimension);
+
+  /// Human-readable label for the UI toggle.
+  final String label;
+
+  /// The maximum pixel dimension passed to the rasteriser.
+  final double maxTextureDimension;
+}
+
 // ── Print Export Settings ───────────────────────────────────────────────────
 
 /// Immutable configuration for bracket PDF export.
@@ -62,6 +83,7 @@ class PrintExportSettings {
     this.scaleFactor = 1.0,
     this.tileOverlapMillimeters = 10.0,
     this.marginPoints = 24.0,
+    this.resolutionQuality = PrintResolutionQuality.standard,
   });
 
   final PaperSize paperSize;
@@ -79,6 +101,9 @@ class PrintExportSettings {
 
   /// Margin around each page in PDF points.
   final double marginPoints;
+
+  /// The rasterisation quality / max GPU texture dimension.
+  final PrintResolutionQuality resolutionQuality;
 
   // ── Millimeter ↔ point conversion ──
 
@@ -181,6 +206,7 @@ class PrintExportSettings {
     double? scaleFactor,
     double? tileOverlapMillimeters,
     double? marginPoints,
+    PrintResolutionQuality? resolutionQuality,
   }) {
     return PrintExportSettings(
       paperSize: paperSize ?? this.paperSize,
@@ -190,6 +216,7 @@ class PrintExportSettings {
       tileOverlapMillimeters:
           tileOverlapMillimeters ?? this.tileOverlapMillimeters,
       marginPoints: marginPoints ?? this.marginPoints,
+      resolutionQuality: resolutionQuality ?? this.resolutionQuality,
     );
   }
 
@@ -205,7 +232,8 @@ class PrintExportSettings {
           fitMode == other.fitMode &&
           scaleFactor == other.scaleFactor &&
           tileOverlapMillimeters == other.tileOverlapMillimeters &&
-          marginPoints == other.marginPoints;
+          marginPoints == other.marginPoints &&
+          resolutionQuality == other.resolutionQuality;
 
   @override
   int get hashCode => Object.hash(
@@ -215,11 +243,13 @@ class PrintExportSettings {
     scaleFactor,
     tileOverlapMillimeters,
     marginPoints,
+    resolutionQuality,
   );
 
   @override
   String toString() =>
       'PrintExportSettings(paperSize: $paperSize, orientation: $orientation, '
       'fitMode: $fitMode, scaleFactor: $scaleFactor, '
-      'overlap: ${tileOverlapMillimeters}mm, margin: ${marginPoints}pt)';
+      'overlap: ${tileOverlapMillimeters}mm, margin: ${marginPoints}pt, '
+      'resolution: $resolutionQuality)';
 }

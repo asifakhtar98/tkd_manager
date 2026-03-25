@@ -20,9 +20,9 @@ import 'package:tkd_saas/features/bracket/presentation/widgets/tie_sheet_canvas_
 class BracketPdfGeneratorService {
   const BracketPdfGeneratorService();
 
-  /// Maximum safe texture dimension to avoid WebGL silent clipping.
-  /// Modern browsers with CanvasKit/Skwasm reliably support 8192.
-  static const double _safeMaxTextureDimension = 8192.0;
+  /// Default maximum safe texture dimension to avoid WebGL silent clipping.
+  /// Used as fallback when no explicit quality setting is provided.
+  static const double _defaultMaxTextureDimension = 8192.0;
 
   /// Generates a PDF document from the given [painter] and [canvasSize]
   /// according to [settings].
@@ -62,10 +62,12 @@ class BracketPdfGeneratorService {
     await _yieldToEventLoop();
 
     // Render at full canvas resolution for maximum sharpness.
-    // _renderCanvasRegionToImage clamps to the safe GPU texture limit (4000px)
-    // automatically, so this produces the highest quality raster possible.
+    // _renderCanvasRegionToImage clamps to the user-selected GPU texture
+    // limit automatically, producing the highest quality raster possible.
     final double outputWidth = canvasSize.width;
     final double outputHeight = canvasSize.height;
+
+    final double maxTexture = settings.resolutionQuality.maxTextureDimension;
 
     final imageBytes = await _renderCanvasRegionToImage(
       painter: painter,
@@ -74,6 +76,7 @@ class BracketPdfGeneratorService {
       regionSize: canvasSize,
       outputWidth: outputWidth,
       outputHeight: outputHeight,
+      maxTextureDimension: maxTexture,
     );
 
     onProgress?.call(0.5, 'Building PDF…');
@@ -130,6 +133,7 @@ class BracketPdfGeneratorService {
     final effectiveStepHeight = tileCoverage.height - overlapCanvas;
 
     final doc = pw.Document();
+    final double maxTexture = settings.resolutionQuality.maxTextureDimension;
 
     int pageIndex = 0;
     for (int row = 0; row < grid.rows; row++) {
@@ -158,14 +162,15 @@ class BracketPdfGeneratorService {
         if (regionWidth <= 0 || regionHeight <= 0) continue;
 
         // Render each tile at the highest resolution that fits within the
-        // safe GPU texture limit. The base output (regionSize × scaleFactor)
-        // equals the printable area (~800px), which is too low.  We multiply
-        // by a high-DPI factor so each tile rasterises at up to 4000px.
+        // user-selected GPU texture limit. The base output
+        // (regionSize × scaleFactor) equals the printable area (~800px),
+        // which is too low. We multiply by a high-DPI factor so each tile
+        // rasterises at up to the chosen quality limit.
         final double baseOutputWidth = regionWidth * settings.scaleFactor;
         final double baseOutputHeight = regionHeight * settings.scaleFactor;
         final double highDpiMultiplier = min(
-          _safeMaxTextureDimension / baseOutputWidth,
-          _safeMaxTextureDimension / baseOutputHeight,
+          maxTexture / baseOutputWidth,
+          maxTexture / baseOutputHeight,
         ).clamp(1.0, double.infinity);
 
         final imageBytes = await _renderCanvasRegionToImage(
@@ -175,6 +180,7 @@ class BracketPdfGeneratorService {
           regionSize: Size(regionWidth, regionHeight),
           outputWidth: baseOutputWidth * highDpiMultiplier,
           outputHeight: baseOutputHeight * highDpiMultiplier,
+          maxTextureDimension: maxTexture,
         );
 
         if (imageBytes != null) {
@@ -231,7 +237,9 @@ class BracketPdfGeneratorService {
   /// - [regionOffset]: top-left corner of the viewport into the canvas.
   /// - [regionSize]: how much of the canvas to capture (in canvas pixels).
   /// - [outputWidth]/[outputHeight]: desired rasterised image dimensions
-  ///   (in pixels). These are clamped to [_safeMaxTextureDimension].
+  ///   (in pixels). These are clamped to [maxTextureDimension].
+  /// - [maxTextureDimension]: the maximum allowed pixel dimension, defaults
+  ///   to [_defaultMaxTextureDimension].
   Future<Uint8List?> _renderCanvasRegionToImage({
     required TieSheetPainter painter,
     required Size canvasSize,
@@ -239,13 +247,14 @@ class BracketPdfGeneratorService {
     required Size regionSize,
     required double outputWidth,
     required double outputHeight,
+    double maxTextureDimension = _defaultMaxTextureDimension,
   }) async {
     // Clamp output dimensions to safe GPU texture limit.
     final double safeScale = min(
       1.0,
       min(
-        _safeMaxTextureDimension / outputWidth,
-        _safeMaxTextureDimension / outputHeight,
+        maxTextureDimension / outputWidth,
+        maxTextureDimension / outputHeight,
       ),
     );
     final int imageWidth = (outputWidth * safeScale).ceil();
