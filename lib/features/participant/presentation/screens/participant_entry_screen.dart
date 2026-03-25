@@ -11,7 +11,7 @@ import 'package:tkd_saas/features/tournament/presentation/bloc/tournament_bloc.d
 ///
 /// The tournament selector at the top lets the user:
 ///  - Pick any existing tournament from [TournamentBloc] → fields become read-only.
-///  - Choose "+ Create New Tournament" → fields become editable.
+///  - Choose "Create New Tournament" → fields become editable.
 ///
 /// On GENERATE, if a new tournament was created it is dispatched to [TournamentBloc],
 /// then the generated bracket is saved as a [BracketSnapshot] under that tournament
@@ -326,7 +326,7 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                               SizedBox(width: 8),
                               Flexible(
                                 child: Text(
-                                  '+ Create New Tournament',
+                                  'Create New Tournament',
                                   overflow: TextOverflow.ellipsis,
                                   style: TextStyle(
                                     color: Colors.grey.shade800,

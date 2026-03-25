@@ -24,7 +24,7 @@ void main() {
     expect(find.text('New Bracket Setup'), findsOneWidget);
   }
 
-  /// Selects '+ Create New Tournament' from the tournament dropdown and
+  /// Selects 'Create New Tournament' from the tournament dropdown and
   /// fills the required name field. Must be called before [tapGenerate]
   /// because GENERATE is gated on a tournament being set.
   Future<void> selectCreateNewTournament(
@@ -35,7 +35,7 @@ void main() {
     await tester.ensureVisible(tournamentDropdown);
     await tester.tap(tournamentDropdown);
     await tester.pumpAndSettle();
-    await tester.tap(find.text('+ Create New Tournament').last);
+    await tester.tap(find.text('Create New Tournament').last);
     await tester.pumpAndSettle();
     final nameField = find.widgetWithText(TextField, 'Tournament Name *');
     await tester.ensureVisible(nameField);

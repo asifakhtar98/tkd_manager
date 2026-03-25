@@ -28,7 +28,7 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  /// Selects '+ Create New Tournament' from the tournament dropdown and
+  /// Selects 'Create New Tournament' from the tournament dropdown and
   /// fills the required tournament name field. Must be called before
   /// [tapGenerate] because GENERATE is gated on a tournament being set.
   Future<void> selectCreateNewTournament(
@@ -40,7 +40,7 @@ void main() {
     await tester.ensureVisible(tournamentDropdown);
     await tester.tap(tournamentDropdown);
     await tester.pumpAndSettle();
-    await tester.tap(find.text('+ Create New Tournament').last);
+    await tester.tap(find.text('Create New Tournament').last);
     await tester.pumpAndSettle();
     // Fill the required name field that appears after selecting create-new.
     final nameField = find.widgetWithText(TextField, 'Tournament Name *');
