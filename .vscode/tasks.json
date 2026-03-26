@@ -2,29 +2,19 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "Flutter: Build Web (Skwasm)",
-      "type": "shell",
-      "command": "flutter build web --wasm",
-      "options": {
-        "cwd": "${workspaceFolder}"
-      },
-      "problemMatcher": [],
-      "group": {
-        "kind": "build",
-        "isDefault": true
-      },
-      "detail": "Builds the Flutter web application with Skwasm (WebAssembly) renderer"
-    },
-    {
-      "label": "Flutter: Run Web (Skwasm / Chrome)",
-      "type": "shell",
-      "command": "flutter run -d chrome --wasm --web-port 51885",
+      "label": "Flutter: Build Web",
+      "type": "flutter",
+      "command": "flutter",
+      "args": [
+        "build",
+        "web"
+      ],
       "options": {
         "cwd": "${workspaceFolder}"
       },
       "problemMatcher": [],
       "group": "build",
-      "detail": "Runs the Flutter web app in Chrome with Skwasm renderer forced"
+      "detail": "Builds the Flutter web application"
     },
     {
       "label": "Flutter: Generate Code",

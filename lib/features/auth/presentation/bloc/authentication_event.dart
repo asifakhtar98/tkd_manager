@@ -1,102 +1,62 @@
-part of 'authentication_bloc.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+part 'authentication_event.freezed.dart';
 
 /// Events consumed by [AuthenticationBloc].
-///
-/// All events with data fields extend [Equatable] for proper deduplication
-/// and simplified test assertions.
-sealed class AuthenticationEvent extends Equatable {
-  const AuthenticationEvent();
+@freezed
+sealed class AuthenticationEvent with _$AuthenticationEvent {
+  /// Start listening to the Supabase [onAuthStateChange] stream.
+  ///
+  /// Dispatched once at app startup from [main.dart].
+  const factory AuthenticationEvent.subscriptionRequested() =
+      AuthenticationSubscriptionRequested;
 
-  @override
-  List<Object?> get props => const [];
-}
+  /// User tapped the **Sign In** button with valid credentials.
+  const factory AuthenticationEvent.signInRequested({
+    required String email,
+    required String password,
+  }) = AuthenticationSignInRequested;
 
-/// Start listening to the Supabase [onAuthStateChange] stream.
-///
-/// Dispatched once at app startup from [main.dart].
-final class AuthenticationSubscriptionRequested extends AuthenticationEvent {
-  const AuthenticationSubscriptionRequested();
-}
+  /// User tapped the **Sign Up** button with valid credentials.
+  const factory AuthenticationEvent.signUpRequested({
+    required String email,
+    required String password,
+    required String organizationName,
+  }) = AuthenticationSignUpRequested;
 
-/// User tapped the **Sign In** button with valid credentials.
-final class AuthenticationSignInRequested extends AuthenticationEvent {
-  const AuthenticationSignInRequested({
-    required this.email,
-    required this.password,
-  });
+  /// User requested to sign out (e.g. from an AppBar action).
+  const factory AuthenticationEvent.signOutRequested() =
+      AuthenticationSignOutRequested;
 
-  final String email;
-  final String password;
+  /// User tapped "Forgot Password?" and submitted their email address.
+  const factory AuthenticationEvent.passwordResetRequested({
+    required String email,
+  }) = AuthenticationPasswordResetRequested;
 
-  @override
-  List<Object?> get props => [email, password];
-}
+  /// User submitted a new password on the password-reset screen
+  /// (after clicking the recovery link in their email).
+  const factory AuthenticationEvent.passwordUpdateRequested({
+    required String newPassword,
+  }) = AuthenticationPasswordUpdateRequested;
 
-/// User tapped the **Sign Up** button with valid credentials.
-final class AuthenticationSignUpRequested extends AuthenticationEvent {
-  const AuthenticationSignUpRequested({
-    required this.email,
-    required this.password,
-    required this.organizationName,
-  });
+  /// Internal event fired by the [authStateChanges] stream listener.
+  ///
+  /// A `null` [user] means the session was destroyed (sign-out / deletion).
+  @internal
+  const factory AuthenticationEvent.statusChanged({required User? user}) =
+      AuthenticationStatusChanged;
 
-  final String email;
-  final String password;
-  final String organizationName;
+  /// Internal event fired when the auth stream reports a password recovery
+  /// token (user clicked the recovery link in their email).
+  @internal
+  const factory AuthenticationEvent.passwordRecoveryDetected() =
+      AuthenticationPasswordRecoveryDetected;
 
-  @override
-  List<Object?> get props => [email, password, organizationName];
-}
-
-/// User requested to sign out (e.g. from an AppBar action).
-final class AuthenticationSignOutRequested extends AuthenticationEvent {
-  const AuthenticationSignOutRequested();
-}
-
-/// User tapped "Forgot Password?" and submitted their email address.
-final class AuthenticationPasswordResetRequested extends AuthenticationEvent {
-  const AuthenticationPasswordResetRequested({required this.email});
-
-  final String email;
-
-  @override
-  List<Object?> get props => [email];
-}
-
-/// User submitted a new password on the password-reset screen
-/// (after clicking the recovery link in their email).
-final class AuthenticationPasswordUpdateRequested extends AuthenticationEvent {
-  const AuthenticationPasswordUpdateRequested({required this.newPassword});
-
-  final String newPassword;
-
-  @override
-  List<Object?> get props => [newPassword];
-}
-
-/// Internal event fired by the [authStateChanges] stream listener.
-///
-/// A `null` [user] means the session was destroyed (sign-out / deletion).
-final class _AuthenticationStatusChanged extends AuthenticationEvent {
-  const _AuthenticationStatusChanged({required this.user});
-
-  final User? user;
-
-  @override
-  List<Object?> get props => [user];
-}
-
-/// Internal event fired when the auth stream reports a password recovery
-/// token (user clicked the recovery link in their email).
-final class _AuthenticationPasswordRecoveryDetected
-    extends AuthenticationEvent {
-  const _AuthenticationPasswordRecoveryDetected();
-}
-
-/// Internal event fired when the auth stream detects a `signedIn` event
-/// that originated from an email confirmation PKCE redirect (the browser
-/// URL contains a `?code=` query parameter).
-final class _AuthenticationEmailConfirmationDetected
-    extends AuthenticationEvent {
-  const _AuthenticationEmailConfirmationDetected();
+  /// Internal event fired when the auth stream detects a `signedIn` event
+  /// that originated from an email confirmation PKCE redirect (the browser
+  /// URL contains a `?code=` query parameter).
+  @internal
+  const factory AuthenticationEvent.emailConfirmationDetected() =
+      AuthenticationEmailConfirmationDetected;
 }

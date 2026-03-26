@@ -6,7 +6,6 @@ import 'tie_sheet_theme_config.dart';
 /// Converts a [Color] to an 8-character uppercase ARGB hex string.
 ///
 /// Uses non-deprecated [Color] component accessors (a, r, g, b are 0.0–1.0
-/// in Flutter 3.27+) instead of the deprecated [Color.value] getter.
 String _colorToHexString(Color color) {
   final a = (color.a * 255).round();
   final r = (color.r * 255).round();
@@ -182,7 +181,7 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
                     onPressed: () => _confirmAndResetToPreset(
                       context,
                       presetName: 'Screen',
-                      presetConfig: const TieSheetThemeConfig.defaultMode(),
+                      presetConfig: TieSheetThemeConfig.defaultPreset,
                     ),
                     icon: const Icon(Icons.visibility, size: 14),
                     label:
@@ -203,7 +202,7 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
                     onPressed: () => _confirmAndResetToPreset(
                       context,
                       presetName: 'Print',
-                      presetConfig: const TieSheetThemeConfig.printMode(),
+                      presetConfig: TieSheetThemeConfig.printPreset,
                     ),
                     icon: const Icon(Icons.print, size: 14),
                     label:

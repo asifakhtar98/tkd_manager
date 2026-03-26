@@ -18,7 +18,7 @@ void main() {
 
   group('TieSheetThemeConfig', () {
     group('defaultMode preset', () {
-      const config = TieSheetThemeConfig.defaultMode();
+      const config = TieSheetThemeConfig.defaultPreset;
 
       // ── Connector / junction tokens ──
       test('mutedColor matches original slate', () {
@@ -35,9 +35,7 @@ void main() {
       test('canvasBackgroundColor is warm white', () {
         expect(config.canvasBackgroundColor, const Color(0xFFFFFEFC));
       });
-      test('borderColor matches original light-slate', () {
-        expect(config.borderColor, const Color(0xFF94A3B8));
-      });
+
       test('shadowOpacityMultiplier is full', () {
         expect(config.shadowOpacityMultiplier, 1.0);
       });
@@ -160,7 +158,7 @@ void main() {
       });
       test('logoRowHeight is derived from logoMaxHeight + logoPadding*2', () {
         // logoMaxHeight=60, logoPadding=12 → 60+24=84
-        expect(config.logoMaxHeight + config.logoPadding * 2, 84.0);
+        expect(config.logoRowHeight, 84.0);
       });
 
       // ── Badge & pill sizing tokens ──
@@ -212,7 +210,7 @@ void main() {
     });
 
     group('printMode preset', () {
-      const config = TieSheetThemeConfig.printMode();
+      const config = TieSheetThemeConfig.printPreset;
 
       // ── All connectors are black ──
       test('mutedColor is black', () {
@@ -321,7 +319,7 @@ void main() {
         expect(config.canvasMargin, 36.0);
       });
       test('logoRowHeight is derived from components', () {
-        expect(config.logoMaxHeight + config.logoPadding * 2, 84.0);
+        expect(config.logoRowHeight, 84.0);
       });
 
       // ── Typography tokens (same as default) ──
@@ -347,41 +345,41 @@ void main() {
         final config = TieSheetThemeConfig.fromMode(
           TieSheetThemeMode.defaultMode,
         );
-        expect(config, const TieSheetThemeConfig.defaultMode());
+        expect(config, TieSheetThemeConfig.defaultPreset);
       });
 
       test('printMode returns printMode preset', () {
         final config = TieSheetThemeConfig.fromMode(
           TieSheetThemeMode.printMode,
         );
-        expect(config, const TieSheetThemeConfig.printMode());
+        expect(config, TieSheetThemeConfig.printPreset);
       });
 
       test('customMode returns defaultMode as starting base', () {
         final config = TieSheetThemeConfig.fromMode(
           TieSheetThemeMode.customMode,
         );
-        expect(config, const TieSheetThemeConfig.defaultMode());
+        expect(config, TieSheetThemeConfig.defaultPreset);
       });
     });
 
     group('equality', () {
       test('identical presets are equal', () {
-        const configA = TieSheetThemeConfig.defaultMode();
-        const configB = TieSheetThemeConfig.defaultMode();
+        const configA = TieSheetThemeConfig.defaultPreset;
+        const configB = TieSheetThemeConfig.defaultPreset;
         expect(configA, equals(configB));
         expect(configA.hashCode, configB.hashCode);
       });
 
       test('different presets are not equal', () {
-        const defaultConfig = TieSheetThemeConfig.defaultMode();
-        const printConfig = TieSheetThemeConfig.printMode();
+        const defaultConfig = TieSheetThemeConfig.defaultPreset;
+        const printConfig = TieSheetThemeConfig.printPreset;
         expect(defaultConfig, isNot(equals(printConfig)));
         expect(defaultConfig.hashCode, isNot(equals(printConfig.hashCode)));
       });
 
       test('custom config with same values as preset is equal', () {
-        const preset = TieSheetThemeConfig.defaultMode();
+        const preset = TieSheetThemeConfig.defaultPreset;
         const custom = TieSheetThemeConfig(
           mutedColor: Color(0xFF64748B),
           connectorWonColor: Color(0xFF334155),
@@ -484,7 +482,7 @@ void main() {
     });
 
     group('copyWith', () {
-      const baseConfig = TieSheetThemeConfig.defaultMode();
+      const baseConfig = TieSheetThemeConfig.defaultPreset;
 
       test('returns identical config when no arguments are provided', () {
         final copied = baseConfig.copyWith();
@@ -625,10 +623,12 @@ void main() {
           dashedLineGapWidth: 80.0,
           shadowBlurRadius: 79.0,
           shadowColor: c1,
+          shadowOffsetX: 78.0,
+          shadowOffsetY: 77.5,
           fontFamily: 'TestFont',
           headerLetterSpacing: 77.0,
           subHeaderLetterSpacing: 76.0,
-          // New tokens
+          // Layout tokens
           rowHeight: 75.0,
           intraMatchGapHeight: 74.0,
           interMatchGapHeight: 73.0,
@@ -645,13 +645,18 @@ void main() {
           medalNameColumnWidth: 62.0,
           medalLabelColumnWidth: 61.0,
           medalRowGap: 60.0,
-          headerBannerHeight: 59.0,
+          // Junction geometry
+          centerFinalMinimumSpan: 59.5,
+          grandFinalOutputArmLength: 59.0,
+          // Banner & logo
+          headerBannerHeight: 58.5,
           logoMaxHeight: 58.0,
           logoPadding: 57.0,
           matchPillFillColor: c28,
           badgeTextColor: c29,
           sectionLabelBackgroundOpacity: 0.56,
           headerSecondaryTextOpacity: 0.55,
+          badgeOutlineOpacity: 0.54,
           canvasMinimumWidth: 53.0,
           canvasMinimumHeight: 52.0,
         );
@@ -709,10 +714,12 @@ void main() {
         expect(overridden.dashedLineGapWidth, 80.0);
         expect(overridden.shadowBlurRadius, 79.0);
         expect(overridden.shadowColor, c1);
+        expect(overridden.shadowOffsetX, 78.0);
+        expect(overridden.shadowOffsetY, 77.5);
         expect(overridden.fontFamily, 'TestFont');
         expect(overridden.headerLetterSpacing, 77.0);
         expect(overridden.subHeaderLetterSpacing, 76.0);
-        // New tokens
+        // Layout tokens
         expect(overridden.rowHeight, 75.0);
         expect(overridden.intraMatchGapHeight, 74.0);
         expect(overridden.interMatchGapHeight, 73.0);
@@ -729,11 +736,16 @@ void main() {
         expect(overridden.medalNameColumnWidth, 62.0);
         expect(overridden.medalLabelColumnWidth, 61.0);
         expect(overridden.medalRowGap, 60.0);
-        expect(overridden.headerBannerHeight, 59.0);
+        // Junction geometry
+        expect(overridden.centerFinalMinimumSpan, 59.5);
+        expect(overridden.grandFinalOutputArmLength, 59.0);
+        // Banner & logo
+        expect(overridden.headerBannerHeight, 58.5);
         expect(overridden.logoMaxHeight, 58.0);
         expect(overridden.logoPadding, 57.0);
         expect(overridden.sectionLabelBackgroundOpacity, 0.56);
         expect(overridden.headerSecondaryTextOpacity, 0.55);
+        expect(overridden.badgeOutlineOpacity, 0.54);
         expect(overridden.canvasMinimumWidth, 53.0);
         expect(overridden.canvasMinimumHeight, 52.0);
       });

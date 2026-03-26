@@ -31,6 +31,6 @@ The loop stops only when all completed epics are fully usable and testable in re
 
 - This will be a flutter website, do web style asthetics and ui structuring when working on ui. 
 
-- do exhaustive code review to the changes/implementation. fix all issues found also do some dx enhancements if needed. dont overcommunicate
+- do exhaustive code review of the changes/implementation. fix all issues found also do some dx enhancements if needed. dont overcommunicate
 
 -continue from where left off.

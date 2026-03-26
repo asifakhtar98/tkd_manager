@@ -1,16 +1,15 @@
-part of 'authentication_bloc.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+part 'authentication_state.freezed.dart';
 
 /// Possible states emitted by [AuthenticationBloc].
 ///
 /// The [GoRouter] redirect guard pattern-matches on this sealed family
 /// to decide whether to show the login screen, main app, or password
 /// reset screen.
-///
-/// States carrying data extend [Equatable] so BLoC deduplicates identical
-/// emissions and test assertions can compare by value.
-sealed class AuthenticationState extends Equatable {
-  const AuthenticationState();
-
+@freezed
+sealed class AuthenticationState with _$AuthenticationState {
   /// App has just been launched — we have not yet checked whether a
   /// persisted session exists.
   const factory AuthenticationState.unknown() = AuthenticationUnknown;
@@ -52,54 +51,4 @@ sealed class AuthenticationState extends Equatable {
   /// interstitial "Email Verified" screen before logging in manually.
   const factory AuthenticationState.emailJustConfirmed() =
       AuthenticationEmailJustConfirmed;
-
-  @override
-  List<Object?> get props => const [];
-}
-
-final class AuthenticationUnknown extends AuthenticationState {
-  const AuthenticationUnknown();
-}
-
-final class AuthenticationAuthenticated extends AuthenticationState {
-  const AuthenticationAuthenticated({required this.user});
-
-  final User user;
-
-  @override
-  List<Object?> get props => [user];
-}
-
-final class AuthenticationUnauthenticated extends AuthenticationState {
-  const AuthenticationUnauthenticated();
-}
-
-final class AuthenticationInProgress extends AuthenticationState {
-  const AuthenticationInProgress();
-}
-
-final class AuthenticationFailureState extends AuthenticationState {
-  const AuthenticationFailureState({required this.message});
-
-  final String message;
-
-  @override
-  List<Object?> get props => [message];
-}
-
-final class AuthenticationPasswordResetEmailSent extends AuthenticationState {
-  const AuthenticationPasswordResetEmailSent();
-}
-
-final class AuthenticationEmailConfirmationSent extends AuthenticationState {
-  const AuthenticationEmailConfirmationSent();
-}
-
-final class AuthenticationPasswordRecoveryInProgress
-    extends AuthenticationState {
-  const AuthenticationPasswordRecoveryInProgress();
-}
-
-final class AuthenticationEmailJustConfirmed extends AuthenticationState {
-  const AuthenticationEmailJustConfirmed();
 }

@@ -76,7 +76,7 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
   /// The user-customised theme config, mutated via the editor panel.
   /// Starts from the default preset and accumulates per-token overrides.
   TieSheetThemeConfig _customThemeConfig =
-      const TieSheetThemeConfig.defaultMode();
+      TieSheetThemeConfig.defaultPreset;
 
   bool get _isExportingPdf => _pdfExportProgress != null;
 

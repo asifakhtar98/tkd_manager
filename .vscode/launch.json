@@ -2,7 +2,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "🚀 Dev (Web / Chrome + Canvas)",
+            "name": "🚀 Dev (Web / Chrome)",
             "cwd": "${workspaceFolder}",
             "request": "launch",
             "type": "dart",
@@ -13,19 +13,7 @@
             ]
         },
         {
-            "name": "🚀 Dev (Web / Chrome + Skwasm)",
-            "cwd": "${workspaceFolder}",
-            "request": "launch",
-            "type": "dart",
-            "program": "lib/main.dart",
-            "args": [
-                "-d", "chrome",
-                "--wasm",
-                "--web-port", "51885"
-            ]
-        },
-        {
-            "name": "� Dev (iPad / iOS Simulator)",
+            "name": " Dev (iPad / iOS Simulator)",
             "cwd": "${workspaceFolder}",
             "request": "launch",
             "type": "dart",
@@ -35,7 +23,7 @@
             ]
         },
         {
-            "name": "📊 Profile Mode (Chrome + Skwasm)",
+            "name": "📊 Profile Mode (Chrome)",
             "cwd": "${workspaceFolder}",
             "request": "launch",
             "type": "dart",
@@ -43,12 +31,11 @@
             "flutterMode": "profile",
             "args": [
                 "-d", "chrome",
-                "--wasm",
                 "--web-port", "51885"
             ]
         },
         {
-            "name": "🏭 Release Mode (Chrome + Skwasm)",
+            "name": "🏭 Release Mode (Chrome)",
             "cwd": "${workspaceFolder}",
             "request": "launch",
             "type": "dart",
@@ -56,7 +43,6 @@
             "flutterMode": "release",
             "args": [
                 "-d", "chrome",
-                "--wasm",
                 "--web-port", "51885"
             ]
         },

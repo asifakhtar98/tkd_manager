@@ -1,15 +1,20 @@
 import 'dart:async';
 
-import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart' show kIsWeb, visibleForTesting;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:tkd_saas/features/auth/domain/entities/sign_up_result.dart';
 import 'package:tkd_saas/features/auth/domain/repositories/authentication_repository.dart';
+import 'package:tkd_saas/features/auth/presentation/bloc/authentication_event.dart';
+import 'package:tkd_saas/features/auth/presentation/bloc/authentication_state.dart';
 
-part 'authentication_event.dart';
-part 'authentication_state.dart';
+export 'authentication_event.dart'
+    hide
+        AuthenticationStatusChanged,
+        AuthenticationPasswordRecoveryDetected,
+        AuthenticationEmailConfirmationDetected;
+export 'authentication_state.dart';
 
 /// Type alias for the email-confirmation redirect predicate.
 ///
@@ -38,9 +43,9 @@ class AuthenticationBloc
     on<AuthenticationSignOutRequested>(_onSignOutRequested);
     on<AuthenticationPasswordResetRequested>(_onPasswordResetRequested);
     on<AuthenticationPasswordUpdateRequested>(_onPasswordUpdateRequested);
-    on<_AuthenticationStatusChanged>(_onStatusChanged);
-    on<_AuthenticationPasswordRecoveryDetected>(_onPasswordRecoveryDetected);
-    on<_AuthenticationEmailConfirmationDetected>(_onEmailConfirmationDetected);
+    on<AuthenticationStatusChanged>(_onStatusChanged);
+    on<AuthenticationPasswordRecoveryDetected>(_onPasswordRecoveryDetected);
+    on<AuthenticationEmailConfirmationDetected>(_onEmailConfirmationDetected);
   }
 
   final AuthenticationRepository _authenticationRepository;
@@ -80,14 +85,14 @@ class AuthenticationBloc
           // dashboard.
           if (_isEmailConfirmationRedirect) {
             _emailConfirmationCodeConsumed = true;
-            add(const _AuthenticationEmailConfirmationDetected());
+            add(const AuthenticationEvent.emailConfirmationDetected());
           } else {
-            add(_AuthenticationStatusChanged(user: data.session?.user));
+            add(AuthenticationEvent.statusChanged(user: data.session?.user));
           }
         case AuthChangeEvent.signedOut:
-          add(const _AuthenticationStatusChanged(user: null));
+          add(const AuthenticationEvent.statusChanged(user: null));
         case AuthChangeEvent.passwordRecovery:
-          add(const _AuthenticationPasswordRecoveryDetected());
+          add(const AuthenticationEvent.passwordRecoveryDetected());
         // Events we acknowledge but take no auth-routing action for.
         // `userDeleted` is deprecated but must be matched since it's an enum.
         case AuthChangeEvent.userUpdated:
@@ -228,7 +233,7 @@ class AuthenticationBloc
     await _authenticationRepository.signOut();
     // Emit unauthenticated immediately rather than relying solely on
     // the auth-state stream, which may not fire if the network is down
-    // or the listener was torn down. BLoC's Equatable deduplication
+    // or the listener was torn down. BLoC's freezed value-equality deduplication
     // prevents a redundant emission if the stream also fires signedOut.
     emit(const AuthenticationState.unauthenticated());
   }
@@ -238,7 +243,7 @@ class AuthenticationBloc
   // ───────────────────────────────────────────────────────────────────────────
 
   void _onStatusChanged(
-    _AuthenticationStatusChanged event,
+    AuthenticationStatusChanged event,
     Emitter<AuthenticationState> emit,
   ) {
     if (event.user != null) {
@@ -249,7 +254,7 @@ class AuthenticationBloc
   }
 
   void _onPasswordRecoveryDetected(
-    _AuthenticationPasswordRecoveryDetected event,
+    AuthenticationPasswordRecoveryDetected event,
     Emitter<AuthenticationState> emit,
   ) {
     emit(const AuthenticationState.passwordRecoveryInProgress());
@@ -260,7 +265,7 @@ class AuthenticationBloc
   // ───────────────────────────────────────────────────────────────────────────
 
   Future<void> _onEmailConfirmationDetected(
-    _AuthenticationEmailConfirmationDetected event,
+    AuthenticationEmailConfirmationDetected event,
     Emitter<AuthenticationState> emit,
   ) async {
     // Destroy the auto-created session so the user must log in explicitly.

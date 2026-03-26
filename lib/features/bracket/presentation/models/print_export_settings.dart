@@ -1,4 +1,7 @@
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:pdf/pdf.dart';
+
+part 'print_export_settings.freezed.dart';
 
 // ── Paper Size ──────────────────────────────────────────────────────────────
 
@@ -75,35 +78,31 @@ enum PrintResolutionQuality {
 /// Encapsulates paper size, orientation, fit mode, scale factor, and tile
 /// overlap. Provides computed helpers for printable area, tile grid
 /// dimensions, and total page count.
-class PrintExportSettings {
-  const PrintExportSettings({
-    this.paperSize = PaperSize.a4,
-    this.orientation = PageOrientation.landscape,
-    this.fitMode = PrintFitMode.fitToPage,
-    this.scaleFactor = 1.0,
-    this.tileOverlapMillimeters = 10.0,
-    this.marginPoints = 24.0,
-    this.resolutionQuality = PrintResolutionQuality.standard,
-  });
+@freezed
+abstract class PrintExportSettings with _$PrintExportSettings {
+  const PrintExportSettings._();
 
-  final PaperSize paperSize;
-  final PageOrientation orientation;
-  final PrintFitMode fitMode;
+  const factory PrintExportSettings({
+    @Default(PaperSize.a4) PaperSize paperSize,
+    @Default(PageOrientation.landscape) PageOrientation orientation,
+    @Default(PrintFitMode.fitToPage) PrintFitMode fitMode,
 
-  /// Scale applied to the bracket when tiling (0.5–2.0).
-  /// 1.0 = 1 logical pixel → 1 PDF point.
-  /// Only used in [PrintFitMode.tileAcrossPages].
-  final double scaleFactor;
+    /// Scale applied to the bracket when tiling (0.5–2.0).
+    /// 1.0 = 1 logical pixel → 1 PDF point.
+    /// Only used in [PrintFitMode.tileAcrossPages].
+    @Default(1.0) double scaleFactor,
 
-  /// Overlap between adjacent tiles in millimeters (0–30).
-  /// Converted to PDF points internally (1 mm ≈ 2.835 pt).
-  final double tileOverlapMillimeters;
+    /// Overlap between adjacent tiles in millimeters (0–30).
+    /// Converted to PDF points internally (1 mm ≈ 2.835 pt).
+    @Default(10.0) double tileOverlapMillimeters,
 
-  /// Margin around each page in PDF points.
-  final double marginPoints;
+    /// Margin around each page in PDF points.
+    @Default(24.0) double marginPoints,
 
-  /// The rasterisation quality / max GPU texture dimension.
-  final PrintResolutionQuality resolutionQuality;
+    /// The rasterisation quality / max GPU texture dimension.
+    @Default(PrintResolutionQuality.standard)
+    PrintResolutionQuality resolutionQuality,
+  }) = _PrintExportSettings;
 
   // ── Millimeter ↔ point conversion ──
 
@@ -196,60 +195,4 @@ class PrintExportSettings {
     );
     return grid.columns * grid.rows;
   }
-
-  // ── Copy-with ──
-
-  PrintExportSettings copyWith({
-    PaperSize? paperSize,
-    PageOrientation? orientation,
-    PrintFitMode? fitMode,
-    double? scaleFactor,
-    double? tileOverlapMillimeters,
-    double? marginPoints,
-    PrintResolutionQuality? resolutionQuality,
-  }) {
-    return PrintExportSettings(
-      paperSize: paperSize ?? this.paperSize,
-      orientation: orientation ?? this.orientation,
-      fitMode: fitMode ?? this.fitMode,
-      scaleFactor: scaleFactor ?? this.scaleFactor,
-      tileOverlapMillimeters:
-          tileOverlapMillimeters ?? this.tileOverlapMillimeters,
-      marginPoints: marginPoints ?? this.marginPoints,
-      resolutionQuality: resolutionQuality ?? this.resolutionQuality,
-    );
-  }
-
-  // ── Equality ──
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is PrintExportSettings &&
-          runtimeType == other.runtimeType &&
-          paperSize == other.paperSize &&
-          orientation == other.orientation &&
-          fitMode == other.fitMode &&
-          scaleFactor == other.scaleFactor &&
-          tileOverlapMillimeters == other.tileOverlapMillimeters &&
-          marginPoints == other.marginPoints &&
-          resolutionQuality == other.resolutionQuality;
-
-  @override
-  int get hashCode => Object.hash(
-    paperSize,
-    orientation,
-    fitMode,
-    scaleFactor,
-    tileOverlapMillimeters,
-    marginPoints,
-    resolutionQuality,
-  );
-
-  @override
-  String toString() =>
-      'PrintExportSettings(paperSize: $paperSize, orientation: $orientation, '
-      'fitMode: $fitMode, scaleFactor: $scaleFactor, '
-      'overlap: ${tileOverlapMillimeters}mm, margin: ${marginPoints}pt, '
-      'resolution: $resolutionQuality)';
 }

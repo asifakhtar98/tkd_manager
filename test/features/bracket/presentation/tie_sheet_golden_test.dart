@@ -417,7 +417,7 @@ void main() {
                 onMatchTap: (_) {},
                 printKey: GlobalKey(),
                 includeThirdPlaceMatch: false,
-                themeConfig: const TieSheetThemeConfig.printMode(),
+                themeConfig: TieSheetThemeConfig.printPreset,
               ),
             ),
           ),

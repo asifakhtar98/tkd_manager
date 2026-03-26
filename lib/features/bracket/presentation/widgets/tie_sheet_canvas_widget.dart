@@ -54,7 +54,7 @@ class TieSheetCanvasWidget extends StatefulWidget {
     this.winnersBracketId,
     this.losersBracketId,
     this.isEditModeEnabled = false,
-    this.themeConfig = const TieSheetThemeConfig.defaultMode(),
+    this.themeConfig = TieSheetThemeConfig.defaultPreset,
     this.onParticipantSlotSwapped,
     this.onParticipantSlotTapped,
   });
@@ -449,7 +449,7 @@ class TieSheetPainter extends CustomPainter {
     this.winnersBracketId,
     this.losersBracketId,
     this.isEditModeEnabled = false,
-    this.themeConfig = const TieSheetThemeConfig.defaultMode(),
+    this.themeConfig = TieSheetThemeConfig.defaultPreset,
     this.leftLogoImage,
     this.rightLogoImage,
   });
