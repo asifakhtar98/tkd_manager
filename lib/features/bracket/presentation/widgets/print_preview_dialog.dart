@@ -205,6 +205,8 @@ class _PrintPreviewDialogState extends State<PrintPreviewDialog> {
                 ),
                 const SizedBox(height: 8),
                 _buildOverlapSlider(colorScheme),
+                const SizedBox(height: 16),
+                _buildAssemblyHintsToggle(colorScheme),
                 const SizedBox(height: 20),
               ],
             ),
@@ -394,6 +396,39 @@ class _PrintPreviewDialogState extends State<PrintPreviewDialog> {
               );
             },
           ),
+      ],
+    );
+  }
+
+  Widget _buildAssemblyHintsToggle(ColorScheme colorScheme) {
+    return Row(
+      children: [
+        Icon(
+          Icons.grid_goldenratio,
+          color: colorScheme.onSurface.withAlpha(140),
+          size: 16,
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            'Assembly Hints',
+            style: TextStyle(
+              color: colorScheme.onSurface.withAlpha(180),
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+        SizedBox(
+          height: 28,
+          child: Switch.adaptive(
+            value: _settings.showTileAssemblyHints,
+            onChanged: (value) => setState(
+              () => _settings =
+                  _settings.copyWith(showTileAssemblyHints: value),
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -876,31 +911,34 @@ class _PageTargetChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: _isActive
-          ? colorScheme.primary.withAlpha(20)
-          : colorScheme.surfaceContainerHighest,
-      borderRadius: BorderRadius.circular(8),
-      child: InkWell(
+    final borderColor =
+        _isActive ? colorScheme.primary : Colors.transparent;
+    final backgroundColor = _isActive
+        ? colorScheme.primary.withAlpha(20)
+        : colorScheme.surfaceContainerHighest;
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: backgroundColor,
         borderRadius: BorderRadius.circular(8),
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: _isActive ? colorScheme.primary : Colors.transparent,
-              width: 1.5,
-            ),
-          ),
-          child: Text(
-            '≤$targetPageCount',
-            style: TextStyle(
-              color: _isActive
-                  ? colorScheme.primary
-                  : colorScheme.onSurface.withAlpha(140),
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
+        border: Border.all(color: borderColor, width: 1.5),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(8),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: Text(
+              '≤$targetPageCount',
+              style: TextStyle(
+                color: _isActive
+                    ? colorScheme.primary
+                    : colorScheme.onSurface.withAlpha(140),
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ),

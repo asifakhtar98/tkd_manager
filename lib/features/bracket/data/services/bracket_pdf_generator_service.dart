@@ -5,6 +5,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/widgets.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
+import 'package:tkd_saas/features/bracket/data/services/tile_assembly_aid_renderer.dart';
 import 'package:tkd_saas/features/bracket/presentation/models/print_export_settings.dart';
 import 'package:tkd_saas/features/bracket/presentation/widgets/tie_sheet_canvas_widget.dart';
 
@@ -125,7 +126,7 @@ class BracketPdfGeneratorService {
       canvasWidth: canvasSize.width,
       canvasHeight: canvasSize.height,
     );
-    final totalPages = grid.columns * grid.rows;
+    final totalTilePages = grid.columns * grid.rows;
 
     final tileCoverage = settings.tileCanvasCoverage();
     final overlapCanvas = settings.tileOverlapCanvasPixels;
@@ -134,15 +135,17 @@ class BracketPdfGeneratorService {
 
     final doc = pw.Document();
     final double maxTexture = settings.resolutionQuality.maxTextureDimension;
+    const assemblyAidRenderer = TileAssemblyAidRenderer();
 
-    int pageIndex = 0;
+    // ── Tile Pages ────────────────────────────────────────────────────────
+    int tileIndex = 0;
     for (int row = 0; row < grid.rows; row++) {
       for (int col = 0; col < grid.columns; col++) {
-        pageIndex++;
-        final progressFraction = pageIndex / totalPages;
+        tileIndex++;
+        final progressFraction = tileIndex / totalTilePages;
         onProgress?.call(
-          progressFraction * 0.8,
-          'Rendering page $pageIndex of $totalPages…',
+          0.1 + progressFraction * 0.7,
+          'Rendering tile $tileIndex of $totalTilePages…',
         );
         await _yieldToEventLoop();
 
@@ -184,6 +187,26 @@ class BracketPdfGeneratorService {
         );
 
         if (imageBytes != null) {
+          // Build assembly aid overlays for this tile (if enabled).
+          final assemblyAidOverlayWidgets = settings.showTileAssemblyHints
+              ? [
+                  ...assemblyAidRenderer.buildRegistrationMarks(
+                    row: row,
+                    col: col,
+                    totalColumns: grid.columns,
+                    totalRows: grid.rows,
+                    settings: settings,
+                  ),
+                  ...assemblyAidRenderer.buildEdgeNeighborLabels(
+                    row: row,
+                    col: col,
+                    totalColumns: grid.columns,
+                    totalRows: grid.rows,
+                    settings: settings,
+                  ),
+                ]
+              : <pw.Widget>[];
+
           doc.addPage(
             pw.Page(
               pageFormat: settings.pdfPageFormat,
@@ -192,6 +215,7 @@ class BracketPdfGeneratorService {
                 final printable = settings.printableAreaPoints;
                 return pw.Stack(
                   children: [
+                    // Bracket tile image.
                     pw.Positioned(
                       left: 0,
                       top: 0,
@@ -202,12 +226,14 @@ class BracketPdfGeneratorService {
                         fit: pw.BoxFit.contain,
                       ),
                     ),
+                    // Assembly aid overlays (registration marks + neighbor labels).
+                    ...assemblyAidOverlayWidgets,
                     // Page label for assembly reference.
                     pw.Positioned(
                       right: 0,
                       bottom: 0,
                       child: pw.Text(
-                        'Page $pageIndex of $totalPages  (R${row + 1} C${col + 1})',
+                        'Page $tileIndex of $totalTilePages  (R${row + 1} C${col + 1})',
                         style: pw.TextStyle(
                           fontSize: 8,
                           color: PdfColor.fromInt(0xFF999999),

@@ -101,14 +101,14 @@ class DashboardRoute extends GoRouteData with $DashboardRoute {
       const DashboardScreen();
 }
 
-@TypedGoRoute<SetupRoute>(path: '/setup')
+@TypedGoRoute<BracketSetupRoute>(path: '/setup')
 @immutable
-class SetupRoute extends GoRouteData with $SetupRoute {
-  const SetupRoute({this.tournamentId});
+class BracketSetupRoute extends GoRouteData with $BracketSetupRoute {
+  const BracketSetupRoute({required this.tournamentId});
 
-  /// When provided, the tournament is pre-selected on the setup screen.
-  /// When null, the user chooses or creates a tournament in the setup flow.
-  final String? tournamentId;
+  /// The owning tournament — always required.  Brackets are created
+  /// exclusively from a tournament's detail page.
+  final String tournamentId;
 
   @override
   Widget build(BuildContext context, GoRouterState state) =>
@@ -127,11 +127,11 @@ class TournamentDetailRoute extends GoRouteData with $TournamentDetailRoute {
       TournamentDetailScreen(tournamentId: tournamentId);
 }
 
-/// Extra data passed to the bracket route.
+/// Extra data passed to the bracket viewer route.
 ///
 /// Bundles all complex objects so go_router_builder can route via `$extra`.
-class BracketRouteExtra {
-  const BracketRouteExtra({
+class BracketViewerRouteExtra {
+  const BracketViewerRouteExtra({
     required this.participants,
     required this.dojangSeparation,
     required this.bracketFormat,
@@ -160,13 +160,13 @@ class BracketRouteExtra {
   final BracketClassification classification;
 }
 
-@TypedGoRoute<BracketRoute>(path: '/bracket')
+@TypedGoRoute<BracketViewerRoute>(path: '/bracket')
 @immutable
-class BracketRoute extends GoRouteData with $BracketRoute {
-  const BracketRoute({required this.$extra});
+class BracketViewerRoute extends GoRouteData with $BracketViewerRoute {
+  const BracketViewerRoute({required this.$extra});
 
   /// All complex bracket params passed as a single typed extra object.
-  final BracketRouteExtra $extra;
+  final BracketViewerRouteExtra $extra;
 
   @override
   Widget build(BuildContext context, GoRouterState state) {

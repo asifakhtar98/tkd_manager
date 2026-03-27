@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:uuid/uuid.dart';
 import 'package:go_router/go_router.dart';
@@ -10,152 +11,175 @@ import 'package:tkd_saas/features/tournament/presentation/bloc/tournament_bloc.d
 
 /// "New Bracket" setup screen.
 ///
-/// The tournament selector at the top lets the user:
-///  - Pick any existing tournament from [TournamentBloc] → fields become read-only.
-///  - Choose "Create New Tournament" → fields become editable.
-///
-/// On GENERATE, if a new tournament was created it is dispatched to [TournamentBloc],
-/// then the generated bracket is saved as a [BracketSnapshot] under that tournament
-/// and the user is navigated to the bracket viewer.
+/// The tournament is always pre-selected — users navigate here from
+/// [TournamentDetailScreen]'s "Add Bracket" FAB with a required
+/// [tournamentId]. There is no inline tournament-creation flow.
 class ParticipantEntryScreen extends StatefulWidget {
-  const ParticipantEntryScreen({super.key, this.tournamentId});
+  const ParticipantEntryScreen({super.key, required this.tournamentId});
 
-  /// When provided (e.g., navigating from a TournamentDetailScreen), this
-  /// tournament is pre-selected and the fields are read-only.
-  final String? tournamentId;
+  /// The owning tournament — always required.
+  final String tournamentId;
 
   @override
   State<ParticipantEntryScreen> createState() => _ParticipantEntryScreenState();
 }
 
 class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
-  static const _createNewSentinel = '__CREATE_NEW__';
+  // ── Constants ──────────────────────────────────────────────────────────────
+  static const int _maximumFullNameLength = 100;
+  static const int _maximumRegistrationIdLength = 50;
+  static const int _maximumDojangNameLength = 100;
+  static const int _maximumClassificationFieldLength = 100;
+  static const int _minimumParticipantsForBracket = 2;
 
+  // ── Participant roster ─────────────────────────────────────────────────────
   final List<ParticipantEntity> _participants = [];
   final Uuid _uuid = const Uuid();
-  bool _dojangSeparation = true;
-  bool _includeThirdPlaceMatch = false;
+
+  // ── Configuration state ────────────────────────────────────────────────────
+  bool _isDojangSeparationEnabled = true;
+  bool _isThirdPlaceMatchIncluded = false;
   BracketFormat _selectedBracketFormat = BracketFormat.singleElimination;
 
-  // Tournament selector state
-  // null = nothing selected yet; _createNewSentinel = user chose "Create New"
-  String? _selectedTournamentId;
-  // Editable controllers used when creating a new tournament
-  final _nameController = TextEditingController();
-  final _dateRangeController = TextEditingController();
-  final _venueController = TextEditingController();
-  final _organizerController = TextEditingController();
-
-  // Bracket-level classification controllers
+  // ── Bracket-level classification controllers ───────────────────────────────
   final _bracketAgeCategoryController = TextEditingController();
   final _bracketGenderController = TextEditingController();
   final _bracketWeightDivisionController = TextEditingController();
 
-  // Participant entry controllers
+  // ── Participant quick-add form ─────────────────────────────────────────────
+  final _participantFormKey = GlobalKey<FormState>();
   final _fullNameController = TextEditingController();
-  final _dojangController = TextEditingController();
   final _registrationIdController = TextEditingController();
-
-  @override
-  void initState() {
-    super.initState();
-    // Pre-select when navigated from a tournament detail screen
-    if (widget.tournamentId != null) {
-      _selectedTournamentId = widget.tournamentId;
-    }
-  }
+  final _dojangController = TextEditingController();
 
   @override
   void dispose() {
-    _nameController.dispose();
-    _dateRangeController.dispose();
-    _venueController.dispose();
-    _organizerController.dispose();
     _bracketAgeCategoryController.dispose();
     _bracketGenderController.dispose();
     _bracketWeightDivisionController.dispose();
     _fullNameController.dispose();
-    _dojangController.dispose();
     _registrationIdController.dispose();
+    _dojangController.dispose();
     super.dispose();
   }
 
-  bool get _isCreatingNew => _selectedTournamentId == _createNewSentinel;
+  // ── Helpers ────────────────────────────────────────────────────────────────
 
-  TournamentEntity? _existingTournament(TournamentState state) {
-    if (_selectedTournamentId == null ||
-        _selectedTournamentId == _createNewSentinel) {
-      return null;
-    }
+  TournamentEntity? _findOwningTournament(TournamentState state) {
     return state.tournaments
-        .where((tournament) => tournament.id == _selectedTournamentId)
+        .where((tournament) => tournament.id == widget.tournamentId)
         .firstOrNull;
   }
 
-  /// Returns the resolved tournament to use, or null if selection is incomplete.
-  TournamentEntity? _resolveTournament(TournamentState state) {
-    if (_isCreatingNew) {
-      final name = _nameController.text.trim();
-      if (name.isEmpty) return null;
-      return TournamentEntity(
-        id: _uuid.v4(),
-        name: name,
-        dateRange: _dateRangeController.text.trim(),
-        venue: _venueController.text.trim(),
-        organizer: _organizerController.text.trim(),
-        createdAt: DateTime.now(),
-      );
-    }
-    return _existingTournament(state);
+  bool get _hasEnoughParticipantsToGenerate =>
+      _participants.length >= _minimumParticipantsForBracket;
+
+  /// Returns `true` when a participant with the exact same full name (case-
+  /// insensitive) already exists in the roster.
+  bool _isDuplicateParticipantName(String fullName) {
+    final normalizedName = fullName.trim().toLowerCase();
+    return _participants
+        .any((p) => p.fullName.toLowerCase() == normalizedName);
   }
 
+  // ── Actions ────────────────────────────────────────────────────────────────
+
   void _addParticipantFromFormFields() {
-    if (_fullNameController.text.trim().isEmpty) return;
+    if (!_participantFormKey.currentState!.validate()) return;
+
+    final fullName = _fullNameController.text.trim();
+    final registrationId = _registrationIdController.text.trim();
+    final dojangName = _dojangController.text.trim();
+
+    // Check for duplicates (soft warning — does not block)
+    if (_isDuplicateParticipantName(fullName)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Warning: A participant named "$fullName" already exists.',
+          ),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.orange.shade800,
+        ),
+      );
+    }
+
     setState(() {
       _participants.add(
         ParticipantEntity(
           id: _uuid.v4(),
           genderId: 'manual_division',
-          fullName: _fullNameController.text.trim(),
-          schoolOrDojangName: _dojangController.text.trim().isNotEmpty
-              ? _dojangController.text.trim()
-              : null,
-          registrationId: _registrationIdController.text.trim().isNotEmpty
-              ? _registrationIdController.text.trim()
-              : null,
+          fullName: fullName,
+          registrationId:
+              registrationId.isNotEmpty ? registrationId : null,
+          schoolOrDojangName:
+              dojangName.isNotEmpty ? dojangName : null,
           seedNumber: _participants.length + 1,
         ),
       );
       _fullNameController.clear();
-      _dojangController.clear();
       _registrationIdController.clear();
+      _dojangController.clear();
     });
   }
 
   void _importParticipantsFromCsvData(String csvData) {
     if (csvData.trim().isEmpty) return;
+
     final lines = csvData.trim().split('\n');
+    int importedCount = 0;
+    int skippedCount = 0;
+
     setState(() {
-      for (var csvLine in lines) {
-        final parts = csvLine.split(',');
-        if (parts.isNotEmpty && parts[0].trim().isNotEmpty) {
-          _participants.add(
-            ParticipantEntity(
-              id: _uuid.v4(),
-              genderId: 'manual_division',
-              fullName: parts[0].trim(),
-              schoolOrDojangName: parts.length > 1 && parts[1].trim().isNotEmpty
-                  ? parts[1].trim()
-                  : null,
-              registrationId: parts.length > 2 && parts[2].trim().isNotEmpty
-                  ? parts[2].trim()
-                  : null,
-              seedNumber: _participants.length + 1,
-            ),
-          );
+      for (final csvLine in lines) {
+        final trimmedLine = csvLine.trim();
+        if (trimmedLine.isEmpty) {
+          skippedCount++;
+          continue;
         }
+
+        final parts = trimmedLine.split(',');
+        final name = parts.isNotEmpty ? parts[0].trim() : '';
+
+        if (name.isEmpty) {
+          skippedCount++;
+          continue;
+        }
+
+        // CSV column order: Name, RegID, Dojang
+        final registrationId =
+            parts.length > 1 ? parts[1].trim() : '';
+        final dojangName =
+            parts.length > 2 ? parts[2].trim() : '';
+
+        _participants.add(
+          ParticipantEntity(
+            id: _uuid.v4(),
+            genderId: 'manual_division',
+            fullName: name,
+            registrationId:
+                registrationId.isNotEmpty ? registrationId : null,
+            schoolOrDojangName:
+                dojangName.isNotEmpty ? dojangName : null,
+            seedNumber: _participants.length + 1,
+          ),
+        );
+        importedCount++;
       }
     });
+
+    if (mounted) {
+      final message = skippedCount > 0
+          ? 'Imported $importedCount participant${importedCount == 1 ? '' : 's'}, '
+              'skipped $skippedCount invalid row${skippedCount == 1 ? '' : 's'}.'
+          : 'Imported $importedCount participant${importedCount == 1 ? '' : 's'}.';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
   }
 
   void _removeParticipant(int index) =>
@@ -165,49 +189,40 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
     BuildContext context,
     TournamentState state,
   ) async {
-    final bloc = context.read<TournamentBloc>();
-
-    TournamentEntity? tournament = _resolveTournament(state);
+    final tournament = _findOwningTournament(state);
     if (tournament == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Please select or create a tournament first.'),
+          content: Text('Tournament not found. Please go back and try again.'),
         ),
       );
       return;
     }
 
-    // If user created a new tournament, persist it to the BLoC
-    if (_isCreatingNew) {
-      bloc.add(TournamentEvent.created(tournament));
-    }
-
-    BracketRoute(
-      $extra: BracketRouteExtra(
+    BracketViewerRoute(
+      $extra: BracketViewerRouteExtra(
         participants: List<ParticipantEntity>.from(_participants),
-        dojangSeparation: _dojangSeparation,
+        dojangSeparation: _isDojangSeparationEnabled,
         bracketFormat: _selectedBracketFormat,
-        includeThirdPlaceMatch: _includeThirdPlaceMatch,
+        includeThirdPlaceMatch: _isThirdPlaceMatchIncluded,
         tournament: tournament,
         classification: BracketClassification(
           ageCategoryLabel: _bracketAgeCategoryController.text.trim(),
           genderLabel: _bracketGenderController.text.trim(),
-          weightDivisionLabel: _bracketWeightDivisionController.text.trim(),
+          weightDivisionLabel:
+              _bracketWeightDivisionController.text.trim(),
         ),
       ),
     ).push(context);
   }
 
+  // ── Build ──────────────────────────────────────────────────────────────────
+
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<TournamentBloc, TournamentState>(
       builder: (context, state) {
-        final canGenerate =
-            _participants.length >= 2 &&
-            (_selectedTournamentId != null &&
-                    _selectedTournamentId != _createNewSentinel
-                ? true
-                : _nameController.text.trim().isNotEmpty);
+        final tournament = _findOwningTournament(state);
 
         return Scaffold(
           appBar: AppBar(
@@ -220,13 +235,13 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
               Padding(
                 padding: const EdgeInsets.only(right: 16.0),
                 child: Tooltip(
-                  message: _participants.length < 2
-                      ? 'Add at least 2 players to generate a bracket'
-                      : 'Generate Bracket',
+                  message: !_hasEnoughParticipantsToGenerate
+                      ? 'Add at least $_minimumParticipantsForBracket players to generate a bracket'
+                      : tournament == null
+                          ? 'Tournament not found'
+                          : 'Generate Bracket',
                   child: ElevatedButton.icon(
-                    icon: const Icon(
-                      Icons.bolt,
-                    ),
+                    icon: const Icon(Icons.bolt),
                     label: const Text(
                       'GENERATE',
                       style: TextStyle(fontWeight: FontWeight.bold),
@@ -237,9 +252,13 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                       disabledBackgroundColor: Colors.grey.shade300,
                       disabledForegroundColor: Colors.grey.shade600,
                     ),
-                    onPressed: canGenerate
-                        ? () => _handleGenerateBracketRequested(context, state)
-                        : null,
+                    onPressed:
+                        _hasEnoughParticipantsToGenerate && tournament != null
+                            ? () => _handleGenerateBracketRequested(
+                                  context,
+                                  state,
+                                )
+                            : null,
                   ),
                 ),
               ),
@@ -247,7 +266,7 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
           ),
           body: Row(
             children: [
-              // ── LEFT PANEL: Tournament + Config ──────────────────────────
+              // ── LEFT PANEL: Tournament Info + Config ─────────────────────
               Expanded(
                 flex: 2,
                 child: Padding(
@@ -256,24 +275,24 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildTournamentSelector(context, state),
+                        _buildTournamentInfoHeader(tournament),
                         const SizedBox(height: 24),
                         _buildBracketDetailsSection(),
                         const SizedBox(height: 24),
-                        _buildConfiguration(),
+                        _buildConfigurationSection(),
                         const SizedBox(height: 24),
-                        _buildQuickAddPlayer(),
+                        _buildQuickAddPlayerSection(),
                       ],
                     ),
                   ),
                 ),
               ),
-              // ── RIGHT PANEL: Participant Roster ───────────────────────────
+              // ── RIGHT PANEL: Participant Roster ─────────────────────────
               Expanded(
                 flex: 3,
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
-                  child: _buildRoster(),
+                  child: _buildParticipantRoster(),
                 ),
               ),
             ],
@@ -284,12 +303,10 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
   }
 
   // ─────────────────────────────────────────────────────────────────────────
-  // Tournament selector section
+  // Tournament info header (read-only)
   // ─────────────────────────────────────────────────────────────────────────
 
-  Widget _buildTournamentSelector(BuildContext context, TournamentState state) {
-    final existing = _existingTournament(state);
-
+  Widget _buildTournamentInfoHeader(TournamentEntity? tournament) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -301,121 +318,35 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
         Card(
           child: Padding(
             padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // ── Dropdown ────────────────────────────────────────────────
-                InputDecorator(
-                  decoration: const InputDecoration(
-                    labelText: 'Select or Create Tournament',
-                    border: OutlineInputBorder(),
-                    contentPadding: EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 4,
-                    ),
-                  ),
-                  isEmpty: _selectedTournamentId == null,
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton<String>(
-                      value: _selectedTournamentId,
-                      isExpanded: true,
-                      isDense: true,
-                      items: [
-                        DropdownMenuItem(
-                          value: _createNewSentinel,
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.add_circle_outline,
-                                size: 18,
-                                color: Colors.grey.shade800,
-                              ),
-                              SizedBox(width: 8),
-                              Flexible(
-                                child: Text(
-                                  'Create New Tournament',
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    color: Colors.grey.shade800,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
+            child: tournament == null
+                ? const Text(
+                    'Tournament not found. Go back and select a valid tournament.',
+                    style: TextStyle(color: Colors.red),
+                  )
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _ReadOnlyField(
+                        label: 'Name',
+                        value: tournament.name,
+                      ),
+                      if (tournament.dateRange.isNotEmpty)
+                        _ReadOnlyField(
+                          label: 'Date Range',
+                          value: tournament.dateRange,
                         ),
-                        ...state.tournaments.map(
-                          (t) => DropdownMenuItem(
-                            value: t.id,
-                            child: Text(
-                              t.name,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
+                      if (tournament.venue.isNotEmpty)
+                        _ReadOnlyField(
+                          label: 'Venue',
+                          value: tournament.venue,
                         ),
-                      ],
-                      onChanged: (v) {
-                        setState(() {
-                          _selectedTournamentId = v;
-                          // Clear editable fields when switching away from create new
-                          if (v != _createNewSentinel) {
-                            _nameController.clear();
-                            _dateRangeController.clear();
-                            _venueController.clear();
-                            _organizerController.clear();
-                          }
-                        });
-                      },
-                    ),
+                      if (tournament.organizer.isNotEmpty)
+                        _ReadOnlyField(
+                          label: 'Organizer',
+                          value: tournament.organizer,
+                        ),
+                    ],
                   ),
-                ),
-                const SizedBox(height: 16),
-
-                // ── Fields: editable when creating new, read-only otherwise ─
-                if (_isCreatingNew) ...[
-                  TextField(
-                    controller: _nameController,
-                    decoration: const InputDecoration(
-                      labelText: 'Tournament Name *',
-                    ),
-                    textInputAction: TextInputAction.next,
-                    onChanged: (_) => setState(() {}), // recheck canGenerate
-                  ),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: _dateRangeController,
-                    decoration: const InputDecoration(labelText: 'Date Range'),
-                    textInputAction: TextInputAction.next,
-                  ),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: _venueController,
-                    decoration: const InputDecoration(labelText: 'Venue'),
-                    textInputAction: TextInputAction.next,
-                  ),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: _organizerController,
-                    decoration: const InputDecoration(labelText: 'Organizer'),
-                    textInputAction: TextInputAction.done,
-                  ),
-                ] else if (existing != null) ...[
-                  _ReadOnlyField(label: 'Name', value: existing.name),
-                  if (existing.dateRange.isNotEmpty)
-                    _ReadOnlyField(
-                      label: 'Date Range',
-                      value: existing.dateRange,
-                    ),
-                  if (existing.venue.isNotEmpty)
-                    _ReadOnlyField(label: 'Venue', value: existing.venue),
-                  if (existing.organizer.isNotEmpty)
-                    _ReadOnlyField(
-                      label: 'Organizer',
-                      value: existing.organizer,
-                    ),
-                ],
-              ],
-            ),
           ),
         ),
       ],
@@ -446,6 +377,7 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                   decoration: const InputDecoration(
                     labelText: 'Age Category (e.g., JUNIOR, SENIOR)',
                   ),
+                  maxLength: _maximumClassificationFieldLength,
                   textInputAction: TextInputAction.next,
                 ),
                 const SizedBox(height: 8),
@@ -454,6 +386,7 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                   decoration: const InputDecoration(
                     labelText: 'Gender (e.g., BOYS, GIRLS)',
                   ),
+                  maxLength: _maximumClassificationFieldLength,
                   textInputAction: TextInputAction.next,
                 ),
                 const SizedBox(height: 8),
@@ -462,6 +395,7 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                   decoration: const InputDecoration(
                     labelText: 'Weight Division (e.g., UNDER 59 KG)',
                   ),
+                  maxLength: _maximumClassificationFieldLength,
                   textInputAction: TextInputAction.done,
                 ),
               ],
@@ -476,7 +410,7 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
   // Configuration section
   // ─────────────────────────────────────────────────────────────────────────
 
-  Widget _buildConfiguration() {
+  Widget _buildConfigurationSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -496,15 +430,17 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                   isExpanded: true,
                   items: BracketFormat.values
                       .map(
-                        (f) => DropdownMenuItem(
-                          value: f,
-                          child: Text(f.displayLabel),
+                        (format) => DropdownMenuItem(
+                          value: format,
+                          child: Text(format.displayLabel),
                         ),
                       )
                       .toList(),
-                  onChanged: (val) {
-                    if (val != null) {
-                      setState(() => _selectedBracketFormat = val);
+                  onChanged: (selectedFormat) {
+                    if (selectedFormat != null) {
+                      setState(
+                        () => _selectedBracketFormat = selectedFormat,
+                      );
                     }
                   },
                 ),
@@ -512,16 +448,20 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                 SwitchListTile(
                   title: const Text('Dojang / School Separation'),
                   subtitle: const Text('Auto-distribute teammates'),
-                  value: _dojangSeparation,
-                  onChanged: (val) => setState(() => _dojangSeparation = val),
+                  value: _isDojangSeparationEnabled,
+                  onChanged: (isEnabled) =>
+                      setState(() => _isDojangSeparationEnabled = isEnabled),
                 ),
-                if (_selectedBracketFormat == BracketFormat.singleElimination)
+                if (_selectedBracketFormat ==
+                    BracketFormat.singleElimination)
                   SwitchListTile(
                     title: const Text('3rd Place Match'),
-                    subtitle: const Text('Bronze medal match for semi losers'),
-                    value: _includeThirdPlaceMatch,
-                    onChanged: (val) =>
-                        setState(() => _includeThirdPlaceMatch = val),
+                    subtitle:
+                        const Text('Bronze medal match for semi losers'),
+                    value: _isThirdPlaceMatchIncluded,
+                    onChanged: (isEnabled) => setState(
+                      () => _isThirdPlaceMatchIncluded = isEnabled,
+                    ),
                   ),
               ],
             ),
@@ -533,9 +473,11 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
 
   // ─────────────────────────────────────────────────────────────────────────
   // Quick Add Player section
+  //
+  // Field order: Full Name → Registration ID → Dojang / Club
   // ─────────────────────────────────────────────────────────────────────────
 
-  Widget _buildQuickAddPlayer() {
+  Widget _buildQuickAddPlayerSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -547,75 +489,90 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
         Card(
           child: Padding(
             padding: const EdgeInsets.all(16.0),
-            child: Column(
-              children: [
-                TextField(
-                  controller: _fullNameController,
-                  decoration: const InputDecoration(labelText: 'Full Name'),
-                  textInputAction: TextInputAction.next,
-                  onSubmitted: (_) => _addParticipantFromFormFields(),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: _dojangController,
-                  decoration: const InputDecoration(
-                    labelText: 'Dojang / Club (Optional)',
+            child: Form(
+              key: _participantFormKey,
+              child: Column(
+                children: [
+                  // ── Full Name (required) ────────────────────────────────
+                  TextFormField(
+                    controller: _fullNameController,
+                    decoration: const InputDecoration(
+                      labelText: 'Full Name *',
+                      hintText: 'Enter participant full name',
+                    ),
+                    maxLength: _maximumFullNameLength,
+                    inputFormatters: [
+                      LengthLimitingTextInputFormatter(
+                        _maximumFullNameLength,
+                      ),
+                    ],
+                    textInputAction: TextInputAction.next,
+                    validator: _validateFullName,
+                    onFieldSubmitted: (_) =>
+                        _addParticipantFromFormFields(),
                   ),
-                  textInputAction: TextInputAction.next,
-                  onSubmitted: (_) => _addParticipantFromFormFields(),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: _registrationIdController,
-                  decoration: const InputDecoration(
-                    labelText: 'Registration ID (Optional)',
+                  const SizedBox(height: 8),
+
+                  // ── Registration ID (optional) ──────────────────────────
+                  TextFormField(
+                    controller: _registrationIdController,
+                    decoration: const InputDecoration(
+                      labelText: 'Registration ID (Optional)',
+                    ),
+                    maxLength: _maximumRegistrationIdLength,
+                    inputFormatters: [
+                      LengthLimitingTextInputFormatter(
+                        _maximumRegistrationIdLength,
+                      ),
+                    ],
+                    textInputAction: TextInputAction.next,
+                    onFieldSubmitted: (_) =>
+                        _addParticipantFromFormFields(),
                   ),
-                  textInputAction: TextInputAction.done,
-                  onSubmitted: (_) => _addParticipantFromFormFields(),
-                ),
-                const SizedBox(height: 16),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    icon: const Icon(Icons.add),
-                    label: const Text('Add Participant'),
-                    onPressed: _addParticipantFromFormFields,
+                  const SizedBox(height: 8),
+
+                  // ── Dojang / Club (optional) ────────────────────────────
+                  TextFormField(
+                    controller: _dojangController,
+                    decoration: const InputDecoration(
+                      labelText: 'Dojang / Club (Optional)',
+                    ),
+                    maxLength: _maximumDojangNameLength,
+                    inputFormatters: [
+                      LengthLimitingTextInputFormatter(
+                        _maximumDojangNameLength,
+                      ),
+                    ],
+                    textInputAction: TextInputAction.done,
+                    onFieldSubmitted: (_) =>
+                        _addParticipantFromFormFields(),
                   ),
-                ),
-                const SizedBox(height: 16),
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton.icon(
-                    icon: const Icon(Icons.paste),
-                    label: const Text('Paste CSV (Name,Dojang,RegID)'),
-                    onPressed: () async {
-                      final text = await showDialog<String>(
-                        context: context,
-                        builder: (c) {
-                          final ctrl = TextEditingController();
-                          return AlertDialog(
-                            title: const Text('Paste CSV'),
-                            content: TextField(controller: ctrl, maxLines: 5),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(c, ''),
-                                child: const Text('Cancel'),
-                              ),
-                              ElevatedButton(
-                                onPressed: () => Navigator.pop(c, ctrl.text),
-                                child: const Text('Import'),
-                              ),
-                            ],
-                          );
-                        },
-                      );
-                      if (text != null && text.isNotEmpty) {
-                        _importParticipantsFromCsvData(text);
-                      }
-                    },
+                  const SizedBox(height: 16),
+
+                  // ── Add button ──────────────────────────────────────────
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      icon: const Icon(Icons.add),
+                      label: const Text('Add Participant'),
+                      onPressed: _addParticipantFromFormFields,
+                    ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 16),
+
+                  // ── CSV import button ───────────────────────────────────
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      icon: const Icon(Icons.paste),
+                      label: const Text(
+                        'Paste CSV (Name, RegID, Dojang)',
+                      ),
+                      onPressed: () => _showCsvImportDialog(),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -624,10 +581,80 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
   }
 
   // ─────────────────────────────────────────────────────────────────────────
+  // CSV import dialog
+  // ─────────────────────────────────────────────────────────────────────────
+
+  Future<void> _showCsvImportDialog() async {
+    final csvText = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) {
+        final csvController = TextEditingController();
+        return AlertDialog(
+          title: const Text('Paste CSV'),
+          content: SizedBox(
+            width: 400,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Format: Name, RegID, Dojang (one participant per line)',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: csvController,
+                  maxLines: 8,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    hintText:
+                        'John Doe, REG001, Tiger Dojang\nJane Smith, REG002, Dragon Club',
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, ''),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () =>
+                  Navigator.pop(dialogContext, csvController.text),
+              child: const Text('Import'),
+            ),
+          ],
+        );
+      },
+    );
+    if (csvText != null && csvText.isNotEmpty) {
+      _importParticipantsFromCsvData(csvText);
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Validators
+  // ─────────────────────────────────────────────────────────────────────────
+
+  String? _validateFullName(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Full name is required.';
+    }
+    if (value.trim().length < 2) {
+      return 'Name must be at least 2 characters.';
+    }
+    return null;
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
   // Participant roster (right panel)
   // ─────────────────────────────────────────────────────────────────────────
 
-  Widget _buildRoster() {
+  Widget _buildParticipantRoster() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -651,35 +678,7 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
               ),
               onPressed: _participants.isEmpty
                   ? null
-                  : () async {
-                      final confirmed = await showDialog<bool>(
-                        context: context,
-                        builder: (c) => AlertDialog(
-                          title: const Text('Clear All Participants?'),
-                          content: Text(
-                            'This will remove all ${_participants.length} '
-                            'participants from the roster.',
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(c, false),
-                              child: const Text('Cancel'),
-                            ),
-                            ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.grey.shade800,
-                                foregroundColor: Colors.white,
-                              ),
-                              onPressed: () => Navigator.pop(c, true),
-                              child: const Text('Clear All'),
-                            ),
-                          ],
-                        ),
-                      );
-                      if (confirmed == true) {
-                        setState(() => _participants.clear());
-                      }
-                    },
+                  : () => _confirmClearAllParticipants(),
             ),
           ],
         ),
@@ -707,9 +706,9 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                     });
                   },
                   itemBuilder: (context, index) {
-                    final p = _participants[index];
+                    final participant = _participants[index];
                     return Card(
-                      key: ValueKey(p.id),
+                      key: ValueKey(participant.id),
                       margin: const EdgeInsets.symmetric(vertical: 4),
                       child: ListTile(
                         leading: CircleAvatar(
@@ -717,29 +716,36 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                           child: Text('${index + 1}'),
                         ),
                         title: Text(
-                          p.fullName.toUpperCase(),
-                          style: const TextStyle(fontWeight: FontWeight.bold),
+                          participant.fullName.toUpperCase(),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                         subtitle: Text(
                           [
-                            if (p.schoolOrDojangName != null &&
-                                p.schoolOrDojangName!.isNotEmpty)
-                              'Dojang: ${p.schoolOrDojangName}',
-                            if (p.registrationId != null &&
-                                p.registrationId!.isNotEmpty)
-                              'Reg: ${p.registrationId}',
+                            if (participant.registrationId != null &&
+                                participant.registrationId!.isNotEmpty)
+                              'Reg: ${participant.registrationId}',
+                            if (participant.schoolOrDojangName != null &&
+                                participant
+                                    .schoolOrDojangName!.isNotEmpty)
+                              'Dojang: ${participant.schoolOrDojangName}',
                           ].join(' | '),
                         ),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.drag_handle, color: Colors.grey),
+                            const Icon(
+                              Icons.drag_handle,
+                              color: Colors.grey,
+                            ),
                             IconButton(
                               icon: Icon(
                                 Icons.close,
                                 color: Colors.grey.shade800,
                               ),
-                              onPressed: () => _removeParticipant(index),
+                              onPressed: () =>
+                                  _removeParticipant(index),
                             ),
                           ],
                         ),
@@ -750,6 +756,40 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
         ),
       ],
     );
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Clear-all confirmation
+  // ─────────────────────────────────────────────────────────────────────────
+
+  Future<void> _confirmClearAllParticipants() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Clear All Participants?'),
+        content: Text(
+          'This will remove all ${_participants.length} '
+          'participants from the roster.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.grey.shade800,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Clear All'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      setState(() => _participants.clear());
+    }
   }
 }
 
@@ -781,7 +821,9 @@ class _ReadOnlyField extends StatelessWidget {
               ),
             ),
           ),
-          Expanded(child: Text(value, style: const TextStyle(fontSize: 13))),
+          Expanded(
+            child: Text(value, style: const TextStyle(fontSize: 13)),
+          ),
         ],
       ),
     );

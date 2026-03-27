@@ -89,7 +89,7 @@ abstract class PrintExportSettings with _$PrintExportSettings {
     @Default(PageOrientation.landscape) PageOrientation orientation,
     @Default(PrintFitMode.fitToPage) PrintFitMode fitMode,
 
-    /// Scale applied to the bracket when tiling (0.5–2.0).
+    /// Scale applied to the bracket when tiling ([minScaleFactor]–[maxScaleFactor]).
     /// 1.0 = 1 logical pixel → 1 PDF point.
     /// Only used in [PrintFitMode.tileAcrossPages].
     @Default(1.0) double scaleFactor,
@@ -104,6 +104,10 @@ abstract class PrintExportSettings with _$PrintExportSettings {
     /// The rasterisation quality / max GPU texture dimension.
     @Default(PrintResolutionQuality.standard)
     PrintResolutionQuality resolutionQuality,
+
+    /// Whether to show assembly aid hints (registration marks and edge
+    /// neighbor labels) on each tile page. Only used in tile mode.
+    @Default(true) bool showTileAssemblyHints,
   }) = _PrintExportSettings;
 
   // ── Millimeter ↔ point conversion ──

@@ -11,9 +11,9 @@ List<RouteBase> get $appRoutes => [
   $passwordResetRoute,
   $emailConfirmedRoute,
   $dashboardRoute,
-  $setupRoute,
+  $bracketSetupRoute,
   $tournamentDetailRoute,
-  $bracketRoute,
+  $bracketViewerRoute,
 ];
 
 RouteBase get $loginRoute =>
@@ -115,21 +115,20 @@ mixin $DashboardRoute on GoRouteData {
   void replace(BuildContext context) => context.replace(location);
 }
 
-RouteBase get $setupRoute =>
-    GoRouteData.$route(path: '/setup', factory: $SetupRoute._fromState);
+RouteBase get $bracketSetupRoute =>
+    GoRouteData.$route(path: '/setup', factory: $BracketSetupRoute._fromState);
 
-mixin $SetupRoute on GoRouteData {
-  static SetupRoute _fromState(GoRouterState state) =>
-      SetupRoute(tournamentId: state.uri.queryParameters['tournament-id']);
+mixin $BracketSetupRoute on GoRouteData {
+  static BracketSetupRoute _fromState(GoRouterState state) => BracketSetupRoute(
+    tournamentId: state.uri.queryParameters['tournament-id']!,
+  );
 
-  SetupRoute get _self => this as SetupRoute;
+  BracketSetupRoute get _self => this as BracketSetupRoute;
 
   @override
   String get location => GoRouteData.$location(
     '/setup',
-    queryParams: {
-      if (_self.tournamentId != null) 'tournament-id': _self.tournamentId,
-    },
+    queryParams: {'tournament-id': _self.tournamentId},
   );
 
   @override
@@ -178,14 +177,16 @@ mixin $TournamentDetailRoute on GoRouteData {
   void replace(BuildContext context) => context.replace(location);
 }
 
-RouteBase get $bracketRoute =>
-    GoRouteData.$route(path: '/bracket', factory: $BracketRoute._fromState);
+RouteBase get $bracketViewerRoute => GoRouteData.$route(
+  path: '/bracket',
+  factory: $BracketViewerRoute._fromState,
+);
 
-mixin $BracketRoute on GoRouteData {
-  static BracketRoute _fromState(GoRouterState state) =>
-      BracketRoute($extra: state.extra as BracketRouteExtra);
+mixin $BracketViewerRoute on GoRouteData {
+  static BracketViewerRoute _fromState(GoRouterState state) =>
+      BracketViewerRoute($extra: state.extra as BracketViewerRouteExtra);
 
-  BracketRoute get _self => this as BracketRoute;
+  BracketViewerRoute get _self => this as BracketViewerRoute;
 
   @override
   String get location => GoRouteData.$location('/bracket');

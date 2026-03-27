@@ -61,12 +61,6 @@ class DashboardScreen extends StatelessWidget {
                   ),
                 ),
                 const Spacer(),
-                OutlinedButton.icon(
-                  icon: const Icon(Icons.account_tree_outlined),
-                  label: const Text('Create Bracket'),
-                  onPressed: () => const SetupRoute().push(context),
-                ),
-                const SizedBox(width: 8),
                 FilledButton.icon(
                   icon: const Icon(Icons.add),
                   label: const Text('New Tournament'),

@@ -59,7 +59,7 @@ class TournamentDetailScreen extends StatelessWidget {
             icon: const Icon(Icons.add),
             label: const Text('Add Bracket'),
             onPressed: () =>
-                SetupRoute(tournamentId: tournamentId).push(context),
+                BracketSetupRoute(tournamentId: tournamentId).push(context),
           ),
           body: CustomScrollView(
             slivers: [
@@ -317,8 +317,8 @@ class _BracketSnapshotCard extends StatelessWidget {
             const Icon(Icons.chevron_right),
           ],
         ),
-        onTap: () => BracketRoute(
-          $extra: BracketRouteExtra(
+        onTap: () => BracketViewerRoute(
+          $extra: BracketViewerRouteExtra(
             participants: snapshot.participants,
             dojangSeparation: snapshot.dojangSeparation,
             bracketFormat: snapshot.format,

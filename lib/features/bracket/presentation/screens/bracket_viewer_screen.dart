@@ -28,7 +28,7 @@ import 'package:tkd_saas/features/tournament/domain/entities/tournament_entity.d
 import 'package:tkd_saas/features/tournament/presentation/bloc/tournament_bloc.dart';
 
 /// Bracket viewer — receives route props, broadcasts [BracketGenerateRequested]
-/// via the [BracketBloc] provided by the route (see [BracketRoute]).
+/// via the [BracketBloc] provided by the route (see [BracketViewerRoute]).
 class BracketViewerScreen extends StatefulWidget {
   const BracketViewerScreen({
     super.key,
