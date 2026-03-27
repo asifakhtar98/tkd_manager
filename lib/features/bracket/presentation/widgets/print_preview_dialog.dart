@@ -186,6 +186,14 @@ class _PrintPreviewDialogState extends State<PrintPreviewDialog> {
             firstChild: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                _buildSettingLabel(
+                  Icons.auto_fix_high,
+                  'Page Target',
+                  colorScheme,
+                ),
+                const SizedBox(height: 8),
+                _buildPageTargetPresets(colorScheme),
+                const SizedBox(height: 20),
                 _buildSettingLabel(Icons.zoom_in, 'Scale', colorScheme),
                 const SizedBox(height: 8),
                 _buildScaleSlider(colorScheme),
@@ -363,16 +371,46 @@ class _PrintPreviewDialogState extends State<PrintPreviewDialog> {
     );
   }
 
+  Widget _buildPageTargetPresets(ColorScheme colorScheme) {
+    return Wrap(
+      spacing: 6,
+      runSpacing: 6,
+      children: [
+        for (final targetPageCount in PrintExportSettings.pageTargetPresets)
+          _PageTargetChip(
+            targetPageCount: targetPageCount,
+            currentPageCount: _totalPages,
+            colorScheme: colorScheme,
+            onTap: () {
+              final computedScaleFactor =
+                  _settings.computeScaleFactorForTargetPageCount(
+                    canvasWidth: widget.canvasSize.width,
+                    canvasHeight: widget.canvasSize.height,
+                    targetPageCount: targetPageCount,
+                  );
+              setState(
+                () => _settings =
+                    _settings.copyWith(scaleFactor: computedScaleFactor),
+              );
+            },
+          ),
+      ],
+    );
+  }
+
   Widget _buildScaleSlider(ColorScheme colorScheme) {
     return _buildLabeledSlider(
       colorScheme: colorScheme,
-      minLabel: '50%',
-      maxLabel: '200%',
+      minLabel: '${(PrintExportSettings.minScaleFactor * 100).round()}%',
+      maxLabel: '${(PrintExportSettings.maxScaleFactor * 100).round()}%',
       currentLabel: '${(_settings.scaleFactor * 100).round()}%',
-      value: _settings.scaleFactor,
-      min: 0.5,
-      max: 2.0,
-      divisions: 30,
+      value: _settings.scaleFactor.clamp(
+        PrintExportSettings.minScaleFactor,
+        PrintExportSettings.maxScaleFactor,
+      ),
+      min: PrintExportSettings.minScaleFactor,
+      max: PrintExportSettings.maxScaleFactor,
+      divisions: 38,
       onChanged: (value) =>
           setState(() => _settings = _settings.copyWith(scaleFactor: value)),
     );
@@ -814,4 +852,59 @@ class _TileGridOverlayPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _TileGridOverlayPainter oldDelegate) =>
       settings != oldDelegate.settings;
+}
+
+// ── Page Target Chip ──────────────────────────────────────────────────────
+
+/// A compact chip that auto-computes the optimal scale to fit a bracket
+/// within a target page count. Highlights when the current layout already
+/// matches or beats the target.
+class _PageTargetChip extends StatelessWidget {
+  const _PageTargetChip({
+    required this.targetPageCount,
+    required this.currentPageCount,
+    required this.colorScheme,
+    required this.onTap,
+  });
+
+  final int targetPageCount;
+  final int currentPageCount;
+  final ColorScheme colorScheme;
+  final VoidCallback onTap;
+
+  bool get _isActive => currentPageCount <= targetPageCount;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: _isActive
+          ? colorScheme.primary.withAlpha(20)
+          : colorScheme.surfaceContainerHighest,
+      borderRadius: BorderRadius.circular(8),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(8),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: _isActive ? colorScheme.primary : Colors.transparent,
+              width: 1.5,
+            ),
+          ),
+          child: Text(
+            '≤$targetPageCount',
+            style: TextStyle(
+              color: _isActive
+                  ? colorScheme.primary
+                  : colorScheme.onSurface.withAlpha(140),
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }

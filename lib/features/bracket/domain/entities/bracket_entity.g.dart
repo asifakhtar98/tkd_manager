@@ -28,7 +28,6 @@ _BracketEntity _$BracketEntityFromJson(Map<String, dynamic> json) =>
       deletedAtTimestamp: json['deletedAtTimestamp'] == null
           ? null
           : DateTime.parse(json['deletedAtTimestamp'] as String),
-      isDemoData: json['isDemoData'] as bool? ?? false,
     );
 
 Map<String, dynamic> _$BracketEntityToJson(_BracketEntity instance) =>
@@ -47,7 +46,6 @@ Map<String, dynamic> _$BracketEntityToJson(_BracketEntity instance) =>
       'syncVersion': instance.syncVersion,
       'isDeleted': instance.isDeleted,
       'deletedAtTimestamp': instance.deletedAtTimestamp?.toIso8601String(),
-      'isDemoData': instance.isDemoData,
     };
 
 const _$BracketTypeEnumMap = {

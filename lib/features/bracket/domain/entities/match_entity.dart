@@ -145,8 +145,6 @@ abstract class MatchEntity with _$MatchEntity {
     /// Timestamp of soft deletion, if applicable.
     DateTime? deletedAtTimestamp,
 
-    /// Whether this match was created from demo/sample data.
-    @Default(false) bool isDemoData,
   }) = _MatchEntity;
 
   factory MatchEntity.fromJson(Map<String, dynamic> json) =>

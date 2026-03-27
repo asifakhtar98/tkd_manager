@@ -29,8 +29,7 @@ mixin _$BracketEntity {
  Map<String, dynamic>? get bracketDataJson;/// Optimistic concurrency version counter.
  int get syncVersion;/// Soft-delete flag.
  bool get isDeleted;/// Timestamp of soft deletion, if applicable.
- DateTime? get deletedAtTimestamp;/// Whether this bracket was created from demo/sample data.
- bool get isDemoData;
+ DateTime? get deletedAtTimestamp;
 /// Create a copy of BracketEntity
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -43,16 +42,16 @@ $BracketEntityCopyWith<BracketEntity> get copyWith => _$BracketEntityCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is BracketEntity&&(identical(other.id, id) || other.id == id)&&(identical(other.genderId, genderId) || other.genderId == genderId)&&(identical(other.bracketType, bracketType) || other.bracketType == bracketType)&&(identical(other.totalRounds, totalRounds) || other.totalRounds == totalRounds)&&(identical(other.createdAtTimestamp, createdAtTimestamp) || other.createdAtTimestamp == createdAtTimestamp)&&(identical(other.updatedAtTimestamp, updatedAtTimestamp) || other.updatedAtTimestamp == updatedAtTimestamp)&&(identical(other.poolIdentifier, poolIdentifier) || other.poolIdentifier == poolIdentifier)&&(identical(other.isFinalized, isFinalized) || other.isFinalized == isFinalized)&&(identical(other.generatedAtTimestamp, generatedAtTimestamp) || other.generatedAtTimestamp == generatedAtTimestamp)&&(identical(other.finalizedAtTimestamp, finalizedAtTimestamp) || other.finalizedAtTimestamp == finalizedAtTimestamp)&&const DeepCollectionEquality().equals(other.bracketDataJson, bracketDataJson)&&(identical(other.syncVersion, syncVersion) || other.syncVersion == syncVersion)&&(identical(other.isDeleted, isDeleted) || other.isDeleted == isDeleted)&&(identical(other.deletedAtTimestamp, deletedAtTimestamp) || other.deletedAtTimestamp == deletedAtTimestamp)&&(identical(other.isDemoData, isDemoData) || other.isDemoData == isDemoData));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is BracketEntity&&(identical(other.id, id) || other.id == id)&&(identical(other.genderId, genderId) || other.genderId == genderId)&&(identical(other.bracketType, bracketType) || other.bracketType == bracketType)&&(identical(other.totalRounds, totalRounds) || other.totalRounds == totalRounds)&&(identical(other.createdAtTimestamp, createdAtTimestamp) || other.createdAtTimestamp == createdAtTimestamp)&&(identical(other.updatedAtTimestamp, updatedAtTimestamp) || other.updatedAtTimestamp == updatedAtTimestamp)&&(identical(other.poolIdentifier, poolIdentifier) || other.poolIdentifier == poolIdentifier)&&(identical(other.isFinalized, isFinalized) || other.isFinalized == isFinalized)&&(identical(other.generatedAtTimestamp, generatedAtTimestamp) || other.generatedAtTimestamp == generatedAtTimestamp)&&(identical(other.finalizedAtTimestamp, finalizedAtTimestamp) || other.finalizedAtTimestamp == finalizedAtTimestamp)&&const DeepCollectionEquality().equals(other.bracketDataJson, bracketDataJson)&&(identical(other.syncVersion, syncVersion) || other.syncVersion == syncVersion)&&(identical(other.isDeleted, isDeleted) || other.isDeleted == isDeleted)&&(identical(other.deletedAtTimestamp, deletedAtTimestamp) || other.deletedAtTimestamp == deletedAtTimestamp));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,genderId,bracketType,totalRounds,createdAtTimestamp,updatedAtTimestamp,poolIdentifier,isFinalized,generatedAtTimestamp,finalizedAtTimestamp,const DeepCollectionEquality().hash(bracketDataJson),syncVersion,isDeleted,deletedAtTimestamp,isDemoData);
+int get hashCode => Object.hash(runtimeType,id,genderId,bracketType,totalRounds,createdAtTimestamp,updatedAtTimestamp,poolIdentifier,isFinalized,generatedAtTimestamp,finalizedAtTimestamp,const DeepCollectionEquality().hash(bracketDataJson),syncVersion,isDeleted,deletedAtTimestamp);
 
 @override
 String toString() {
-  return 'BracketEntity(id: $id, genderId: $genderId, bracketType: $bracketType, totalRounds: $totalRounds, createdAtTimestamp: $createdAtTimestamp, updatedAtTimestamp: $updatedAtTimestamp, poolIdentifier: $poolIdentifier, isFinalized: $isFinalized, generatedAtTimestamp: $generatedAtTimestamp, finalizedAtTimestamp: $finalizedAtTimestamp, bracketDataJson: $bracketDataJson, syncVersion: $syncVersion, isDeleted: $isDeleted, deletedAtTimestamp: $deletedAtTimestamp, isDemoData: $isDemoData)';
+  return 'BracketEntity(id: $id, genderId: $genderId, bracketType: $bracketType, totalRounds: $totalRounds, createdAtTimestamp: $createdAtTimestamp, updatedAtTimestamp: $updatedAtTimestamp, poolIdentifier: $poolIdentifier, isFinalized: $isFinalized, generatedAtTimestamp: $generatedAtTimestamp, finalizedAtTimestamp: $finalizedAtTimestamp, bracketDataJson: $bracketDataJson, syncVersion: $syncVersion, isDeleted: $isDeleted, deletedAtTimestamp: $deletedAtTimestamp)';
 }
 
 
@@ -63,7 +62,7 @@ abstract mixin class $BracketEntityCopyWith<$Res>  {
   factory $BracketEntityCopyWith(BracketEntity value, $Res Function(BracketEntity) _then) = _$BracketEntityCopyWithImpl;
 @useResult
 $Res call({
- String id, String genderId, BracketType bracketType, int totalRounds, DateTime createdAtTimestamp, DateTime updatedAtTimestamp, String? poolIdentifier, bool isFinalized, DateTime? generatedAtTimestamp, DateTime? finalizedAtTimestamp, Map<String, dynamic>? bracketDataJson, int syncVersion, bool isDeleted, DateTime? deletedAtTimestamp, bool isDemoData
+ String id, String genderId, BracketType bracketType, int totalRounds, DateTime createdAtTimestamp, DateTime updatedAtTimestamp, String? poolIdentifier, bool isFinalized, DateTime? generatedAtTimestamp, DateTime? finalizedAtTimestamp, Map<String, dynamic>? bracketDataJson, int syncVersion, bool isDeleted, DateTime? deletedAtTimestamp
 });
 
 
@@ -80,7 +79,7 @@ class _$BracketEntityCopyWithImpl<$Res>
 
 /// Create a copy of BracketEntity
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? genderId = null,Object? bracketType = null,Object? totalRounds = null,Object? createdAtTimestamp = null,Object? updatedAtTimestamp = null,Object? poolIdentifier = freezed,Object? isFinalized = null,Object? generatedAtTimestamp = freezed,Object? finalizedAtTimestamp = freezed,Object? bracketDataJson = freezed,Object? syncVersion = null,Object? isDeleted = null,Object? deletedAtTimestamp = freezed,Object? isDemoData = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? genderId = null,Object? bracketType = null,Object? totalRounds = null,Object? createdAtTimestamp = null,Object? updatedAtTimestamp = null,Object? poolIdentifier = freezed,Object? isFinalized = null,Object? generatedAtTimestamp = freezed,Object? finalizedAtTimestamp = freezed,Object? bracketDataJson = freezed,Object? syncVersion = null,Object? isDeleted = null,Object? deletedAtTimestamp = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,genderId: null == genderId ? _self.genderId : genderId // ignore: cast_nullable_to_non_nullable
@@ -96,8 +95,7 @@ as DateTime?,bracketDataJson: freezed == bracketDataJson ? _self.bracketDataJson
 as Map<String, dynamic>?,syncVersion: null == syncVersion ? _self.syncVersion : syncVersion // ignore: cast_nullable_to_non_nullable
 as int,isDeleted: null == isDeleted ? _self.isDeleted : isDeleted // ignore: cast_nullable_to_non_nullable
 as bool,deletedAtTimestamp: freezed == deletedAtTimestamp ? _self.deletedAtTimestamp : deletedAtTimestamp // ignore: cast_nullable_to_non_nullable
-as DateTime?,isDemoData: null == isDemoData ? _self.isDemoData : isDemoData // ignore: cast_nullable_to_non_nullable
-as bool,
+as DateTime?,
   ));
 }
 
@@ -182,10 +180,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String genderId,  BracketType bracketType,  int totalRounds,  DateTime createdAtTimestamp,  DateTime updatedAtTimestamp,  String? poolIdentifier,  bool isFinalized,  DateTime? generatedAtTimestamp,  DateTime? finalizedAtTimestamp,  Map<String, dynamic>? bracketDataJson,  int syncVersion,  bool isDeleted,  DateTime? deletedAtTimestamp,  bool isDemoData)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String genderId,  BracketType bracketType,  int totalRounds,  DateTime createdAtTimestamp,  DateTime updatedAtTimestamp,  String? poolIdentifier,  bool isFinalized,  DateTime? generatedAtTimestamp,  DateTime? finalizedAtTimestamp,  Map<String, dynamic>? bracketDataJson,  int syncVersion,  bool isDeleted,  DateTime? deletedAtTimestamp)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _BracketEntity() when $default != null:
-return $default(_that.id,_that.genderId,_that.bracketType,_that.totalRounds,_that.createdAtTimestamp,_that.updatedAtTimestamp,_that.poolIdentifier,_that.isFinalized,_that.generatedAtTimestamp,_that.finalizedAtTimestamp,_that.bracketDataJson,_that.syncVersion,_that.isDeleted,_that.deletedAtTimestamp,_that.isDemoData);case _:
+return $default(_that.id,_that.genderId,_that.bracketType,_that.totalRounds,_that.createdAtTimestamp,_that.updatedAtTimestamp,_that.poolIdentifier,_that.isFinalized,_that.generatedAtTimestamp,_that.finalizedAtTimestamp,_that.bracketDataJson,_that.syncVersion,_that.isDeleted,_that.deletedAtTimestamp);case _:
   return orElse();
 
 }
@@ -203,10 +201,10 @@ return $default(_that.id,_that.genderId,_that.bracketType,_that.totalRounds,_tha
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String genderId,  BracketType bracketType,  int totalRounds,  DateTime createdAtTimestamp,  DateTime updatedAtTimestamp,  String? poolIdentifier,  bool isFinalized,  DateTime? generatedAtTimestamp,  DateTime? finalizedAtTimestamp,  Map<String, dynamic>? bracketDataJson,  int syncVersion,  bool isDeleted,  DateTime? deletedAtTimestamp,  bool isDemoData)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String genderId,  BracketType bracketType,  int totalRounds,  DateTime createdAtTimestamp,  DateTime updatedAtTimestamp,  String? poolIdentifier,  bool isFinalized,  DateTime? generatedAtTimestamp,  DateTime? finalizedAtTimestamp,  Map<String, dynamic>? bracketDataJson,  int syncVersion,  bool isDeleted,  DateTime? deletedAtTimestamp)  $default,) {final _that = this;
 switch (_that) {
 case _BracketEntity():
-return $default(_that.id,_that.genderId,_that.bracketType,_that.totalRounds,_that.createdAtTimestamp,_that.updatedAtTimestamp,_that.poolIdentifier,_that.isFinalized,_that.generatedAtTimestamp,_that.finalizedAtTimestamp,_that.bracketDataJson,_that.syncVersion,_that.isDeleted,_that.deletedAtTimestamp,_that.isDemoData);case _:
+return $default(_that.id,_that.genderId,_that.bracketType,_that.totalRounds,_that.createdAtTimestamp,_that.updatedAtTimestamp,_that.poolIdentifier,_that.isFinalized,_that.generatedAtTimestamp,_that.finalizedAtTimestamp,_that.bracketDataJson,_that.syncVersion,_that.isDeleted,_that.deletedAtTimestamp);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -223,10 +221,10 @@ return $default(_that.id,_that.genderId,_that.bracketType,_that.totalRounds,_tha
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String genderId,  BracketType bracketType,  int totalRounds,  DateTime createdAtTimestamp,  DateTime updatedAtTimestamp,  String? poolIdentifier,  bool isFinalized,  DateTime? generatedAtTimestamp,  DateTime? finalizedAtTimestamp,  Map<String, dynamic>? bracketDataJson,  int syncVersion,  bool isDeleted,  DateTime? deletedAtTimestamp,  bool isDemoData)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String genderId,  BracketType bracketType,  int totalRounds,  DateTime createdAtTimestamp,  DateTime updatedAtTimestamp,  String? poolIdentifier,  bool isFinalized,  DateTime? generatedAtTimestamp,  DateTime? finalizedAtTimestamp,  Map<String, dynamic>? bracketDataJson,  int syncVersion,  bool isDeleted,  DateTime? deletedAtTimestamp)?  $default,) {final _that = this;
 switch (_that) {
 case _BracketEntity() when $default != null:
-return $default(_that.id,_that.genderId,_that.bracketType,_that.totalRounds,_that.createdAtTimestamp,_that.updatedAtTimestamp,_that.poolIdentifier,_that.isFinalized,_that.generatedAtTimestamp,_that.finalizedAtTimestamp,_that.bracketDataJson,_that.syncVersion,_that.isDeleted,_that.deletedAtTimestamp,_that.isDemoData);case _:
+return $default(_that.id,_that.genderId,_that.bracketType,_that.totalRounds,_that.createdAtTimestamp,_that.updatedAtTimestamp,_that.poolIdentifier,_that.isFinalized,_that.generatedAtTimestamp,_that.finalizedAtTimestamp,_that.bracketDataJson,_that.syncVersion,_that.isDeleted,_that.deletedAtTimestamp);case _:
   return null;
 
 }
@@ -238,7 +236,7 @@ return $default(_that.id,_that.genderId,_that.bracketType,_that.totalRounds,_tha
 @JsonSerializable()
 
 class _BracketEntity implements BracketEntity {
-  const _BracketEntity({required this.id, required this.genderId, required this.bracketType, required this.totalRounds, required this.createdAtTimestamp, required this.updatedAtTimestamp, this.poolIdentifier, this.isFinalized = false, this.generatedAtTimestamp, this.finalizedAtTimestamp, final  Map<String, dynamic>? bracketDataJson, this.syncVersion = 1, this.isDeleted = false, this.deletedAtTimestamp, this.isDemoData = false}): _bracketDataJson = bracketDataJson;
+  const _BracketEntity({required this.id, required this.genderId, required this.bracketType, required this.totalRounds, required this.createdAtTimestamp, required this.updatedAtTimestamp, this.poolIdentifier, this.isFinalized = false, this.generatedAtTimestamp, this.finalizedAtTimestamp, final  Map<String, dynamic>? bracketDataJson, this.syncVersion = 1, this.isDeleted = false, this.deletedAtTimestamp}): _bracketDataJson = bracketDataJson;
   factory _BracketEntity.fromJson(Map<String, dynamic> json) => _$BracketEntityFromJson(json);
 
 /// Unique identifier (UUID v4).
@@ -278,8 +276,6 @@ class _BracketEntity implements BracketEntity {
 @override@JsonKey() final  bool isDeleted;
 /// Timestamp of soft deletion, if applicable.
 @override final  DateTime? deletedAtTimestamp;
-/// Whether this bracket was created from demo/sample data.
-@override@JsonKey() final  bool isDemoData;
 
 /// Create a copy of BracketEntity
 /// with the given fields replaced by the non-null parameter values.
@@ -294,16 +290,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _BracketEntity&&(identical(other.id, id) || other.id == id)&&(identical(other.genderId, genderId) || other.genderId == genderId)&&(identical(other.bracketType, bracketType) || other.bracketType == bracketType)&&(identical(other.totalRounds, totalRounds) || other.totalRounds == totalRounds)&&(identical(other.createdAtTimestamp, createdAtTimestamp) || other.createdAtTimestamp == createdAtTimestamp)&&(identical(other.updatedAtTimestamp, updatedAtTimestamp) || other.updatedAtTimestamp == updatedAtTimestamp)&&(identical(other.poolIdentifier, poolIdentifier) || other.poolIdentifier == poolIdentifier)&&(identical(other.isFinalized, isFinalized) || other.isFinalized == isFinalized)&&(identical(other.generatedAtTimestamp, generatedAtTimestamp) || other.generatedAtTimestamp == generatedAtTimestamp)&&(identical(other.finalizedAtTimestamp, finalizedAtTimestamp) || other.finalizedAtTimestamp == finalizedAtTimestamp)&&const DeepCollectionEquality().equals(other._bracketDataJson, _bracketDataJson)&&(identical(other.syncVersion, syncVersion) || other.syncVersion == syncVersion)&&(identical(other.isDeleted, isDeleted) || other.isDeleted == isDeleted)&&(identical(other.deletedAtTimestamp, deletedAtTimestamp) || other.deletedAtTimestamp == deletedAtTimestamp)&&(identical(other.isDemoData, isDemoData) || other.isDemoData == isDemoData));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _BracketEntity&&(identical(other.id, id) || other.id == id)&&(identical(other.genderId, genderId) || other.genderId == genderId)&&(identical(other.bracketType, bracketType) || other.bracketType == bracketType)&&(identical(other.totalRounds, totalRounds) || other.totalRounds == totalRounds)&&(identical(other.createdAtTimestamp, createdAtTimestamp) || other.createdAtTimestamp == createdAtTimestamp)&&(identical(other.updatedAtTimestamp, updatedAtTimestamp) || other.updatedAtTimestamp == updatedAtTimestamp)&&(identical(other.poolIdentifier, poolIdentifier) || other.poolIdentifier == poolIdentifier)&&(identical(other.isFinalized, isFinalized) || other.isFinalized == isFinalized)&&(identical(other.generatedAtTimestamp, generatedAtTimestamp) || other.generatedAtTimestamp == generatedAtTimestamp)&&(identical(other.finalizedAtTimestamp, finalizedAtTimestamp) || other.finalizedAtTimestamp == finalizedAtTimestamp)&&const DeepCollectionEquality().equals(other._bracketDataJson, _bracketDataJson)&&(identical(other.syncVersion, syncVersion) || other.syncVersion == syncVersion)&&(identical(other.isDeleted, isDeleted) || other.isDeleted == isDeleted)&&(identical(other.deletedAtTimestamp, deletedAtTimestamp) || other.deletedAtTimestamp == deletedAtTimestamp));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,genderId,bracketType,totalRounds,createdAtTimestamp,updatedAtTimestamp,poolIdentifier,isFinalized,generatedAtTimestamp,finalizedAtTimestamp,const DeepCollectionEquality().hash(_bracketDataJson),syncVersion,isDeleted,deletedAtTimestamp,isDemoData);
+int get hashCode => Object.hash(runtimeType,id,genderId,bracketType,totalRounds,createdAtTimestamp,updatedAtTimestamp,poolIdentifier,isFinalized,generatedAtTimestamp,finalizedAtTimestamp,const DeepCollectionEquality().hash(_bracketDataJson),syncVersion,isDeleted,deletedAtTimestamp);
 
 @override
 String toString() {
-  return 'BracketEntity(id: $id, genderId: $genderId, bracketType: $bracketType, totalRounds: $totalRounds, createdAtTimestamp: $createdAtTimestamp, updatedAtTimestamp: $updatedAtTimestamp, poolIdentifier: $poolIdentifier, isFinalized: $isFinalized, generatedAtTimestamp: $generatedAtTimestamp, finalizedAtTimestamp: $finalizedAtTimestamp, bracketDataJson: $bracketDataJson, syncVersion: $syncVersion, isDeleted: $isDeleted, deletedAtTimestamp: $deletedAtTimestamp, isDemoData: $isDemoData)';
+  return 'BracketEntity(id: $id, genderId: $genderId, bracketType: $bracketType, totalRounds: $totalRounds, createdAtTimestamp: $createdAtTimestamp, updatedAtTimestamp: $updatedAtTimestamp, poolIdentifier: $poolIdentifier, isFinalized: $isFinalized, generatedAtTimestamp: $generatedAtTimestamp, finalizedAtTimestamp: $finalizedAtTimestamp, bracketDataJson: $bracketDataJson, syncVersion: $syncVersion, isDeleted: $isDeleted, deletedAtTimestamp: $deletedAtTimestamp)';
 }
 
 
@@ -314,7 +310,7 @@ abstract mixin class _$BracketEntityCopyWith<$Res> implements $BracketEntityCopy
   factory _$BracketEntityCopyWith(_BracketEntity value, $Res Function(_BracketEntity) _then) = __$BracketEntityCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String genderId, BracketType bracketType, int totalRounds, DateTime createdAtTimestamp, DateTime updatedAtTimestamp, String? poolIdentifier, bool isFinalized, DateTime? generatedAtTimestamp, DateTime? finalizedAtTimestamp, Map<String, dynamic>? bracketDataJson, int syncVersion, bool isDeleted, DateTime? deletedAtTimestamp, bool isDemoData
+ String id, String genderId, BracketType bracketType, int totalRounds, DateTime createdAtTimestamp, DateTime updatedAtTimestamp, String? poolIdentifier, bool isFinalized, DateTime? generatedAtTimestamp, DateTime? finalizedAtTimestamp, Map<String, dynamic>? bracketDataJson, int syncVersion, bool isDeleted, DateTime? deletedAtTimestamp
 });
 
 
@@ -331,7 +327,7 @@ class __$BracketEntityCopyWithImpl<$Res>
 
 /// Create a copy of BracketEntity
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? genderId = null,Object? bracketType = null,Object? totalRounds = null,Object? createdAtTimestamp = null,Object? updatedAtTimestamp = null,Object? poolIdentifier = freezed,Object? isFinalized = null,Object? generatedAtTimestamp = freezed,Object? finalizedAtTimestamp = freezed,Object? bracketDataJson = freezed,Object? syncVersion = null,Object? isDeleted = null,Object? deletedAtTimestamp = freezed,Object? isDemoData = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? genderId = null,Object? bracketType = null,Object? totalRounds = null,Object? createdAtTimestamp = null,Object? updatedAtTimestamp = null,Object? poolIdentifier = freezed,Object? isFinalized = null,Object? generatedAtTimestamp = freezed,Object? finalizedAtTimestamp = freezed,Object? bracketDataJson = freezed,Object? syncVersion = null,Object? isDeleted = null,Object? deletedAtTimestamp = freezed,}) {
   return _then(_BracketEntity(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,genderId: null == genderId ? _self.genderId : genderId // ignore: cast_nullable_to_non_nullable
@@ -347,8 +343,7 @@ as DateTime?,bracketDataJson: freezed == bracketDataJson ? _self._bracketDataJso
 as Map<String, dynamic>?,syncVersion: null == syncVersion ? _self.syncVersion : syncVersion // ignore: cast_nullable_to_non_nullable
 as int,isDeleted: null == isDeleted ? _self.isDeleted : isDeleted // ignore: cast_nullable_to_non_nullable
 as bool,deletedAtTimestamp: freezed == deletedAtTimestamp ? _self.deletedAtTimestamp : deletedAtTimestamp // ignore: cast_nullable_to_non_nullable
-as DateTime?,isDemoData: null == isDemoData ? _self.isDemoData : isDemoData // ignore: cast_nullable_to_non_nullable
-as bool,
+as DateTime?,
   ));
 }
 

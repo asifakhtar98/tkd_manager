@@ -36,7 +36,7 @@ class BracketViewerScreen extends StatefulWidget {
     required this.dojangSeparation,
     required this.bracketFormat,
     required this.includeThirdPlaceMatch,
-    this.tournament,
+    required this.tournament,
     this.isHistoryView = false,
     this.classification = const BracketClassification(),
   });
@@ -47,7 +47,7 @@ class BracketViewerScreen extends StatefulWidget {
   /// The elimination format used for this bracket.
   final BracketFormat bracketFormat;
   final bool includeThirdPlaceMatch;
-  final TournamentEntity? tournament;
+  final TournamentEntity tournament;
 
   /// When true the bracket is a replay from history — do NOT save a new
   /// [BracketSnapshot] so the history list stays clean.
@@ -97,15 +97,7 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
 
   static const _uuid = Uuid();
 
-  /// Fallback tournament entity used for demo brackets that lack a parent
-  /// [TournamentEntity]. Centralised to avoid scattered duplicate literals.
-  TournamentEntity get _fallbackDemoTournament =>
-      widget.tournament ??
-      TournamentEntity(
-        id: 'demo',
-        name: 'Demo Tournament',
-        createdAt: DateTime(2026),
-      );
+
 
   /// Extracts the flat match list and optional bracket IDs from a
   /// [BracketResult].  Used by both the on-screen viewer and PDF export.
@@ -157,7 +149,7 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
     final bracketData = _extractBracketDataFromResult(blocState.result);
 
     return TieSheetPainter(
-      tournament: _fallbackDemoTournament,
+      tournament: widget.tournament,
       matches: bracketData.allMatches,
       participants: blocState.participants,
       bracketType: widget.bracketFormat.displayLabel,
@@ -453,8 +445,7 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
 
   /// Saves the just-generated bracket as a [BracketSnapshot] under the
   /// owning tournament in [TournamentBloc]. Only fires once per viewer session
-  /// (guarded by [_snapshotSaved]) and is skipped for demo brackets that have
-  /// no owning tournament.
+  /// (guarded by [_snapshotSaved]).
   void _saveSnapshot({
     required BuildContext context,
     required BracketResult result,
@@ -462,8 +453,8 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
     required BracketFormat format,
     required bool includeThirdPlaceMatch,
   }) {
-    // Skip if already saved, no owning tournament, or replaying history.
-    if (_snapshotSaved || widget.tournament == null || widget.isHistoryView) {
+    // Skip if already saved or replaying history.
+    if (_snapshotSaved || widget.isHistoryView) {
       return;
     }
     _snapshotSaved = true;
@@ -483,7 +474,7 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
 
     context.read<TournamentBloc>().add(
       TournamentEvent.bracketSnapshotAdded(
-        tournamentId: widget.tournament!.id,
+        tournamentId: widget.tournament.id,
         snapshot: snapshot,
       ),
     );
@@ -856,7 +847,7 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
         child: Padding(
           padding: const EdgeInsets.all(40.0),
           child: TieSheetCanvasWidget(
-            tournament: _fallbackDemoTournament,
+            tournament: widget.tournament,
             matches: matches,
             participants: participants,
             bracketType: widget.bracketFormat.displayLabel,

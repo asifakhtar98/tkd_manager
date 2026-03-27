@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:pdf/pdf.dart';
 
@@ -194,5 +196,85 @@ abstract class PrintExportSettings with _$PrintExportSettings {
       canvasHeight: canvasHeight,
     );
     return grid.columns * grid.rows;
+  }
+
+  // ── Scale factor range ──
+
+  /// Minimum allowed scale factor for the tile mode slider.
+  static const double minScaleFactor = 0.1;
+
+  /// Maximum allowed scale factor for the tile mode slider.
+  static const double maxScaleFactor = 2.0;
+
+  /// Preset page-count targets shown as quick-action chips in the UI.
+  static const List<int> pageTargetPresets = [1, 2, 4, 6, 9];
+
+  // ── Smart-fit: compute optimal scale for a target page count ──
+
+  /// Computes the **largest** scale factor (highest print quality) that
+  /// produces at most [targetPageCount] pages when tiling the given canvas.
+  ///
+  /// **Algorithm**: iterates over every valid `(cols, rows)` grid where
+  /// `cols × rows ≤ targetPageCount` and algebraically solves for the
+  /// maximum scale that fits the canvas within that grid:
+  ///
+  /// ```
+  /// scaleForCols = (printableW + (cols - 1) × netPrintableW) / canvasW
+  /// scaleForRows = (printableH + (rows - 1) × netPrintableH) / canvasH
+  /// scale = min(scaleForCols, scaleForRows)
+  /// ```
+  ///
+  /// where `netPrintableW = printableW - overlapPts` accounts for the
+  /// overlap strip that adjacent tiles share.
+  ///
+  /// Returns the scale clamped to
+  /// [[minScaleFactor], [maxScaleFactor]].
+  double computeScaleFactorForTargetPageCount({
+    required double canvasWidth,
+    required double canvasHeight,
+    required int targetPageCount,
+  }) {
+    if (targetPageCount <= 0 || canvasWidth <= 0 || canvasHeight <= 0) {
+      return 1.0;
+    }
+
+    final printable = printableAreaPoints;
+    final overlapPts = tileOverlapPoints;
+
+    // Net printable area per additional tile (after overlap deduction).
+    final netPrintableWidth = printable.width - overlapPts;
+    final netPrintableHeight = printable.height - overlapPts;
+
+    // Guard against degenerate overlap ≥ printable area.
+    if (netPrintableWidth <= 0 || netPrintableHeight <= 0) return 1.0;
+
+    double bestScale = minScaleFactor;
+
+    // Iterate all valid (cols, rows) grids where cols × rows ≤ target.
+    for (int cols = 1; cols <= targetPageCount; cols++) {
+      final int maxRows = targetPageCount ~/ cols;
+      if (maxRows < 1) continue;
+
+      // Scale that makes `cols` columns cover canvasWidth:
+      // First tile covers printableW/scale, each subsequent covers
+      // netPrintableW/scale. Total ≥ canvasWidth.
+      // → scale ≤ (printableW + (cols-1) × netPrintableW) / canvasWidth
+      final double scaleForColumns =
+          (printable.width + (cols - 1) * netPrintableWidth) / canvasWidth;
+
+      final double scaleForRows =
+          (printable.height + (maxRows - 1) * netPrintableHeight) /
+              canvasHeight;
+
+      // Must satisfy both axes — take the smaller of the two.
+      final double candidateScale = min(scaleForColumns, scaleForRows);
+
+      // Prefer the largest scale (best quality) across all grids.
+      if (candidateScale > bestScale) {
+        bestScale = candidateScale;
+      }
+    }
+
+    return bestScale.clamp(minScaleFactor, maxScaleFactor);
   }
 }

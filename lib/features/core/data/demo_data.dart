@@ -1,137 +1,30 @@
-import '../../participant/domain/entities/participant_entity.dart';
 import '../../tournament/domain/entities/tournament_entity.dart';
 
-/// Static helpers that produce deterministic demo data for bracket previews.
+/// Static helpers that produce deterministic demo data for the pre-seeded
+/// demo tournament.
 ///
-/// Uses fixed IDs so the same demo tournament / participants are always
-/// returned — no UUID randomness.
+/// Uses a fixed ID so the same demo tournament is always returned — no UUID
+/// randomness.
 class DemoData {
   DemoData._();
 
   // ── Deterministic IDs ──────────────────────────────────────────────────
 
-  /// Fixed tournament ID shared by all demo brackets.
+  /// Fixed tournament ID for the demo tournament.
   static const _demoTournamentId = 'demo-tournament-00';
 
   // ── Tournament ─────────────────────────────────────────────────────────
 
   /// Returns a single, reusable demo [TournamentEntity].
   ///
-  /// All demo brackets reference this tournament so that snapshots,
-  /// history, and the viewer work correctly without polluting real data.
+  /// Seeded into [TournamentBloc] at startup so the demo tournament
+  /// appears in the tournament list like any user-created tournament.
   static TournamentEntity get demoTournament => TournamentEntity(
     id: _demoTournamentId,
     name: 'Demo Tournament',
     dateRange: 'March 10, 2026',
     venue: 'Demo Arena',
     organizer: 'TKD Brackets',
-
     createdAt: DateTime(2026, 3, 10),
   );
-
-  // ── Participants ───────────────────────────────────────────────────────
-
-  /// Indian-inspired demo full names for realistic bracket previews.
-  ///
-  /// 64 unique names to support brackets up to 64 participants without
-  /// repeating entries in a single draw.
-  static const _fullNames = [
-    'Aarav Patel',
-    'Diya Sharma',
-    'Vihaan Singh',
-    'Aanya Gupta',
-    'Arjun Kumar',
-    'Kiara Reddy',
-    'Rohan Desai',
-    'Isha Joshi',
-    'Aditya Verma',
-    'Meera Nair',
-    'Kabir Das',
-    'Ananya Rao',
-    'Dhruv Iyer',
-    'Neha Pillai',
-    'Aryan Mehta',
-    'Riya Kapoor',
-    'Siddharth Thakur',
-    'Priya Menon',
-    'Tanish Bhatt',
-    'Kavya Sethi',
-    'Ishaan Saxena',
-    'Shruti Bose',
-    'Harsh Choudhary',
-    'Pooja Mishra',
-    'Vivek Malhotra',
-    'Simran Kaur',
-    'Manav Tiwari',
-    'Deepika Hegde',
-    'Yash Pandey',
-    'Ritika Narayan',
-    'Karan Bhatia',
-    'Sneha Kulkarni',
-    'Nikhil Chatterjee',
-    'Tanya Srinivasan',
-    'Rahul Agarwal',
-    'Meghna Deshpande',
-    'Samar Bajaj',
-    'Nikita Ranganathan',
-    'Pranav Khanna',
-    'Aditi Venkatesh',
-    'Kunal Banerjee',
-    'Swati Raghavan',
-    'Ajay Chauhan',
-    'Pallavi Suresh',
-    'Dev Rajput',
-    'Nandini Gopalan',
-    'Vikram Soni',
-    'Lakshmi Ramesh',
-    'Abhishek Dalal',
-    'Gayatri Sundaram',
-    'Tarun Jain',
-    'Shweta Chandra',
-    'Mayank Trivedi',
-    'Divya Mahajan',
-    'Rohit Khatri',
-    'Kamini Shukla',
-    'Gaurav Vohra',
-    'Aparna Subramaniam',
-    'Sachin Parikh',
-    'Jyoti Mukherjee',
-    'Ankur Grover',
-    'Varsha Krishnan',
-    'Nitin Walia',
-    'Sonal Pathak',
-  ];
-
-  /// 12 unique schools / dojangs for realistic affiliation variety.
-  static const _schools = [
-    'Kerala Martial Arts',
-    'Mumbai Taekwondo',
-    'Delhi Sports Club',
-    'Bengaluru Dojang',
-    'Chennai Dragons',
-    'Punjab Tigers',
-    'Hyderabad Warriors',
-    'Kolkata Kicks',
-    'Jaipur Dojang',
-    'Lucknow Academy',
-    'Pune Power TKD',
-    'Ahmedabad Strikers',
-  ];
-
-  /// Builds a deterministic list of [count] participants.
-  ///
-  /// Participant IDs are derived from [count] so different demo sizes
-  /// produce the same IDs on every invocation.
-  static List<ParticipantEntity> getParticipants(int count) {
-    return List.generate(count, (i) {
-      return ParticipantEntity(
-        id: 'demo-p-$count-${i + 1}',
-        genderId: 'demo_division',
-        fullName: _fullNames[i % _fullNames.length],
-        schoolOrDojangName: _schools[i % _schools.length],
-        registrationId: 'DEMO-${1000 + i}',
-        seedNumber: i + 1,
-      );
-    });
-  }
 }

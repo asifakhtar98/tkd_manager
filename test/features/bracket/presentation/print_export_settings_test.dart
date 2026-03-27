@@ -326,5 +326,187 @@ void main() {
       // Should require more than 1 page to tile a bracket this large.
       expect(total, greaterThan(1));
     });
+
+    // ── Scale factor range constants ────────────────────────────────────
+
+    test('minScaleFactor is 0.1 and maxScaleFactor is 2.0', () {
+      expect(PrintExportSettings.minScaleFactor, 0.1);
+      expect(PrintExportSettings.maxScaleFactor, 2.0);
+    });
+
+    test('pageTargetPresets contains expected values', () {
+      expect(PrintExportSettings.pageTargetPresets, [1, 2, 4, 6, 9]);
+    });
+
+    // ── computeScaleFactorForTargetPageCount ─────────────────────────────
+
+    group('computeScaleFactorForTargetPageCount', () {
+      test('small canvas already fits in 1 page returns high scale', () {
+        const settings = PrintExportSettings(
+          fitMode: PrintFitMode.tileAcrossPages,
+          paperSize: PaperSize.a4,
+          orientation: PageOrientation.landscape,
+          tileOverlapMillimeters: 0,
+        );
+        final printable = settings.printableAreaPoints;
+
+        // Canvas smaller than the printable area should easily fit.
+        final scale = settings.computeScaleFactorForTargetPageCount(
+          canvasWidth: printable.width * 0.5,
+          canvasHeight: printable.height * 0.5,
+          targetPageCount: 1,
+        );
+
+        // The computed scale should be at the maximum (clamped to 2.0).
+        expect(scale, PrintExportSettings.maxScaleFactor);
+      });
+
+      test('large canvas with target=1 produces valid scale for 1 page', () {
+        const settings = PrintExportSettings(
+          fitMode: PrintFitMode.tileAcrossPages,
+          paperSize: PaperSize.a4,
+          orientation: PageOrientation.landscape,
+          tileOverlapMillimeters: 10,
+        );
+
+        final scale = settings.computeScaleFactorForTargetPageCount(
+          canvasWidth: 2960,
+          canvasHeight: 4284,
+          targetPageCount: 1,
+        );
+
+        // Verify it actually produces 1 page (or at most 1).
+        final adjusted = settings.copyWith(scaleFactor: scale);
+        final pages = adjusted.totalPageCount(
+          canvasWidth: 2960,
+          canvasHeight: 4284,
+        );
+
+        expect(pages, lessThanOrEqualTo(1));
+        expect(scale, greaterThanOrEqualTo(PrintExportSettings.minScaleFactor));
+      });
+
+      test('large canvas with target=4 produces ≤4 pages', () {
+        const settings = PrintExportSettings(
+          fitMode: PrintFitMode.tileAcrossPages,
+          paperSize: PaperSize.a4,
+          orientation: PageOrientation.landscape,
+          tileOverlapMillimeters: 10,
+        );
+
+        final scale = settings.computeScaleFactorForTargetPageCount(
+          canvasWidth: 2960,
+          canvasHeight: 4284,
+          targetPageCount: 4,
+        );
+
+        final adjusted = settings.copyWith(scaleFactor: scale);
+        final pages = adjusted.totalPageCount(
+          canvasWidth: 2960,
+          canvasHeight: 4284,
+        );
+
+        expect(pages, lessThanOrEqualTo(4));
+        expect(scale, greaterThan(PrintExportSettings.minScaleFactor));
+      });
+
+      test('higher target allows larger (better quality) scale', () {
+        const settings = PrintExportSettings(
+          fitMode: PrintFitMode.tileAcrossPages,
+          paperSize: PaperSize.a4,
+          orientation: PageOrientation.landscape,
+          tileOverlapMillimeters: 10,
+        );
+
+        final scaleFor2 = settings.computeScaleFactorForTargetPageCount(
+          canvasWidth: 2960,
+          canvasHeight: 4284,
+          targetPageCount: 2,
+        );
+        final scaleFor9 = settings.computeScaleFactorForTargetPageCount(
+          canvasWidth: 2960,
+          canvasHeight: 4284,
+          targetPageCount: 9,
+        );
+
+        expect(scaleFor9, greaterThanOrEqualTo(scaleFor2));
+      });
+
+      test('result is clamped between min and max scale', () {
+        const settings = PrintExportSettings(
+          fitMode: PrintFitMode.tileAcrossPages,
+          paperSize: PaperSize.a4,
+          orientation: PageOrientation.landscape,
+          tileOverlapMillimeters: 10,
+        );
+
+        final scale = settings.computeScaleFactorForTargetPageCount(
+          canvasWidth: 2960,
+          canvasHeight: 4284,
+          targetPageCount: 1,
+        );
+
+        expect(
+          scale,
+          greaterThanOrEqualTo(PrintExportSettings.minScaleFactor),
+        );
+        expect(
+          scale,
+          lessThanOrEqualTo(PrintExportSettings.maxScaleFactor),
+        );
+      });
+
+      test('degenerate inputs return 1.0', () {
+        const settings = PrintExportSettings();
+
+        expect(
+          settings.computeScaleFactorForTargetPageCount(
+            canvasWidth: 0,
+            canvasHeight: 100,
+            targetPageCount: 4,
+          ),
+          1.0,
+        );
+        expect(
+          settings.computeScaleFactorForTargetPageCount(
+            canvasWidth: 100,
+            canvasHeight: 0,
+            targetPageCount: 4,
+          ),
+          1.0,
+        );
+        expect(
+          settings.computeScaleFactorForTargetPageCount(
+            canvasWidth: 100,
+            canvasHeight: 100,
+            targetPageCount: 0,
+          ),
+          1.0,
+        );
+      });
+
+      test('overlap-heavy settings still produce valid results', () {
+        const settings = PrintExportSettings(
+          fitMode: PrintFitMode.tileAcrossPages,
+          paperSize: PaperSize.a4,
+          orientation: PageOrientation.landscape,
+          tileOverlapMillimeters: 30,
+        );
+
+        final scale = settings.computeScaleFactorForTargetPageCount(
+          canvasWidth: 2960,
+          canvasHeight: 4284,
+          targetPageCount: 6,
+        );
+
+        final adjusted = settings.copyWith(scaleFactor: scale);
+        final pages = adjusted.totalPageCount(
+          canvasWidth: 2960,
+          canvasHeight: 4284,
+        );
+
+        expect(pages, lessThanOrEqualTo(6));
+      });
+    });
   });
 }

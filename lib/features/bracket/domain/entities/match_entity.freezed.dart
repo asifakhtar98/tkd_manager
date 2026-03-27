@@ -38,8 +38,7 @@ mixin _$MatchEntity {
  DateTime? get completedAtTimestamp;/// Optimistic concurrency version counter.
  int get syncVersion;/// Soft-delete flag.
  bool get isDeleted;/// Timestamp of soft deletion, if applicable.
- DateTime? get deletedAtTimestamp;/// Whether this match was created from demo/sample data.
- bool get isDemoData;
+ DateTime? get deletedAtTimestamp;
 /// Create a copy of MatchEntity
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -52,16 +51,16 @@ $MatchEntityCopyWith<MatchEntity> get copyWith => _$MatchEntityCopyWithImpl<Matc
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is MatchEntity&&(identical(other.id, id) || other.id == id)&&(identical(other.bracketId, bracketId) || other.bracketId == bracketId)&&(identical(other.roundNumber, roundNumber) || other.roundNumber == roundNumber)&&(identical(other.matchNumberInRound, matchNumberInRound) || other.matchNumberInRound == matchNumberInRound)&&(identical(other.createdAtTimestamp, createdAtTimestamp) || other.createdAtTimestamp == createdAtTimestamp)&&(identical(other.updatedAtTimestamp, updatedAtTimestamp) || other.updatedAtTimestamp == updatedAtTimestamp)&&(identical(other.participantRedId, participantRedId) || other.participantRedId == participantRedId)&&(identical(other.participantBlueId, participantBlueId) || other.participantBlueId == participantBlueId)&&(identical(other.winnerId, winnerId) || other.winnerId == winnerId)&&(identical(other.winnerAdvancesToMatchId, winnerAdvancesToMatchId) || other.winnerAdvancesToMatchId == winnerAdvancesToMatchId)&&(identical(other.loserAdvancesToMatchId, loserAdvancesToMatchId) || other.loserAdvancesToMatchId == loserAdvancesToMatchId)&&(identical(other.scheduledRingNumber, scheduledRingNumber) || other.scheduledRingNumber == scheduledRingNumber)&&(identical(other.scheduledTime, scheduledTime) || other.scheduledTime == scheduledTime)&&(identical(other.status, status) || other.status == status)&&(identical(other.resultType, resultType) || other.resultType == resultType)&&(identical(other.notes, notes) || other.notes == notes)&&(identical(other.blueScore, blueScore) || other.blueScore == blueScore)&&(identical(other.redScore, redScore) || other.redScore == redScore)&&(identical(other.startedAtTimestamp, startedAtTimestamp) || other.startedAtTimestamp == startedAtTimestamp)&&(identical(other.completedAtTimestamp, completedAtTimestamp) || other.completedAtTimestamp == completedAtTimestamp)&&(identical(other.syncVersion, syncVersion) || other.syncVersion == syncVersion)&&(identical(other.isDeleted, isDeleted) || other.isDeleted == isDeleted)&&(identical(other.deletedAtTimestamp, deletedAtTimestamp) || other.deletedAtTimestamp == deletedAtTimestamp)&&(identical(other.isDemoData, isDemoData) || other.isDemoData == isDemoData));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is MatchEntity&&(identical(other.id, id) || other.id == id)&&(identical(other.bracketId, bracketId) || other.bracketId == bracketId)&&(identical(other.roundNumber, roundNumber) || other.roundNumber == roundNumber)&&(identical(other.matchNumberInRound, matchNumberInRound) || other.matchNumberInRound == matchNumberInRound)&&(identical(other.createdAtTimestamp, createdAtTimestamp) || other.createdAtTimestamp == createdAtTimestamp)&&(identical(other.updatedAtTimestamp, updatedAtTimestamp) || other.updatedAtTimestamp == updatedAtTimestamp)&&(identical(other.participantRedId, participantRedId) || other.participantRedId == participantRedId)&&(identical(other.participantBlueId, participantBlueId) || other.participantBlueId == participantBlueId)&&(identical(other.winnerId, winnerId) || other.winnerId == winnerId)&&(identical(other.winnerAdvancesToMatchId, winnerAdvancesToMatchId) || other.winnerAdvancesToMatchId == winnerAdvancesToMatchId)&&(identical(other.loserAdvancesToMatchId, loserAdvancesToMatchId) || other.loserAdvancesToMatchId == loserAdvancesToMatchId)&&(identical(other.scheduledRingNumber, scheduledRingNumber) || other.scheduledRingNumber == scheduledRingNumber)&&(identical(other.scheduledTime, scheduledTime) || other.scheduledTime == scheduledTime)&&(identical(other.status, status) || other.status == status)&&(identical(other.resultType, resultType) || other.resultType == resultType)&&(identical(other.notes, notes) || other.notes == notes)&&(identical(other.blueScore, blueScore) || other.blueScore == blueScore)&&(identical(other.redScore, redScore) || other.redScore == redScore)&&(identical(other.startedAtTimestamp, startedAtTimestamp) || other.startedAtTimestamp == startedAtTimestamp)&&(identical(other.completedAtTimestamp, completedAtTimestamp) || other.completedAtTimestamp == completedAtTimestamp)&&(identical(other.syncVersion, syncVersion) || other.syncVersion == syncVersion)&&(identical(other.isDeleted, isDeleted) || other.isDeleted == isDeleted)&&(identical(other.deletedAtTimestamp, deletedAtTimestamp) || other.deletedAtTimestamp == deletedAtTimestamp));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hashAll([runtimeType,id,bracketId,roundNumber,matchNumberInRound,createdAtTimestamp,updatedAtTimestamp,participantRedId,participantBlueId,winnerId,winnerAdvancesToMatchId,loserAdvancesToMatchId,scheduledRingNumber,scheduledTime,status,resultType,notes,blueScore,redScore,startedAtTimestamp,completedAtTimestamp,syncVersion,isDeleted,deletedAtTimestamp,isDemoData]);
+int get hashCode => Object.hashAll([runtimeType,id,bracketId,roundNumber,matchNumberInRound,createdAtTimestamp,updatedAtTimestamp,participantRedId,participantBlueId,winnerId,winnerAdvancesToMatchId,loserAdvancesToMatchId,scheduledRingNumber,scheduledTime,status,resultType,notes,blueScore,redScore,startedAtTimestamp,completedAtTimestamp,syncVersion,isDeleted,deletedAtTimestamp]);
 
 @override
 String toString() {
-  return 'MatchEntity(id: $id, bracketId: $bracketId, roundNumber: $roundNumber, matchNumberInRound: $matchNumberInRound, createdAtTimestamp: $createdAtTimestamp, updatedAtTimestamp: $updatedAtTimestamp, participantRedId: $participantRedId, participantBlueId: $participantBlueId, winnerId: $winnerId, winnerAdvancesToMatchId: $winnerAdvancesToMatchId, loserAdvancesToMatchId: $loserAdvancesToMatchId, scheduledRingNumber: $scheduledRingNumber, scheduledTime: $scheduledTime, status: $status, resultType: $resultType, notes: $notes, blueScore: $blueScore, redScore: $redScore, startedAtTimestamp: $startedAtTimestamp, completedAtTimestamp: $completedAtTimestamp, syncVersion: $syncVersion, isDeleted: $isDeleted, deletedAtTimestamp: $deletedAtTimestamp, isDemoData: $isDemoData)';
+  return 'MatchEntity(id: $id, bracketId: $bracketId, roundNumber: $roundNumber, matchNumberInRound: $matchNumberInRound, createdAtTimestamp: $createdAtTimestamp, updatedAtTimestamp: $updatedAtTimestamp, participantRedId: $participantRedId, participantBlueId: $participantBlueId, winnerId: $winnerId, winnerAdvancesToMatchId: $winnerAdvancesToMatchId, loserAdvancesToMatchId: $loserAdvancesToMatchId, scheduledRingNumber: $scheduledRingNumber, scheduledTime: $scheduledTime, status: $status, resultType: $resultType, notes: $notes, blueScore: $blueScore, redScore: $redScore, startedAtTimestamp: $startedAtTimestamp, completedAtTimestamp: $completedAtTimestamp, syncVersion: $syncVersion, isDeleted: $isDeleted, deletedAtTimestamp: $deletedAtTimestamp)';
 }
 
 
@@ -72,7 +71,7 @@ abstract mixin class $MatchEntityCopyWith<$Res>  {
   factory $MatchEntityCopyWith(MatchEntity value, $Res Function(MatchEntity) _then) = _$MatchEntityCopyWithImpl;
 @useResult
 $Res call({
- String id, String bracketId, int roundNumber, int matchNumberInRound, DateTime createdAtTimestamp, DateTime updatedAtTimestamp, String? participantRedId, String? participantBlueId, String? winnerId, String? winnerAdvancesToMatchId, String? loserAdvancesToMatchId, int? scheduledRingNumber, DateTime? scheduledTime, MatchStatus status, MatchResultType? resultType, String? notes, int? blueScore, int? redScore, DateTime? startedAtTimestamp, DateTime? completedAtTimestamp, int syncVersion, bool isDeleted, DateTime? deletedAtTimestamp, bool isDemoData
+ String id, String bracketId, int roundNumber, int matchNumberInRound, DateTime createdAtTimestamp, DateTime updatedAtTimestamp, String? participantRedId, String? participantBlueId, String? winnerId, String? winnerAdvancesToMatchId, String? loserAdvancesToMatchId, int? scheduledRingNumber, DateTime? scheduledTime, MatchStatus status, MatchResultType? resultType, String? notes, int? blueScore, int? redScore, DateTime? startedAtTimestamp, DateTime? completedAtTimestamp, int syncVersion, bool isDeleted, DateTime? deletedAtTimestamp
 });
 
 
@@ -89,7 +88,7 @@ class _$MatchEntityCopyWithImpl<$Res>
 
 /// Create a copy of MatchEntity
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? bracketId = null,Object? roundNumber = null,Object? matchNumberInRound = null,Object? createdAtTimestamp = null,Object? updatedAtTimestamp = null,Object? participantRedId = freezed,Object? participantBlueId = freezed,Object? winnerId = freezed,Object? winnerAdvancesToMatchId = freezed,Object? loserAdvancesToMatchId = freezed,Object? scheduledRingNumber = freezed,Object? scheduledTime = freezed,Object? status = null,Object? resultType = freezed,Object? notes = freezed,Object? blueScore = freezed,Object? redScore = freezed,Object? startedAtTimestamp = freezed,Object? completedAtTimestamp = freezed,Object? syncVersion = null,Object? isDeleted = null,Object? deletedAtTimestamp = freezed,Object? isDemoData = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? bracketId = null,Object? roundNumber = null,Object? matchNumberInRound = null,Object? createdAtTimestamp = null,Object? updatedAtTimestamp = null,Object? participantRedId = freezed,Object? participantBlueId = freezed,Object? winnerId = freezed,Object? winnerAdvancesToMatchId = freezed,Object? loserAdvancesToMatchId = freezed,Object? scheduledRingNumber = freezed,Object? scheduledTime = freezed,Object? status = null,Object? resultType = freezed,Object? notes = freezed,Object? blueScore = freezed,Object? redScore = freezed,Object? startedAtTimestamp = freezed,Object? completedAtTimestamp = freezed,Object? syncVersion = null,Object? isDeleted = null,Object? deletedAtTimestamp = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,bracketId: null == bracketId ? _self.bracketId : bracketId // ignore: cast_nullable_to_non_nullable
@@ -114,8 +113,7 @@ as DateTime?,completedAtTimestamp: freezed == completedAtTimestamp ? _self.compl
 as DateTime?,syncVersion: null == syncVersion ? _self.syncVersion : syncVersion // ignore: cast_nullable_to_non_nullable
 as int,isDeleted: null == isDeleted ? _self.isDeleted : isDeleted // ignore: cast_nullable_to_non_nullable
 as bool,deletedAtTimestamp: freezed == deletedAtTimestamp ? _self.deletedAtTimestamp : deletedAtTimestamp // ignore: cast_nullable_to_non_nullable
-as DateTime?,isDemoData: null == isDemoData ? _self.isDemoData : isDemoData // ignore: cast_nullable_to_non_nullable
-as bool,
+as DateTime?,
   ));
 }
 
@@ -200,10 +198,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String bracketId,  int roundNumber,  int matchNumberInRound,  DateTime createdAtTimestamp,  DateTime updatedAtTimestamp,  String? participantRedId,  String? participantBlueId,  String? winnerId,  String? winnerAdvancesToMatchId,  String? loserAdvancesToMatchId,  int? scheduledRingNumber,  DateTime? scheduledTime,  MatchStatus status,  MatchResultType? resultType,  String? notes,  int? blueScore,  int? redScore,  DateTime? startedAtTimestamp,  DateTime? completedAtTimestamp,  int syncVersion,  bool isDeleted,  DateTime? deletedAtTimestamp,  bool isDemoData)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String bracketId,  int roundNumber,  int matchNumberInRound,  DateTime createdAtTimestamp,  DateTime updatedAtTimestamp,  String? participantRedId,  String? participantBlueId,  String? winnerId,  String? winnerAdvancesToMatchId,  String? loserAdvancesToMatchId,  int? scheduledRingNumber,  DateTime? scheduledTime,  MatchStatus status,  MatchResultType? resultType,  String? notes,  int? blueScore,  int? redScore,  DateTime? startedAtTimestamp,  DateTime? completedAtTimestamp,  int syncVersion,  bool isDeleted,  DateTime? deletedAtTimestamp)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _MatchEntity() when $default != null:
-return $default(_that.id,_that.bracketId,_that.roundNumber,_that.matchNumberInRound,_that.createdAtTimestamp,_that.updatedAtTimestamp,_that.participantRedId,_that.participantBlueId,_that.winnerId,_that.winnerAdvancesToMatchId,_that.loserAdvancesToMatchId,_that.scheduledRingNumber,_that.scheduledTime,_that.status,_that.resultType,_that.notes,_that.blueScore,_that.redScore,_that.startedAtTimestamp,_that.completedAtTimestamp,_that.syncVersion,_that.isDeleted,_that.deletedAtTimestamp,_that.isDemoData);case _:
+return $default(_that.id,_that.bracketId,_that.roundNumber,_that.matchNumberInRound,_that.createdAtTimestamp,_that.updatedAtTimestamp,_that.participantRedId,_that.participantBlueId,_that.winnerId,_that.winnerAdvancesToMatchId,_that.loserAdvancesToMatchId,_that.scheduledRingNumber,_that.scheduledTime,_that.status,_that.resultType,_that.notes,_that.blueScore,_that.redScore,_that.startedAtTimestamp,_that.completedAtTimestamp,_that.syncVersion,_that.isDeleted,_that.deletedAtTimestamp);case _:
   return orElse();
 
 }
@@ -221,10 +219,10 @@ return $default(_that.id,_that.bracketId,_that.roundNumber,_that.matchNumberInRo
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String bracketId,  int roundNumber,  int matchNumberInRound,  DateTime createdAtTimestamp,  DateTime updatedAtTimestamp,  String? participantRedId,  String? participantBlueId,  String? winnerId,  String? winnerAdvancesToMatchId,  String? loserAdvancesToMatchId,  int? scheduledRingNumber,  DateTime? scheduledTime,  MatchStatus status,  MatchResultType? resultType,  String? notes,  int? blueScore,  int? redScore,  DateTime? startedAtTimestamp,  DateTime? completedAtTimestamp,  int syncVersion,  bool isDeleted,  DateTime? deletedAtTimestamp,  bool isDemoData)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String bracketId,  int roundNumber,  int matchNumberInRound,  DateTime createdAtTimestamp,  DateTime updatedAtTimestamp,  String? participantRedId,  String? participantBlueId,  String? winnerId,  String? winnerAdvancesToMatchId,  String? loserAdvancesToMatchId,  int? scheduledRingNumber,  DateTime? scheduledTime,  MatchStatus status,  MatchResultType? resultType,  String? notes,  int? blueScore,  int? redScore,  DateTime? startedAtTimestamp,  DateTime? completedAtTimestamp,  int syncVersion,  bool isDeleted,  DateTime? deletedAtTimestamp)  $default,) {final _that = this;
 switch (_that) {
 case _MatchEntity():
-return $default(_that.id,_that.bracketId,_that.roundNumber,_that.matchNumberInRound,_that.createdAtTimestamp,_that.updatedAtTimestamp,_that.participantRedId,_that.participantBlueId,_that.winnerId,_that.winnerAdvancesToMatchId,_that.loserAdvancesToMatchId,_that.scheduledRingNumber,_that.scheduledTime,_that.status,_that.resultType,_that.notes,_that.blueScore,_that.redScore,_that.startedAtTimestamp,_that.completedAtTimestamp,_that.syncVersion,_that.isDeleted,_that.deletedAtTimestamp,_that.isDemoData);case _:
+return $default(_that.id,_that.bracketId,_that.roundNumber,_that.matchNumberInRound,_that.createdAtTimestamp,_that.updatedAtTimestamp,_that.participantRedId,_that.participantBlueId,_that.winnerId,_that.winnerAdvancesToMatchId,_that.loserAdvancesToMatchId,_that.scheduledRingNumber,_that.scheduledTime,_that.status,_that.resultType,_that.notes,_that.blueScore,_that.redScore,_that.startedAtTimestamp,_that.completedAtTimestamp,_that.syncVersion,_that.isDeleted,_that.deletedAtTimestamp);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -241,10 +239,10 @@ return $default(_that.id,_that.bracketId,_that.roundNumber,_that.matchNumberInRo
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String bracketId,  int roundNumber,  int matchNumberInRound,  DateTime createdAtTimestamp,  DateTime updatedAtTimestamp,  String? participantRedId,  String? participantBlueId,  String? winnerId,  String? winnerAdvancesToMatchId,  String? loserAdvancesToMatchId,  int? scheduledRingNumber,  DateTime? scheduledTime,  MatchStatus status,  MatchResultType? resultType,  String? notes,  int? blueScore,  int? redScore,  DateTime? startedAtTimestamp,  DateTime? completedAtTimestamp,  int syncVersion,  bool isDeleted,  DateTime? deletedAtTimestamp,  bool isDemoData)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String bracketId,  int roundNumber,  int matchNumberInRound,  DateTime createdAtTimestamp,  DateTime updatedAtTimestamp,  String? participantRedId,  String? participantBlueId,  String? winnerId,  String? winnerAdvancesToMatchId,  String? loserAdvancesToMatchId,  int? scheduledRingNumber,  DateTime? scheduledTime,  MatchStatus status,  MatchResultType? resultType,  String? notes,  int? blueScore,  int? redScore,  DateTime? startedAtTimestamp,  DateTime? completedAtTimestamp,  int syncVersion,  bool isDeleted,  DateTime? deletedAtTimestamp)?  $default,) {final _that = this;
 switch (_that) {
 case _MatchEntity() when $default != null:
-return $default(_that.id,_that.bracketId,_that.roundNumber,_that.matchNumberInRound,_that.createdAtTimestamp,_that.updatedAtTimestamp,_that.participantRedId,_that.participantBlueId,_that.winnerId,_that.winnerAdvancesToMatchId,_that.loserAdvancesToMatchId,_that.scheduledRingNumber,_that.scheduledTime,_that.status,_that.resultType,_that.notes,_that.blueScore,_that.redScore,_that.startedAtTimestamp,_that.completedAtTimestamp,_that.syncVersion,_that.isDeleted,_that.deletedAtTimestamp,_that.isDemoData);case _:
+return $default(_that.id,_that.bracketId,_that.roundNumber,_that.matchNumberInRound,_that.createdAtTimestamp,_that.updatedAtTimestamp,_that.participantRedId,_that.participantBlueId,_that.winnerId,_that.winnerAdvancesToMatchId,_that.loserAdvancesToMatchId,_that.scheduledRingNumber,_that.scheduledTime,_that.status,_that.resultType,_that.notes,_that.blueScore,_that.redScore,_that.startedAtTimestamp,_that.completedAtTimestamp,_that.syncVersion,_that.isDeleted,_that.deletedAtTimestamp);case _:
   return null;
 
 }
@@ -256,7 +254,7 @@ return $default(_that.id,_that.bracketId,_that.roundNumber,_that.matchNumberInRo
 @JsonSerializable()
 
 class _MatchEntity extends MatchEntity {
-  const _MatchEntity({required this.id, required this.bracketId, required this.roundNumber, required this.matchNumberInRound, required this.createdAtTimestamp, required this.updatedAtTimestamp, this.participantRedId, this.participantBlueId, this.winnerId, this.winnerAdvancesToMatchId, this.loserAdvancesToMatchId, this.scheduledRingNumber, this.scheduledTime, this.status = MatchStatus.pending, this.resultType, this.notes, this.blueScore, this.redScore, this.startedAtTimestamp, this.completedAtTimestamp, this.syncVersion = 1, this.isDeleted = false, this.deletedAtTimestamp, this.isDemoData = false}): super._();
+  const _MatchEntity({required this.id, required this.bracketId, required this.roundNumber, required this.matchNumberInRound, required this.createdAtTimestamp, required this.updatedAtTimestamp, this.participantRedId, this.participantBlueId, this.winnerId, this.winnerAdvancesToMatchId, this.loserAdvancesToMatchId, this.scheduledRingNumber, this.scheduledTime, this.status = MatchStatus.pending, this.resultType, this.notes, this.blueScore, this.redScore, this.startedAtTimestamp, this.completedAtTimestamp, this.syncVersion = 1, this.isDeleted = false, this.deletedAtTimestamp}): super._();
   factory _MatchEntity.fromJson(Map<String, dynamic> json) => _$MatchEntityFromJson(json);
 
 /// Unique identifier for this match (UUID v4).
@@ -305,8 +303,6 @@ class _MatchEntity extends MatchEntity {
 @override@JsonKey() final  bool isDeleted;
 /// Timestamp of soft deletion, if applicable.
 @override final  DateTime? deletedAtTimestamp;
-/// Whether this match was created from demo/sample data.
-@override@JsonKey() final  bool isDemoData;
 
 /// Create a copy of MatchEntity
 /// with the given fields replaced by the non-null parameter values.
@@ -321,16 +317,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _MatchEntity&&(identical(other.id, id) || other.id == id)&&(identical(other.bracketId, bracketId) || other.bracketId == bracketId)&&(identical(other.roundNumber, roundNumber) || other.roundNumber == roundNumber)&&(identical(other.matchNumberInRound, matchNumberInRound) || other.matchNumberInRound == matchNumberInRound)&&(identical(other.createdAtTimestamp, createdAtTimestamp) || other.createdAtTimestamp == createdAtTimestamp)&&(identical(other.updatedAtTimestamp, updatedAtTimestamp) || other.updatedAtTimestamp == updatedAtTimestamp)&&(identical(other.participantRedId, participantRedId) || other.participantRedId == participantRedId)&&(identical(other.participantBlueId, participantBlueId) || other.participantBlueId == participantBlueId)&&(identical(other.winnerId, winnerId) || other.winnerId == winnerId)&&(identical(other.winnerAdvancesToMatchId, winnerAdvancesToMatchId) || other.winnerAdvancesToMatchId == winnerAdvancesToMatchId)&&(identical(other.loserAdvancesToMatchId, loserAdvancesToMatchId) || other.loserAdvancesToMatchId == loserAdvancesToMatchId)&&(identical(other.scheduledRingNumber, scheduledRingNumber) || other.scheduledRingNumber == scheduledRingNumber)&&(identical(other.scheduledTime, scheduledTime) || other.scheduledTime == scheduledTime)&&(identical(other.status, status) || other.status == status)&&(identical(other.resultType, resultType) || other.resultType == resultType)&&(identical(other.notes, notes) || other.notes == notes)&&(identical(other.blueScore, blueScore) || other.blueScore == blueScore)&&(identical(other.redScore, redScore) || other.redScore == redScore)&&(identical(other.startedAtTimestamp, startedAtTimestamp) || other.startedAtTimestamp == startedAtTimestamp)&&(identical(other.completedAtTimestamp, completedAtTimestamp) || other.completedAtTimestamp == completedAtTimestamp)&&(identical(other.syncVersion, syncVersion) || other.syncVersion == syncVersion)&&(identical(other.isDeleted, isDeleted) || other.isDeleted == isDeleted)&&(identical(other.deletedAtTimestamp, deletedAtTimestamp) || other.deletedAtTimestamp == deletedAtTimestamp)&&(identical(other.isDemoData, isDemoData) || other.isDemoData == isDemoData));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _MatchEntity&&(identical(other.id, id) || other.id == id)&&(identical(other.bracketId, bracketId) || other.bracketId == bracketId)&&(identical(other.roundNumber, roundNumber) || other.roundNumber == roundNumber)&&(identical(other.matchNumberInRound, matchNumberInRound) || other.matchNumberInRound == matchNumberInRound)&&(identical(other.createdAtTimestamp, createdAtTimestamp) || other.createdAtTimestamp == createdAtTimestamp)&&(identical(other.updatedAtTimestamp, updatedAtTimestamp) || other.updatedAtTimestamp == updatedAtTimestamp)&&(identical(other.participantRedId, participantRedId) || other.participantRedId == participantRedId)&&(identical(other.participantBlueId, participantBlueId) || other.participantBlueId == participantBlueId)&&(identical(other.winnerId, winnerId) || other.winnerId == winnerId)&&(identical(other.winnerAdvancesToMatchId, winnerAdvancesToMatchId) || other.winnerAdvancesToMatchId == winnerAdvancesToMatchId)&&(identical(other.loserAdvancesToMatchId, loserAdvancesToMatchId) || other.loserAdvancesToMatchId == loserAdvancesToMatchId)&&(identical(other.scheduledRingNumber, scheduledRingNumber) || other.scheduledRingNumber == scheduledRingNumber)&&(identical(other.scheduledTime, scheduledTime) || other.scheduledTime == scheduledTime)&&(identical(other.status, status) || other.status == status)&&(identical(other.resultType, resultType) || other.resultType == resultType)&&(identical(other.notes, notes) || other.notes == notes)&&(identical(other.blueScore, blueScore) || other.blueScore == blueScore)&&(identical(other.redScore, redScore) || other.redScore == redScore)&&(identical(other.startedAtTimestamp, startedAtTimestamp) || other.startedAtTimestamp == startedAtTimestamp)&&(identical(other.completedAtTimestamp, completedAtTimestamp) || other.completedAtTimestamp == completedAtTimestamp)&&(identical(other.syncVersion, syncVersion) || other.syncVersion == syncVersion)&&(identical(other.isDeleted, isDeleted) || other.isDeleted == isDeleted)&&(identical(other.deletedAtTimestamp, deletedAtTimestamp) || other.deletedAtTimestamp == deletedAtTimestamp));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hashAll([runtimeType,id,bracketId,roundNumber,matchNumberInRound,createdAtTimestamp,updatedAtTimestamp,participantRedId,participantBlueId,winnerId,winnerAdvancesToMatchId,loserAdvancesToMatchId,scheduledRingNumber,scheduledTime,status,resultType,notes,blueScore,redScore,startedAtTimestamp,completedAtTimestamp,syncVersion,isDeleted,deletedAtTimestamp,isDemoData]);
+int get hashCode => Object.hashAll([runtimeType,id,bracketId,roundNumber,matchNumberInRound,createdAtTimestamp,updatedAtTimestamp,participantRedId,participantBlueId,winnerId,winnerAdvancesToMatchId,loserAdvancesToMatchId,scheduledRingNumber,scheduledTime,status,resultType,notes,blueScore,redScore,startedAtTimestamp,completedAtTimestamp,syncVersion,isDeleted,deletedAtTimestamp]);
 
 @override
 String toString() {
-  return 'MatchEntity(id: $id, bracketId: $bracketId, roundNumber: $roundNumber, matchNumberInRound: $matchNumberInRound, createdAtTimestamp: $createdAtTimestamp, updatedAtTimestamp: $updatedAtTimestamp, participantRedId: $participantRedId, participantBlueId: $participantBlueId, winnerId: $winnerId, winnerAdvancesToMatchId: $winnerAdvancesToMatchId, loserAdvancesToMatchId: $loserAdvancesToMatchId, scheduledRingNumber: $scheduledRingNumber, scheduledTime: $scheduledTime, status: $status, resultType: $resultType, notes: $notes, blueScore: $blueScore, redScore: $redScore, startedAtTimestamp: $startedAtTimestamp, completedAtTimestamp: $completedAtTimestamp, syncVersion: $syncVersion, isDeleted: $isDeleted, deletedAtTimestamp: $deletedAtTimestamp, isDemoData: $isDemoData)';
+  return 'MatchEntity(id: $id, bracketId: $bracketId, roundNumber: $roundNumber, matchNumberInRound: $matchNumberInRound, createdAtTimestamp: $createdAtTimestamp, updatedAtTimestamp: $updatedAtTimestamp, participantRedId: $participantRedId, participantBlueId: $participantBlueId, winnerId: $winnerId, winnerAdvancesToMatchId: $winnerAdvancesToMatchId, loserAdvancesToMatchId: $loserAdvancesToMatchId, scheduledRingNumber: $scheduledRingNumber, scheduledTime: $scheduledTime, status: $status, resultType: $resultType, notes: $notes, blueScore: $blueScore, redScore: $redScore, startedAtTimestamp: $startedAtTimestamp, completedAtTimestamp: $completedAtTimestamp, syncVersion: $syncVersion, isDeleted: $isDeleted, deletedAtTimestamp: $deletedAtTimestamp)';
 }
 
 
@@ -341,7 +337,7 @@ abstract mixin class _$MatchEntityCopyWith<$Res> implements $MatchEntityCopyWith
   factory _$MatchEntityCopyWith(_MatchEntity value, $Res Function(_MatchEntity) _then) = __$MatchEntityCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String bracketId, int roundNumber, int matchNumberInRound, DateTime createdAtTimestamp, DateTime updatedAtTimestamp, String? participantRedId, String? participantBlueId, String? winnerId, String? winnerAdvancesToMatchId, String? loserAdvancesToMatchId, int? scheduledRingNumber, DateTime? scheduledTime, MatchStatus status, MatchResultType? resultType, String? notes, int? blueScore, int? redScore, DateTime? startedAtTimestamp, DateTime? completedAtTimestamp, int syncVersion, bool isDeleted, DateTime? deletedAtTimestamp, bool isDemoData
+ String id, String bracketId, int roundNumber, int matchNumberInRound, DateTime createdAtTimestamp, DateTime updatedAtTimestamp, String? participantRedId, String? participantBlueId, String? winnerId, String? winnerAdvancesToMatchId, String? loserAdvancesToMatchId, int? scheduledRingNumber, DateTime? scheduledTime, MatchStatus status, MatchResultType? resultType, String? notes, int? blueScore, int? redScore, DateTime? startedAtTimestamp, DateTime? completedAtTimestamp, int syncVersion, bool isDeleted, DateTime? deletedAtTimestamp
 });
 
 
@@ -358,7 +354,7 @@ class __$MatchEntityCopyWithImpl<$Res>
 
 /// Create a copy of MatchEntity
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? bracketId = null,Object? roundNumber = null,Object? matchNumberInRound = null,Object? createdAtTimestamp = null,Object? updatedAtTimestamp = null,Object? participantRedId = freezed,Object? participantBlueId = freezed,Object? winnerId = freezed,Object? winnerAdvancesToMatchId = freezed,Object? loserAdvancesToMatchId = freezed,Object? scheduledRingNumber = freezed,Object? scheduledTime = freezed,Object? status = null,Object? resultType = freezed,Object? notes = freezed,Object? blueScore = freezed,Object? redScore = freezed,Object? startedAtTimestamp = freezed,Object? completedAtTimestamp = freezed,Object? syncVersion = null,Object? isDeleted = null,Object? deletedAtTimestamp = freezed,Object? isDemoData = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? bracketId = null,Object? roundNumber = null,Object? matchNumberInRound = null,Object? createdAtTimestamp = null,Object? updatedAtTimestamp = null,Object? participantRedId = freezed,Object? participantBlueId = freezed,Object? winnerId = freezed,Object? winnerAdvancesToMatchId = freezed,Object? loserAdvancesToMatchId = freezed,Object? scheduledRingNumber = freezed,Object? scheduledTime = freezed,Object? status = null,Object? resultType = freezed,Object? notes = freezed,Object? blueScore = freezed,Object? redScore = freezed,Object? startedAtTimestamp = freezed,Object? completedAtTimestamp = freezed,Object? syncVersion = null,Object? isDeleted = null,Object? deletedAtTimestamp = freezed,}) {
   return _then(_MatchEntity(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,bracketId: null == bracketId ? _self.bracketId : bracketId // ignore: cast_nullable_to_non_nullable
@@ -383,8 +379,7 @@ as DateTime?,completedAtTimestamp: freezed == completedAtTimestamp ? _self.compl
 as DateTime?,syncVersion: null == syncVersion ? _self.syncVersion : syncVersion // ignore: cast_nullable_to_non_nullable
 as int,isDeleted: null == isDeleted ? _self.isDeleted : isDeleted // ignore: cast_nullable_to_non_nullable
 as bool,deletedAtTimestamp: freezed == deletedAtTimestamp ? _self.deletedAtTimestamp : deletedAtTimestamp // ignore: cast_nullable_to_non_nullable
-as DateTime?,isDemoData: null == isDemoData ? _self.isDemoData : isDemoData // ignore: cast_nullable_to_non_nullable
-as bool,
+as DateTime?,
   ));
 }
 

@@ -77,8 +77,6 @@ abstract class BracketEntity with _$BracketEntity {
     /// Timestamp of soft deletion, if applicable.
     DateTime? deletedAtTimestamp,
 
-    /// Whether this bracket was created from demo/sample data.
-    @Default(false) bool isDemoData,
   }) = _BracketEntity;
 
   factory BracketEntity.fromJson(Map<String, dynamic> json) =>

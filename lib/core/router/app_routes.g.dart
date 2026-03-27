@@ -120,14 +120,16 @@ RouteBase get $setupRoute =>
 
 mixin $SetupRoute on GoRouteData {
   static SetupRoute _fromState(GoRouterState state) =>
-      SetupRoute(tournamentId: state.uri.queryParameters['tournament-id']!);
+      SetupRoute(tournamentId: state.uri.queryParameters['tournament-id']);
 
   SetupRoute get _self => this as SetupRoute;
 
   @override
   String get location => GoRouteData.$location(
     '/setup',
-    queryParams: {'tournament-id': _self.tournamentId},
+    queryParams: {
+      if (_self.tournamentId != null) 'tournament-id': _self.tournamentId,
+    },
   );
 
   @override

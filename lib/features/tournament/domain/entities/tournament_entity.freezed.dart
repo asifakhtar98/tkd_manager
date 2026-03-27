@@ -16,9 +16,9 @@ mixin _$TournamentEntity {
 
 /// Globally unique identifier (UUID v4).
  String get id;/// Human-readable name shown across all screens and bracket headers.
- String get name; String get dateRange; String get venue; String get organizer;/// URL of the left-side logo displayed in the tie sheet header.
+ String get name; String get dateRange; String get venue; String get organizer;/// URL of the right-side logo displayed in the tie sheet header.
 /// Defaults to India Taekwondo federation logo.
- String get rightLogoUrl;/// URL of the right-side logo displayed in the tie sheet header.
+ String get rightLogoUrl;/// URL of the left-side logo displayed in the tie sheet header.
 /// Defaults to World Taekwondo federation logo.
  String get leftLogoUrl;/// Wall-clock time when this tournament was first created in-memory.
  DateTime get createdAt;
@@ -230,10 +230,10 @@ class _TournamentEntity implements TournamentEntity {
 @override@JsonKey() final  String dateRange;
 @override@JsonKey() final  String venue;
 @override@JsonKey() final  String organizer;
-/// URL of the left-side logo displayed in the tie sheet header.
+/// URL of the right-side logo displayed in the tie sheet header.
 /// Defaults to India Taekwondo federation logo.
 @override@JsonKey() final  String rightLogoUrl;
-/// URL of the right-side logo displayed in the tie sheet header.
+/// URL of the left-side logo displayed in the tie sheet header.
 /// Defaults to World Taekwondo federation logo.
 @override@JsonKey() final  String leftLogoUrl;
 /// Wall-clock time when this tournament was first created in-memory.

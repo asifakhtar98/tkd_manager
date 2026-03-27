@@ -104,10 +104,11 @@ class DashboardRoute extends GoRouteData with $DashboardRoute {
 @TypedGoRoute<SetupRoute>(path: '/setup')
 @immutable
 class SetupRoute extends GoRouteData with $SetupRoute {
-  const SetupRoute({required this.tournamentId});
+  const SetupRoute({this.tournamentId});
 
-  /// The tournament this bracket belongs to. Always required.
-  final String tournamentId;
+  /// When provided, the tournament is pre-selected on the setup screen.
+  /// When null, the user chooses or creates a tournament in the setup flow.
+  final String? tournamentId;
 
   @override
   Widget build(BuildContext context, GoRouterState state) =>
@@ -135,7 +136,7 @@ class BracketRouteExtra {
     required this.dojangSeparation,
     required this.bracketFormat,
     required this.includeThirdPlaceMatch,
-    this.tournament,
+    required this.tournament,
     this.isHistoryView = false,
     this.classification = const BracketClassification(),
   });
@@ -148,8 +149,8 @@ class BracketRouteExtra {
 
   final bool includeThirdPlaceMatch;
 
-  /// The owning tournament — null only for demo/legacy paths.
-  final TournamentEntity? tournament;
+  /// The owning tournament — always required.
+  final TournamentEntity tournament;
 
   /// When true, the bracket is being replayed from history — the viewer
   /// must NOT save a new [BracketSnapshot] so history stays clean.

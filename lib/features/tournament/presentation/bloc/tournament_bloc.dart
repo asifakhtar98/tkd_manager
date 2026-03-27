@@ -1,5 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
+import 'package:tkd_saas/features/core/data/demo_bracket_snapshot_factory.dart';
+import 'package:tkd_saas/features/core/data/demo_data.dart';
 import 'package:tkd_saas/features/tournament/domain/entities/bracket_snapshot.dart';
 import 'package:tkd_saas/features/tournament/domain/entities/tournament_entity.dart';
 import 'package:tkd_saas/features/tournament/presentation/bloc/tournament_event.dart';
@@ -13,7 +15,17 @@ export 'tournament_state.dart';
 /// the same instance is shared across the dashboard, setup, and detail screens.
 @lazySingleton
 class TournamentBloc extends Bloc<TournamentEvent, TournamentState> {
-  TournamentBloc() : super(const TournamentState()) {
+  TournamentBloc()
+      : super(
+          TournamentState(
+            tournaments: [DemoData.demoTournament],
+            bracketsByTournamentId: {
+              DemoData.demoTournament.id:
+                  DemoBracketSnapshotFactory
+                      .generateAllDemoBracketSnapshots(),
+            },
+          ),
+        ) {
     on<TournamentCreated>(_handleTournamentCreated);
     on<TournamentBracketSnapshotAdded>(_handleBracketSnapshotAdded);
     on<TournamentBracketSnapshotRemoved>(_handleBracketSnapshotRemoved);

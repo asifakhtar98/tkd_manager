@@ -10,6 +10,9 @@ import 'package:tkd_saas/features/tournament/presentation/widgets/create_tournam
 /// Shows the detail of a tournament — its metadata and all previously
 /// generated bracket snapshots. Tapping any snapshot re-opens the bracket
 /// viewer. The FAB navigates to bracket setup with this tournament pre-selected.
+///
+/// No special treatment for the demo tournament — it behaves identically
+/// to any user-created tournament.
 class TournamentDetailScreen extends StatelessWidget {
   const TournamentDetailScreen({super.key, required this.tournamentId});
 
@@ -63,6 +66,28 @@ class TournamentDetailScreen extends StatelessWidget {
               SliverToBoxAdapter(
                 child: _TournamentHeader(tournament: tournament),
               ),
+
+              // ── Saved bracket snapshots ──
+              if (snapshots.isNotEmpty)
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  sliver: SliverList.separated(
+                    itemCount: snapshots.length,
+                    separatorBuilder: (_, _) => const SizedBox(height: 8),
+                    itemBuilder: (context, index) => _BracketSnapshotCard(
+                      snapshot: snapshots[index],
+                      tournament: tournament,
+                      onDelete: () => context.read<TournamentBloc>().add(
+                        TournamentEvent.bracketSnapshotRemoved(
+                          tournamentId: tournamentId,
+                          snapshotId: snapshots[index].id,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+
+              // ── Empty state ──
               if (snapshots.isEmpty)
                 const SliverFillRemaining(
                   child: Center(
@@ -83,25 +108,10 @@ class TournamentDetailScreen extends StatelessWidget {
                       ],
                     ),
                   ),
-                )
-              else
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 96),
-                  sliver: SliverList.separated(
-                    itemCount: snapshots.length,
-                    separatorBuilder: (_, _) => const SizedBox(height: 8),
-                    itemBuilder: (context, index) => _BracketSnapshotCard(
-                      snapshot: snapshots[index],
-                      tournament: tournament,
-                      onDelete: () => context.read<TournamentBloc>().add(
-                        TournamentEvent.bracketSnapshotRemoved(
-                          tournamentId: tournamentId,
-                          snapshotId: snapshots[index].id,
-                        ),
-                      ),
-                    ),
-                  ),
                 ),
+
+              // Bottom spacing for FAB clearance
+              const SliverToBoxAdapter(child: SizedBox(height: 96)),
             ],
           ),
         );
