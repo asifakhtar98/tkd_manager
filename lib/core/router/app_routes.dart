@@ -11,6 +11,7 @@ import 'package:tkd_saas/features/dashboard/presentation/screens/dashboard_scree
 import 'package:tkd_saas/features/participant/domain/entities/participant_entity.dart';
 import 'package:tkd_saas/features/participant/presentation/screens/participant_entry_screen.dart';
 import 'package:tkd_saas/features/tournament/domain/entities/tournament_entity.dart';
+import 'package:tkd_saas/features/tournament/domain/entities/bracket_classification.dart';
 import 'package:tkd_saas/features/tournament/presentation/screens/tournament_detail_screen.dart';
 
 part 'app_routes.g.dart';
@@ -103,10 +104,10 @@ class DashboardRoute extends GoRouteData with $DashboardRoute {
 @TypedGoRoute<SetupRoute>(path: '/setup')
 @immutable
 class SetupRoute extends GoRouteData with $SetupRoute {
-  const SetupRoute({this.tournamentId});
+  const SetupRoute({required this.tournamentId});
 
-  /// When provided, the participant entry screen pre-selects this tournament.
-  final String? tournamentId;
+  /// The tournament this bracket belongs to. Always required.
+  final String tournamentId;
 
   @override
   Widget build(BuildContext context, GoRouterState state) =>
@@ -136,6 +137,7 @@ class BracketRouteExtra {
     required this.includeThirdPlaceMatch,
     this.tournament,
     this.isHistoryView = false,
+    this.classification = const BracketClassification(),
   });
 
   final List<ParticipantEntity> participants;
@@ -152,6 +154,9 @@ class BracketRouteExtra {
   /// When true, the bracket is being replayed from history — the viewer
   /// must NOT save a new [BracketSnapshot] so history stays clean.
   final bool isHistoryView;
+
+  /// Bracket-level classification labels displayed in the tie sheet header.
+  final BracketClassification classification;
 }
 
 @TypedGoRoute<BracketRoute>(path: '/bracket')
@@ -181,6 +186,7 @@ class BracketRoute extends GoRouteData with $BracketRoute {
         includeThirdPlaceMatch: $extra.includeThirdPlaceMatch,
         tournament: $extra.tournament,
         isHistoryView: $extra.isHistoryView,
+        classification: $extra.classification,
       ),
     );
   }

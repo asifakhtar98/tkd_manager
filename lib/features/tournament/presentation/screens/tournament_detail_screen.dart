@@ -177,12 +177,6 @@ class _TournamentHeader extends StatelessWidget {
         _InfoRow(Icons.location_on_outlined, tournament.venue),
       if (tournament.organizer.isNotEmpty)
         _InfoRow(Icons.person_outline, tournament.organizer),
-      if (tournament.ageCategoryLabel.isNotEmpty)
-        _InfoRow(Icons.category_outlined, tournament.ageCategoryLabel),
-      if (tournament.genderLabel.isNotEmpty)
-        _InfoRow(Icons.group_outlined, tournament.genderLabel),
-      if (tournament.weightDivisionLabel.isNotEmpty)
-        _InfoRow(Icons.fitness_center_outlined, tournament.weightDivisionLabel),
     ];
 
     return Card(
@@ -321,6 +315,7 @@ class _BracketSnapshotCard extends StatelessWidget {
             includeThirdPlaceMatch: snapshot.includeThirdPlaceMatch,
             tournament: tournament,
             isHistoryView: true,
+            classification: snapshot.classification,
           ),
         ).push(context),
       ),

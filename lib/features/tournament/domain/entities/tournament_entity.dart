@@ -16,16 +16,14 @@ abstract class TournamentEntity with _$TournamentEntity {
     @Default('') String dateRange,
     @Default('') String venue,
     @Default('') String organizer,
-    @Default('') String ageCategoryLabel,
-    @Default('') String genderLabel,
-    @Default('') String weightDivisionLabel,
 
-    /// URL of the left-side logo displayed in the tie sheet header.
+
+    /// URL of the right-side logo displayed in the tie sheet header.
     /// Defaults to India Taekwondo federation logo.
     @Default('https://lldlunqzkltclpfzpjxh.supabase.co/storage/v1/object/public/assets/India_Taekwondo_logo_5346.png')
     String rightLogoUrl ,
 
-    /// URL of the right-side logo displayed in the tie sheet header.
+    /// URL of the left-side logo displayed in the tie sheet header.
     /// Defaults to World Taekwondo federation logo.
     @Default('https://lldlunqzkltclpfzpjxh.supabase.co/storage/v1/object/public/assets/World_Taekwondo+logo_356345.png')
     String leftLogoUrl,

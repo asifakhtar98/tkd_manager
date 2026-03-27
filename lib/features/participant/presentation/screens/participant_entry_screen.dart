@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:uuid/uuid.dart';
 import 'package:go_router/go_router.dart';
 import 'package:tkd_saas/core/router/app_routes.dart';
+import 'package:tkd_saas/features/tournament/domain/entities/bracket_classification.dart';
 import 'package:tkd_saas/features/participant/domain/entities/participant_entity.dart';
 import 'package:tkd_saas/features/tournament/domain/entities/tournament_entity.dart';
 import 'package:tkd_saas/features/tournament/presentation/bloc/tournament_bloc.dart';
@@ -44,9 +45,11 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
   final _dateRangeController = TextEditingController();
   final _venueController = TextEditingController();
   final _organizerController = TextEditingController();
-  final _ageCategoryController = TextEditingController();
-  final _divisionController = TextEditingController();
-  final _weightDivisionController = TextEditingController();
+
+  // Bracket-level classification controllers
+  final _bracketAgeCategoryController = TextEditingController();
+  final _bracketGenderController = TextEditingController();
+  final _bracketWeightDivisionController = TextEditingController();
 
   // Participant entry controllers
   final _fullNameController = TextEditingController();
@@ -68,9 +71,9 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
     _dateRangeController.dispose();
     _venueController.dispose();
     _organizerController.dispose();
-    _ageCategoryController.dispose();
-    _divisionController.dispose();
-    _weightDivisionController.dispose();
+    _bracketAgeCategoryController.dispose();
+    _bracketGenderController.dispose();
+    _bracketWeightDivisionController.dispose();
     _fullNameController.dispose();
     _dojangController.dispose();
     _registrationIdController.dispose();
@@ -100,9 +103,6 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
         dateRange: _dateRangeController.text.trim(),
         venue: _venueController.text.trim(),
         organizer: _organizerController.text.trim(),
-        ageCategoryLabel: _ageCategoryController.text.trim(),
-        genderLabel: _divisionController.text.trim(),
-        weightDivisionLabel: _weightDivisionController.text.trim(),
         createdAt: DateTime.now(),
       );
     }
@@ -189,6 +189,11 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
         bracketFormat: _selectedBracketFormat,
         includeThirdPlaceMatch: _includeThirdPlaceMatch,
         tournament: tournament,
+        classification: BracketClassification(
+          ageCategoryLabel: _bracketAgeCategoryController.text.trim(),
+          genderLabel: _bracketGenderController.text.trim(),
+          weightDivisionLabel: _bracketWeightDivisionController.text.trim(),
+        ),
       ),
     ).push(context);
   }
@@ -252,6 +257,8 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         _buildTournamentSelector(context, state),
+                        const SizedBox(height: 24),
+                        _buildBracketDetailsSection(),
                         const SizedBox(height: 24),
                         _buildConfiguration(),
                         const SizedBox(height: 24),
@@ -356,9 +363,6 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                             _dateRangeController.clear();
                             _venueController.clear();
                             _organizerController.clear();
-                            _ageCategoryController.clear();
-                            _divisionController.clear();
-                            _weightDivisionController.clear();
                           }
                         });
                       },
@@ -393,30 +397,6 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                   TextField(
                     controller: _organizerController,
                     decoration: const InputDecoration(labelText: 'Organizer'),
-                    textInputAction: TextInputAction.next,
-                  ),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: _ageCategoryController,
-                    decoration: const InputDecoration(
-                      labelText: 'Age Category (e.g., JUNIOR)',
-                    ),
-                    textInputAction: TextInputAction.next,
-                  ),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: _divisionController,
-                    decoration: const InputDecoration(
-                      labelText: 'Gender (e.g., BOYS)',
-                    ),
-                    textInputAction: TextInputAction.next,
-                  ),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: _weightDivisionController,
-                    decoration: const InputDecoration(
-                      labelText: 'Weight Division (e.g., UNDER 59)',
-                    ),
                     textInputAction: TextInputAction.done,
                   ),
                 ] else if (existing != null) ...[
@@ -433,22 +413,57 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                       label: 'Organizer',
                       value: existing.organizer,
                     ),
-                  if (existing.ageCategoryLabel.isNotEmpty)
-                    _ReadOnlyField(
-                      label: 'Age Category',
-                      value: existing.ageCategoryLabel,
-                    ),
-                  if (existing.genderLabel.isNotEmpty)
-                    _ReadOnlyField(
-                      label: 'Gender',
-                      value: existing.genderLabel,
-                    ),
-                  if (existing.weightDivisionLabel.isNotEmpty)
-                    _ReadOnlyField(
-                      label: 'Weight Division',
-                      value: existing.weightDivisionLabel,
-                    ),
                 ],
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Bracket details section (age category, gender, weight division)
+  // ─────────────────────────────────────────────────────────────────────────
+
+  Widget _buildBracketDetailsSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Bracket Details',
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 12),
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TextField(
+                  controller: _bracketAgeCategoryController,
+                  decoration: const InputDecoration(
+                    labelText: 'Age Category (e.g., JUNIOR, SENIOR)',
+                  ),
+                  textInputAction: TextInputAction.next,
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: _bracketGenderController,
+                  decoration: const InputDecoration(
+                    labelText: 'Gender (e.g., BOYS, GIRLS)',
+                  ),
+                  textInputAction: TextInputAction.next,
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: _bracketWeightDivisionController,
+                  decoration: const InputDecoration(
+                    labelText: 'Weight Division (e.g., UNDER 59 KG)',
+                  ),
+                  textInputAction: TextInputAction.done,
+                ),
               ],
             ),
           ),

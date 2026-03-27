@@ -25,9 +25,7 @@ class DemoData {
     dateRange: 'March 10, 2026',
     venue: 'Demo Arena',
     organizer: 'TKD Brackets',
-    ageCategoryLabel: 'Demo Age Category',
-    genderLabel: 'Demo Gender',
-    weightDivisionLabel: 'Under 59',
+
     createdAt: DateTime(2026, 3, 10),
   );
 

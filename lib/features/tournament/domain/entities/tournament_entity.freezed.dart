@@ -16,7 +16,7 @@ mixin _$TournamentEntity {
 
 /// Globally unique identifier (UUID v4).
  String get id;/// Human-readable name shown across all screens and bracket headers.
- String get name; String get dateRange; String get venue; String get organizer; String get ageCategoryLabel; String get genderLabel; String get weightDivisionLabel;/// URL of the left-side logo displayed in the tie sheet header.
+ String get name; String get dateRange; String get venue; String get organizer;/// URL of the left-side logo displayed in the tie sheet header.
 /// Defaults to India Taekwondo federation logo.
  String get rightLogoUrl;/// URL of the right-side logo displayed in the tie sheet header.
 /// Defaults to World Taekwondo federation logo.
@@ -32,16 +32,16 @@ $TournamentEntityCopyWith<TournamentEntity> get copyWith => _$TournamentEntityCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is TournamentEntity&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.dateRange, dateRange) || other.dateRange == dateRange)&&(identical(other.venue, venue) || other.venue == venue)&&(identical(other.organizer, organizer) || other.organizer == organizer)&&(identical(other.ageCategoryLabel, ageCategoryLabel) || other.ageCategoryLabel == ageCategoryLabel)&&(identical(other.genderLabel, genderLabel) || other.genderLabel == genderLabel)&&(identical(other.weightDivisionLabel, weightDivisionLabel) || other.weightDivisionLabel == weightDivisionLabel)&&(identical(other.rightLogoUrl, rightLogoUrl) || other.rightLogoUrl == rightLogoUrl)&&(identical(other.leftLogoUrl, leftLogoUrl) || other.leftLogoUrl == leftLogoUrl)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is TournamentEntity&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.dateRange, dateRange) || other.dateRange == dateRange)&&(identical(other.venue, venue) || other.venue == venue)&&(identical(other.organizer, organizer) || other.organizer == organizer)&&(identical(other.rightLogoUrl, rightLogoUrl) || other.rightLogoUrl == rightLogoUrl)&&(identical(other.leftLogoUrl, leftLogoUrl) || other.leftLogoUrl == leftLogoUrl)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,name,dateRange,venue,organizer,ageCategoryLabel,genderLabel,weightDivisionLabel,rightLogoUrl,leftLogoUrl,createdAt);
+int get hashCode => Object.hash(runtimeType,id,name,dateRange,venue,organizer,rightLogoUrl,leftLogoUrl,createdAt);
 
 @override
 String toString() {
-  return 'TournamentEntity(id: $id, name: $name, dateRange: $dateRange, venue: $venue, organizer: $organizer, ageCategoryLabel: $ageCategoryLabel, genderLabel: $genderLabel, weightDivisionLabel: $weightDivisionLabel, rightLogoUrl: $rightLogoUrl, leftLogoUrl: $leftLogoUrl, createdAt: $createdAt)';
+  return 'TournamentEntity(id: $id, name: $name, dateRange: $dateRange, venue: $venue, organizer: $organizer, rightLogoUrl: $rightLogoUrl, leftLogoUrl: $leftLogoUrl, createdAt: $createdAt)';
 }
 
 
@@ -52,7 +52,7 @@ abstract mixin class $TournamentEntityCopyWith<$Res>  {
   factory $TournamentEntityCopyWith(TournamentEntity value, $Res Function(TournamentEntity) _then) = _$TournamentEntityCopyWithImpl;
 @useResult
 $Res call({
- String id, String name, String dateRange, String venue, String organizer, String ageCategoryLabel, String genderLabel, String weightDivisionLabel, String rightLogoUrl, String leftLogoUrl, DateTime createdAt
+ String id, String name, String dateRange, String venue, String organizer, String rightLogoUrl, String leftLogoUrl, DateTime createdAt
 });
 
 
@@ -69,16 +69,13 @@ class _$TournamentEntityCopyWithImpl<$Res>
 
 /// Create a copy of TournamentEntity
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? dateRange = null,Object? venue = null,Object? organizer = null,Object? ageCategoryLabel = null,Object? genderLabel = null,Object? weightDivisionLabel = null,Object? rightLogoUrl = null,Object? leftLogoUrl = null,Object? createdAt = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? dateRange = null,Object? venue = null,Object? organizer = null,Object? rightLogoUrl = null,Object? leftLogoUrl = null,Object? createdAt = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,dateRange: null == dateRange ? _self.dateRange : dateRange // ignore: cast_nullable_to_non_nullable
 as String,venue: null == venue ? _self.venue : venue // ignore: cast_nullable_to_non_nullable
 as String,organizer: null == organizer ? _self.organizer : organizer // ignore: cast_nullable_to_non_nullable
-as String,ageCategoryLabel: null == ageCategoryLabel ? _self.ageCategoryLabel : ageCategoryLabel // ignore: cast_nullable_to_non_nullable
-as String,genderLabel: null == genderLabel ? _self.genderLabel : genderLabel // ignore: cast_nullable_to_non_nullable
-as String,weightDivisionLabel: null == weightDivisionLabel ? _self.weightDivisionLabel : weightDivisionLabel // ignore: cast_nullable_to_non_nullable
 as String,rightLogoUrl: null == rightLogoUrl ? _self.rightLogoUrl : rightLogoUrl // ignore: cast_nullable_to_non_nullable
 as String,leftLogoUrl: null == leftLogoUrl ? _self.leftLogoUrl : leftLogoUrl // ignore: cast_nullable_to_non_nullable
 as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
@@ -167,10 +164,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  String dateRange,  String venue,  String organizer,  String ageCategoryLabel,  String genderLabel,  String weightDivisionLabel,  String rightLogoUrl,  String leftLogoUrl,  DateTime createdAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  String dateRange,  String venue,  String organizer,  String rightLogoUrl,  String leftLogoUrl,  DateTime createdAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _TournamentEntity() when $default != null:
-return $default(_that.id,_that.name,_that.dateRange,_that.venue,_that.organizer,_that.ageCategoryLabel,_that.genderLabel,_that.weightDivisionLabel,_that.rightLogoUrl,_that.leftLogoUrl,_that.createdAt);case _:
+return $default(_that.id,_that.name,_that.dateRange,_that.venue,_that.organizer,_that.rightLogoUrl,_that.leftLogoUrl,_that.createdAt);case _:
   return orElse();
 
 }
@@ -188,10 +185,10 @@ return $default(_that.id,_that.name,_that.dateRange,_that.venue,_that.organizer,
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  String dateRange,  String venue,  String organizer,  String ageCategoryLabel,  String genderLabel,  String weightDivisionLabel,  String rightLogoUrl,  String leftLogoUrl,  DateTime createdAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  String dateRange,  String venue,  String organizer,  String rightLogoUrl,  String leftLogoUrl,  DateTime createdAt)  $default,) {final _that = this;
 switch (_that) {
 case _TournamentEntity():
-return $default(_that.id,_that.name,_that.dateRange,_that.venue,_that.organizer,_that.ageCategoryLabel,_that.genderLabel,_that.weightDivisionLabel,_that.rightLogoUrl,_that.leftLogoUrl,_that.createdAt);case _:
+return $default(_that.id,_that.name,_that.dateRange,_that.venue,_that.organizer,_that.rightLogoUrl,_that.leftLogoUrl,_that.createdAt);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -208,10 +205,10 @@ return $default(_that.id,_that.name,_that.dateRange,_that.venue,_that.organizer,
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  String dateRange,  String venue,  String organizer,  String ageCategoryLabel,  String genderLabel,  String weightDivisionLabel,  String rightLogoUrl,  String leftLogoUrl,  DateTime createdAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  String dateRange,  String venue,  String organizer,  String rightLogoUrl,  String leftLogoUrl,  DateTime createdAt)?  $default,) {final _that = this;
 switch (_that) {
 case _TournamentEntity() when $default != null:
-return $default(_that.id,_that.name,_that.dateRange,_that.venue,_that.organizer,_that.ageCategoryLabel,_that.genderLabel,_that.weightDivisionLabel,_that.rightLogoUrl,_that.leftLogoUrl,_that.createdAt);case _:
+return $default(_that.id,_that.name,_that.dateRange,_that.venue,_that.organizer,_that.rightLogoUrl,_that.leftLogoUrl,_that.createdAt);case _:
   return null;
 
 }
@@ -223,7 +220,7 @@ return $default(_that.id,_that.name,_that.dateRange,_that.venue,_that.organizer,
 
 
 class _TournamentEntity implements TournamentEntity {
-  const _TournamentEntity({required this.id, required this.name, this.dateRange = '', this.venue = '', this.organizer = '', this.ageCategoryLabel = '', this.genderLabel = '', this.weightDivisionLabel = '', this.rightLogoUrl = 'https://lldlunqzkltclpfzpjxh.supabase.co/storage/v1/object/public/assets/India_Taekwondo_logo_5346.png', this.leftLogoUrl = 'https://lldlunqzkltclpfzpjxh.supabase.co/storage/v1/object/public/assets/World_Taekwondo+logo_356345.png', required this.createdAt});
+  const _TournamentEntity({required this.id, required this.name, this.dateRange = '', this.venue = '', this.organizer = '', this.rightLogoUrl = 'https://lldlunqzkltclpfzpjxh.supabase.co/storage/v1/object/public/assets/India_Taekwondo_logo_5346.png', this.leftLogoUrl = 'https://lldlunqzkltclpfzpjxh.supabase.co/storage/v1/object/public/assets/World_Taekwondo+logo_356345.png', required this.createdAt});
   
 
 /// Globally unique identifier (UUID v4).
@@ -233,9 +230,6 @@ class _TournamentEntity implements TournamentEntity {
 @override@JsonKey() final  String dateRange;
 @override@JsonKey() final  String venue;
 @override@JsonKey() final  String organizer;
-@override@JsonKey() final  String ageCategoryLabel;
-@override@JsonKey() final  String genderLabel;
-@override@JsonKey() final  String weightDivisionLabel;
 /// URL of the left-side logo displayed in the tie sheet header.
 /// Defaults to India Taekwondo federation logo.
 @override@JsonKey() final  String rightLogoUrl;
@@ -255,16 +249,16 @@ _$TournamentEntityCopyWith<_TournamentEntity> get copyWith => __$TournamentEntit
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TournamentEntity&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.dateRange, dateRange) || other.dateRange == dateRange)&&(identical(other.venue, venue) || other.venue == venue)&&(identical(other.organizer, organizer) || other.organizer == organizer)&&(identical(other.ageCategoryLabel, ageCategoryLabel) || other.ageCategoryLabel == ageCategoryLabel)&&(identical(other.genderLabel, genderLabel) || other.genderLabel == genderLabel)&&(identical(other.weightDivisionLabel, weightDivisionLabel) || other.weightDivisionLabel == weightDivisionLabel)&&(identical(other.rightLogoUrl, rightLogoUrl) || other.rightLogoUrl == rightLogoUrl)&&(identical(other.leftLogoUrl, leftLogoUrl) || other.leftLogoUrl == leftLogoUrl)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TournamentEntity&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.dateRange, dateRange) || other.dateRange == dateRange)&&(identical(other.venue, venue) || other.venue == venue)&&(identical(other.organizer, organizer) || other.organizer == organizer)&&(identical(other.rightLogoUrl, rightLogoUrl) || other.rightLogoUrl == rightLogoUrl)&&(identical(other.leftLogoUrl, leftLogoUrl) || other.leftLogoUrl == leftLogoUrl)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,name,dateRange,venue,organizer,ageCategoryLabel,genderLabel,weightDivisionLabel,rightLogoUrl,leftLogoUrl,createdAt);
+int get hashCode => Object.hash(runtimeType,id,name,dateRange,venue,organizer,rightLogoUrl,leftLogoUrl,createdAt);
 
 @override
 String toString() {
-  return 'TournamentEntity(id: $id, name: $name, dateRange: $dateRange, venue: $venue, organizer: $organizer, ageCategoryLabel: $ageCategoryLabel, genderLabel: $genderLabel, weightDivisionLabel: $weightDivisionLabel, rightLogoUrl: $rightLogoUrl, leftLogoUrl: $leftLogoUrl, createdAt: $createdAt)';
+  return 'TournamentEntity(id: $id, name: $name, dateRange: $dateRange, venue: $venue, organizer: $organizer, rightLogoUrl: $rightLogoUrl, leftLogoUrl: $leftLogoUrl, createdAt: $createdAt)';
 }
 
 
@@ -275,7 +269,7 @@ abstract mixin class _$TournamentEntityCopyWith<$Res> implements $TournamentEnti
   factory _$TournamentEntityCopyWith(_TournamentEntity value, $Res Function(_TournamentEntity) _then) = __$TournamentEntityCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String name, String dateRange, String venue, String organizer, String ageCategoryLabel, String genderLabel, String weightDivisionLabel, String rightLogoUrl, String leftLogoUrl, DateTime createdAt
+ String id, String name, String dateRange, String venue, String organizer, String rightLogoUrl, String leftLogoUrl, DateTime createdAt
 });
 
 
@@ -292,16 +286,13 @@ class __$TournamentEntityCopyWithImpl<$Res>
 
 /// Create a copy of TournamentEntity
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? dateRange = null,Object? venue = null,Object? organizer = null,Object? ageCategoryLabel = null,Object? genderLabel = null,Object? weightDivisionLabel = null,Object? rightLogoUrl = null,Object? leftLogoUrl = null,Object? createdAt = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? dateRange = null,Object? venue = null,Object? organizer = null,Object? rightLogoUrl = null,Object? leftLogoUrl = null,Object? createdAt = null,}) {
   return _then(_TournamentEntity(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,dateRange: null == dateRange ? _self.dateRange : dateRange // ignore: cast_nullable_to_non_nullable
 as String,venue: null == venue ? _self.venue : venue // ignore: cast_nullable_to_non_nullable
 as String,organizer: null == organizer ? _self.organizer : organizer // ignore: cast_nullable_to_non_nullable
-as String,ageCategoryLabel: null == ageCategoryLabel ? _self.ageCategoryLabel : ageCategoryLabel // ignore: cast_nullable_to_non_nullable
-as String,genderLabel: null == genderLabel ? _self.genderLabel : genderLabel // ignore: cast_nullable_to_non_nullable
-as String,weightDivisionLabel: null == weightDivisionLabel ? _self.weightDivisionLabel : weightDivisionLabel // ignore: cast_nullable_to_non_nullable
 as String,rightLogoUrl: null == rightLogoUrl ? _self.rightLogoUrl : rightLogoUrl // ignore: cast_nullable_to_non_nullable
 as String,leftLogoUrl: null == leftLogoUrl ? _self.leftLogoUrl : leftLogoUrl // ignore: cast_nullable_to_non_nullable
 as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable

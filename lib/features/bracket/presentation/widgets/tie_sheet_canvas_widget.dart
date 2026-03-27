@@ -8,6 +8,7 @@ import '../../../tournament/domain/entities/tournament_entity.dart';
 import '../../../participant/domain/entities/participant_entity.dart';
 import 'participant_slot_hit_area.dart';
 import 'tie_sheet_theme_config.dart';
+import '../../../tournament/domain/entities/bracket_classification.dart';
 
 // ══════════════════════════════════════════════════════════════════════════════
 // SECTION 1 — WIDGET  (TieSheetCanvasWidget + _TieSheetCanvasWidgetState)
@@ -32,6 +33,9 @@ class TieSheetCanvasWidget extends StatefulWidget {
   /// Optional theme configuration for the canvas (default vs print mode).
   final TieSheetThemeConfig themeConfig;
 
+  /// Bracket-level classification labels displayed in the tie sheet header.
+  final BracketClassification classification;
+
   /// Called when a participant slot swap is completed via drag-and-drop.
   final void Function(
     ParticipantSlotHitArea source,
@@ -55,6 +59,7 @@ class TieSheetCanvasWidget extends StatefulWidget {
     this.losersBracketId,
     this.isEditModeEnabled = false,
     this.themeConfig = TieSheetThemeConfig.defaultPreset,
+    this.classification = const BracketClassification(),
     this.onParticipantSlotSwapped,
     this.onParticipantSlotTapped,
   });
@@ -189,6 +194,7 @@ class _TieSheetCanvasWidgetState extends State<TieSheetCanvasWidget> {
     losersBracketId: widget.losersBracketId,
     isEditModeEnabled: widget.isEditModeEnabled,
     themeConfig: widget.themeConfig,
+    classification: widget.classification,
     leftLogoImage: _leftLogoImage,
     rightLogoImage: _rightLogoImage,
   );
@@ -393,6 +399,9 @@ class TieSheetPainter extends CustomPainter {
   final bool isEditModeEnabled;
   final TieSheetThemeConfig themeConfig;
 
+  /// Bracket-level classification labels displayed in the tie sheet header.
+  final BracketClassification classification;
+
   /// Pre-decoded logo images rendered above the header banner.
   final ui.Image? leftLogoImage;
   final ui.Image? rightLogoImage;
@@ -450,6 +459,7 @@ class TieSheetPainter extends CustomPainter {
     this.losersBracketId,
     this.isEditModeEnabled = false,
     this.themeConfig = TieSheetThemeConfig.defaultPreset,
+    this.classification = const BracketClassification(),
     this.leftLogoImage,
     this.rightLogoImage,
   });
@@ -1337,14 +1347,14 @@ class TieSheetPainter extends CustomPainter {
     canvas.drawRRect(infoRect, _Pens.fill(themeConfig.headerFillColor));
     canvas.drawRRect(infoRect, _getThinPen(themeConfig.borderColor));
 
-    final ageCategory = tournament.ageCategoryLabel.isNotEmpty
-        ? tournament.ageCategoryLabel.toUpperCase()
+    final ageCategory = classification.ageCategoryLabel.isNotEmpty
+        ? classification.ageCategoryLabel.toUpperCase()
         : 'AGE CATEGORY';
-    final gender = tournament.genderLabel.isNotEmpty
-        ? tournament.genderLabel.toUpperCase()
+    final gender = classification.genderLabel.isNotEmpty
+        ? classification.genderLabel.toUpperCase()
         : 'GENDER';
-    final weightDivision = tournament.weightDivisionLabel.isNotEmpty
-        ? tournament.weightDivisionLabel.toUpperCase()
+    final weightDivision = classification.weightDivisionLabel.isNotEmpty
+        ? classification.weightDivisionLabel.toUpperCase()
         : 'WEIGHT DIVISION';
     final infoTextY = _centeredTextY(infoRowTop, subHeaderH, _fontSize(11));
 

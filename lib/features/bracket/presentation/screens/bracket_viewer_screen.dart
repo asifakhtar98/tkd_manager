@@ -23,6 +23,7 @@ import 'package:tkd_saas/features/bracket/presentation/widgets/tie_sheet_theme_c
 import 'package:tkd_saas/features/bracket/presentation/widgets/tie_sheet_theme_editor_panel.dart';
 import 'package:tkd_saas/features/participant/domain/entities/participant_entity.dart';
 import 'package:tkd_saas/features/tournament/domain/entities/bracket_snapshot.dart';
+import 'package:tkd_saas/features/tournament/domain/entities/bracket_classification.dart';
 import 'package:tkd_saas/features/tournament/domain/entities/tournament_entity.dart';
 import 'package:tkd_saas/features/tournament/presentation/bloc/tournament_bloc.dart';
 
@@ -37,6 +38,7 @@ class BracketViewerScreen extends StatefulWidget {
     required this.includeThirdPlaceMatch,
     this.tournament,
     this.isHistoryView = false,
+    this.classification = const BracketClassification(),
   });
 
   final List<ParticipantEntity> participants;
@@ -50,6 +52,9 @@ class BracketViewerScreen extends StatefulWidget {
   /// When true the bracket is a replay from history — do NOT save a new
   /// [BracketSnapshot] so the history list stays clean.
   final bool isHistoryView;
+
+  /// Bracket-level classification labels displayed in the tie sheet header.
+  final BracketClassification classification;
 
   @override
   State<BracketViewerScreen> createState() => _BracketViewerScreenState();
@@ -161,6 +166,7 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
       losersBracketId: bracketData.losersBracketId,
       isEditModeEnabled: false,
       themeConfig: _resolvedThemeConfig,
+      classification: widget.classification,
     );
   }
 
@@ -469,6 +475,7 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
       participantCount: participants.length,
       includeThirdPlaceMatch: includeThirdPlaceMatch,
       dojangSeparation: widget.dojangSeparation,
+      classification: widget.classification,
       generatedAt: DateTime.now(),
       participants: participants,
       result: result,
@@ -861,6 +868,7 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
             losersBracketId: losersBracketId,
             isEditModeEnabled: isEditModeEnabled,
             themeConfig: _resolvedThemeConfig,
+            classification: widget.classification,
             onParticipantSlotSwapped: (source, target) {
               _handleParticipantSwap(
                 context,

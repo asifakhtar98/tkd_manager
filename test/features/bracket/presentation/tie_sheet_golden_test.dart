@@ -9,6 +9,14 @@ import 'package:tkd_saas/features/bracket/domain/entities/match_entity.dart';
 import 'package:tkd_saas/features/bracket/presentation/widgets/tie_sheet_canvas_widget.dart';
 import 'package:tkd_saas/features/bracket/presentation/widgets/tie_sheet_theme_config.dart';
 import 'package:tkd_saas/features/participant/domain/entities/participant_entity.dart';
+import 'package:tkd_saas/features/tournament/domain/entities/bracket_classification.dart';
+
+/// Shared constant used across all tie sheet golden tests.
+const _testClassification = BracketClassification(
+  ageCategoryLabel: 'JUNIOR',
+  genderLabel: 'BOYS',
+  weightDivisionLabel: 'UNDER 59',
+);
 
 void main() {
   const uuid = Uuid();
@@ -22,9 +30,6 @@ void main() {
     dateRange: '18 Jan. to 22 Jan, 2026',
     venue: 'SMS Indoor Stadium, Jaipur, Rajasthan',
     organizer: 'INDIA TAEKWONDO',
-    ageCategoryLabel: 'JUNIOR',
-    genderLabel: 'BOYS',
-    weightDivisionLabel: 'UNDER 59',
     createdAt: DateTime(2026),
   );
 
@@ -88,6 +93,7 @@ void main() {
                 onMatchTap: (_) {},
                 printKey: GlobalKey(),
                 includeThirdPlaceMatch: include3rd,
+                classification: _testClassification,
               ),
             ),
           ),
@@ -211,6 +217,7 @@ void main() {
                 includeThirdPlaceMatch: false,
                 winnersBracketId: 'wb-golden',
                 losersBracketId: 'lb-golden',
+                classification: _testClassification,
               ),
             ),
           ),
@@ -346,6 +353,7 @@ void main() {
                 onMatchTap: (_) {},
                 printKey: GlobalKey(),
                 includeThirdPlaceMatch: include3rd,
+                classification: _testClassification,
               ),
             ),
           ),
@@ -418,6 +426,7 @@ void main() {
                 printKey: GlobalKey(),
                 includeThirdPlaceMatch: false,
                 themeConfig: TieSheetThemeConfig.printPreset,
+                classification: _testClassification,
               ),
             ),
           ),

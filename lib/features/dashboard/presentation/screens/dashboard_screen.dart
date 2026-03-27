@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:tkd_saas/core/config/app_config.dart';
 import 'package:tkd_saas/core/router/app_routes.dart';
+import 'package:tkd_saas/features/tournament/domain/entities/bracket_classification.dart';
 import 'package:tkd_saas/features/auth/presentation/bloc/authentication_bloc.dart';
 import 'package:tkd_saas/features/core/data/demo_data.dart';
 import 'package:tkd_saas/features/tournament/domain/entities/tournament_entity.dart';
@@ -67,6 +68,11 @@ class DashboardScreen extends StatelessWidget {
         bracketFormat: bracketFormat,
         includeThirdPlaceMatch: includeThirdPlaceMatch,
         tournament: DemoData.demoTournament,
+        classification: const BracketClassification(
+          ageCategoryLabel: 'Demo Age Category',
+          genderLabel: 'Demo Gender',
+          weightDivisionLabel: 'Under 59',
+        ),
       ),
     ).push(context);
   }
@@ -86,12 +92,6 @@ class DashboardScreen extends StatelessWidget {
                   ),
                 ),
                 const Spacer(),
-                FilledButton.icon(
-                  icon: const Icon(Icons.add),
-                  label: const Text('Create Bracket'),
-                  onPressed: () => const SetupRoute().push(context),
-                ),
-                const SizedBox(width: 16),
                 FilledButton.icon(
                   icon: const Icon(Icons.add),
                   label: const Text('New Tournament'),

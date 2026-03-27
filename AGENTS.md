@@ -7,3 +7,4 @@ Striclty do verbose nomenclature everywhere (variables, class, methods, function
 This will be a flutter website, do web style asthetics and ui structuring when working on ui
 Always code  like a 20 yrs experienced senior developer
 Follow solid, dry principles strictly, flutter clean architecture
+Dont take shortcuts while coding decision, i want production ready code

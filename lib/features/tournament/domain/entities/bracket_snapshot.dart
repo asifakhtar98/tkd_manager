@@ -2,6 +2,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:tkd_saas/core/router/app_routes.dart';
 import 'package:tkd_saas/features/bracket/presentation/bloc/bracket_bloc.dart';
 import 'package:tkd_saas/features/participant/domain/entities/participant_entity.dart';
+import 'package:tkd_saas/features/tournament/domain/entities/bracket_classification.dart';
 
 part 'bracket_snapshot.freezed.dart';
 
@@ -22,6 +23,9 @@ abstract class BracketSnapshot with _$BracketSnapshot {
     required int participantCount,
     required bool includeThirdPlaceMatch,
     required bool dojangSeparation,
+
+    /// Bracket-level classification labels displayed in the tie sheet header.
+    @Default(BracketClassification()) BracketClassification classification,
 
     /// Wall-clock time when the bracket was generated.
     required DateTime generatedAt,
