@@ -11,9 +11,6 @@ List<RouteBase> get $appRoutes => [
   $passwordResetRoute,
   $emailConfirmedRoute,
   $dashboardRoute,
-  $bracketSetupRoute,
-  $tournamentDetailRoute,
-  $bracketViewerRoute,
 ];
 
 RouteBase get $loginRoute =>
@@ -91,8 +88,26 @@ mixin $EmailConfirmedRoute on GoRouteData {
   void replace(BuildContext context) => context.replace(location);
 }
 
-RouteBase get $dashboardRoute =>
-    GoRouteData.$route(path: '/', factory: $DashboardRoute._fromState);
+RouteBase get $dashboardRoute => GoRouteData.$route(
+  path: '/',
+  factory: $DashboardRoute._fromState,
+  routes: [
+    GoRouteData.$route(
+      path: 'tournaments/:tournamentId',
+      factory: $TournamentDetailRoute._fromState,
+      routes: [
+        GoRouteData.$route(
+          path: 'setup',
+          factory: $BracketSetupRoute._fromState,
+        ),
+        GoRouteData.$route(
+          path: 'brackets/:snapshotId',
+          factory: $BracketViewerRoute._fromState,
+        ),
+      ],
+    ),
+  ],
+);
 
 mixin $DashboardRoute on GoRouteData {
   static DashboardRoute _fromState(GoRouterState state) =>
@@ -115,41 +130,6 @@ mixin $DashboardRoute on GoRouteData {
   void replace(BuildContext context) => context.replace(location);
 }
 
-RouteBase get $bracketSetupRoute =>
-    GoRouteData.$route(path: '/setup', factory: $BracketSetupRoute._fromState);
-
-mixin $BracketSetupRoute on GoRouteData {
-  static BracketSetupRoute _fromState(GoRouterState state) => BracketSetupRoute(
-    tournamentId: state.uri.queryParameters['tournament-id']!,
-  );
-
-  BracketSetupRoute get _self => this as BracketSetupRoute;
-
-  @override
-  String get location => GoRouteData.$location(
-    '/setup',
-    queryParams: {'tournament-id': _self.tournamentId},
-  );
-
-  @override
-  void go(BuildContext context) => context.go(location);
-
-  @override
-  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
-
-  @override
-  void pushReplacement(BuildContext context) =>
-      context.pushReplacement(location);
-
-  @override
-  void replace(BuildContext context) => context.replace(location);
-}
-
-RouteBase get $tournamentDetailRoute => GoRouteData.$route(
-  path: '/tournament/:tournamentId',
-  factory: $TournamentDetailRoute._fromState,
-);
-
 mixin $TournamentDetailRoute on GoRouteData {
   static TournamentDetailRoute _fromState(GoRouterState state) =>
       TournamentDetailRoute(
@@ -160,7 +140,7 @@ mixin $TournamentDetailRoute on GoRouteData {
 
   @override
   String get location => GoRouteData.$location(
-    '/tournament/${Uri.encodeComponent(_self.tournamentId)}',
+    '/tournaments/${Uri.encodeComponent(_self.tournamentId)}',
   );
 
   @override
@@ -177,32 +157,55 @@ mixin $TournamentDetailRoute on GoRouteData {
   void replace(BuildContext context) => context.replace(location);
 }
 
-RouteBase get $bracketViewerRoute => GoRouteData.$route(
-  path: '/bracket',
-  factory: $BracketViewerRoute._fromState,
-);
+mixin $BracketSetupRoute on GoRouteData {
+  static BracketSetupRoute _fromState(GoRouterState state) =>
+      BracketSetupRoute(tournamentId: state.pathParameters['tournamentId']!);
+
+  BracketSetupRoute get _self => this as BracketSetupRoute;
+
+  @override
+  String get location => GoRouteData.$location(
+    '/tournaments/${Uri.encodeComponent(_self.tournamentId)}/setup',
+  );
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
 
 mixin $BracketViewerRoute on GoRouteData {
   static BracketViewerRoute _fromState(GoRouterState state) =>
-      BracketViewerRoute($extra: state.extra as BracketViewerRouteExtra);
+      BracketViewerRoute(
+        tournamentId: state.pathParameters['tournamentId']!,
+        snapshotId: state.pathParameters['snapshotId']!,
+      );
 
   BracketViewerRoute get _self => this as BracketViewerRoute;
 
   @override
-  String get location => GoRouteData.$location('/bracket');
+  String get location => GoRouteData.$location(
+    '/tournaments/${Uri.encodeComponent(_self.tournamentId)}/brackets/${Uri.encodeComponent(_self.snapshotId)}',
+  );
 
   @override
-  void go(BuildContext context) => context.go(location, extra: _self.$extra);
+  void go(BuildContext context) => context.go(location);
 
   @override
-  Future<T?> push<T>(BuildContext context) =>
-      context.push<T>(location, extra: _self.$extra);
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
 
   @override
   void pushReplacement(BuildContext context) =>
-      context.pushReplacement(location, extra: _self.$extra);
+      context.pushReplacement(location);
 
   @override
-  void replace(BuildContext context) =>
-      context.replace(location, extra: _self.$extra);
+  void replace(BuildContext context) => context.replace(location);
 }

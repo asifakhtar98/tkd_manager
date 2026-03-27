@@ -132,7 +132,7 @@ class _TournamentCard extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: () =>
-            TournamentDetailRoute(tournamentId: tournament.id).push(context),
+            TournamentDetailRoute(tournamentId: tournament.id).go(context),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
           child: Row(

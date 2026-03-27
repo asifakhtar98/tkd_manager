@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 import 'package:tkd_saas/core/router/app_routes.dart';
 import 'package:tkd_saas/features/tournament/domain/entities/bracket_snapshot.dart';
 import 'package:tkd_saas/features/tournament/domain/entities/tournament_entity.dart';
@@ -40,7 +39,7 @@ class TournamentDetailScreen extends StatelessWidget {
             title: Text(tournament.name),
             leading: IconButton(
               icon: const Icon(Icons.arrow_back),
-              onPressed: () => context.pop(),
+              onPressed: () => const DashboardRoute().go(context),
             ),
             actions: [
               IconButton(
@@ -59,7 +58,7 @@ class TournamentDetailScreen extends StatelessWidget {
             icon: const Icon(Icons.add),
             label: const Text('Add Bracket'),
             onPressed: () =>
-                BracketSetupRoute(tournamentId: tournamentId).push(context),
+                BracketSetupRoute(tournamentId: tournamentId).go(context),
           ),
           body: CustomScrollView(
             slivers: [
@@ -163,7 +162,7 @@ class TournamentDetailScreen extends StatelessWidget {
       context.read<TournamentBloc>().add(
         TournamentEvent.deleted(tournament.id),
       );
-      context.pop();
+      const DashboardRoute().go(context);
     }
   }
 }
@@ -275,7 +274,7 @@ class _BracketSnapshotCard extends StatelessWidget {
         ],
       ),
     );
-    if (confirmed == true) onDelete();
+    if (confirmed == true && context.mounted) onDelete();
   }
 
   @override
@@ -318,22 +317,17 @@ class _BracketSnapshotCard extends StatelessWidget {
           ],
         ),
         onTap: () => BracketViewerRoute(
-          $extra: BracketViewerRouteExtra(
-            participants: snapshot.participants,
-            dojangSeparation: snapshot.dojangSeparation,
-            bracketFormat: snapshot.format,
-            includeThirdPlaceMatch: snapshot.includeThirdPlaceMatch,
-            tournament: tournament,
-            isHistoryView: true,
-            classification: snapshot.classification,
-          ),
-        ).push(context),
+          tournamentId: tournament.id,
+          snapshotId: snapshot.id,
+        ).go(context),
       ),
     );
   }
 
   String _formatDate(DateTime dt) {
-    return '${dt.day}/${dt.month}/${dt.year}  '
+    return '${dt.day.toString().padLeft(2, '0')}/'
+        '${dt.month.toString().padLeft(2, '0')}/'
+        '${dt.year}  '
         '${dt.hour.toString().padLeft(2, '0')}:'
         '${dt.minute.toString().padLeft(2, '0')}';
   }

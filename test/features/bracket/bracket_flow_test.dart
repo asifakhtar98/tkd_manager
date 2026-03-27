@@ -13,6 +13,8 @@ void main() {
     await getIt.reset();
   });
 
+  /// Navigates from the Dashboard → Demo Tournament Detail → Add Bracket FAB
+  /// → Bracket Setup screen (ParticipantEntryScreen).
   Future<void> navigateToSetup(WidgetTester tester) async {
     tester.view.physicalSize = const Size(1920, 1080);
     tester.view.devicePixelRatio = 1.0;
@@ -21,39 +23,30 @@ void main() {
 
     await tester.pumpWidget(const app.TkdTournamentApp());
     await tester.pumpAndSettle();
-    // Dashboard now uses a 'Create Bracket' button.
-    final startBtn = find.text('Create Bracket');
-    await tester.ensureVisible(startBtn);
-    await tester.tap(startBtn);
-    await tester.pumpAndSettle();
-  }
 
-  /// Selects 'Create New Tournament' from the tournament dropdown and
-  /// fills the required tournament name field. Must be called before
-  /// [tapGenerate] because GENERATE is gated on a tournament being set.
-  Future<void> selectCreateNewTournament(
-    WidgetTester tester, {
-    String name = 'Test Tournament',
-  }) async {
-    // Tournament selector is the first DropdownButton<String> on the screen.
-    final tournamentDropdown = find.byType(DropdownButton<String>).first;
-    await tester.ensureVisible(tournamentDropdown);
-    await tester.tap(tournamentDropdown);
+    // 1. Dashboard — tap the Demo Tournament card.
+    final demoTournamentCard = find.text('Demo Tournament');
+    expect(demoTournamentCard, findsOneWidget);
+    await tester.ensureVisible(demoTournamentCard);
+    await tester.tap(demoTournamentCard);
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Create New Tournament').last);
+
+    // 2. Tournament Detail — tap "Add Bracket" FAB.
+    final addBracketFab = find.text('Add Bracket');
+    expect(addBracketFab, findsOneWidget);
+    await tester.ensureVisible(addBracketFab);
+    await tester.tap(addBracketFab);
     await tester.pumpAndSettle();
-    // Fill the required name field that appears after selecting create-new.
-    final nameField = find.widgetWithText(TextField, 'Tournament Name *');
-    await tester.ensureVisible(nameField);
-    await tester.enterText(nameField, name);
-    await tester.pump();
+
+    // 3. Verify we're on the setup screen.
+    expect(find.text('New Bracket Setup'), findsOneWidget);
   }
 
   Future<void> addPlayers(
     WidgetTester tester,
     List<List<String>> players,
   ) async {
-    final fullNameInput = find.widgetWithText(TextField, 'Full Name');
+    final fullNameInput = find.widgetWithText(TextField, 'Full Name *');
     final dojangInput = find.widgetWithText(
       TextField,
       'Dojang / Club (Optional)',
@@ -109,7 +102,6 @@ void main() {
       await navigateToSetup(tester);
       expect(find.text('New Bracket Setup'), findsOneWidget);
 
-      await selectCreateNewTournament(tester);
       await addPlayers(tester, fourPlayers);
       await tapGenerate(tester);
       expect(find.textContaining('Single Elimination'), findsOneWidget);
@@ -119,7 +111,6 @@ void main() {
 
     testWidgets('1b. 3 players: BYE handling', (tester) async {
       await navigateToSetup(tester);
-      await selectCreateNewTournament(tester);
 
       await addPlayers(tester, [
         ['Alice Kim', 'Dojang A'],
@@ -135,7 +126,6 @@ void main() {
 
     testWidgets('1c. 8 players: larger bracket generation', (tester) async {
       await navigateToSetup(tester);
-      await selectCreateNewTournament(tester);
 
       await addPlayers(tester, [
         ['Player 1', 'Club A'],
@@ -161,7 +151,6 @@ void main() {
       tester,
     ) async {
       await navigateToSetup(tester);
-      await selectCreateNewTournament(tester);
 
       // Format dropdown now uses BracketFormat enum type.
       final formatDropdown = find.byType(DropdownButton<BracketFormat>).first;
@@ -186,7 +175,6 @@ void main() {
       tester,
     ) async {
       await navigateToSetup(tester);
-      await selectCreateNewTournament(tester);
 
       final formatDropdown = find.byType(DropdownButton<BracketFormat>).first;
       await tester.ensureVisible(formatDropdown);
@@ -212,7 +200,6 @@ void main() {
       tester,
     ) async {
       await navigateToSetup(tester);
-      await selectCreateNewTournament(tester);
 
       await addPlayers(tester, fourPlayers);
       expect(find.text('GENERATE'), findsOneWidget);
@@ -238,9 +225,8 @@ void main() {
       tester,
     ) async {
       await navigateToSetup(tester);
-      await selectCreateNewTournament(tester);
 
-      final csvBtn = find.text('Paste CSV (Name,Dojang,RegID)');
+      final csvBtn = find.text('Paste CSV (Name, RegID, Dojang)');
       await tester.ensureVisible(csvBtn);
       await tester.tap(csvBtn);
       await tester.pumpAndSettle();
@@ -261,7 +247,6 @@ void main() {
 
     testWidgets('3c. Remove individual participant', (tester) async {
       await navigateToSetup(tester);
-      await selectCreateNewTournament(tester);
 
       await addPlayers(tester, [
         ['Alice Kim', 'Dojang A'],
@@ -283,7 +268,6 @@ void main() {
       tester,
     ) async {
       await navigateToSetup(tester);
-      await selectCreateNewTournament(tester);
 
       await addPlayers(tester, [
         ['Alice Kim', 'Dojang A'],
@@ -301,7 +285,6 @@ void main() {
 
     testWidgets('3e. View participant roster with details', (tester) async {
       await navigateToSetup(tester);
-      await selectCreateNewTournament(tester);
 
       await addPlayers(tester, [
         ['John Doe', 'Eagle TKD'],
@@ -313,16 +296,11 @@ void main() {
   });
 
   group('4. Tournament Configuration', () {
-    testWidgets('4a. Tournament info fields are present on entry screen', (
-      tester,
-    ) async {
+    testWidgets('4a. Bracket classification fields are present on setup screen',
+        (tester) async {
       await navigateToSetup(tester);
-      // Fields only appear after choosing to create a new tournament.
-      await selectCreateNewTournament(tester, name: 'Temp');
-      expect(find.text('Tournament Name *'), findsOneWidget);
-      expect(find.text('Date Range'), findsOneWidget);
-      expect(find.text('Venue'), findsOneWidget);
-      expect(find.text('Organizer'), findsOneWidget);
+
+      // Classification fields are always visible on the setup screen.
       final ageCatFinder = find.textContaining('Age Category');
       await tester.ensureVisible(ageCatFinder.first);
       expect(ageCatFinder, findsAtLeast(1));
@@ -335,21 +313,6 @@ void main() {
     testWidgets('4b. Registration ID field is present', (tester) async {
       await navigateToSetup(tester);
       expect(find.text('Registration ID (Optional)'), findsOneWidget);
-    });
-
-    testWidgets('4c. Fill and save tournament info fields', (tester) async {
-      await navigateToSetup(tester);
-      // Select create-new to reveal the tournament fields.
-      await selectCreateNewTournament(
-        tester,
-        name: 'National TKD Championship',
-      );
-
-      final venueField = find.widgetWithText(TextField, 'Venue');
-      await tester.enterText(venueField, 'Sports Arena');
-      await tester.pump();
-
-      expect(find.text('National TKD Championship'), findsOneWidget);
     });
 
     testWidgets(
@@ -383,7 +346,6 @@ void main() {
     ) async {
       await navigateToSetup(tester);
 
-      // Format dropdown is at index 1 (tournament selector is at index 0).
       final formatDropdown = find.byType(DropdownButton<BracketFormat>).first;
       await tester.ensureVisible(formatDropdown);
       await tester.tap(formatDropdown);
@@ -415,7 +377,6 @@ void main() {
       tester,
     ) async {
       await navigateToSetup(tester);
-      await selectCreateNewTournament(tester);
       await addPlayers(tester, fourPlayers);
       await tapGenerate(tester);
 
@@ -429,7 +390,6 @@ void main() {
       tester,
     ) async {
       await navigateToSetup(tester);
-      await selectCreateNewTournament(tester);
       await addPlayers(tester, fourPlayers);
       await tapGenerate(tester);
 
@@ -455,7 +415,6 @@ void main() {
 
     testWidgets('5c. Confirm regenerate action', (tester) async {
       await navigateToSetup(tester);
-      await selectCreateNewTournament(tester);
       await addPlayers(tester, fourPlayers);
       await tapGenerate(tester);
 
@@ -473,7 +432,6 @@ void main() {
 
     testWidgets('5d. Export PDF button is present', (tester) async {
       await navigateToSetup(tester);
-      await selectCreateNewTournament(tester);
       await addPlayers(tester, fourPlayers);
       await tapGenerate(tester);
 
@@ -482,22 +440,22 @@ void main() {
       await goBack(tester);
     });
 
-    testWidgets('5e. Back navigation from bracket viewer', (tester) async {
+    testWidgets('5e. Back navigation from bracket viewer goes to tournament detail', (tester) async {
       await navigateToSetup(tester);
-      await selectCreateNewTournament(tester);
       await addPlayers(tester, fourPlayers);
       await tapGenerate(tester);
 
       await goBack(tester);
 
-      expect(find.text('New Bracket Setup'), findsOneWidget);
+      // Back from bracket viewer navigates to tournament detail.
+      expect(find.text('Demo Tournament'), findsAtLeast(1));
+      expect(find.text('Add Bracket'), findsOneWidget);
     });
 
     testWidgets('5f. InteractiveViewer is present for pan/zoom', (
       tester,
     ) async {
       await navigateToSetup(tester);
-      await selectCreateNewTournament(tester);
       await addPlayers(tester, fourPlayers);
       await tapGenerate(tester);
 
@@ -509,12 +467,9 @@ void main() {
 
   group('6. Combined Workflow Tests', () {
     testWidgets(
-      '6a. Full workflow: Configure tournament, add players, generate, verify, regenerate',
+      '6a. Full workflow: Add players, select DE format, generate, verify, regenerate',
       (tester) async {
         await navigateToSetup(tester);
-
-        // Select create-new first, which reveals tournament fields.
-        await selectCreateNewTournament(tester, name: 'Spring Championship');
 
         await addPlayers(tester, fourPlayers);
 
@@ -547,9 +502,8 @@ void main() {
       tester,
     ) async {
       await navigateToSetup(tester);
-      await selectCreateNewTournament(tester);
 
-      final csvBtn = find.text('Paste CSV (Name,Dojang,RegID)');
+      final csvBtn = find.text('Paste CSV (Name, RegID, Dojang)');
       await tester.ensureVisible(csvBtn);
       await tester.tap(csvBtn);
       await tester.pumpAndSettle();

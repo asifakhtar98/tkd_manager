@@ -3,11 +3,9 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
-import 'package:uuid/uuid.dart';
 import 'package:tkd_saas/features/bracket/data/services/bracket_pdf_generator_service.dart';
 import 'package:tkd_saas/features/bracket/presentation/models/print_export_settings.dart';
 import 'package:tkd_saas/features/bracket/domain/entities/match_entity.dart';
@@ -25,36 +23,21 @@ import 'package:tkd_saas/features/participant/domain/entities/participant_entity
 import 'package:tkd_saas/features/tournament/domain/entities/bracket_snapshot.dart';
 import 'package:tkd_saas/features/tournament/domain/entities/bracket_classification.dart';
 import 'package:tkd_saas/features/tournament/domain/entities/tournament_entity.dart';
-import 'package:tkd_saas/features/tournament/presentation/bloc/tournament_bloc.dart';
 
-/// Bracket viewer — receives route props, broadcasts [BracketGenerateRequested]
-/// via the [BracketBloc] provided by the route (see [BracketViewerRoute]).
+/// Bracket viewer — now URL-driven via `/tournaments/:tId/brackets/:sId`.
+///
+/// Receives a pre-looked-up [tournament] and [snapshot] from the route
+/// builder. The [BracketBloc] is provided by the route layer (see
+/// [BracketViewerRoute] in `app_routes.dart`).
 class BracketViewerScreen extends StatefulWidget {
   const BracketViewerScreen({
     super.key,
-    required this.participants,
-    required this.dojangSeparation,
-    required this.bracketFormat,
-    required this.includeThirdPlaceMatch,
     required this.tournament,
-    this.isHistoryView = false,
-    this.classification = const BracketClassification(),
+    required this.snapshot,
   });
 
-  final List<ParticipantEntity> participants;
-  final bool dojangSeparation;
-
-  /// The elimination format used for this bracket.
-  final BracketFormat bracketFormat;
-  final bool includeThirdPlaceMatch;
   final TournamentEntity tournament;
-
-  /// When true the bracket is a replay from history — do NOT save a new
-  /// [BracketSnapshot] so the history list stays clean.
-  final bool isHistoryView;
-
-  /// Bracket-level classification labels displayed in the tie sheet header.
-  final BracketClassification classification;
+  final BracketSnapshot snapshot;
 
   @override
   State<BracketViewerScreen> createState() => _BracketViewerScreenState();
@@ -66,10 +49,6 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
   final GlobalKey _printKey = GlobalKey();
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  // Tracks whether we have already committed a snapshot for this generation
-  // session, so we don't double-save on rebuilds.
-  bool _snapshotSaved = false;
-
   /// Non-null while a PDF export is in progress.
   /// Value ranges from 0.0 (just started) to 1.0 (complete).
   double? _pdfExportProgress;
@@ -80,8 +59,7 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
 
   /// The user-customised theme config, mutated via the editor panel.
   /// Starts from the default preset and accumulates per-token overrides.
-  TieSheetThemeConfig _customThemeConfig =
-      TieSheetThemeConfig.defaultPreset;
+  TieSheetThemeConfig _customThemeConfig = TieSheetThemeConfig.defaultPreset;
 
   bool get _isExportingPdf => _pdfExportProgress != null;
 
@@ -95,9 +73,10 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
     return TieSheetThemeConfig.fromMode(_activeTieSheetThemeMode);
   }
 
-  static const _uuid = Uuid();
-
-
+  // ── Convenience accessors from snapshot ─────────────────────────────────────
+  BracketFormat get _bracketFormat => widget.snapshot.format;
+  bool get _includeThirdPlaceMatch => widget.snapshot.includeThirdPlaceMatch;
+  BracketClassification get _classification => widget.snapshot.classification;
 
   /// Extracts the flat match list and optional bracket IDs from a
   /// [BracketResult].  Used by both the on-screen viewer and PDF export.
@@ -152,13 +131,13 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
       tournament: widget.tournament,
       matches: bracketData.allMatches,
       participants: blocState.participants,
-      bracketType: widget.bracketFormat.displayLabel,
-      includeThirdPlaceMatch: widget.includeThirdPlaceMatch,
+      bracketType: _bracketFormat.displayLabel,
+      includeThirdPlaceMatch: _includeThirdPlaceMatch,
       winnersBracketId: bracketData.winnersBracketId,
       losersBracketId: bracketData.losersBracketId,
       isEditModeEnabled: false,
       themeConfig: _resolvedThemeConfig,
-      classification: widget.classification,
+      classification: _classification,
     );
   }
 
@@ -349,18 +328,18 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
     }
   }
 
+  /// Navigates back to the parent tournament detail page using URL
+  /// navigation rather than stack-based `pop()`.
+  void _navigateBackToTournamentDetail() {
+    TournamentDetailRoute(tournamentId: widget.tournament.id).go(context);
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<BracketBloc, BracketState>(
       listenWhen: (prev, current) => current is BracketLoadSuccess,
       listener: (context, state) {
-        if (state case BracketLoadSuccess(
-          :final result,
-          :final participants,
-          :final format,
-          :final includeThirdPlaceMatch,
-          :final errorMessage,
-        )) {
+        if (state case BracketLoadSuccess(:final errorMessage)) {
           // Show error as SnackBar without destroying bracket state.
           if (errorMessage != null) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -373,15 +352,7 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
             context.read<BracketBloc>().add(
               const BracketEvent.errorDismissed(),
             );
-            return;
           }
-          _saveSnapshot(
-            context: context,
-            result: result,
-            participants: participants,
-            format: format,
-            includeThirdPlaceMatch: includeThirdPlaceMatch,
-          );
         }
       },
       builder: (context, state) {
@@ -389,7 +360,7 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
           BracketInitial() || BracketGenerating() => Scaffold(
             appBar: AppBar(
               title: Text(
-                '${widget.bracketFormat.displayLabel} — ${widget.participants.length} Players',
+                '${_bracketFormat.displayLabel} — ${widget.snapshot.participantCount} Players',
               ),
             ),
             body: const Center(child: CircularProgressIndicator()),
@@ -399,7 +370,7 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
               title: const Text('Error'),
               leading: IconButton(
                 icon: const Icon(Icons.arrow_back),
-                onPressed: () => context.pop(),
+                onPressed: _navigateBackToTournamentDetail,
               ),
             ),
             body: Center(
@@ -443,43 +414,6 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
     );
   }
 
-  /// Saves the just-generated bracket as a [BracketSnapshot] under the
-  /// owning tournament in [TournamentBloc]. Only fires once per viewer session
-  /// (guarded by [_snapshotSaved]).
-  void _saveSnapshot({
-    required BuildContext context,
-    required BracketResult result,
-    required List<ParticipantEntity> participants,
-    required BracketFormat format,
-    required bool includeThirdPlaceMatch,
-  }) {
-    // Skip if already saved or replaying history.
-    if (_snapshotSaved || widget.isHistoryView) {
-      return;
-    }
-    _snapshotSaved = true;
-
-    final snapshot = BracketSnapshot(
-      id: _uuid.v4(),
-      label: '${format.displayLabel} — ${participants.length} Players',
-      format: format,
-      participantCount: participants.length,
-      includeThirdPlaceMatch: includeThirdPlaceMatch,
-      dojangSeparation: widget.dojangSeparation,
-      classification: widget.classification,
-      generatedAt: DateTime.now(),
-      participants: participants,
-      result: result,
-    );
-
-    context.read<TournamentBloc>().add(
-      TournamentEvent.bracketSnapshotAdded(
-        tournamentId: widget.tournament.id,
-        snapshot: snapshot,
-      ),
-    );
-  }
-
   Widget _buildViewer({
     required BuildContext context,
     required BracketResult result,
@@ -517,7 +451,7 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
         title: Text('${format.displayLabel} — ${participants.length} Players'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
+          onPressed: _navigateBackToTournamentDetail,
         ),
         actions: [
           // ── Undo ──
@@ -615,9 +549,6 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
                 ),
               );
               if (confirm == true && context.mounted) {
-                if (!widget.isHistoryView) {
-                  setState(() => _snapshotSaved = false);
-                }
                 context.read<BracketBloc>().add(
                   const BracketRegenerateRequested(),
                 );
@@ -850,16 +781,16 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
             tournament: widget.tournament,
             matches: matches,
             participants: participants,
-            bracketType: widget.bracketFormat.displayLabel,
+            bracketType: _bracketFormat.displayLabel,
             onMatchTap: (matchId) =>
                 _handleMatchTap(context, matchId, matches, participants),
             printKey: _printKey,
-            includeThirdPlaceMatch: widget.includeThirdPlaceMatch,
+            includeThirdPlaceMatch: _includeThirdPlaceMatch,
             winnersBracketId: winnersBracketId,
             losersBracketId: losersBracketId,
             isEditModeEnabled: isEditModeEnabled,
             themeConfig: _resolvedThemeConfig,
-            classification: widget.classification,
+            classification: _classification,
             onParticipantSlotSwapped: (source, target) {
               _handleParticipantSwap(
                 context,
@@ -886,10 +817,16 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
     List<MatchEntity> allMatches,
     List<ParticipantEntity> participants,
   ) {
-    final match = allMatches.firstWhere(
-      (matchEntity) => matchEntity.id == matchId,
-      orElse: () => throw StateError('Match $matchId not found'),
-    );
+    final match = allMatches
+        .where((matchEntity) => matchEntity.id == matchId)
+        .firstOrNull;
+
+    if (match == null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Match "$matchId" not found.')));
+      return;
+    }
 
     // Don't allow re-scoring a completed match.
     if (match.status == MatchStatus.completed) {
@@ -942,11 +879,11 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
   }
 
   String _participantName(String id, List<ParticipantEntity> participants) {
-    final matchingParticipants = participants.where(
-      (participant) => participant.id == id,
-    );
-    if (matchingParticipants.isEmpty) return 'Unknown';
-    return matchingParticipants.first.fullName;
+    return participants
+            .where((participant) => participant.id == id)
+            .firstOrNull
+            ?.fullName ??
+        'Unknown';
   }
 
   /// Handles a participant slot swap triggered by drag-and-drop.

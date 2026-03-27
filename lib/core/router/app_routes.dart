@@ -8,10 +8,10 @@ import 'package:tkd_saas/features/auth/presentation/screens/password_reset_scree
 import 'package:tkd_saas/features/bracket/presentation/bloc/bracket_bloc.dart';
 import 'package:tkd_saas/features/bracket/presentation/screens/bracket_viewer_screen.dart';
 import 'package:tkd_saas/features/dashboard/presentation/screens/dashboard_screen.dart';
-import 'package:tkd_saas/features/participant/domain/entities/participant_entity.dart';
 import 'package:tkd_saas/features/participant/presentation/screens/participant_entry_screen.dart';
+import 'package:tkd_saas/features/tournament/domain/entities/bracket_snapshot.dart';
 import 'package:tkd_saas/features/tournament/domain/entities/tournament_entity.dart';
-import 'package:tkd_saas/features/tournament/domain/entities/bracket_classification.dart';
+import 'package:tkd_saas/features/tournament/presentation/bloc/tournament_bloc.dart';
 import 'package:tkd_saas/features/tournament/presentation/screens/tournament_detail_screen.dart';
 
 part 'app_routes.g.dart';
@@ -54,12 +54,37 @@ abstract final class RoutePaths {
   static const String login = '/login';
   static const String resetPassword = '/reset-password';
   static const String emailConfirmed = '/email-confirmed';
+
+  /// Builds a tournament detail path:  `/tournaments/<id>`
+  static String tournamentDetail(String tournamentId) =>
+      '/tournaments/$tournamentId';
+
+  /// Builds a bracket setup path:  `/tournaments/<id>/setup`
+  static String bracketSetup(String tournamentId) =>
+      '/tournaments/$tournamentId/setup';
+
+  /// Builds a bracket viewer path:  `/tournaments/<tId>/brackets/<sId>`
+  static String bracketViewer({
+    required String tournamentId,
+    required String snapshotId,
+  }) => '/tournaments/$tournamentId/brackets/$snapshotId';
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Route definitions — annotated for go_router_builder code generation.
 // Run: dart run build_runner build --delete-conflicting-outputs
+//
+// Hierarchy:
+//   /                                             → DashboardRoute
+//     tournaments/:tournamentId                   → TournamentDetailRoute
+//       setup                                     → BracketSetupRoute
+//       brackets/:snapshotId                      → BracketViewerRoute
+//   /login                                        → LoginRoute
+//   /reset-password                               → PasswordResetRoute
+//   /email-confirmed                              → EmailConfirmedRoute
 // ─────────────────────────────────────────────────────────────────────────────
+
+// ── Auth routes (top-level, no nesting needed) ───────────────────────────────
 
 @TypedGoRoute<LoginRoute>(path: '/login')
 @immutable
@@ -91,7 +116,20 @@ class EmailConfirmedRoute extends GoRouteData with $EmailConfirmedRoute {
       const EmailConfirmedScreen();
 }
 
-@TypedGoRoute<DashboardRoute>(path: '/')
+// ── Main app routes (nested hierarchy) ───────────────────────────────────────
+
+@TypedGoRoute<DashboardRoute>(
+  path: '/',
+  routes: <TypedGoRoute<GoRouteData>>[
+    TypedGoRoute<TournamentDetailRoute>(
+      path: 'tournaments/:tournamentId',
+      routes: <TypedGoRoute<GoRouteData>>[
+        TypedGoRoute<BracketSetupRoute>(path: 'setup'),
+        TypedGoRoute<BracketViewerRoute>(path: 'brackets/:snapshotId'),
+      ],
+    ),
+  ],
+)
 @immutable
 class DashboardRoute extends GoRouteData with $DashboardRoute {
   const DashboardRoute();
@@ -101,21 +139,6 @@ class DashboardRoute extends GoRouteData with $DashboardRoute {
       const DashboardScreen();
 }
 
-@TypedGoRoute<BracketSetupRoute>(path: '/setup')
-@immutable
-class BracketSetupRoute extends GoRouteData with $BracketSetupRoute {
-  const BracketSetupRoute({required this.tournamentId});
-
-  /// The owning tournament — always required.  Brackets are created
-  /// exclusively from a tournament's detail page.
-  final String tournamentId;
-
-  @override
-  Widget build(BuildContext context, GoRouterState state) =>
-      ParticipantEntryScreen(tournamentId: tournamentId);
-}
-
-@TypedGoRoute<TournamentDetailRoute>(path: '/tournament/:tournamentId')
 @immutable
 class TournamentDetailRoute extends GoRouteData with $TournamentDetailRoute {
   const TournamentDetailRoute({required this.tournamentId});
@@ -127,67 +150,118 @@ class TournamentDetailRoute extends GoRouteData with $TournamentDetailRoute {
       TournamentDetailScreen(tournamentId: tournamentId);
 }
 
-/// Extra data passed to the bracket viewer route.
-///
-/// Bundles all complex objects so go_router_builder can route via `$extra`.
-class BracketViewerRouteExtra {
-  const BracketViewerRouteExtra({
-    required this.participants,
-    required this.dojangSeparation,
-    required this.bracketFormat,
-    required this.includeThirdPlaceMatch,
-    required this.tournament,
-    this.isHistoryView = false,
-    this.classification = const BracketClassification(),
-  });
+@immutable
+class BracketSetupRoute extends GoRouteData with $BracketSetupRoute {
+  const BracketSetupRoute({required this.tournamentId});
 
-  final List<ParticipantEntity> participants;
-  final bool dojangSeparation;
+  /// The owning tournament — inherited from the parent path segment.
+  final String tournamentId;
 
-  /// The elimination format for this bracket.
-  final BracketFormat bracketFormat;
-
-  final bool includeThirdPlaceMatch;
-
-  /// The owning tournament — always required.
-  final TournamentEntity tournament;
-
-  /// When true, the bracket is being replayed from history — the viewer
-  /// must NOT save a new [BracketSnapshot] so history stays clean.
-  final bool isHistoryView;
-
-  /// Bracket-level classification labels displayed in the tie sheet header.
-  final BracketClassification classification;
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      ParticipantEntryScreen(tournamentId: tournamentId);
 }
 
-@TypedGoRoute<BracketViewerRoute>(path: '/bracket')
 @immutable
 class BracketViewerRoute extends GoRouteData with $BracketViewerRoute {
-  const BracketViewerRoute({required this.$extra});
+  const BracketViewerRoute({
+    required this.tournamentId,
+    required this.snapshotId,
+  });
 
-  /// All complex bracket params passed as a single typed extra object.
-  final BracketViewerRouteExtra $extra;
+  final String tournamentId;
+  final String snapshotId;
 
   @override
   Widget build(BuildContext context, GoRouterState state) {
+    // Look up the snapshot and tournament from TournamentBloc state.
+    final TournamentState tournamentState = context
+        .read<TournamentBloc>()
+        .state;
+    final TournamentEntity? tournament = tournamentState.tournaments
+        .where((t) => t.id == tournamentId)
+        .firstOrNull;
+    final BracketSnapshot? snapshot = tournamentState
+        .bracketsFor(tournamentId)
+        .where((s) => s.id == snapshotId)
+        .firstOrNull;
+
+    // If either the tournament or snapshot is not found (e.g. stale URL or
+    // refresh after data was lost), show a graceful error page.
+    if (tournament == null || snapshot == null) {
+      return _BracketNotFoundPage(tournamentId: tournamentId);
+    }
+
     return BlocProvider(
       create: (_) => getIt<BracketBloc>()
         ..add(
           BracketGenerateRequested(
-            participants: $extra.participants,
-            bracketFormat: $extra.bracketFormat,
-            dojangSeparation: $extra.dojangSeparation,
-            includeThirdPlaceMatch: $extra.includeThirdPlaceMatch,
+            participants: snapshot.participants,
+            bracketFormat: snapshot.format,
+            dojangSeparation: snapshot.dojangSeparation,
+            includeThirdPlaceMatch: snapshot.includeThirdPlaceMatch,
           ),
         ),
-      child: BracketViewerScreen(
-        participants: $extra.participants,
-        dojangSeparation: $extra.dojangSeparation,
-        bracketFormat: $extra.bracketFormat,
-        includeThirdPlaceMatch: $extra.includeThirdPlaceMatch,
-        tournament: $extra.tournament,
-        isHistoryView: $extra.isHistoryView,
-        classification: $extra.classification,
+      child: BracketViewerScreen(tournament: tournament, snapshot: snapshot),
+    );
+  }
+}
+
+/// Shown when a bracket URL cannot be resolved — either the tournament or the
+/// snapshot is missing from the current [TournamentBloc] state.
+///
+/// Navigates the user back to the parent tournament (if it exists) or to the
+/// dashboard as a last resort.
+class _BracketNotFoundPage extends StatelessWidget {
+  const _BracketNotFoundPage({required this.tournamentId});
+
+  final String tournamentId;
+
+  @override
+  Widget build(BuildContext context) {
+    // Check whether the tournament itself still exists so the user can
+    // navigate back to it instead of the root dashboard.
+    final tournamentExists = context
+        .read<TournamentBloc>()
+        .state
+        .tournaments
+        .any((t) => t.id == tournamentId);
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Bracket Not Found'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => tournamentExists
+              ? TournamentDetailRoute(tournamentId: tournamentId).go(context)
+              : const DashboardRoute().go(context),
+        ),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.link_off, size: 64, color: Colors.grey.shade400),
+            const SizedBox(height: 16),
+            const Text(
+              'This bracket could not be found.\n'
+              'It may have been deleted or the URL is invalid.',
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            FilledButton.icon(
+              icon: const Icon(Icons.arrow_back),
+              label: Text(
+                tournamentExists ? 'Back to Tournament' : 'Go to Dashboard',
+              ),
+              onPressed: () => tournamentExists
+                  ? TournamentDetailRoute(
+                      tournamentId: tournamentId,
+                    ).go(context)
+                  : const DashboardRoute().go(context),
+            ),
+          ],
+        ),
       ),
     );
   }

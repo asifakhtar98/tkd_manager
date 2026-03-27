@@ -2,9 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:uuid/uuid.dart';
-import 'package:go_router/go_router.dart';
+import 'package:tkd_saas/core/di/injection.dart';
 import 'package:tkd_saas/core/router/app_routes.dart';
+import 'package:tkd_saas/features/bracket/domain/services/double_elimination_bracket_generator_service.dart';
+import 'package:tkd_saas/features/bracket/domain/services/participant_shuffle_service.dart';
+import 'package:tkd_saas/features/bracket/domain/services/single_elimination_bracket_generator_service.dart';
+import 'package:tkd_saas/features/bracket/presentation/bloc/bracket_bloc.dart';
 import 'package:tkd_saas/features/tournament/domain/entities/bracket_classification.dart';
+import 'package:tkd_saas/features/tournament/domain/entities/bracket_snapshot.dart';
 import 'package:tkd_saas/features/participant/domain/entities/participant_entity.dart';
 import 'package:tkd_saas/features/tournament/domain/entities/tournament_entity.dart';
 import 'package:tkd_saas/features/tournament/presentation/bloc/tournament_bloc.dart';
@@ -199,21 +204,96 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
       return;
     }
 
-    BracketViewerRoute(
-      $extra: BracketViewerRouteExtra(
-        participants: List<ParticipantEntity>.from(_participants),
-        dojangSeparation: _isDojangSeparationEnabled,
-        bracketFormat: _selectedBracketFormat,
-        includeThirdPlaceMatch: _isThirdPlaceMatchIncluded,
-        tournament: tournament,
-        classification: BracketClassification(
-          ageCategoryLabel: _bracketAgeCategoryController.text.trim(),
-          genderLabel: _bracketGenderController.text.trim(),
-          weightDivisionLabel:
-              _bracketWeightDivisionController.text.trim(),
-        ),
+    final participants = List<ParticipantEntity>.from(_participants);
+    final classification = BracketClassification(
+      ageCategoryLabel: _bracketAgeCategoryController.text.trim(),
+      genderLabel: _bracketGenderController.text.trim(),
+      weightDivisionLabel: _bracketWeightDivisionController.text.trim(),
+    );
+
+    // ── Shuffle participants if dojang separation is enabled ──────────
+    final List<ParticipantEntity> orderedParticipants;
+    if (_isDojangSeparationEnabled) {
+      final shuffleService = getIt<ParticipantShuffleService>();
+      orderedParticipants =
+          shuffleService.shuffleParticipantsForBracketGeneration(
+        participants: participants,
+        dojangSeparation: true,
+      );
+    } else {
+      orderedParticipants = participants;
+    }
+
+    // ── Generate bracket inline ──────────────────────────────────────
+    final participantIds =
+        orderedParticipants.map((p) => p.id).toList();
+
+    late final BracketResult bracketResult;
+    try {
+      switch (_selectedBracketFormat) {
+        case BracketFormat.singleElimination:
+          final generator = getIt<SingleEliminationBracketGeneratorService>();
+          final result = generator.generate(
+            genderId: _uuid.v4(),
+            participantIds: participantIds,
+            bracketId: _uuid.v4(),
+            includeThirdPlaceMatch: _isThirdPlaceMatchIncluded,
+          );
+          bracketResult = BracketResult.singleElimination(result);
+        case BracketFormat.doubleElimination:
+          final generator = getIt<DoubleEliminationBracketGeneratorService>();
+          final result = generator.generate(
+            genderId: _uuid.v4(),
+            participantIds: participantIds,
+            winnersBracketId: _uuid.v4(),
+            losersBracketId: _uuid.v4(),
+          );
+          bracketResult = BracketResult.doubleElimination(result);
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Bracket generation failed: $e'),
+            backgroundColor: Colors.red.shade800,
+          ),
+        );
+      }
+      return;
+    }
+
+    // ── Create snapshot and persist to TournamentBloc ────────────────
+    final snapshotId = _uuid.v4();
+    final thirdPlaceSuffix =
+        _isThirdPlaceMatchIncluded ? ' + 3rd Place' : '';
+    final snapshot = BracketSnapshot(
+      id: snapshotId,
+      label:
+          '${_selectedBracketFormat.displayLabel} — '
+          '${orderedParticipants.length} Players$thirdPlaceSuffix',
+      format: _selectedBracketFormat,
+      participantCount: orderedParticipants.length,
+      includeThirdPlaceMatch: _isThirdPlaceMatchIncluded,
+      dojangSeparation: _isDojangSeparationEnabled,
+      classification: classification,
+      generatedAt: DateTime.now(),
+      participants: orderedParticipants,
+      result: bracketResult,
+    );
+
+    if (!context.mounted) return;
+    context.read<TournamentBloc>().add(
+      TournamentBracketSnapshotAdded(
+        tournamentId: tournament.id,
+        snapshot: snapshot,
       ),
-    ).push(context);
+    );
+
+    // ── Navigate to bracket viewer by URL ────────────────────────────
+    BracketViewerRoute(
+      tournamentId: tournament.id,
+      snapshotId: snapshotId,
+    ).go(context);
   }
 
   // ── Build ──────────────────────────────────────────────────────────────────
@@ -229,7 +309,9 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
             title: const Text('New Bracket Setup'),
             leading: IconButton(
               icon: const Icon(Icons.arrow_back),
-              onPressed: () => context.pop(),
+              onPressed: () => TournamentDetailRoute(
+                tournamentId: widget.tournamentId,
+              ).go(context),
             ),
             actions: [
               Padding(
