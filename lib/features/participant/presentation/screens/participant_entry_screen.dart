@@ -32,7 +32,7 @@ class ParticipantEntryScreen extends StatefulWidget {
 class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
   // ── Constants ──────────────────────────────────────────────────────────────
   static const int _maximumFullNameLength = 100;
-  static const int _maximumRegistrationIdLength = 50;
+  static const int _maximumRegistrationIdLength = 100;
   static const int _maximumDojangNameLength = 100;
   static const int _maximumClassificationFieldLength = 100;
   static const int _minimumParticipantsForBracket = 2;
@@ -405,35 +405,66 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                     'Tournament not found. Go back and select a valid tournament.',
                     style: TextStyle(color: Colors.red),
                   )
-                : Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _ReadOnlyField(
-                        label: 'Name',
-                        value: tournament.name,
+                    : Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                              if (tournament.leftLogoUrl.isNotEmpty ||
+                          tournament.rightLogoUrl.isNotEmpty) ...[
+                        
+                        Row(
+                          children: [
+                            if (tournament.leftLogoUrl.isNotEmpty)
+                              _buildLogoImage(tournament.leftLogoUrl),
+                            if (tournament.leftLogoUrl.isNotEmpty &&
+                                tournament.rightLogoUrl.isNotEmpty)
+                              const SizedBox(width: 16),
+                            if (tournament.rightLogoUrl.isNotEmpty)
+                              _buildLogoImage(tournament.rightLogoUrl),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                      ],
+                          _ReadOnlyField(
+                            label: 'Name',
+                            value: tournament.name,
+                          ),
+                          if (tournament.dateRange.isNotEmpty)
+                            _ReadOnlyField(
+                              label: 'Date Range',
+                              value: tournament.dateRange,
+                            ),
+                          if (tournament.venue.isNotEmpty)
+                            _ReadOnlyField(
+                              label: 'Venue',
+                              value: tournament.venue,
+                            ),
+                          if (tournament.organizer.isNotEmpty)
+                            _ReadOnlyField(
+                              label: 'Organizer',
+                              value: tournament.organizer,
+                            ),
+                      
+                        ],
                       ),
-                      if (tournament.dateRange.isNotEmpty)
-                        _ReadOnlyField(
-                          label: 'Date Range',
-                          value: tournament.dateRange,
-                        ),
-                      if (tournament.venue.isNotEmpty)
-                        _ReadOnlyField(
-                          label: 'Venue',
-                          value: tournament.venue,
-                        ),
-                      if (tournament.organizer.isNotEmpty)
-                        _ReadOnlyField(
-                          label: 'Organizer',
-                          value: tournament.organizer,
-                        ),
-                    ],
-                  ),
+            ),
           ),
+        ],
+      );
+    }
+
+    Widget _buildLogoImage(String url) {
+      return Image.network(
+        url,
+        width: 64,
+        height: 64,
+        fit: BoxFit.contain,
+        errorBuilder: (context, error, stackTrace) => const SizedBox(
+          width: 64,
+          height: 64,
+          child: Icon(Icons.broken_image, color: Colors.grey, size: 32),
         ),
-      ],
-    );
-  }
+      );
+    }
 
   // ─────────────────────────────────────────────────────────────────────────
   // Bracket details section (age category, gender, weight division)
@@ -457,7 +488,7 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                 TextField(
                   controller: _bracketAgeCategoryController,
                   decoration: const InputDecoration(
-                    labelText: 'Age Category (e.g., JUNIOR, SENIOR)',
+                    labelText: 'Age Category',
                   ),
                   maxLength: _maximumClassificationFieldLength,
                   textInputAction: TextInputAction.next,
@@ -466,7 +497,7 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                 TextField(
                   controller: _bracketGenderController,
                   decoration: const InputDecoration(
-                    labelText: 'Gender (e.g., BOYS, GIRLS)',
+                    labelText: 'Gender',
                   ),
                   maxLength: _maximumClassificationFieldLength,
                   textInputAction: TextInputAction.next,
@@ -475,7 +506,7 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                 TextField(
                   controller: _bracketWeightDivisionController,
                   decoration: const InputDecoration(
-                    labelText: 'Weight Division (e.g., UNDER 59 KG)',
+                    labelText: 'Weight Division',
                   ),
                   maxLength: _maximumClassificationFieldLength,
                   textInputAction: TextInputAction.done,

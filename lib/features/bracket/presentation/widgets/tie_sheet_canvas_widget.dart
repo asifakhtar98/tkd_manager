@@ -582,12 +582,22 @@ class TieSheetPainter extends CustomPainter {
     );
 
     final effectiveLogoRowHeight = _hasLogos ? logoRowHeight : 0.0;
+
+    // When a 3rd-place match is included it is painted at
+    //   finalJunction.dy + rowH * 4 + 60
+    // which is roughly tableH/2 + rowH * 4 + 60 below the table top.
+    // Add enough vertical space so the match box (≈50 px) + breathing
+    // room (40 px) never overlaps the medal table underneath.
+    final double bracketToMedalGapHeight = includeThirdPlaceMatch
+        ? max(60.0, tableH / 2 + rowH * 4 + 150 - tableH)
+        : 60.0;
+
     final height =
         margin +
         effectiveLogoRowHeight +
         headerH +
         tableH +
-        60 +
+        bracketToMedalGapHeight +
         medalH +
         margin;
     return Size(
@@ -2018,6 +2028,11 @@ class TieSheetPainter extends CustomPainter {
         Rect.fromCenter(center: Offset(x, y), width: 60, height: 50),
       ),
     );
+
+    final gNum = _matchGlobalNumbers[m.id];
+    if (gNum != null) {
+      _drawMatchPill(canvas, '$gNum', x - 4, y);
+    }
 
     _drawText(canvas, '3rd Place', x - 25, y - 34, _bold(9), center: true);
     _drawText(

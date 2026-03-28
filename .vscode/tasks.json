@@ -79,6 +79,17 @@
       "problemMatcher": [],
       "group": "build",
       "detail": "Deploys the application to Firebase"
+    },
+    {
+      "label": "Flutter: Build and Deploy Web",
+      "dependsOrder": "sequence",
+      "dependsOn": [
+        "Flutter: Build Web",
+        "Firebase: Deploy"
+      ],
+      "problemMatcher": [],
+      "group": "build",
+      "detail": "Builds the Flutter web application and deploys it to Firebase"
     }
   ]
 }

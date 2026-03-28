@@ -53,27 +53,20 @@ abstract final class MatchNumberingUtility {
 
     // Identify special matches in the final round.
     final thirdPlaceMatch = matches
-        .where(
-          (m) => m.roundNumber == maxRound && m.matchNumberInRound == 2,
-        )
+        .where((m) => m.roundNumber == maxRound && m.matchNumberInRound == 2)
         .firstOrNull;
     final finalMatch = matches
-        .where(
-          (m) => m.roundNumber == maxRound && m.matchNumberInRound == 1,
-        )
+        .where((m) => m.roundNumber == maxRound && m.matchNumberInRound == 1)
         .firstOrNull;
 
     // Exclude the 3rd-place match from the main round loop — it's numbered
     // separately between the semi-finals and the final.
     final mainMatches = matches
-        .where(
-          (m) => !(m.roundNumber == maxRound && m.matchNumberInRound == 2),
-        )
+        .where((m) => !(m.roundNumber == maxRound && m.matchNumberInRound == 2))
         .toList();
 
     final byRound = _groupByRound(mainMatches);
-    final mainMaxRound =
-        mainMatches.isEmpty ? 0 : _maxRound(mainMatches);
+    final mainMaxRound = mainMatches.isEmpty ? 0 : _maxRound(mainMatches);
 
     var globalNumber = 1;
 
@@ -93,12 +86,13 @@ abstract final class MatchNumberingUtility {
     }
 
     // 3rd-place match comes before the final.
-    if (thirdPlaceMatch != null) {
+    if (thirdPlaceMatch != null &&
+        thirdPlaceMatch.resultType != MatchResultType.bye) {
       result[thirdPlaceMatch.id] = globalNumber++;
     }
 
     // Final match is always last.
-    if (finalMatch != null) {
+    if (finalMatch != null && finalMatch.resultType != MatchResultType.bye) {
       result[finalMatch.id] = globalNumber++;
     }
 
@@ -116,23 +110,25 @@ abstract final class MatchNumberingUtility {
   }) {
     final result = <String, int>{};
 
-    final winnersMatches =
-        matches.where((m) => m.bracketId == winnersBracketId).toList();
-    final losersMatches =
-        matches.where((m) => m.bracketId == losersBracketId).toList();
+    final winnersMatches = matches
+        .where((m) => m.bracketId == winnersBracketId)
+        .toList();
+    final losersMatches = matches
+        .where((m) => m.bracketId == losersBracketId)
+        .toList();
     final grandFinalsMatches = matches
         .where(
           (m) =>
-              m.bracketId != winnersBracketId &&
-              m.bracketId != losersBracketId,
+              m.bracketId != winnersBracketId && m.bracketId != losersBracketId,
         )
         .toList();
 
     var globalNumber = 1;
 
     // Winners Bracket: left-first / right-second per round.
-    final winnersMaxRound =
-        winnersMatches.isEmpty ? 0 : _maxRound(winnersMatches);
+    final winnersMaxRound = winnersMatches.isEmpty
+        ? 0
+        : _maxRound(winnersMatches);
     final winnersByRound = _groupByRound(winnersMatches);
     for (var r = 1; r <= winnersMaxRound; r++) {
       globalNumber = _numberMatchesLeftThenRight(
@@ -144,8 +140,7 @@ abstract final class MatchNumberingUtility {
 
     // Losers Bracket: sequential round-by-round (no left/right split —
     // LB is rendered linearly, not mirrored).
-    final losersMaxRound =
-        losersMatches.isEmpty ? 0 : _maxRound(losersMatches);
+    final losersMaxRound = losersMatches.isEmpty ? 0 : _maxRound(losersMatches);
     final losersByRound = _groupByRound(losersMatches);
     for (var r = 1; r <= losersMaxRound; r++) {
       globalNumber = _numberMatchesSequentially(
@@ -164,7 +159,9 @@ abstract final class MatchNumberingUtility {
         return a.matchNumberInRound.compareTo(b.matchNumberInRound);
       });
     for (final match in grandFinalsSorted) {
-      result[match.id] = globalNumber++;
+      if (match.resultType != MatchResultType.bye) {
+        result[match.id] = globalNumber++;
+      }
     }
 
     return result;
@@ -195,10 +192,14 @@ abstract final class MatchNumberingUtility {
         .toList();
 
     for (final match in leftMatches) {
-      result[match.id] = globalNumber++;
+      if (match.resultType != MatchResultType.bye) {
+        result[match.id] = globalNumber++;
+      }
     }
     for (final match in rightMatches) {
-      result[match.id] = globalNumber++;
+      if (match.resultType != MatchResultType.bye) {
+        result[match.id] = globalNumber++;
+      }
     }
     return globalNumber;
   }
@@ -213,7 +214,9 @@ abstract final class MatchNumberingUtility {
   ) {
     var globalNumber = startingNumber;
     for (final match in roundMatches) {
-      result[match.id] = globalNumber++;
+      if (match.resultType != MatchResultType.bye) {
+        result[match.id] = globalNumber++;
+      }
     }
     return globalNumber;
   }
@@ -223,9 +226,7 @@ abstract final class MatchNumberingUtility {
       matches.map((m) => m.roundNumber).reduce(max);
 
   /// Groups matches by round, sorted by [matchNumberInRound] within each round.
-  static Map<int, List<MatchEntity>> _groupByRound(
-    List<MatchEntity> matches,
-  ) {
+  static Map<int, List<MatchEntity>> _groupByRound(List<MatchEntity> matches) {
     final map = <int, List<MatchEntity>>{};
     for (final m in matches) {
       map.putIfAbsent(m.roundNumber, () => []).add(m);

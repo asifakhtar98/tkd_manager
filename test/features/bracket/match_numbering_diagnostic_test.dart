@@ -35,13 +35,22 @@ void main() {
   /// or duplicates.
   void expectContiguousNumbering(Map<String, int> numbering) {
     final expectedLength = numbering.length;
-    expect(numbering.values.toSet().length, expectedLength,
-        reason: 'Numbering must have no duplicates');
+    expect(
+      numbering.values.toSet().length,
+      expectedLength,
+      reason: 'Numbering must have no duplicates',
+    );
     if (expectedLength > 0) {
-      expect(numbering.values.reduce(min), 1,
-          reason: 'Numbering must start at 1');
-      expect(numbering.values.reduce(max), expectedLength,
-          reason: 'Numbering must be contiguous to N');
+      expect(
+        numbering.values.reduce(min),
+        1,
+        reason: 'Numbering must start at 1',
+      );
+      expect(
+        numbering.values.reduce(max),
+        expectedLength,
+        reason: 'Numbering must be contiguous to N',
+      );
     }
   }
 
@@ -50,20 +59,23 @@ void main() {
     List<MatchEntity> matches,
     Map<String, int> numbering,
   ) {
-    final maxRound =
-        matches.isEmpty ? 0 : matches.map((m) => m.roundNumber).reduce(max);
+    final maxRound = matches.isEmpty
+        ? 0
+        : matches.map((m) => m.roundNumber).reduce(max);
     final byRound = groupByRound(matches);
 
     debugPrint('\n=== $label ===');
     for (var roundIndex = 1; roundIndex <= maxRound; roundIndex++) {
       final roundMatches = byRound[roundIndex] ?? [];
-      final descriptions = roundMatches.map((m) {
-        final displayNumber = numbering[m.id] ?? -1;
-        final byeMarker = m.resultType == MatchResultType.bye ? ',BYE' : '';
-        final bracketPrefix =
-            '${m.bracketId.substring(0, min(2, m.bracketId.length))}:';
-        return '$displayNumber($bracketPrefix${m.matchNumberInRound}$byeMarker)';
-      }).join(', ');
+      final descriptions = roundMatches
+          .map((m) {
+            final displayNumber = numbering[m.id] ?? -1;
+            final byeMarker = m.resultType == MatchResultType.bye ? ',BYE' : '';
+            final bracketPrefix =
+                '${m.bracketId.substring(0, min(2, m.bracketId.length))}:';
+            return '$displayNumber($bracketPrefix${m.matchNumberInRound}$byeMarker)';
+          })
+          .join(', ');
       debugPrint('  R$roundIndex: $descriptions');
     }
   }
@@ -74,7 +86,7 @@ void main() {
 
   group('MatchNumberingUtility — Single Elimination', () {
     ({List<MatchEntity> matches, Map<String, int> numbering})
-        generateSingleEliminationBracket(
+    generateSingleEliminationBracket(
       int playerCount, {
       bool includeThirdPlaceMatch = false,
     }) {
@@ -119,11 +131,11 @@ void main() {
       expect(byRound[2]!.length, 1);
       expectContiguousNumbering(numbering);
 
-      // Left match (M1) numbered before right match (M2)
-      expect(numbering[byRound[1]![0].id], 1);
-      expect(numbering[byRound[1]![1].id], 2);
-      // Final is last
-      expect(numbering[byRound[2]![0].id], 3);
+      // Left match (M1) is BYE (no number). Right match (M2) is numbered 1.
+      expect(numbering[byRound[1]![0].id], isNull);
+      expect(numbering[byRound[1]![1].id], 1);
+      // Final is 2
+      expect(numbering[byRound[2]![0].id], 2);
     });
 
     test('4-player bracket: left-first per round, final last', () {
@@ -164,8 +176,10 @@ void main() {
     });
 
     test('8-player with 3rd place: 3rd place numbered before final', () {
-      final (:matches, :numbering) =
-          generateSingleEliminationBracket(8, includeThirdPlaceMatch: true);
+      final (:matches, :numbering) = generateSingleEliminationBracket(
+        8,
+        includeThirdPlaceMatch: true,
+      );
       final byRound = groupByRound(matches);
       debugPrintNumbering('SE 8 players + 3rd place', matches, numbering);
 
@@ -189,21 +203,25 @@ void main() {
       debugPrintNumbering('SE 14 players', matches, numbering);
 
       expectContiguousNumbering(numbering);
-      expect(numbering.length, 15);
+      expect(numbering.length, 13); // 15 total matches - 2 BYEs
 
-      // R1: left M1-M4 → 1-4, right M5-M8 → 5-8
+      // R1: left M1-M4 (M1 is BYE) → null, 1-3
+      // right M5-M8 (M5 is BYE) → null, 4-6
       final r1 = byRound[1]!;
-      for (var i = 0; i < 4; i++) {
-        expect(numbering[r1[i].id], i + 1);
-      }
-      for (var i = 4; i < 8; i++) {
-        expect(numbering[r1[i].id], i + 1);
-      }
+      expect(numbering[r1[0].id], isNull);
+      expect(numbering[r1[1].id], 1);
+      expect(numbering[r1[2].id], 2);
+      expect(numbering[r1[3].id], 3);
+
+      expect(numbering[r1[4].id], isNull);
+      expect(numbering[r1[5].id], 4);
+      expect(numbering[r1[6].id], 5);
+      expect(numbering[r1[7].id], 6);
 
       // Final is last
       final maxRound = byRound.keys.reduce(max);
       final finalRound = byRound[maxRound]!;
-      expect(numbering[finalRound[0].id], 15);
+      expect(numbering[finalRound[0].id], 13);
     });
 
     test('16-player: all assignments contiguous 1..15', () {
@@ -215,29 +233,32 @@ void main() {
     });
 
     test('14-player with 3rd place: contiguous 1..16', () {
-      final (:matches, :numbering) =
-          generateSingleEliminationBracket(14, includeThirdPlaceMatch: true);
+      final (:matches, :numbering) = generateSingleEliminationBracket(
+        14,
+        includeThirdPlaceMatch: true,
+      );
       debugPrintNumbering('SE 14 players + 3rd place', matches, numbering);
 
-      expect(numbering.length, 16);
+      expect(numbering.length, 14); // 16 total matches - 2 BYEs
       expectContiguousNumbering(numbering);
 
       // 3rd place (last round, M2) is numbered before final (last round, M1)
-      final maxRound =
-          matches.map((m) => m.roundNumber).reduce(max);
+      final maxRound = matches.map((m) => m.roundNumber).reduce(max);
       final lastRoundMatches = matches
           .where((m) => m.roundNumber == maxRound)
           .toList();
-      final finalMatch =
-          lastRoundMatches.firstWhere((m) => m.matchNumberInRound == 1);
-      final thirdPlaceMatch =
-          lastRoundMatches.firstWhere((m) => m.matchNumberInRound == 2);
+      final finalMatch = lastRoundMatches.firstWhere(
+        (m) => m.matchNumberInRound == 1,
+      );
+      final thirdPlaceMatch = lastRoundMatches.firstWhere(
+        (m) => m.matchNumberInRound == 2,
+      );
       expect(
         numbering[thirdPlaceMatch.id]!,
         lessThan(numbering[finalMatch.id]!),
         reason: '3rd place must be numbered before the final',
       );
-      expect(numbering[finalMatch.id], 16);
+      expect(numbering[finalMatch.id], 14);
     });
   });
 
@@ -272,10 +293,12 @@ void main() {
 
       return (
         allMatches: result.allMatches,
-        winnersMatches:
-            result.allMatches.where((m) => m.bracketId == 'wb').toList(),
-        losersMatches:
-            result.allMatches.where((m) => m.bracketId == 'lb').toList(),
+        winnersMatches: result.allMatches
+            .where((m) => m.bracketId == 'wb')
+            .toList(),
+        losersMatches: result.allMatches
+            .where((m) => m.bracketId == 'lb')
+            .toList(),
         grandFinalsMatches: result.allMatches
             .where((m) => m.bracketId != 'wb' && m.bracketId != 'lb')
             .toList(),
@@ -296,28 +319,41 @@ void main() {
       final result = generateDoubleEliminationBracket(4);
       debugPrintNumbering('DE 4 WB', result.winnersMatches, result.numbering);
       debugPrintNumbering('DE 4 LB', result.losersMatches, result.numbering);
-      debugPrintNumbering('DE 4 GF', result.grandFinalsMatches, result.numbering);
+      debugPrintNumbering(
+        'DE 4 GF',
+        result.grandFinalsMatches,
+        result.numbering,
+      );
 
       expectContiguousNumbering(result.numbering);
 
       // WB before LB before GF
       if (result.winnersMatches.isNotEmpty && result.losersMatches.isNotEmpty) {
-        final maxWinnersNumber =
-            result.winnersMatches.map((m) => result.numbering[m.id]!).reduce(max);
-        final minLosersNumber =
-            result.losersMatches.map((m) => result.numbering[m.id]!).reduce(min);
-        expect(maxWinnersNumber, lessThan(minLosersNumber),
-            reason: 'WB must be numbered entirely before LB');
+        final maxWinnersNumber = result.winnersMatches
+            .map((m) => result.numbering[m.id]!)
+            .reduce(max);
+        final minLosersNumber = result.losersMatches
+            .map((m) => result.numbering[m.id]!)
+            .reduce(min);
+        expect(
+          maxWinnersNumber,
+          lessThan(minLosersNumber),
+          reason: 'WB must be numbered entirely before LB',
+        );
       }
       if (result.losersMatches.isNotEmpty &&
           result.grandFinalsMatches.isNotEmpty) {
-        final maxLosersNumber =
-            result.losersMatches.map((m) => result.numbering[m.id]!).reduce(max);
+        final maxLosersNumber = result.losersMatches
+            .map((m) => result.numbering[m.id]!)
+            .reduce(max);
         final minGrandFinalNumber = result.grandFinalsMatches
             .map((m) => result.numbering[m.id]!)
             .reduce(min);
-        expect(maxLosersNumber, lessThan(minGrandFinalNumber),
-            reason: 'LB must be numbered entirely before GF');
+        expect(
+          maxLosersNumber,
+          lessThan(minGrandFinalNumber),
+          reason: 'LB must be numbered entirely before GF',
+        );
       }
     });
 
@@ -325,26 +361,39 @@ void main() {
       final result = generateDoubleEliminationBracket(8);
       debugPrintNumbering('DE 8 WB', result.winnersMatches, result.numbering);
       debugPrintNumbering('DE 8 LB', result.losersMatches, result.numbering);
-      debugPrintNumbering('DE 8 GF', result.grandFinalsMatches, result.numbering);
+      debugPrintNumbering(
+        'DE 8 GF',
+        result.grandFinalsMatches,
+        result.numbering,
+      );
 
       expectContiguousNumbering(result.numbering);
       expect(result.numbering.length, result.allMatches.length);
 
       // WB → LB → GF ordering
-      final maxWinnersNumber =
-          result.winnersMatches.map((m) => result.numbering[m.id]!).reduce(max);
-      final minLosersNumber =
-          result.losersMatches.map((m) => result.numbering[m.id]!).reduce(min);
-      final maxLosersNumber =
-          result.losersMatches.map((m) => result.numbering[m.id]!).reduce(max);
+      final maxWinnersNumber = result.winnersMatches
+          .map((m) => result.numbering[m.id]!)
+          .reduce(max);
+      final minLosersNumber = result.losersMatches
+          .map((m) => result.numbering[m.id]!)
+          .reduce(min);
+      final maxLosersNumber = result.losersMatches
+          .map((m) => result.numbering[m.id]!)
+          .reduce(max);
       final minGrandFinalNumber = result.grandFinalsMatches
           .map((m) => result.numbering[m.id]!)
           .reduce(min);
 
-      expect(maxWinnersNumber, lessThan(minLosersNumber),
-          reason: 'All WB matches before LB');
-      expect(maxLosersNumber, lessThan(minGrandFinalNumber),
-          reason: 'All LB matches before GF');
+      expect(
+        maxWinnersNumber,
+        lessThan(minLosersNumber),
+        reason: 'All WB matches before LB',
+      );
+      expect(
+        maxLosersNumber,
+        lessThan(minGrandFinalNumber),
+        reason: 'All LB matches before GF',
+      );
 
       // WB R1 specifically: left-first/right-second
       final wbByRound = groupByRound(result.winnersMatches);
