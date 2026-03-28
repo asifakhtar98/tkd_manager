@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:tkd_saas/core/config/app_config.dart';
 import 'package:tkd_saas/core/router/app_routes.dart';
 
 /// Production-quality interstitial screen shown after a user confirms
@@ -59,9 +60,15 @@ class _EmailConfirmedScreenState extends State<EmailConfirmedScreen>
     final ColorScheme colorScheme = theme.colorScheme;
 
     return Scaffold(
-      backgroundColor: colorScheme.surfaceContainerLowest,
-      body: Center(
-        child: SingleChildScrollView(
+      body: Container(
+        decoration: const BoxDecoration(
+          image: DecorationImage(
+            image: NetworkImage(AppConfig.authBackgroundImage),
+            fit: BoxFit.cover,
+          ),
+        ),
+        child: Center(
+          child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 48),
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 420),
@@ -152,6 +159,7 @@ class _EmailConfirmedScreenState extends State<EmailConfirmedScreen>
             ),
           ),
         ),
+      ),
       ),
     );
   }

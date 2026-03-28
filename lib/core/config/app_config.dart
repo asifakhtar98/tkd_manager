@@ -14,4 +14,8 @@ abstract final class AppConfig {
   ///
   /// Flip to `true` to restore the full Supabase-backed auth flow.
   static const bool isAuthenticationEnabled = true;
+
+  /// Background image URL for auth screens.
+  static const String authBackgroundImage =
+      'https://lldlunqzkltclpfzpjxh.supabase.co/storage/v1/object/public/assets/tkd_bw_534.jpg';
 }

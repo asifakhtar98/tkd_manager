@@ -1,11 +1,11 @@
 {
-    "name": "tkd_saas",
-    "short_name": "tkd_saas",
+    "name": "TKD Tournament Manager",
+    "short_name": "TKD Manager",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "Easy-to-use tool for Taekwondo organizers to automatically create brackets and manage scores offline.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

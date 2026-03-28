@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:tkd_saas/core/config/app_config.dart';
 import 'package:tkd_saas/features/auth/presentation/bloc/authentication_bloc.dart';
 import 'package:tkd_saas/features/auth/presentation/utils/auth_snackbar_listener.dart';
 import 'package:tkd_saas/features/auth/presentation/utils/auth_validators.dart';
@@ -54,9 +55,15 @@ class _PasswordResetScreenState extends State<PasswordResetScreen> {
     final ColorScheme colorScheme = theme.colorScheme;
 
     return Scaffold(
-      backgroundColor: colorScheme.surfaceContainerLowest,
-      body: Center(
-        child: SingleChildScrollView(
+      body: Container(
+        decoration: const BoxDecoration(
+          image: DecorationImage(
+            image: NetworkImage(AppConfig.authBackgroundImage),
+            fit: BoxFit.cover,
+          ),
+        ),
+        child: Center(
+          child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 48),
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 420),
@@ -156,6 +163,7 @@ class _PasswordResetScreenState extends State<PasswordResetScreen> {
             ),
           ),
         ),
+      ),
       ),
     );
   }
