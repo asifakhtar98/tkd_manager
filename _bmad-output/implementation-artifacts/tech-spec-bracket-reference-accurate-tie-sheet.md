@@ -81,7 +81,7 @@ The reference image is a **2ND FEDERATION CUP – 2026** official tie sheet. Her
 
 ### Header Section (top of sheet)
 - **Line 1**: Tournament name in large bold text, centered: `"2ND FEDERATION CUP – 2026 (Kyorugi & Poomsae)"`
-- **Line 2**: Date + venue in smaller text: `"18 Jan. to 22 Jan, 2026, SMS Indoor Stadium, Jaipur, Rajasthan"`
+- **Line 2**: Date + venue in smaller text: `"18 Jan. to 22 Jan, 2022, SMS Indoor Stadium, Jaipur, Rajasthan"`
 - **Line 3**: Organizer in bold: `"Organised by : INDIA TAEKWONDO"`
 - **Line 4**: A horizontal divider line spanning the full width. Below it on the far left: `"No."`. In the center: the category word (e.g., `"JUNIOR"`). On the right side: the gender/division word (e.g., `"BOYS"`).
 

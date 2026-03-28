@@ -21,6 +21,12 @@ class TournamentDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<TournamentBloc, TournamentState>(
       builder: (context, state) {
+        if (state.isLoading) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+
         final tournament = state.tournaments
             .where((t) => t.id == tournamentId)
             .firstOrNull;

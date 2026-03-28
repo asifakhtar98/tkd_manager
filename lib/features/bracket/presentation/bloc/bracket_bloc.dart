@@ -42,6 +42,7 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
     on<BracketParticipantSlotSwapped>(_handleParticipantSlotSwapped);
     on<BracketParticipantDetailsUpdated>(_handleParticipantDetailsUpdated);
     on<BracketSaveRequested>(_handleBracketSaveRequested);
+    on<BracketSaveOutcomeReceived>(_handleBracketSaveOutcomeReceived);
     on<BracketLoadFromSnapshotRequested>(_handleLoadFromSnapshotRequested);
   }
 
@@ -854,12 +855,29 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
   ) {
     if (state is! BracketLoadSuccess) return;
     
-    // We emit `isSaving: true` if we were performing async ops.
-    // However, saving to the TournamentBloc in-memory store is synchronous,
-    // so we can just emit `hasUnsavedChanges: false` directly.
+    // Set isSaving to true to show loading indicator in UI.
+    // Wait for the TournamentBloc to finish before clearing hasUnsavedChanges.
     emit((state as BracketLoadSuccess).copyWith(
-      isSaving: false,
-      hasUnsavedChanges: false,
+      isSaving: true,
     ));
+  }
+
+  void _handleBracketSaveOutcomeReceived(
+    BracketSaveOutcomeReceived event,
+    Emitter<BracketState> emit,
+  ) {
+    if (state is! BracketLoadSuccess) return;
+
+    if (event.isSuccess) {
+      emit((state as BracketLoadSuccess).copyWith(
+        isSaving: false,
+        hasUnsavedChanges: false,
+      ));
+    } else {
+      emit((state as BracketLoadSuccess).copyWith(
+        isSaving: false,
+        // hasUnsavedChanges remains true because the save failed
+      ));
+    }
   }
 }

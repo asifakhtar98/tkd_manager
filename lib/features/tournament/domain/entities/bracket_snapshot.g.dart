@@ -26,7 +26,6 @@ _BracketSnapshot _$BracketSnapshotFromJson(Map<String, dynamic> json) =>
           .map((e) => ParticipantEntity.fromJson(e as Map<String, dynamic>))
           .toList(),
       result: BracketResult.fromJson(json['result'] as Map<String, dynamic>),
-      isDeleted: json['isDeleted'] as bool? ?? false,
       updatedAt: DateTime.parse(json['updatedAt'] as String),
     );
 
@@ -40,11 +39,10 @@ Map<String, dynamic> _$BracketSnapshotToJson(_BracketSnapshot instance) =>
       'participantCount': instance.participantCount,
       'includeThirdPlaceMatch': instance.includeThirdPlaceMatch,
       'dojangSeparation': instance.dojangSeparation,
-      'classification': instance.classification,
+      'classification': instance.classification.toJson(),
       'generatedAt': instance.generatedAt.toIso8601String(),
-      'participants': instance.participants,
-      'result': instance.result,
-      'isDeleted': instance.isDeleted,
+      'participants': instance.participants.map((e) => e.toJson()).toList(),
+      'result': instance.result.toJson(),
       'updatedAt': instance.updatedAt.toIso8601String(),
     };
 

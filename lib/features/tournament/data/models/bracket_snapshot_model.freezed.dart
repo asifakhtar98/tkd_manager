@@ -3,7 +3,7 @@
 // ignore_for_file: type=lint
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
-part of 'bracket_snapshot.dart';
+part of 'bracket_snapshot_model.dart';
 
 // **************************************************************************
 // FreezedGenerator
@@ -13,32 +13,22 @@ part of 'bracket_snapshot.dart';
 T _$identity<T>(T value) => value;
 
 /// @nodoc
-mixin _$BracketSnapshot {
+mixin _$BracketSnapshotModel {
 
-/// Unique ID for this snapshot (UUID v4).
- String get id;/// Foreign key to 'auth.users'. The owner of the tournament snapshot.
- String get userId;/// Foreign key to 'tournaments'. Which tournament this bracket belongs to.
- String get tournamentId;/// Display label, e.g. "Single Elim — 8 Players".
- String get label;/// The elimination format used for this bracket generation.
- BracketFormat get format; int get participantCount; bool get includeThirdPlaceMatch; bool get dojangSeparation;/// Bracket-level classification labels displayed in the tie sheet header.
- BracketClassification get classification;/// Wall-clock time when the bracket was generated.
- DateTime get generatedAt;/// Full participant list at the time of generation.
- List<ParticipantEntity> get participants;/// The generated bracket data (single or double elimination union).
- BracketResult get result;/// Last update timestamp.
- DateTime get updatedAt;
-/// Create a copy of BracketSnapshot
+ String get id; String get userId; String get tournamentId; String get label; BracketFormat get format; int get participantCount; bool get includeThirdPlaceMatch; bool get dojangSeparation; BracketClassification get classification; DateTime get generatedAt; List<ParticipantEntity> get participants; BracketResult get result; DateTime get updatedAt;
+/// Create a copy of BracketSnapshotModel
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
-$BracketSnapshotCopyWith<BracketSnapshot> get copyWith => _$BracketSnapshotCopyWithImpl<BracketSnapshot>(this as BracketSnapshot, _$identity);
+$BracketSnapshotModelCopyWith<BracketSnapshotModel> get copyWith => _$BracketSnapshotModelCopyWithImpl<BracketSnapshotModel>(this as BracketSnapshotModel, _$identity);
 
-  /// Serializes this BracketSnapshot to a JSON map.
+  /// Serializes this BracketSnapshotModel to a JSON map.
   Map<String, dynamic> toJson();
 
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is BracketSnapshot&&(identical(other.id, id) || other.id == id)&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.tournamentId, tournamentId) || other.tournamentId == tournamentId)&&(identical(other.label, label) || other.label == label)&&(identical(other.format, format) || other.format == format)&&(identical(other.participantCount, participantCount) || other.participantCount == participantCount)&&(identical(other.includeThirdPlaceMatch, includeThirdPlaceMatch) || other.includeThirdPlaceMatch == includeThirdPlaceMatch)&&(identical(other.dojangSeparation, dojangSeparation) || other.dojangSeparation == dojangSeparation)&&(identical(other.classification, classification) || other.classification == classification)&&(identical(other.generatedAt, generatedAt) || other.generatedAt == generatedAt)&&const DeepCollectionEquality().equals(other.participants, participants)&&(identical(other.result, result) || other.result == result)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is BracketSnapshotModel&&(identical(other.id, id) || other.id == id)&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.tournamentId, tournamentId) || other.tournamentId == tournamentId)&&(identical(other.label, label) || other.label == label)&&(identical(other.format, format) || other.format == format)&&(identical(other.participantCount, participantCount) || other.participantCount == participantCount)&&(identical(other.includeThirdPlaceMatch, includeThirdPlaceMatch) || other.includeThirdPlaceMatch == includeThirdPlaceMatch)&&(identical(other.dojangSeparation, dojangSeparation) || other.dojangSeparation == dojangSeparation)&&(identical(other.classification, classification) || other.classification == classification)&&(identical(other.generatedAt, generatedAt) || other.generatedAt == generatedAt)&&const DeepCollectionEquality().equals(other.participants, participants)&&(identical(other.result, result) || other.result == result)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -47,15 +37,15 @@ int get hashCode => Object.hash(runtimeType,id,userId,tournamentId,label,format,
 
 @override
 String toString() {
-  return 'BracketSnapshot(id: $id, userId: $userId, tournamentId: $tournamentId, label: $label, format: $format, participantCount: $participantCount, includeThirdPlaceMatch: $includeThirdPlaceMatch, dojangSeparation: $dojangSeparation, classification: $classification, generatedAt: $generatedAt, participants: $participants, result: $result, updatedAt: $updatedAt)';
+  return 'BracketSnapshotModel(id: $id, userId: $userId, tournamentId: $tournamentId, label: $label, format: $format, participantCount: $participantCount, includeThirdPlaceMatch: $includeThirdPlaceMatch, dojangSeparation: $dojangSeparation, classification: $classification, generatedAt: $generatedAt, participants: $participants, result: $result, updatedAt: $updatedAt)';
 }
 
 
 }
 
 /// @nodoc
-abstract mixin class $BracketSnapshotCopyWith<$Res>  {
-  factory $BracketSnapshotCopyWith(BracketSnapshot value, $Res Function(BracketSnapshot) _then) = _$BracketSnapshotCopyWithImpl;
+abstract mixin class $BracketSnapshotModelCopyWith<$Res>  {
+  factory $BracketSnapshotModelCopyWith(BracketSnapshotModel value, $Res Function(BracketSnapshotModel) _then) = _$BracketSnapshotModelCopyWithImpl;
 @useResult
 $Res call({
  String id, String userId, String tournamentId, String label, BracketFormat format, int participantCount, bool includeThirdPlaceMatch, bool dojangSeparation, BracketClassification classification, DateTime generatedAt, List<ParticipantEntity> participants, BracketResult result, DateTime updatedAt
@@ -66,14 +56,14 @@ $BracketClassificationCopyWith<$Res> get classification;$BracketResultCopyWith<$
 
 }
 /// @nodoc
-class _$BracketSnapshotCopyWithImpl<$Res>
-    implements $BracketSnapshotCopyWith<$Res> {
-  _$BracketSnapshotCopyWithImpl(this._self, this._then);
+class _$BracketSnapshotModelCopyWithImpl<$Res>
+    implements $BracketSnapshotModelCopyWith<$Res> {
+  _$BracketSnapshotModelCopyWithImpl(this._self, this._then);
 
-  final BracketSnapshot _self;
-  final $Res Function(BracketSnapshot) _then;
+  final BracketSnapshotModel _self;
+  final $Res Function(BracketSnapshotModel) _then;
 
-/// Create a copy of BracketSnapshot
+/// Create a copy of BracketSnapshotModel
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? userId = null,Object? tournamentId = null,Object? label = null,Object? format = null,Object? participantCount = null,Object? includeThirdPlaceMatch = null,Object? dojangSeparation = null,Object? classification = null,Object? generatedAt = null,Object? participants = null,Object? result = null,Object? updatedAt = null,}) {
   return _then(_self.copyWith(
@@ -93,7 +83,7 @@ as BracketResult,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // i
 as DateTime,
   ));
 }
-/// Create a copy of BracketSnapshot
+/// Create a copy of BracketSnapshotModel
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
@@ -102,7 +92,7 @@ $BracketClassificationCopyWith<$Res> get classification {
   return $BracketClassificationCopyWith<$Res>(_self.classification, (value) {
     return _then(_self.copyWith(classification: value));
   });
-}/// Create a copy of BracketSnapshot
+}/// Create a copy of BracketSnapshotModel
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
@@ -115,8 +105,8 @@ $BracketResultCopyWith<$Res> get result {
 }
 
 
-/// Adds pattern-matching-related methods to [BracketSnapshot].
-extension BracketSnapshotPatterns on BracketSnapshot {
+/// Adds pattern-matching-related methods to [BracketSnapshotModel].
+extension BracketSnapshotModelPatterns on BracketSnapshotModel {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
 /// It is equivalent to doing:
@@ -129,10 +119,10 @@ extension BracketSnapshotPatterns on BracketSnapshot {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _BracketSnapshot value)?  $default,{required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _BracketSnapshotModel value)?  $default,{required TResult orElse(),}){
 final _that = this;
 switch (_that) {
-case _BracketSnapshot() when $default != null:
+case _BracketSnapshotModel() when $default != null:
 return $default(_that);case _:
   return orElse();
 
@@ -151,10 +141,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _BracketSnapshot value)  $default,){
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _BracketSnapshotModel value)  $default,){
 final _that = this;
 switch (_that) {
-case _BracketSnapshot():
+case _BracketSnapshotModel():
 return $default(_that);case _:
   throw StateError('Unexpected subclass');
 
@@ -172,10 +162,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _BracketSnapshot value)?  $default,){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _BracketSnapshotModel value)?  $default,){
 final _that = this;
 switch (_that) {
-case _BracketSnapshot() when $default != null:
+case _BracketSnapshotModel() when $default != null:
 return $default(_that);case _:
   return null;
 
@@ -195,7 +185,7 @@ return $default(_that);case _:
 
 @optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String userId,  String tournamentId,  String label,  BracketFormat format,  int participantCount,  bool includeThirdPlaceMatch,  bool dojangSeparation,  BracketClassification classification,  DateTime generatedAt,  List<ParticipantEntity> participants,  BracketResult result,  DateTime updatedAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
-case _BracketSnapshot() when $default != null:
+case _BracketSnapshotModel() when $default != null:
 return $default(_that.id,_that.userId,_that.tournamentId,_that.label,_that.format,_that.participantCount,_that.includeThirdPlaceMatch,_that.dojangSeparation,_that.classification,_that.generatedAt,_that.participants,_that.result,_that.updatedAt);case _:
   return orElse();
 
@@ -216,7 +206,7 @@ return $default(_that.id,_that.userId,_that.tournamentId,_that.label,_that.forma
 
 @optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String userId,  String tournamentId,  String label,  BracketFormat format,  int participantCount,  bool includeThirdPlaceMatch,  bool dojangSeparation,  BracketClassification classification,  DateTime generatedAt,  List<ParticipantEntity> participants,  BracketResult result,  DateTime updatedAt)  $default,) {final _that = this;
 switch (_that) {
-case _BracketSnapshot():
+case _BracketSnapshotModel():
 return $default(_that.id,_that.userId,_that.tournamentId,_that.label,_that.format,_that.participantCount,_that.includeThirdPlaceMatch,_that.dojangSeparation,_that.classification,_that.generatedAt,_that.participants,_that.result,_that.updatedAt);case _:
   throw StateError('Unexpected subclass');
 
@@ -236,7 +226,7 @@ return $default(_that.id,_that.userId,_that.tournamentId,_that.label,_that.forma
 
 @optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String userId,  String tournamentId,  String label,  BracketFormat format,  int participantCount,  bool includeThirdPlaceMatch,  bool dojangSeparation,  BracketClassification classification,  DateTime generatedAt,  List<ParticipantEntity> participants,  BracketResult result,  DateTime updatedAt)?  $default,) {final _that = this;
 switch (_that) {
-case _BracketSnapshot() when $default != null:
+case _BracketSnapshotModel() when $default != null:
 return $default(_that.id,_that.userId,_that.tournamentId,_that.label,_that.format,_that.participantCount,_that.includeThirdPlaceMatch,_that.dojangSeparation,_that.classification,_that.generatedAt,_that.participants,_that.result,_that.updatedAt);case _:
   return null;
 
@@ -246,57 +236,46 @@ return $default(_that.id,_that.userId,_that.tournamentId,_that.label,_that.forma
 }
 
 /// @nodoc
-@JsonSerializable()
 
-class _BracketSnapshot implements BracketSnapshot {
-  const _BracketSnapshot({required this.id, required this.userId, required this.tournamentId, required this.label, required this.format, required this.participantCount, required this.includeThirdPlaceMatch, required this.dojangSeparation, this.classification = const BracketClassification(), required this.generatedAt, required final  List<ParticipantEntity> participants, required this.result, required this.updatedAt}): _participants = participants;
-  factory _BracketSnapshot.fromJson(Map<String, dynamic> json) => _$BracketSnapshotFromJson(json);
+@JsonSerializable(explicitToJson: true, fieldRename: FieldRename.snake)
+class _BracketSnapshotModel extends BracketSnapshotModel {
+  const _BracketSnapshotModel({required this.id, required this.userId, required this.tournamentId, required this.label, required this.format, required this.participantCount, required this.includeThirdPlaceMatch, required this.dojangSeparation, this.classification = const BracketClassification(), required this.generatedAt, required final  List<ParticipantEntity> participants, required this.result, required this.updatedAt}): _participants = participants,super._();
+  factory _BracketSnapshotModel.fromJson(Map<String, dynamic> json) => _$BracketSnapshotModelFromJson(json);
 
-/// Unique ID for this snapshot (UUID v4).
 @override final  String id;
-/// Foreign key to 'auth.users'. The owner of the tournament snapshot.
 @override final  String userId;
-/// Foreign key to 'tournaments'. Which tournament this bracket belongs to.
 @override final  String tournamentId;
-/// Display label, e.g. "Single Elim — 8 Players".
 @override final  String label;
-/// The elimination format used for this bracket generation.
 @override final  BracketFormat format;
 @override final  int participantCount;
 @override final  bool includeThirdPlaceMatch;
 @override final  bool dojangSeparation;
-/// Bracket-level classification labels displayed in the tie sheet header.
 @override@JsonKey() final  BracketClassification classification;
-/// Wall-clock time when the bracket was generated.
 @override final  DateTime generatedAt;
-/// Full participant list at the time of generation.
  final  List<ParticipantEntity> _participants;
-/// Full participant list at the time of generation.
 @override List<ParticipantEntity> get participants {
   if (_participants is EqualUnmodifiableListView) return _participants;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableListView(_participants);
 }
 
-/// The generated bracket data (single or double elimination union).
 @override final  BracketResult result;
-/// Last update timestamp.
 @override final  DateTime updatedAt;
 
-/// Create a copy of BracketSnapshot
+/// Create a copy of BracketSnapshotModel
 /// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
-_$BracketSnapshotCopyWith<_BracketSnapshot> get copyWith => __$BracketSnapshotCopyWithImpl<_BracketSnapshot>(this, _$identity);
+_$BracketSnapshotModelCopyWith<_BracketSnapshotModel> get copyWith => __$BracketSnapshotModelCopyWithImpl<_BracketSnapshotModel>(this, _$identity);
 
 @override
 Map<String, dynamic> toJson() {
-  return _$BracketSnapshotToJson(this, );
+  return _$BracketSnapshotModelToJson(this, );
 }
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _BracketSnapshot&&(identical(other.id, id) || other.id == id)&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.tournamentId, tournamentId) || other.tournamentId == tournamentId)&&(identical(other.label, label) || other.label == label)&&(identical(other.format, format) || other.format == format)&&(identical(other.participantCount, participantCount) || other.participantCount == participantCount)&&(identical(other.includeThirdPlaceMatch, includeThirdPlaceMatch) || other.includeThirdPlaceMatch == includeThirdPlaceMatch)&&(identical(other.dojangSeparation, dojangSeparation) || other.dojangSeparation == dojangSeparation)&&(identical(other.classification, classification) || other.classification == classification)&&(identical(other.generatedAt, generatedAt) || other.generatedAt == generatedAt)&&const DeepCollectionEquality().equals(other._participants, _participants)&&(identical(other.result, result) || other.result == result)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _BracketSnapshotModel&&(identical(other.id, id) || other.id == id)&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.tournamentId, tournamentId) || other.tournamentId == tournamentId)&&(identical(other.label, label) || other.label == label)&&(identical(other.format, format) || other.format == format)&&(identical(other.participantCount, participantCount) || other.participantCount == participantCount)&&(identical(other.includeThirdPlaceMatch, includeThirdPlaceMatch) || other.includeThirdPlaceMatch == includeThirdPlaceMatch)&&(identical(other.dojangSeparation, dojangSeparation) || other.dojangSeparation == dojangSeparation)&&(identical(other.classification, classification) || other.classification == classification)&&(identical(other.generatedAt, generatedAt) || other.generatedAt == generatedAt)&&const DeepCollectionEquality().equals(other._participants, _participants)&&(identical(other.result, result) || other.result == result)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -305,15 +284,15 @@ int get hashCode => Object.hash(runtimeType,id,userId,tournamentId,label,format,
 
 @override
 String toString() {
-  return 'BracketSnapshot(id: $id, userId: $userId, tournamentId: $tournamentId, label: $label, format: $format, participantCount: $participantCount, includeThirdPlaceMatch: $includeThirdPlaceMatch, dojangSeparation: $dojangSeparation, classification: $classification, generatedAt: $generatedAt, participants: $participants, result: $result, updatedAt: $updatedAt)';
+  return 'BracketSnapshotModel(id: $id, userId: $userId, tournamentId: $tournamentId, label: $label, format: $format, participantCount: $participantCount, includeThirdPlaceMatch: $includeThirdPlaceMatch, dojangSeparation: $dojangSeparation, classification: $classification, generatedAt: $generatedAt, participants: $participants, result: $result, updatedAt: $updatedAt)';
 }
 
 
 }
 
 /// @nodoc
-abstract mixin class _$BracketSnapshotCopyWith<$Res> implements $BracketSnapshotCopyWith<$Res> {
-  factory _$BracketSnapshotCopyWith(_BracketSnapshot value, $Res Function(_BracketSnapshot) _then) = __$BracketSnapshotCopyWithImpl;
+abstract mixin class _$BracketSnapshotModelCopyWith<$Res> implements $BracketSnapshotModelCopyWith<$Res> {
+  factory _$BracketSnapshotModelCopyWith(_BracketSnapshotModel value, $Res Function(_BracketSnapshotModel) _then) = __$BracketSnapshotModelCopyWithImpl;
 @override @useResult
 $Res call({
  String id, String userId, String tournamentId, String label, BracketFormat format, int participantCount, bool includeThirdPlaceMatch, bool dojangSeparation, BracketClassification classification, DateTime generatedAt, List<ParticipantEntity> participants, BracketResult result, DateTime updatedAt
@@ -324,17 +303,17 @@ $Res call({
 
 }
 /// @nodoc
-class __$BracketSnapshotCopyWithImpl<$Res>
-    implements _$BracketSnapshotCopyWith<$Res> {
-  __$BracketSnapshotCopyWithImpl(this._self, this._then);
+class __$BracketSnapshotModelCopyWithImpl<$Res>
+    implements _$BracketSnapshotModelCopyWith<$Res> {
+  __$BracketSnapshotModelCopyWithImpl(this._self, this._then);
 
-  final _BracketSnapshot _self;
-  final $Res Function(_BracketSnapshot) _then;
+  final _BracketSnapshotModel _self;
+  final $Res Function(_BracketSnapshotModel) _then;
 
-/// Create a copy of BracketSnapshot
+/// Create a copy of BracketSnapshotModel
 /// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? userId = null,Object? tournamentId = null,Object? label = null,Object? format = null,Object? participantCount = null,Object? includeThirdPlaceMatch = null,Object? dojangSeparation = null,Object? classification = null,Object? generatedAt = null,Object? participants = null,Object? result = null,Object? updatedAt = null,}) {
-  return _then(_BracketSnapshot(
+  return _then(_BracketSnapshotModel(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,userId: null == userId ? _self.userId : userId // ignore: cast_nullable_to_non_nullable
 as String,tournamentId: null == tournamentId ? _self.tournamentId : tournamentId // ignore: cast_nullable_to_non_nullable
@@ -352,7 +331,7 @@ as DateTime,
   ));
 }
 
-/// Create a copy of BracketSnapshot
+/// Create a copy of BracketSnapshotModel
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
@@ -361,7 +340,7 @@ $BracketClassificationCopyWith<$Res> get classification {
   return $BracketClassificationCopyWith<$Res>(_self.classification, (value) {
     return _then(_self.copyWith(classification: value));
   });
-}/// Create a copy of BracketSnapshot
+}/// Create a copy of BracketSnapshotModel
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')

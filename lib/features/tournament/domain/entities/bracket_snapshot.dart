@@ -44,8 +44,6 @@ abstract class BracketSnapshot with _$BracketSnapshot {
     /// The generated bracket data (single or double elimination union).
     required BracketResult result,
 
-    /// Soft delete flag.
-    @Default(false) bool isDeleted,
 
     /// Last update timestamp.
     required DateTime updatedAt,

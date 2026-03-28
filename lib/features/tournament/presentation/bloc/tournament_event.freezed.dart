@@ -55,10 +55,13 @@ extension TournamentEventPatterns on TournamentEvent {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( TournamentCreated value)?  created,TResult Function( TournamentBracketSnapshotAdded value)?  bracketSnapshotAdded,TResult Function( TournamentBracketSnapshotRemoved value)?  bracketSnapshotRemoved,TResult Function( TournamentDeleted value)?  deleted,TResult Function( TournamentUpdated value)?  updated,TResult Function( TournamentBracketSnapshotUpdated value)?  bracketSnapshotUpdated,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( TournamentLoadRequested value)?  loadRequested,TResult Function( TournamentLoadMoreRequested value)?  loadMoreRequested,TResult Function( TournamentClearRequested value)?  clearRequested,TResult Function( TournamentCreated value)?  created,TResult Function( TournamentBracketSnapshotAdded value)?  bracketSnapshotAdded,TResult Function( TournamentBracketSnapshotRemoved value)?  bracketSnapshotRemoved,TResult Function( TournamentDeleted value)?  deleted,TResult Function( TournamentUpdated value)?  updated,TResult Function( TournamentBracketSnapshotUpdated value)?  bracketSnapshotUpdated,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
-case TournamentCreated() when created != null:
+case TournamentLoadRequested() when loadRequested != null:
+return loadRequested(_that);case TournamentLoadMoreRequested() when loadMoreRequested != null:
+return loadMoreRequested(_that);case TournamentClearRequested() when clearRequested != null:
+return clearRequested(_that);case TournamentCreated() when created != null:
 return created(_that);case TournamentBracketSnapshotAdded() when bracketSnapshotAdded != null:
 return bracketSnapshotAdded(_that);case TournamentBracketSnapshotRemoved() when bracketSnapshotRemoved != null:
 return bracketSnapshotRemoved(_that);case TournamentDeleted() when deleted != null:
@@ -82,10 +85,13 @@ return bracketSnapshotUpdated(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( TournamentCreated value)  created,required TResult Function( TournamentBracketSnapshotAdded value)  bracketSnapshotAdded,required TResult Function( TournamentBracketSnapshotRemoved value)  bracketSnapshotRemoved,required TResult Function( TournamentDeleted value)  deleted,required TResult Function( TournamentUpdated value)  updated,required TResult Function( TournamentBracketSnapshotUpdated value)  bracketSnapshotUpdated,}){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( TournamentLoadRequested value)  loadRequested,required TResult Function( TournamentLoadMoreRequested value)  loadMoreRequested,required TResult Function( TournamentClearRequested value)  clearRequested,required TResult Function( TournamentCreated value)  created,required TResult Function( TournamentBracketSnapshotAdded value)  bracketSnapshotAdded,required TResult Function( TournamentBracketSnapshotRemoved value)  bracketSnapshotRemoved,required TResult Function( TournamentDeleted value)  deleted,required TResult Function( TournamentUpdated value)  updated,required TResult Function( TournamentBracketSnapshotUpdated value)  bracketSnapshotUpdated,}){
 final _that = this;
 switch (_that) {
-case TournamentCreated():
+case TournamentLoadRequested():
+return loadRequested(_that);case TournamentLoadMoreRequested():
+return loadMoreRequested(_that);case TournamentClearRequested():
+return clearRequested(_that);case TournamentCreated():
 return created(_that);case TournamentBracketSnapshotAdded():
 return bracketSnapshotAdded(_that);case TournamentBracketSnapshotRemoved():
 return bracketSnapshotRemoved(_that);case TournamentDeleted():
@@ -105,10 +111,13 @@ return bracketSnapshotUpdated(_that);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( TournamentCreated value)?  created,TResult? Function( TournamentBracketSnapshotAdded value)?  bracketSnapshotAdded,TResult? Function( TournamentBracketSnapshotRemoved value)?  bracketSnapshotRemoved,TResult? Function( TournamentDeleted value)?  deleted,TResult? Function( TournamentUpdated value)?  updated,TResult? Function( TournamentBracketSnapshotUpdated value)?  bracketSnapshotUpdated,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( TournamentLoadRequested value)?  loadRequested,TResult? Function( TournamentLoadMoreRequested value)?  loadMoreRequested,TResult? Function( TournamentClearRequested value)?  clearRequested,TResult? Function( TournamentCreated value)?  created,TResult? Function( TournamentBracketSnapshotAdded value)?  bracketSnapshotAdded,TResult? Function( TournamentBracketSnapshotRemoved value)?  bracketSnapshotRemoved,TResult? Function( TournamentDeleted value)?  deleted,TResult? Function( TournamentUpdated value)?  updated,TResult? Function( TournamentBracketSnapshotUpdated value)?  bracketSnapshotUpdated,}){
 final _that = this;
 switch (_that) {
-case TournamentCreated() when created != null:
+case TournamentLoadRequested() when loadRequested != null:
+return loadRequested(_that);case TournamentLoadMoreRequested() when loadMoreRequested != null:
+return loadMoreRequested(_that);case TournamentClearRequested() when clearRequested != null:
+return clearRequested(_that);case TournamentCreated() when created != null:
 return created(_that);case TournamentBracketSnapshotAdded() when bracketSnapshotAdded != null:
 return bracketSnapshotAdded(_that);case TournamentBracketSnapshotRemoved() when bracketSnapshotRemoved != null:
 return bracketSnapshotRemoved(_that);case TournamentDeleted() when deleted != null:
@@ -131,9 +140,12 @@ return bracketSnapshotUpdated(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( TournamentEntity tournament)?  created,TResult Function( String tournamentId,  BracketSnapshot snapshot)?  bracketSnapshotAdded,TResult Function( String tournamentId,  String snapshotId)?  bracketSnapshotRemoved,TResult Function( String tournamentId)?  deleted,TResult Function( TournamentEntity tournament)?  updated,TResult Function( BracketSnapshot snapshot)?  bracketSnapshotUpdated,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  loadRequested,TResult Function()?  loadMoreRequested,TResult Function()?  clearRequested,TResult Function( TournamentEntity tournament)?  created,TResult Function( String tournamentId,  BracketSnapshot snapshot)?  bracketSnapshotAdded,TResult Function( String tournamentId,  String snapshotId)?  bracketSnapshotRemoved,TResult Function( String tournamentId)?  deleted,TResult Function( TournamentEntity tournament)?  updated,TResult Function( BracketSnapshot snapshot)?  bracketSnapshotUpdated,required TResult orElse(),}) {final _that = this;
 switch (_that) {
-case TournamentCreated() when created != null:
+case TournamentLoadRequested() when loadRequested != null:
+return loadRequested();case TournamentLoadMoreRequested() when loadMoreRequested != null:
+return loadMoreRequested();case TournamentClearRequested() when clearRequested != null:
+return clearRequested();case TournamentCreated() when created != null:
 return created(_that.tournament);case TournamentBracketSnapshotAdded() when bracketSnapshotAdded != null:
 return bracketSnapshotAdded(_that.tournamentId,_that.snapshot);case TournamentBracketSnapshotRemoved() when bracketSnapshotRemoved != null:
 return bracketSnapshotRemoved(_that.tournamentId,_that.snapshotId);case TournamentDeleted() when deleted != null:
@@ -157,9 +169,12 @@ return bracketSnapshotUpdated(_that.snapshot);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( TournamentEntity tournament)  created,required TResult Function( String tournamentId,  BracketSnapshot snapshot)  bracketSnapshotAdded,required TResult Function( String tournamentId,  String snapshotId)  bracketSnapshotRemoved,required TResult Function( String tournamentId)  deleted,required TResult Function( TournamentEntity tournament)  updated,required TResult Function( BracketSnapshot snapshot)  bracketSnapshotUpdated,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  loadRequested,required TResult Function()  loadMoreRequested,required TResult Function()  clearRequested,required TResult Function( TournamentEntity tournament)  created,required TResult Function( String tournamentId,  BracketSnapshot snapshot)  bracketSnapshotAdded,required TResult Function( String tournamentId,  String snapshotId)  bracketSnapshotRemoved,required TResult Function( String tournamentId)  deleted,required TResult Function( TournamentEntity tournament)  updated,required TResult Function( BracketSnapshot snapshot)  bracketSnapshotUpdated,}) {final _that = this;
 switch (_that) {
-case TournamentCreated():
+case TournamentLoadRequested():
+return loadRequested();case TournamentLoadMoreRequested():
+return loadMoreRequested();case TournamentClearRequested():
+return clearRequested();case TournamentCreated():
 return created(_that.tournament);case TournamentBracketSnapshotAdded():
 return bracketSnapshotAdded(_that.tournamentId,_that.snapshot);case TournamentBracketSnapshotRemoved():
 return bracketSnapshotRemoved(_that.tournamentId,_that.snapshotId);case TournamentDeleted():
@@ -179,9 +194,12 @@ return bracketSnapshotUpdated(_that.snapshot);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( TournamentEntity tournament)?  created,TResult? Function( String tournamentId,  BracketSnapshot snapshot)?  bracketSnapshotAdded,TResult? Function( String tournamentId,  String snapshotId)?  bracketSnapshotRemoved,TResult? Function( String tournamentId)?  deleted,TResult? Function( TournamentEntity tournament)?  updated,TResult? Function( BracketSnapshot snapshot)?  bracketSnapshotUpdated,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  loadRequested,TResult? Function()?  loadMoreRequested,TResult? Function()?  clearRequested,TResult? Function( TournamentEntity tournament)?  created,TResult? Function( String tournamentId,  BracketSnapshot snapshot)?  bracketSnapshotAdded,TResult? Function( String tournamentId,  String snapshotId)?  bracketSnapshotRemoved,TResult? Function( String tournamentId)?  deleted,TResult? Function( TournamentEntity tournament)?  updated,TResult? Function( BracketSnapshot snapshot)?  bracketSnapshotUpdated,}) {final _that = this;
 switch (_that) {
-case TournamentCreated() when created != null:
+case TournamentLoadRequested() when loadRequested != null:
+return loadRequested();case TournamentLoadMoreRequested() when loadMoreRequested != null:
+return loadMoreRequested();case TournamentClearRequested() when clearRequested != null:
+return clearRequested();case TournamentCreated() when created != null:
 return created(_that.tournament);case TournamentBracketSnapshotAdded() when bracketSnapshotAdded != null:
 return bracketSnapshotAdded(_that.tournamentId,_that.snapshot);case TournamentBracketSnapshotRemoved() when bracketSnapshotRemoved != null:
 return bracketSnapshotRemoved(_that.tournamentId,_that.snapshotId);case TournamentDeleted() when deleted != null:
@@ -194,6 +212,102 @@ return bracketSnapshotUpdated(_that.snapshot);case _:
 }
 
 }
+
+/// @nodoc
+
+
+class TournamentLoadRequested implements TournamentEvent {
+  const TournamentLoadRequested();
+  
+
+
+
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is TournamentLoadRequested);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+  return 'TournamentEvent.loadRequested()';
+}
+
+
+}
+
+
+
+
+/// @nodoc
+
+
+class TournamentLoadMoreRequested implements TournamentEvent {
+  const TournamentLoadMoreRequested();
+  
+
+
+
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is TournamentLoadMoreRequested);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+  return 'TournamentEvent.loadMoreRequested()';
+}
+
+
+}
+
+
+
+
+/// @nodoc
+
+
+class TournamentClearRequested implements TournamentEvent {
+  const TournamentClearRequested();
+  
+
+
+
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is TournamentClearRequested);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+  return 'TournamentEvent.clearRequested()';
+}
+
+
+}
+
+
+
 
 /// @nodoc
 

@@ -17,8 +17,8 @@ class DemoData {
   static TournamentEntity get demoTournament => TournamentEntity(
     id: 'demo-tournament-1',
     userId: 'demo-user-1',
-    name: '1ST WTF OPEN NATIONAL TAEKWONDO CHAMPIONSHIP - 2026',
-    dateRange: '18 Jan. to 22 Jan, 2026',
+    name: 'Demo Tournament 2022',
+    dateRange: '18 Jan. to 22 Jan, 2022',
     venue: 'Sanskriti School, Ajmer, Rajasthan',
     organizer: 'Rajasthan Taekwondo Association',
     createdAt: DateTime.now(),

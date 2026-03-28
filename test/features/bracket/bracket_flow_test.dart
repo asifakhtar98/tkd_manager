@@ -2,12 +2,75 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tkd_saas/core/di/injection.dart';
 import 'package:tkd_saas/core/router/app_router.dart';
-import 'package:tkd_saas/core/router/app_routes.dart';
 import 'package:tkd_saas/features/bracket/presentation/widgets/tie_sheet_canvas_widget.dart';
 import 'package:tkd_saas/main.dart' as app;
+import 'package:mocktail/mocktail.dart';
+import 'package:tkd_saas/features/tournament/domain/repositories/tournament_repository.dart';
+import 'package:tkd_saas/features/tournament/domain/repositories/bracket_snapshot_repository.dart';
+import 'package:tkd_saas/features/bracket/domain/entities/bracket_format.dart';
+import 'package:tkd_saas/features/auth/domain/repositories/authentication_repository.dart';
+import 'package:tkd_saas/features/auth/presentation/bloc/authentication_bloc.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:tkd_saas/features/tournament/domain/entities/bracket_snapshot.dart';
+import 'package:fpdart/fpdart.dart';
+class MockTournamentRepository extends Mock implements TournamentRepository {}
+class MockBracketSnapshotRepository extends Mock implements BracketSnapshotRepository {}
+class MockAuthenticationBloc extends Mock implements AuthenticationBloc {}
+class MockAuthenticationRepository extends Mock implements AuthenticationRepository {}
+class MockUser extends Mock implements User {}
+
+class FakeBracketSnapshot extends Fake implements BracketSnapshot {}
 
 void main() {
-  setUp(configureDependencies);
+  setUpAll(() {
+    registerFallbackValue(FakeBracketSnapshot());
+  });
+
+  setUp(() async {
+    configureDependencies();
+    
+    final mockTournamentRepo = MockTournamentRepository();
+    when(() => mockTournamentRepo.getTournaments()).thenAnswer((_) async => const Right([]));
+    
+    final mockBracketRepo = MockBracketSnapshotRepository();
+    
+    final mockAuthBloc = MockAuthenticationBloc();
+    final dummyUser = MockUser();
+    
+    when(() => dummyUser.id).thenReturn('test-user-id');
+    when(() => dummyUser.email).thenReturn('test@example.com');
+    // We don't need app metadata checks right now, but just in case:
+    when(() => dummyUser.appMetadata).thenReturn({});
+    when(() => dummyUser.userMetadata).thenReturn({});
+    when(() => dummyUser.aud).thenReturn('authenticated');
+    when(() => dummyUser.createdAt).thenReturn('2023-01-01T00:00:00Z');
+    
+    when(() => mockAuthBloc.stream).thenAnswer((_) => const Stream.empty());
+    when(() => mockAuthBloc.state).thenReturn(AuthenticationState.authenticated(user: dummyUser));
+    when(() => mockAuthBloc.close()).thenAnswer((_) async {});
+    
+    // Mock snapshot repository
+    when(() => mockBracketRepo.createBracketSnapshot(any(), any())).thenAnswer((inv) async => Right(inv.positionalArguments[0] as BracketSnapshot));
+    when(() => mockBracketRepo.updateBracketSnapshot(any())).thenAnswer((inv) async => Right(inv.positionalArguments[0] as BracketSnapshot));
+    when(() => mockBracketRepo.deleteBracketSnapshot(any())).thenAnswer((_) async => const Right(null));
+    when(() => mockBracketRepo.getBracketSnapshots(any())).thenAnswer((_) async => const Right([]));
+
+    if (getIt.isRegistered<AuthenticationBloc>()) {
+      getIt.unregister<AuthenticationBloc>();
+    }
+    getIt.registerSingleton<AuthenticationBloc>(mockAuthBloc);
+
+    if (getIt.isRegistered<TournamentRepository>()) {
+      getIt.unregister<TournamentRepository>();
+    }
+    getIt.registerSingleton<TournamentRepository>(mockTournamentRepo);
+
+    if (getIt.isRegistered<BracketSnapshotRepository>()) {
+      getIt.unregister<BracketSnapshotRepository>();
+    }
+    getIt.registerSingleton<BracketSnapshotRepository>(mockBracketRepo);
+  });
+
   tearDown(() async {
     AppRouter.resetForTesting();
     await getIt.reset();
@@ -23,9 +86,13 @@ void main() {
 
     await tester.pumpWidget(const app.TkdTournamentApp());
     await tester.pumpAndSettle();
+    
+    // Give BLoC time to finish async loading and emit isLoading: false
+    await tester.pump(const Duration(milliseconds: 100));
+    await tester.pumpAndSettle();
 
     // 1. Dashboard — tap the Demo Tournament card.
-    final demoTournamentCard = find.text('Demo Tournament');
+    final demoTournamentCard = find.text('Demo Tournament 2022');
     expect(demoTournamentCard, findsOneWidget);
     await tester.ensureVisible(demoTournamentCard);
     await tester.tap(demoTournamentCard);
@@ -39,6 +106,9 @@ void main() {
     await tester.pumpAndSettle();
 
     // 3. Verify we're on the setup screen.
+    if (find.text('New Bracket Setup').evaluate().isEmpty) {
+        debugDumpApp();
+    }
     expect(find.text('New Bracket Setup'), findsOneWidget);
   }
 
@@ -97,6 +167,30 @@ void main() {
     ['Sarah Connor', 'Dragon TKD'],
   ];
 
+  const sevenPlayers = [
+    ['Player 1', 'Club A'],
+    ['Player 2', 'Club B'],
+    ['Player 3', 'Club A'],
+    ['Player 4', 'Club C'],
+    ['Player 5', 'Club B'],
+    ['Player 6', 'Club D'],
+    ['Player 7', 'Club D'],
+  ];
+
+  const elevenPlayers = [
+    ['Player 1', 'Club A'],
+    ['Player 2', 'Club B'],
+    ['Player 3', 'Club C'],
+    ['Player 4', 'Club D'],
+    ['Player 5', 'Club E'],
+    ['Player 6', 'Club F'],
+    ['Player 7', 'Club G'],
+    ['Player 8', 'Club H'],
+    ['Player 9', 'Club A'],
+    ['Player 10', 'Club B'],
+    ['Player 11', 'Club C'],
+  ];
+
   group('1. Single Elimination Bracket Generation', () {
     testWidgets('1a. 4 players: correct bracket structure', (tester) async {
       await navigateToSetup(tester);
@@ -124,23 +218,26 @@ void main() {
       await goBack(tester);
     });
 
-    testWidgets('1c. 8 players: larger bracket generation', (tester) async {
+    testWidgets('1c. 7 players: larger bracket generation with Dojang separation and BYEs', (tester) async {
       await navigateToSetup(tester);
 
-      await addPlayers(tester, [
-        ['Player 1', 'Club A'],
-        ['Player 2', 'Club B'],
-        ['Player 3', 'Club C'],
-        ['Player 4', 'Club D'],
-        ['Player 5', 'Club E'],
-        ['Player 6', 'Club F'],
-        ['Player 7', 'Club G'],
-        ['Player 8', 'Club H'],
-      ]);
+      await addPlayers(tester, sevenPlayers);
 
       await tapGenerate(tester);
       expect(find.textContaining('Single Elimination'), findsOneWidget);
-      expect(find.textContaining('8 Players'), findsOneWidget);
+      expect(find.textContaining('7 Players'), findsOneWidget);
+
+      await goBack(tester);
+    });
+
+    testWidgets('1d. 11 players: asymmetrical tournament check', (tester) async {
+      await navigateToSetup(tester);
+
+      await addPlayers(tester, elevenPlayers);
+
+      await tapGenerate(tester);
+      expect(find.textContaining('Single Elimination'), findsOneWidget);
+      expect(find.textContaining('11 Players'), findsOneWidget);
 
       await goBack(tester);
     });
@@ -448,7 +545,7 @@ void main() {
       await goBack(tester);
 
       // Back from bracket viewer navigates to tournament detail.
-      expect(find.text('Demo Tournament'), findsAtLeast(1));
+      expect(find.text('Demo Tournament 2022'), findsAtLeast(1));
       expect(find.text('Add Bracket'), findsOneWidget);
     });
 

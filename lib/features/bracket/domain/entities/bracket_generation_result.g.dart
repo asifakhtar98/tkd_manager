@@ -18,6 +18,6 @@ _BracketGenerationResult _$BracketGenerationResultFromJson(
 Map<String, dynamic> _$BracketGenerationResultToJson(
   _BracketGenerationResult instance,
 ) => <String, dynamic>{
-  'bracket': instance.bracket,
-  'matches': instance.matches,
+  'bracket': instance.bracket.toJson(),
+  'matches': instance.matches.map((e) => e.toJson()).toList(),
 };

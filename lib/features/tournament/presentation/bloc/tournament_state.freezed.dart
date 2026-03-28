@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$TournamentState {
 
- List<TournamentEntity> get tournaments; Map<String, List<BracketSnapshot>> get bracketsByTournamentId;
+ List<TournamentEntity> get tournaments; Map<String, List<BracketSnapshot>> get bracketsByTournamentId; bool get isLoading; bool get isSaving; bool get isFetchingMore; bool get hasReachedMax; String? get errorMessage; String? get lastMutationError;
 /// Create a copy of TournamentState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $TournamentStateCopyWith<TournamentState> get copyWith => _$TournamentStateCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is TournamentState&&const DeepCollectionEquality().equals(other.tournaments, tournaments)&&const DeepCollectionEquality().equals(other.bracketsByTournamentId, bracketsByTournamentId));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is TournamentState&&const DeepCollectionEquality().equals(other.tournaments, tournaments)&&const DeepCollectionEquality().equals(other.bracketsByTournamentId, bracketsByTournamentId)&&(identical(other.isLoading, isLoading) || other.isLoading == isLoading)&&(identical(other.isSaving, isSaving) || other.isSaving == isSaving)&&(identical(other.isFetchingMore, isFetchingMore) || other.isFetchingMore == isFetchingMore)&&(identical(other.hasReachedMax, hasReachedMax) || other.hasReachedMax == hasReachedMax)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage)&&(identical(other.lastMutationError, lastMutationError) || other.lastMutationError == lastMutationError));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(tournaments),const DeepCollectionEquality().hash(bracketsByTournamentId));
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(tournaments),const DeepCollectionEquality().hash(bracketsByTournamentId),isLoading,isSaving,isFetchingMore,hasReachedMax,errorMessage,lastMutationError);
 
 @override
 String toString() {
-  return 'TournamentState(tournaments: $tournaments, bracketsByTournamentId: $bracketsByTournamentId)';
+  return 'TournamentState(tournaments: $tournaments, bracketsByTournamentId: $bracketsByTournamentId, isLoading: $isLoading, isSaving: $isSaving, isFetchingMore: $isFetchingMore, hasReachedMax: $hasReachedMax, errorMessage: $errorMessage, lastMutationError: $lastMutationError)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class $TournamentStateCopyWith<$Res>  {
   factory $TournamentStateCopyWith(TournamentState value, $Res Function(TournamentState) _then) = _$TournamentStateCopyWithImpl;
 @useResult
 $Res call({
- List<TournamentEntity> tournaments, Map<String, List<BracketSnapshot>> bracketsByTournamentId
+ List<TournamentEntity> tournaments, Map<String, List<BracketSnapshot>> bracketsByTournamentId, bool isLoading, bool isSaving, bool isFetchingMore, bool hasReachedMax, String? errorMessage, String? lastMutationError
 });
 
 
@@ -62,11 +62,17 @@ class _$TournamentStateCopyWithImpl<$Res>
 
 /// Create a copy of TournamentState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? tournaments = null,Object? bracketsByTournamentId = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? tournaments = null,Object? bracketsByTournamentId = null,Object? isLoading = null,Object? isSaving = null,Object? isFetchingMore = null,Object? hasReachedMax = null,Object? errorMessage = freezed,Object? lastMutationError = freezed,}) {
   return _then(_self.copyWith(
 tournaments: null == tournaments ? _self.tournaments : tournaments // ignore: cast_nullable_to_non_nullable
 as List<TournamentEntity>,bracketsByTournamentId: null == bracketsByTournamentId ? _self.bracketsByTournamentId : bracketsByTournamentId // ignore: cast_nullable_to_non_nullable
-as Map<String, List<BracketSnapshot>>,
+as Map<String, List<BracketSnapshot>>,isLoading: null == isLoading ? _self.isLoading : isLoading // ignore: cast_nullable_to_non_nullable
+as bool,isSaving: null == isSaving ? _self.isSaving : isSaving // ignore: cast_nullable_to_non_nullable
+as bool,isFetchingMore: null == isFetchingMore ? _self.isFetchingMore : isFetchingMore // ignore: cast_nullable_to_non_nullable
+as bool,hasReachedMax: null == hasReachedMax ? _self.hasReachedMax : hasReachedMax // ignore: cast_nullable_to_non_nullable
+as bool,errorMessage: freezed == errorMessage ? _self.errorMessage : errorMessage // ignore: cast_nullable_to_non_nullable
+as String?,lastMutationError: freezed == lastMutationError ? _self.lastMutationError : lastMutationError // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 
@@ -151,10 +157,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<TournamentEntity> tournaments,  Map<String, List<BracketSnapshot>> bracketsByTournamentId)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<TournamentEntity> tournaments,  Map<String, List<BracketSnapshot>> bracketsByTournamentId,  bool isLoading,  bool isSaving,  bool isFetchingMore,  bool hasReachedMax,  String? errorMessage,  String? lastMutationError)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _TournamentState() when $default != null:
-return $default(_that.tournaments,_that.bracketsByTournamentId);case _:
+return $default(_that.tournaments,_that.bracketsByTournamentId,_that.isLoading,_that.isSaving,_that.isFetchingMore,_that.hasReachedMax,_that.errorMessage,_that.lastMutationError);case _:
   return orElse();
 
 }
@@ -172,10 +178,10 @@ return $default(_that.tournaments,_that.bracketsByTournamentId);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<TournamentEntity> tournaments,  Map<String, List<BracketSnapshot>> bracketsByTournamentId)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<TournamentEntity> tournaments,  Map<String, List<BracketSnapshot>> bracketsByTournamentId,  bool isLoading,  bool isSaving,  bool isFetchingMore,  bool hasReachedMax,  String? errorMessage,  String? lastMutationError)  $default,) {final _that = this;
 switch (_that) {
 case _TournamentState():
-return $default(_that.tournaments,_that.bracketsByTournamentId);case _:
+return $default(_that.tournaments,_that.bracketsByTournamentId,_that.isLoading,_that.isSaving,_that.isFetchingMore,_that.hasReachedMax,_that.errorMessage,_that.lastMutationError);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -192,10 +198,10 @@ return $default(_that.tournaments,_that.bracketsByTournamentId);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<TournamentEntity> tournaments,  Map<String, List<BracketSnapshot>> bracketsByTournamentId)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<TournamentEntity> tournaments,  Map<String, List<BracketSnapshot>> bracketsByTournamentId,  bool isLoading,  bool isSaving,  bool isFetchingMore,  bool hasReachedMax,  String? errorMessage,  String? lastMutationError)?  $default,) {final _that = this;
 switch (_that) {
 case _TournamentState() when $default != null:
-return $default(_that.tournaments,_that.bracketsByTournamentId);case _:
+return $default(_that.tournaments,_that.bracketsByTournamentId,_that.isLoading,_that.isSaving,_that.isFetchingMore,_that.hasReachedMax,_that.errorMessage,_that.lastMutationError);case _:
   return null;
 
 }
@@ -207,7 +213,7 @@ return $default(_that.tournaments,_that.bracketsByTournamentId);case _:
 
 
 class _TournamentState extends TournamentState {
-  const _TournamentState({final  List<TournamentEntity> tournaments = const [], final  Map<String, List<BracketSnapshot>> bracketsByTournamentId = const {}}): _tournaments = tournaments,_bracketsByTournamentId = bracketsByTournamentId,super._();
+  const _TournamentState({final  List<TournamentEntity> tournaments = const [], final  Map<String, List<BracketSnapshot>> bracketsByTournamentId = const {}, this.isLoading = true, this.isSaving = false, this.isFetchingMore = false, this.hasReachedMax = false, this.errorMessage, this.lastMutationError}): _tournaments = tournaments,_bracketsByTournamentId = bracketsByTournamentId,super._();
   
 
  final  List<TournamentEntity> _tournaments;
@@ -224,6 +230,12 @@ class _TournamentState extends TournamentState {
   return EqualUnmodifiableMapView(_bracketsByTournamentId);
 }
 
+@override@JsonKey() final  bool isLoading;
+@override@JsonKey() final  bool isSaving;
+@override@JsonKey() final  bool isFetchingMore;
+@override@JsonKey() final  bool hasReachedMax;
+@override final  String? errorMessage;
+@override final  String? lastMutationError;
 
 /// Create a copy of TournamentState
 /// with the given fields replaced by the non-null parameter values.
@@ -235,16 +247,16 @@ _$TournamentStateCopyWith<_TournamentState> get copyWith => __$TournamentStateCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TournamentState&&const DeepCollectionEquality().equals(other._tournaments, _tournaments)&&const DeepCollectionEquality().equals(other._bracketsByTournamentId, _bracketsByTournamentId));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TournamentState&&const DeepCollectionEquality().equals(other._tournaments, _tournaments)&&const DeepCollectionEquality().equals(other._bracketsByTournamentId, _bracketsByTournamentId)&&(identical(other.isLoading, isLoading) || other.isLoading == isLoading)&&(identical(other.isSaving, isSaving) || other.isSaving == isSaving)&&(identical(other.isFetchingMore, isFetchingMore) || other.isFetchingMore == isFetchingMore)&&(identical(other.hasReachedMax, hasReachedMax) || other.hasReachedMax == hasReachedMax)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage)&&(identical(other.lastMutationError, lastMutationError) || other.lastMutationError == lastMutationError));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_tournaments),const DeepCollectionEquality().hash(_bracketsByTournamentId));
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_tournaments),const DeepCollectionEquality().hash(_bracketsByTournamentId),isLoading,isSaving,isFetchingMore,hasReachedMax,errorMessage,lastMutationError);
 
 @override
 String toString() {
-  return 'TournamentState(tournaments: $tournaments, bracketsByTournamentId: $bracketsByTournamentId)';
+  return 'TournamentState(tournaments: $tournaments, bracketsByTournamentId: $bracketsByTournamentId, isLoading: $isLoading, isSaving: $isSaving, isFetchingMore: $isFetchingMore, hasReachedMax: $hasReachedMax, errorMessage: $errorMessage, lastMutationError: $lastMutationError)';
 }
 
 
@@ -255,7 +267,7 @@ abstract mixin class _$TournamentStateCopyWith<$Res> implements $TournamentState
   factory _$TournamentStateCopyWith(_TournamentState value, $Res Function(_TournamentState) _then) = __$TournamentStateCopyWithImpl;
 @override @useResult
 $Res call({
- List<TournamentEntity> tournaments, Map<String, List<BracketSnapshot>> bracketsByTournamentId
+ List<TournamentEntity> tournaments, Map<String, List<BracketSnapshot>> bracketsByTournamentId, bool isLoading, bool isSaving, bool isFetchingMore, bool hasReachedMax, String? errorMessage, String? lastMutationError
 });
 
 
@@ -272,11 +284,17 @@ class __$TournamentStateCopyWithImpl<$Res>
 
 /// Create a copy of TournamentState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? tournaments = null,Object? bracketsByTournamentId = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? tournaments = null,Object? bracketsByTournamentId = null,Object? isLoading = null,Object? isSaving = null,Object? isFetchingMore = null,Object? hasReachedMax = null,Object? errorMessage = freezed,Object? lastMutationError = freezed,}) {
   return _then(_TournamentState(
 tournaments: null == tournaments ? _self._tournaments : tournaments // ignore: cast_nullable_to_non_nullable
 as List<TournamentEntity>,bracketsByTournamentId: null == bracketsByTournamentId ? _self._bracketsByTournamentId : bracketsByTournamentId // ignore: cast_nullable_to_non_nullable
-as Map<String, List<BracketSnapshot>>,
+as Map<String, List<BracketSnapshot>>,isLoading: null == isLoading ? _self.isLoading : isLoading // ignore: cast_nullable_to_non_nullable
+as bool,isSaving: null == isSaving ? _self.isSaving : isSaving // ignore: cast_nullable_to_non_nullable
+as bool,isFetchingMore: null == isFetchingMore ? _self.isFetchingMore : isFetchingMore // ignore: cast_nullable_to_non_nullable
+as bool,hasReachedMax: null == hasReachedMax ? _self.hasReachedMax : hasReachedMax // ignore: cast_nullable_to_non_nullable
+as bool,errorMessage: freezed == errorMessage ? _self.errorMessage : errorMessage // ignore: cast_nullable_to_non_nullable
+as String?,lastMutationError: freezed == lastMutationError ? _self.lastMutationError : lastMutationError // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 

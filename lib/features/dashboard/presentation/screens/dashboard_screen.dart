@@ -12,8 +12,20 @@ import 'package:tkd_saas/features/tournament/presentation/widgets/create_tournam
 /// This is the default route for authenticated users. The pre-seeded
 /// "Demo Tournament" appears in the tournament list like any other
 /// tournament — users click into it to access its demo brackets.
-class DashboardScreen extends StatelessWidget {
+class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
+
+  @override
+  State<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends State<DashboardScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Tournament loading is now eager-loaded at the app root in main.dart
+    // to ensure deep-linking consistently has data fetching underway.
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -50,9 +62,35 @@ class DashboardScreen extends StatelessWidget {
           const SizedBox(width: 8),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
-        child: _buildTournamentSection(context, theme),
+      body: BlocListener<TournamentBloc, TournamentState>(
+        listenWhen: (previous, current) {
+          return previous.isSaving != current.isSaving ||
+                 previous.lastMutationError != current.lastMutationError ||
+                 previous.tournaments.length != current.tournaments.length;
+        },
+        listener: (context, state) {
+          if (state.lastMutationError != null && state.lastMutationError!.isNotEmpty) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.lastMutationError!),
+                backgroundColor: theme.colorScheme.error,
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+          }
+        },
+        child: NotificationListener<ScrollNotification>(
+          onNotification: (ScrollNotification scrollInfo) {
+            if (scrollInfo.metrics.pixels >= scrollInfo.metrics.maxScrollExtent - 200) {
+              context.read<TournamentBloc>().add(const TournamentEvent.loadMoreRequested());
+            }
+            return false;
+          },
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24.0),
+            child: _buildTournamentSection(context, theme),
+          ),
+        ),
       ),
     );
   }
@@ -90,6 +128,15 @@ class DashboardScreen extends StatelessWidget {
   Widget _buildTournamentSection(BuildContext context, ThemeData theme) {
     return BlocBuilder<TournamentBloc, TournamentState>(
       builder: (context, state) {
+        if (state.isLoading) {
+          return const Center(
+            child: Padding(
+              padding: EdgeInsets.all(48.0),
+              child: CircularProgressIndicator(),
+            ),
+          );
+        }
+
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -103,9 +150,15 @@ class DashboardScreen extends StatelessWidget {
                 ),
                 const Spacer(),
                 FilledButton.icon(
-                  icon: const Icon(Icons.add),
+                  icon: state.isSaving 
+                      ? const SizedBox(
+                          width: 16, 
+                          height: 16, 
+                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)
+                        )
+                      : const Icon(Icons.add),
                   label: const Text('New Tournament'),
-                  onPressed: () => _showCreateDialog(context),
+                  onPressed: state.isSaving ? null : () => _showCreateDialog(context),
                 ),
               ],
             ),
@@ -127,6 +180,11 @@ class DashboardScreen extends StatelessWidget {
               ...state.tournaments.map(
                 (tournament) => _TournamentCard(tournament: tournament),
               ),
+            if (state.isFetchingMore)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 24.0),
+                child: Center(child: CircularProgressIndicator()),
+              ),
           ],
         );
       },
@@ -140,12 +198,9 @@ class DashboardScreen extends StatelessWidget {
     );
     if (tournament != null && context.mounted) {
       context.read<TournamentBloc>().add(TournamentEvent.created(tournament));
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Tournament \u201c${tournament.name}\u201d created.'),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      // Success snackbar could be handled in the BlocListener if we mapped the specific success,
+      // but for now, the BlocListener will catch errors. 
+      // If no error falls out and isSaving finishes, it succeeded.
     }
   }
 }

@@ -9,6 +9,17 @@ sealed class Failure {
   final String message;
 
   @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is Failure && 
+           other.runtimeType == runtimeType && 
+           other.message == message;
+  }
+
+  @override
+  int get hashCode => Object.hash(runtimeType, message);
+
+  @override
   String toString() => '$runtimeType(message: $message)';
 }
 
@@ -17,9 +28,19 @@ class ServerFailure extends Failure {
   const ServerFailure([super.message = 'An unexpected server error occurred.']);
 }
 
-/// Failure originating from the local Drift database layer.
+/// Failure originating from the local or remote database layer.
 class DatabaseFailure extends Failure {
-  const DatabaseFailure([super.message = 'A local database error occurred.']);
+  const DatabaseFailure([super.message = 'A database error occurred.']);
+}
+
+/// Failure when a requested resource is not found.
+class NotFoundFailure extends Failure {
+  const NotFoundFailure([super.message = 'The requested resource was not found.']);
+}
+
+/// Failure resulting from network connectivity issues (sockets/timeouts).
+class NetworkFailure extends Failure {
+  const NetworkFailure([super.message = 'Network error. Please check your connection.']);
 }
 
 /// Failure from the bracket or seeding generation engine.

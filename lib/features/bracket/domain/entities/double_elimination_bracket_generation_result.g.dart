@@ -29,9 +29,9 @@ _$DoubleEliminationBracketGenerationResultFromJson(Map<String, dynamic> json) =>
 Map<String, dynamic> _$DoubleEliminationBracketGenerationResultToJson(
   _DoubleEliminationBracketGenerationResult instance,
 ) => <String, dynamic>{
-  'winnersBracket': instance.winnersBracket,
-  'losersBracket': instance.losersBracket,
-  'grandFinalsMatch': instance.grandFinalsMatch,
-  'resetMatch': instance.resetMatch,
-  'allMatches': instance.allMatches,
+  'winnersBracket': instance.winnersBracket.toJson(),
+  'losersBracket': instance.losersBracket.toJson(),
+  'grandFinalsMatch': instance.grandFinalsMatch.toJson(),
+  'resetMatch': instance.resetMatch?.toJson(),
+  'allMatches': instance.allMatches.map((e) => e.toJson()).toList(),
 };

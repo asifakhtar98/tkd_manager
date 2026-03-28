@@ -37,6 +37,14 @@ import 'package:tkd_saas/features/bracket/domain/services/single_elimination_bra
     as _i937;
 import 'package:tkd_saas/features/bracket/presentation/bloc/bracket_bloc.dart'
     as _i416;
+import 'package:tkd_saas/features/tournament/data/repositories/supabase_bracket_snapshot_repository.dart'
+    as _i900;
+import 'package:tkd_saas/features/tournament/data/repositories/supabase_tournament_repository.dart'
+    as _i987;
+import 'package:tkd_saas/features/tournament/domain/repositories/bracket_snapshot_repository.dart'
+    as _i529;
+import 'package:tkd_saas/features/tournament/domain/repositories/tournament_repository.dart'
+    as _i547;
 import 'package:tkd_saas/features/tournament/presentation/bloc/tournament_bloc.dart'
     as _i143;
 import 'package:uuid/uuid.dart' as _i706;
@@ -51,7 +59,6 @@ extension GetItInjectableX on _i174.GetIt {
     final appModule = _$AppModule();
     gh.lazySingleton<_i706.Uuid>(() => appModule.uuid);
     gh.lazySingleton<_i454.SupabaseClient>(() => appModule.supabaseClient);
-    gh.lazySingleton<_i143.TournamentBloc>(() => _i143.TournamentBloc());
     gh.lazySingleton<_i707.MatchProgressionService>(
       () => _i1018.MatchProgressionServiceImplementation(),
     );
@@ -67,6 +74,12 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i82.DoubleEliminationBracketGeneratorServiceImplementation(
         gh<_i706.Uuid>(),
       ),
+    );
+    gh.lazySingleton<_i529.BracketSnapshotRepository>(
+      () => _i900.SupabaseBracketSnapshotRepository(gh<_i454.SupabaseClient>()),
+    );
+    gh.lazySingleton<_i547.TournamentRepository>(
+      () => _i987.SupabaseTournamentRepository(gh<_i454.SupabaseClient>()),
     );
     gh.lazySingleton<_i791.AuthenticationRepository>(
       () => _i330.AuthenticationRepositoryImplementation(
@@ -90,6 +103,12 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i707.MatchProgressionService>(),
         gh<_i648.ParticipantShuffleService>(),
         gh<_i706.Uuid>(),
+      ),
+    );
+    gh.lazySingleton<_i143.TournamentBloc>(
+      () => _i143.TournamentBloc(
+        gh<_i547.TournamentRepository>(),
+        gh<_i529.BracketSnapshotRepository>(),
       ),
     );
     return this;

@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -15,10 +17,16 @@ Future<void> main() async {
   usePathUrlStrategy();
 
   if (AppConfig.isAuthenticationEnabled) {
-    await Supabase.initialize(
-      url: 'https://lldlunqzkltclpfzpjxh.supabase.co',
-      anonKey: 'sb_publishable_Kf90GkwrSzNySWSCqhJT8Q_9b94d-UM',
-    );
+    try {
+      await Supabase.initialize(
+        url: 'https://lldlunqzkltclpfzpjxh.supabase.co',
+        anonKey: 'sb_publishable_Kf90GkwrSzNySWSCqhJT8Q_9b94d-UM',
+      );
+    } catch (e, st) {
+      log('Critical Error: Supabase failed to initialize on app boot.', error: e, stackTrace: st);
+      // The application will mount, but any features dependent on SupabaseClient
+      // may throw late evaluation exceptions if accessed.
+    }
   }
 
   // DI must ALWAYS be wired — non-auth services (BracketBloc, Uuid,
@@ -45,7 +53,15 @@ class TkdTournamentApp extends StatelessWidget {
               getIt<AuthenticationBloc>()
                 ..add(const AuthenticationSubscriptionRequested()),
         ),
-      BlocProvider<TournamentBloc>(create: (_) => getIt<TournamentBloc>()),
+      BlocProvider<TournamentBloc>(
+        create: (_) {
+          final bloc = getIt<TournamentBloc>();
+          if (!AppConfig.isAuthenticationEnabled) {
+            bloc.add(const TournamentEvent.loadRequested());
+          }
+          return bloc;
+        },
+      ),
     ];
 
     return MultiBlocProvider(
@@ -57,7 +73,7 @@ class TkdTournamentApp extends StatelessWidget {
               ? context.read<AuthenticationBloc>()
               : null;
 
-          return MaterialApp.router(
+          Widget app = MaterialApp.router(
             title: 'TKD Tournament Manager',
             debugShowCheckedModeBanner: false,
             theme: AppTheme.light,
@@ -65,6 +81,21 @@ class TkdTournamentApp extends StatelessWidget {
               authenticationBloc: authenticationBloc,
             ),
           );
+
+          if (authenticationBloc != null) {
+            app = BlocListener<AuthenticationBloc, AuthenticationState>(
+              listener: (context, state) {
+                state.maybeWhen(
+                  authenticated: (_) => context.read<TournamentBloc>().add(const TournamentEvent.loadRequested()),
+                  unauthenticated: () => context.read<TournamentBloc>().add(const TournamentEvent.clearRequested()),
+                  orElse: () {},
+                );
+              },
+              child: app,
+            );
+          }
+
+          return app;
         },
       ),
     );

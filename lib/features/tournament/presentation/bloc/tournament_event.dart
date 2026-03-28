@@ -7,6 +7,15 @@ part 'tournament_event.freezed.dart';
 /// All events for the [TournamentBloc].
 @freezed
 sealed class TournamentEvent with _$TournamentEvent {
+  /// Request all tournaments and their associated snapshots from remote DB.
+  const factory TournamentEvent.loadRequested() = TournamentLoadRequested;
+
+  /// Request the next page of tournaments.
+  const factory TournamentEvent.loadMoreRequested() = TournamentLoadMoreRequested;
+
+  /// Clear all loaded tournaments and brackets (e.g. on sign out).
+  const factory TournamentEvent.clearRequested() = TournamentClearRequested;
+
   /// Create and store a new tournament in memory.
   const factory TournamentEvent.created(TournamentEntity tournament) =
       TournamentCreated;

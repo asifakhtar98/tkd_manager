@@ -338,7 +338,40 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocConsumer<BracketBloc, BracketState>(
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<TournamentBloc, TournamentState>(
+          listenWhen: (previous, current) {
+            // Only fire when TournamentBloc finishes a save cycle.
+            return previous.isSaving && !current.isSaving;
+          },
+          listener: (context, state) {
+            final isSuccess = state.lastMutationError == null;
+            context.read<BracketBloc>().add(
+              BracketEvent.saveOutcomeReceived(isSuccess: isSuccess),
+            );
+
+            if (!isSuccess) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(state.lastMutationError!),
+                  backgroundColor: Colors.red.shade800,
+                  duration: const Duration(seconds: 4),
+                ),
+              );
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Bracket saved successfully.'),
+                  backgroundColor: Colors.green,
+                  duration: Duration(seconds: 2),
+                ),
+              );
+            }
+          },
+        ),
+      ],
+      child: BlocConsumer<BracketBloc, BracketState>(
       listenWhen: (prev, current) => current is BracketLoadSuccess,
       listener: (context, state) {
         if (state case BracketLoadSuccess(:final errorMessage)) {
@@ -417,7 +450,7 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
             ),
         };
       },
-    );
+    ));
   }
 
   Widget _buildViewer({

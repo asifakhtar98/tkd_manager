@@ -15,6 +15,12 @@ abstract class TournamentState with _$TournamentState {
   const factory TournamentState({
     @Default([]) List<TournamentEntity> tournaments,
     @Default({}) Map<String, List<BracketSnapshot>> bracketsByTournamentId,
+    @Default(true) bool isLoading,
+    @Default(false) bool isSaving,
+    @Default(false) bool isFetchingMore,
+    @Default(false) bool hasReachedMax,
+    String? errorMessage,
+    String? lastMutationError,
   }) = _TournamentState;
 
   /// Convenience: brackets for a given tournament ID (empty list if none yet).

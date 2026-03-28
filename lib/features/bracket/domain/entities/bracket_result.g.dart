@@ -15,7 +15,10 @@ SingleEliminationResult _$SingleEliminationResultFromJson(
 
 Map<String, dynamic> _$SingleEliminationResultToJson(
   SingleEliminationResult instance,
-) => <String, dynamic>{'data': instance.data, 'runtimeType': instance.$type};
+) => <String, dynamic>{
+  'data': instance.data.toJson(),
+  'runtimeType': instance.$type,
+};
 
 DoubleEliminationResult _$DoubleEliminationResultFromJson(
   Map<String, dynamic> json,
@@ -28,7 +31,10 @@ DoubleEliminationResult _$DoubleEliminationResultFromJson(
 
 Map<String, dynamic> _$DoubleEliminationResultToJson(
   DoubleEliminationResult instance,
-) => <String, dynamic>{'data': instance.data, 'runtimeType': instance.$type};
+) => <String, dynamic>{
+  'data': instance.data.toJson(),
+  'runtimeType': instance.$type,
+};
 
 BracketActionMatchResult _$BracketActionMatchResultFromJson(
   Map<String, dynamic> json,
@@ -39,7 +45,10 @@ BracketActionMatchResult _$BracketActionMatchResultFromJson(
 
 Map<String, dynamic> _$BracketActionMatchResultToJson(
   BracketActionMatchResult instance,
-) => <String, dynamic>{'data': instance.data, 'runtimeType': instance.$type};
+) => <String, dynamic>{
+  'data': instance.data.toJson(),
+  'runtimeType': instance.$type,
+};
 
 BracketActionEditAction _$BracketActionEditActionFromJson(
   Map<String, dynamic> json,
@@ -50,7 +59,10 @@ BracketActionEditAction _$BracketActionEditActionFromJson(
 
 Map<String, dynamic> _$BracketActionEditActionToJson(
   BracketActionEditAction instance,
-) => <String, dynamic>{'data': instance.data, 'runtimeType': instance.$type};
+) => <String, dynamic>{
+  'data': instance.data.toJson(),
+  'runtimeType': instance.$type,
+};
 
 _BracketHistoryEntry _$BracketHistoryEntryFromJson(Map<String, dynamic> json) =>
     _BracketHistoryEntry(
@@ -66,7 +78,9 @@ _BracketHistoryEntry _$BracketHistoryEntryFromJson(Map<String, dynamic> json) =>
 Map<String, dynamic> _$BracketHistoryEntryToJson(
   _BracketHistoryEntry instance,
 ) => <String, dynamic>{
-  'action': instance.action,
-  'resultSnapshot': instance.resultSnapshot,
-  'participantsSnapshot': instance.participantsSnapshot,
+  'action': instance.action.toJson(),
+  'resultSnapshot': instance.resultSnapshot.toJson(),
+  'participantsSnapshot': instance.participantsSnapshot
+      .map((e) => e.toJson())
+      .toList(),
 };

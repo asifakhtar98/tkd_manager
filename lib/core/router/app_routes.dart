@@ -164,30 +164,32 @@ class BracketViewerRoute extends GoRouteData with $BracketViewerRoute {
 
   @override
   Widget build(BuildContext context, GoRouterState state) {
-    // Look up the snapshot and tournament from TournamentBloc state.
-    final TournamentState tournamentState = context
-        .read<TournamentBloc>()
-        .state;
-    final TournamentEntity? tournament = tournamentState.tournaments
-        .where((t) => t.id == tournamentId)
-        .firstOrNull;
-    final BracketSnapshot? snapshot = tournamentState
-        .bracketsFor(tournamentId)
-        .where((s) => s.id == snapshotId)
-        .firstOrNull;
+    return BlocBuilder<TournamentBloc, TournamentState>(
+      builder: (context, tournamentState) {
+        if (tournamentState.isLoading) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
 
-    // If either the tournament or snapshot is not found (e.g. stale URL or
-    // refresh after data was lost), show a graceful error page.
-    if (tournament == null || snapshot == null) {
-      return _BracketNotFoundPage(tournamentId: tournamentId);
-    }
+        final TournamentEntity? tournament = tournamentState.tournaments
+            .where((t) => t.id == tournamentId)
+            .firstOrNull;
+        final BracketSnapshot? snapshot = tournamentState
+            .bracketsFor(tournamentId)
+            .where((s) => s.id == snapshotId)
+            .firstOrNull;
 
-    return BlocProvider(
-      create: (_) => getIt<BracketBloc>()
-        ..add(
-          BracketEvent.loadFromSnapshotRequested(snapshot),
-        ),
-      child: BracketViewerScreen(tournament: tournament, snapshot: snapshot),
+        if (tournament == null || snapshot == null) {
+          return _BracketNotFoundPage(tournamentId: tournamentId);
+        }
+
+        return BlocProvider(
+          create: (_) => getIt<BracketBloc>()
+            ..add(BracketEvent.loadFromSnapshotRequested(snapshot)),
+          child: BracketViewerScreen(tournament: tournament, snapshot: snapshot),
+        );
+      },
     );
   }
 }

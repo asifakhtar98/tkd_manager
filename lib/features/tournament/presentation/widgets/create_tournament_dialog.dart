@@ -3,6 +3,8 @@ import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:tkd_saas/features/auth/presentation/bloc/authentication_bloc.dart';
 import 'package:tkd_saas/features/tournament/domain/entities/tournament_entity.dart';
 import 'package:uuid/uuid.dart';
 
@@ -87,7 +89,7 @@ class _CreateTournamentDialogState extends State<CreateTournamentDialog> {
     final tournament = TournamentEntity(
       // Preserve original id and createdAt when editing.
       id: existingTournament?.id ?? _uuid.v4(),
-      userId: existingTournament?.userId ?? '', // TODO: Get actual user ID
+      userId: existingTournament?.userId ?? context.read<AuthenticationBloc>().state.mapOrNull(authenticated: (state) => state.user.id) ?? '',
       name: _nameController.text.trim(),
       dateRange: _dateRangeController.text.trim(),
       venue: _venueController.text.trim(),

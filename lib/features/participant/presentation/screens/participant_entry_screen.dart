@@ -13,6 +13,7 @@ import 'package:tkd_saas/features/participant/domain/entities/participant_entity
 import 'package:tkd_saas/features/tournament/domain/entities/tournament_entity.dart';
 import 'package:tkd_saas/features/tournament/presentation/bloc/tournament_bloc.dart';
 import 'package:tkd_saas/features/bracket/domain/entities/bracket_result.dart';
+import 'package:tkd_saas/core/utils/app_overlays.dart';
 
 /// "New Bracket" setup screen.
 ///
@@ -45,6 +46,8 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
   bool _isDojangSeparationEnabled = true;
   bool _isThirdPlaceMatchIncluded = false;
   BracketFormat _selectedBracketFormat = BracketFormat.singleElimination;
+  String? _pendingSnapshotId;
+
 
   // ── Bracket-level classification controllers ───────────────────────────────
   final _bracketAgeCategoryController = TextEditingController();
@@ -285,27 +288,72 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
     );
 
     if (!context.mounted) return;
+    
+    setState(() {
+      _pendingSnapshotId = snapshotId;
+    });
+
+    AppOverlays.showLoading(context, message: 'Generating Bracket...');
+
     context.read<TournamentBloc>().add(
       TournamentBracketSnapshotAdded(
         tournamentId: tournament.id,
         snapshot: snapshot,
       ),
     );
-
-    // ── Navigate to bracket viewer by URL ────────────────────────────
-    BracketViewerRoute(
-      tournamentId: tournament.id,
-      snapshotId: snapshotId,
-    ).go(context);
   }
 
   // ── Build ──────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<TournamentBloc, TournamentState>(
+    return BlocConsumer<TournamentBloc, TournamentState>(
+      listenWhen: (prev, current) {
+        if (_pendingSnapshotId == null) return false;
+        final wasAdded = current.bracketsFor(widget.tournamentId)
+            .any((s) => s.id == _pendingSnapshotId);
+        if (wasAdded) return true;
+        if (prev.isSaving && !current.isSaving) return true;
+        return false;
+      },
+      listener: (context, state) {
+        if (_pendingSnapshotId == null) return;
+        
+        final wasAdded = state.bracketsFor(widget.tournamentId)
+            .any((s) => s.id == _pendingSnapshotId);
+            
+        if (wasAdded) {
+          final idToGo = _pendingSnapshotId!;
+          _pendingSnapshotId = null;
+          AppOverlays.hideLoading(context);
+          BracketViewerRoute(
+            tournamentId: widget.tournamentId,
+            snapshotId: idToGo,
+          ).go(context);
+        } else if (!state.isSaving) {
+          setState(() {
+            _pendingSnapshotId = null;
+          });
+          AppOverlays.hideLoading(context);
+          if (state.lastMutationError != null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Generation failed: ${state.lastMutationError}'),
+                backgroundColor: Colors.red.shade800,
+              ),
+            );
+          }
+        }
+      },
       builder: (context, state) {
+        if (state.isLoading) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+
         final tournament = _findOwningTournament(state);
+        final isGenerating = _pendingSnapshotId != null || state.isSaving;
 
         return Scaffold(
           appBar: AppBar(
@@ -326,10 +374,19 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                           ? 'Tournament not found'
                           : 'Generate Bracket',
                   child: ElevatedButton.icon(
-                    icon: const Icon(Icons.bolt),
-                    label: const Text(
-                      'GENERATE',
-                      style: TextStyle(fontWeight: FontWeight.bold),
+                    icon: isGenerating 
+                        ? const SizedBox(
+                            width: 16, 
+                            height: 16, 
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2, 
+                              color: Colors.white
+                            )
+                          )
+                        : const Icon(Icons.bolt),
+                    label: Text(
+                      isGenerating ? 'GENERATING...' : 'GENERATE',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.grey.shade800,
@@ -338,7 +395,7 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                       disabledForegroundColor: Colors.grey.shade600,
                     ),
                     onPressed:
-                        _hasEnoughParticipantsToGenerate && tournament != null
+                        _hasEnoughParticipantsToGenerate && tournament != null && !isGenerating
                             ? () => _handleGenerateBracketRequested(
                                   context,
                                   state,
