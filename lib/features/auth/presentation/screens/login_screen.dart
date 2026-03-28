@@ -7,6 +7,7 @@ import 'package:tkd_saas/features/auth/presentation/utils/auth_validators.dart';
 import 'package:tkd_saas/features/auth/presentation/widgets/auth_branding_header.dart';
 import 'package:tkd_saas/features/auth/presentation/widgets/auth_submit_button.dart';
 import 'package:tkd_saas/features/auth/presentation/widgets/password_text_form_field.dart';
+import 'package:tkd_saas/core/config/debug_config.dart';
 
 /// Authentication mode for the login screen.
 enum _AuthMode { signIn, signUp, forgotPassword }
@@ -27,13 +28,13 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController(
-    text: kDebugMode ? 'asak91298@gmail.com' : null,
+    text: (DebugConfig.forceDebugMode) ? DebugConfig.debugEmail : null,
   );
   final TextEditingController _passwordController = TextEditingController(
-    text: kDebugMode ? '123456' : null,
+    text: (DebugConfig.forceDebugMode) ? DebugConfig.debugPassword : null,
   );
   final TextEditingController _organizationNameController = TextEditingController(
-    text: kDebugMode ? 'Demo Org' : null,
+    text: (DebugConfig.forceDebugMode) ? DebugConfig.debugOrganizationName : null,
   );
 
   _AuthMode _authMode = _AuthMode.signIn;
@@ -83,8 +84,13 @@ class _LoginScreenState extends State<LoginScreen> {
       // Reset form validation and clear the password field so credentials
       // typed in one mode don't leak into another.
       _formKey.currentState?.reset();
-      _passwordController.clear();
-      _organizationNameController.clear();
+      if (DebugConfig.forceDebugMode) {
+        _passwordController.text = DebugConfig.debugPassword;
+        _organizationNameController.text = DebugConfig.debugOrganizationName;
+      } else {
+        _passwordController.clear();
+        _organizationNameController.clear();
+      }
     });
   }
 

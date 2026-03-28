@@ -25,18 +25,29 @@ class DashboardScreen extends StatelessWidget {
         elevation: 0,
         centerTitle: false,
         actions: [
-          if (AppConfig.isAuthenticationEnabled) ...[
-            TextButton.icon(
-              onPressed: () {
-                context.read<AuthenticationBloc>().add(
-                  const AuthenticationSignOutRequested(),
-                );
+          if (AppConfig.isAuthenticationEnabled)
+            PopupMenuButton<String>(
+              icon: const Icon(Icons.more_vert),
+              tooltip: 'More options',
+              onSelected: (value) {
+                if (value == 'sign_out') {
+                  _confirmSignOut(context);
+                }
               },
-              icon: const Icon(Icons.logout),
-              label: const Text('Sign Out'),
+              itemBuilder: (context) => [
+                const PopupMenuItem(
+                  value: 'sign_out',
+                  child: Row(
+                    children: [
+                      Icon(Icons.logout, size: 20),
+                      SizedBox(width: 12),
+                      Text('Sign Out'),
+                    ],
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(width: 8),
-          ],
+          const SizedBox(width: 8),
         ],
       ),
       body: SingleChildScrollView(
@@ -44,6 +55,36 @@ class DashboardScreen extends StatelessWidget {
         child: _buildTournamentSection(context, theme),
       ),
     );
+  }
+
+  Future<void> _confirmSignOut(BuildContext context) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: const Text('Sign Out?'),
+        content: const Text('Are you sure you want to sign out?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(c, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.grey.shade800,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.pop(c, true),
+            child: const Text('Sign Out'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true && context.mounted) {
+      context.read<AuthenticationBloc>().add(
+        const AuthenticationSignOutRequested(),
+      );
+    }
   }
 
   Widget _buildTournamentSection(BuildContext context, ThemeData theme) {

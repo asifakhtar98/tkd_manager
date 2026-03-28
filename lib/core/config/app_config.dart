@@ -13,5 +13,5 @@ abstract final class AppConfig {
   /// - The sign-out button is hidden from the dashboard AppBar.
   ///
   /// Flip to `true` to restore the full Supabase-backed auth flow.
-  static const bool isAuthenticationEnabled = false;
+  static const bool isAuthenticationEnabled = true;
 }
