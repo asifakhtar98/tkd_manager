@@ -4,6 +4,7 @@ import 'package:injectable/injectable.dart';
 import 'package:tkd_saas/features/bracket/domain/entities/bracket_entity.dart';
 import 'package:tkd_saas/features/bracket/domain/entities/bracket_generation_result.dart';
 import 'package:tkd_saas/features/bracket/domain/entities/match_entity.dart';
+import 'package:tkd_saas/features/bracket/domain/services/match_numbering_utility.dart';
 import 'package:tkd_saas/features/bracket/domain/services/single_elimination_bracket_generator_service.dart';
 import 'package:uuid/uuid.dart';
 
@@ -104,11 +105,17 @@ class SingleEliminationBracketGeneratorServiceImplementation
     }
 
     // Flatten into a single list.
-    final allMatches = <MatchEntity>[
+    final rawMatches = <MatchEntity>[
       for (final roundMatches in matchesByRoundAndPosition.values)
         ...roundMatches.values,
       ?thirdPlaceMatch,
     ];
+
+    // Assign global display numbers.
+    final allMatches = MatchNumberingUtility.assignGlobalMatchNumbers(
+      matches: rawMatches,
+      isDoubleElimination: false,
+    );
 
     return BracketGenerationResult(bracket: bracket, matches: allMatches);
   }

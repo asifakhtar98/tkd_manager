@@ -17,18 +17,19 @@ import 'package:tkd_saas/features/bracket/domain/entities/match_entity.dart';
 /// - LB section: sequential round-by-round (no left/right split)
 /// - GF section: sequential after LB
 abstract final class MatchNumberingUtility {
-  /// Builds a map of `matchId → globalDisplayNumber` for all provided matches.
+  /// Returns a new list of matches where each match's `globalMatchDisplayNumber`
+  /// has been assigned based on the visual arrangement logic.
   ///
   /// [isDoubleElimination] selects the numbering strategy.
   /// [winnersBracketId] and [losersBracketId] are required when
   /// [isDoubleElimination] is `true`.
-  static Map<String, int> buildGlobalMatchNumbers({
+  static List<MatchEntity> assignGlobalMatchNumbers({
     required List<MatchEntity> matches,
     required bool isDoubleElimination,
     String? winnersBracketId,
     String? losersBracketId,
   }) {
-    if (matches.isEmpty) return {};
+    if (matches.isEmpty) return [];
 
     final incomingNonByeCounts = <String, int>{};
     for (final m in matches) {
@@ -38,16 +39,26 @@ abstract final class MatchNumberingUtility {
       }
     }
 
+    final Map<String, int> numberingMap;
     if (isDoubleElimination) {
-      return _buildDoubleEliminationNumbering(
+      numberingMap = _buildDoubleEliminationNumbering(
         matches: matches,
         winnersBracketId: winnersBracketId!,
         losersBracketId: losersBracketId!,
         incomingNonByeCounts: incomingNonByeCounts,
       );
+    } else {
+      numberingMap = _buildSingleEliminationNumbering(matches, incomingNonByeCounts);
     }
 
-    return _buildSingleEliminationNumbering(matches, incomingNonByeCounts);
+    // Apply the numbers to the entity
+    return matches.map((m) {
+      final number = numberingMap[m.id];
+      if (number != null) {
+        return m.copyWith(globalMatchDisplayNumber: number);
+      }
+      return m;
+    }).toList();
   }
 
   // ─────────────────────────────────────────────────────────────────────────

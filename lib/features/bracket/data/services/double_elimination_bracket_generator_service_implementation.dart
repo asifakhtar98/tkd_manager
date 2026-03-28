@@ -5,6 +5,7 @@ import 'package:tkd_saas/features/bracket/domain/entities/bracket_entity.dart';
 import 'package:tkd_saas/features/bracket/domain/entities/double_elimination_bracket_generation_result.dart';
 import 'package:tkd_saas/features/bracket/domain/entities/match_entity.dart';
 import 'package:tkd_saas/features/bracket/domain/services/double_elimination_bracket_generator_service.dart';
+import 'package:tkd_saas/features/bracket/domain/services/match_numbering_utility.dart';
 import 'package:uuid/uuid.dart';
 
 /// Minimum number of participants required for a valid bracket.
@@ -466,24 +467,37 @@ class DoubleEliminationBracketGeneratorServiceImplementation
     }
 
     // Flatten matches
-    final allMatches = <MatchEntity>[];
+    final rawMatches = <MatchEntity>[];
     for (final roundMatches in winnersBracketMatches.values) {
-      allMatches.addAll(roundMatches.values);
+      rawMatches.addAll(roundMatches.values);
     }
     for (final roundMatches in losersBracketMatches.values) {
-      allMatches.addAll(roundMatches.values);
+      rawMatches.addAll(roundMatches.values);
     }
-    allMatches.add(grandFinalsMatch);
+    rawMatches.add(grandFinalsMatch);
     if (resetMatch != null) {
-      allMatches.add(resetMatch);
+      rawMatches.add(resetMatch);
     }
+
+    final numberedMatches = MatchNumberingUtility.assignGlobalMatchNumbers(
+      matches: rawMatches,
+      isDoubleElimination: true,
+      winnersBracketId: winnersBracketId,
+      losersBracketId: losersBracketId,
+    );
+
+    // Update specific assigned match objects
+    final assignedGf = numberedMatches.firstWhere((m) => m.id == grandFinalsMatch.id);
+    final assignedReset = resetMatch != null 
+        ? numberedMatches.firstWhere((m) => m.id == resetMatch!.id) 
+        : null;
 
     return DoubleEliminationBracketGenerationResult(
       winnersBracket: winnersBracket,
       losersBracket: losersBracket,
-      grandFinalsMatch: grandFinalsMatch,
-      resetMatch: resetMatch,
-      allMatches: allMatches,
+      grandFinalsMatch: assignedGf,
+      resetMatch: assignedReset,
+      allMatches: numberedMatches,
     );
   }
 

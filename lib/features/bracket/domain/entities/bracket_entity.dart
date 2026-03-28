@@ -1,8 +1,7 @@
 // ignore_for_file: avoid_dynamic_calls
 
 import 'package:freezed_annotation/freezed_annotation.dart';
-
-part 'bracket_entity.freezed.dart';
+import 'bracket_medal_placement_entity.dart';part 'bracket_entity.freezed.dart';
 part 'bracket_entity.g.dart';
 
 /// Classifies the role of a bracket within an elimination tournament.
@@ -76,6 +75,11 @@ abstract class BracketEntity with _$BracketEntity {
 
     /// Timestamp of soft deletion, if applicable.
     DateTime? deletedAtTimestamp,
+
+    /// Final medal placements, frozen when bracket is marked as finalized.
+    /// This removes the need for UI to traverse the match tree defensively,
+    /// protecting historical accuracy against future logic regressions.
+    List<BracketMedalPlacementEntity>? finalMedalPlacements,
 
   }) = _BracketEntity;
 

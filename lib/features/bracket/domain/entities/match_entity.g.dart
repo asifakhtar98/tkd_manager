@@ -40,6 +40,7 @@ _MatchEntity _$MatchEntityFromJson(Map<String, dynamic> json) => _MatchEntity(
   deletedAtTimestamp: json['deletedAtTimestamp'] == null
       ? null
       : DateTime.parse(json['deletedAtTimestamp'] as String),
+  globalMatchDisplayNumber: (json['globalMatchDisplayNumber'] as num?)?.toInt(),
 );
 
 Map<String, dynamic> _$MatchEntityToJson(_MatchEntity instance) =>
@@ -67,6 +68,7 @@ Map<String, dynamic> _$MatchEntityToJson(_MatchEntity instance) =>
       'syncVersion': instance.syncVersion,
       'isDeleted': instance.isDeleted,
       'deletedAtTimestamp': instance.deletedAtTimestamp?.toIso8601String(),
+      'globalMatchDisplayNumber': instance.globalMatchDisplayNumber,
     };
 
 const _$MatchStatusEnumMap = {

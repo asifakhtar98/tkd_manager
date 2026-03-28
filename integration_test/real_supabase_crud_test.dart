@@ -11,6 +11,7 @@ import 'package:tkd_saas/features/tournament/domain/entities/bracket_snapshot.da
 import 'package:tkd_saas/features/tournament/domain/entities/tournament_entity.dart';
 import 'package:tkd_saas/features/tournament/domain/repositories/bracket_snapshot_repository.dart';
 import 'package:tkd_saas/features/tournament/domain/repositories/tournament_repository.dart';
+import 'package:tkd_saas/features/bracket/domain/entities/bracket_result.dart';
 import 'package:uuid/uuid.dart';
 
 void main() {
@@ -118,13 +119,40 @@ void main() {
       }
 
       // Step D: Update Bracket (using the first one generated)
-      final updatedBracket = firstCreatedBracket.copyWith(label: 'Updated Label');
+      final updatedBracket = firstCreatedBracket.copyWith(
+        label: 'Updated Label',
+      );
+      
+      // Simulate Finalization inside the snapshot
+      final finalizedDataResult = updatedBracket.result.map(
+        singleElimination: (s) => BracketResult.singleElimination(s.data.copyWith(
+          bracket: s.data.bracket.copyWith(
+            isFinalized: true,
+            finalMedalPlacements: [],
+          ),
+        )),
+        doubleElimination: (d) => BracketResult.doubleElimination(d.data.copyWith(
+          winnersBracket: d.data.winnersBracket.copyWith(
+            isFinalized: true,
+            finalMedalPlacements: [],
+          ),
+        )),
+      );
+
+      final fullyUpdatedBracket = updatedBracket.copyWith(result: finalizedDataResult);
+
       final savedUpdatedBracketResult = await bracketRepo.updateBracketSnapshot(
-        updatedBracket, 
+        fullyUpdatedBracket, 
       );
       final savedUpdatedBracket = savedUpdatedBracketResult.getOrElse((failure) => fail('Failed to update bracket: ${failure.message}'));
       
       expect(savedUpdatedBracket.label, 'Updated Label');
+      
+      final dbBracketEntity = savedUpdatedBracket.result.map(
+        singleElimination: (s) => s.data.bracket,
+        doubleElimination: (d) => d.data.winnersBracket,
+      );
+      expect(dbBracketEntity.isFinalized, true);
 
       // Step E: Fetch Bracket
       final snapshotsResult = await bracketRepo.getBracketSnapshots(createdTournament!.id);

@@ -495,143 +495,6 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
           onPressed: _navigateBackToTournamentDetail,
         ),
         actions: [
-          // ── Save Bracket ──
-          Tooltip(
-            message: 'Save explicitly to persist the current bracket state',
-            child: TextButton.icon(
-              style: TextButton.styleFrom(
-                foregroundColor: hasUnsavedChanges ? Colors.blueAccent : Colors.white,
-                disabledForegroundColor: Colors.grey,
-              ),
-              onPressed: isSaving || !hasUnsavedChanges
-                  ? null
-                  : () {
-                      final updatedSnapshot = widget.snapshot.copyWith(
-                        result: result,
-                        participants: participants,
-                        updatedAt: DateTime.now(),
-                      );
-                      context.read<TournamentBloc>().add(
-                            TournamentBracketSnapshotUpdated(updatedSnapshot),
-                          );
-                      context.read<BracketBloc>().add(const BracketSaveRequested());
-                    },
-              icon: isSaving
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.save),
-              label: const Text('Save Bracket'),
-            ),
-          ),
-          
-          const VerticalDivider(width: 8, indent: 14, endIndent: 14, color: Colors.white24),
-
-          // ── Undo ──
-          TextButton(
-            style: actionButtonStyle,
-            onPressed: canUndo
-                ? () => context.read<BracketBloc>().add(
-                    const BracketEvent.undoRequested(),
-                  )
-                : null,
-            child: const Text('Undo'),
-          ),
-
-          // ── Redo ──
-          TextButton(
-            style: actionButtonStyle,
-            onPressed: canRedo
-                ? () => context.read<BracketBloc>().add(
-                    const BracketEvent.redoRequested(),
-                  )
-                : null,
-            child: const Text('Redo'),
-          ),
-
-          // ── Replay / Stop ──
-          if (isReplayInProgress)
-            TextButton(
-              style: actionButtonStyle,
-              onPressed: () => context.read<BracketBloc>().add(
-                const BracketEvent.replayCancelled(),
-              ),
-              child: const Text('Stop Replay'),
-            )
-          else
-            TextButton(
-              style: actionButtonStyle,
-              onPressed: hasHistory
-                  ? () => context.read<BracketBloc>().add(
-                      const BracketEvent.replayRequested(),
-                    )
-                  : null,
-              child: const Text('Replay All'),
-            ),
-
-          // ── History Drawer ──
-          TextButton(
-            style: actionButtonStyle,
-            onPressed: hasHistory
-                ? () => _scaffoldKey.currentState?.openEndDrawer()
-                : null,
-            child: const Text('History'),
-          ),
-
-          const SizedBox(width: 4),
-
-          // ── Edit Mode Toggle ──
-          TextButton(
-            style: TextButton.styleFrom(
-              foregroundColor: isEditModeEnabled
-                  ? Colors.grey.shade400
-                  : Colors.white,
-              disabledForegroundColor: Colors.grey,
-            ),
-            onPressed: isReplayInProgress
-                ? null
-                : () => context.read<BracketBloc>().add(
-                    const BracketEvent.editModeToggled(),
-                  ),
-            child: Text(isEditModeEnabled ? 'Exit Edit' : 'Edit Mode'),
-          ),
-
-          const SizedBox(width: 4),
-
-          // ── Regenerate ──
-          TextButton(
-            style: actionButtonStyle,
-            onPressed: () async {
-              final confirm = await showDialog<bool>(
-                context: context,
-                builder: (c) => AlertDialog(
-                  title: const Text('Regenerate Bracket?'),
-                  content: const Text(
-                    'Current match scores and progress will be lost.',
-                  ),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(c, false),
-                      child: const Text('Cancel'),
-                    ),
-                    ElevatedButton(
-                      onPressed: () => Navigator.pop(c, true),
-                      child: const Text('Regenerate'),
-                    ),
-                  ],
-                ),
-              );
-              if (confirm == true && context.mounted) {
-                context.read<BracketBloc>().add(
-                  const BracketRegenerateRequested(),
-                );
-              }
-            },
-            child: const Text('Regenerate'),
-          ),
-
           // ── Canvas Theme Toggle ──
           SegmentedButton<TieSheetThemeMode>(
             segments: TieSheetThemeMode.values
@@ -721,6 +584,164 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
             ),
           ),
         ],
+      ),
+      bottomNavigationBar: BottomAppBar(
+        height: 48,
+        color: Theme.of(context).primaryColor,
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          reverse: true,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+          
+              // ── Undo ──
+              TextButton(
+                style: actionButtonStyle,
+                onPressed: canUndo
+                    ? () => context.read<BracketBloc>().add(
+                        const BracketEvent.undoRequested(),
+                      )
+                    : null,
+                child: const Text('Undo'),
+              ),
+
+              // ── Redo ──
+              TextButton(
+                style: actionButtonStyle,
+                onPressed: canRedo
+                    ? () => context.read<BracketBloc>().add(
+                        const BracketEvent.redoRequested(),
+                      )
+                    : null,
+                child: const Text('Redo'),
+              ),
+
+              // ── Replay / Stop ──
+              if (isReplayInProgress)
+                TextButton(
+                  style: actionButtonStyle,
+                  onPressed: () => context.read<BracketBloc>().add(
+                    const BracketEvent.replayCancelled(),
+                  ),
+                  child: const Text('Stop Replay'),
+                )
+              else
+                TextButton(
+                  style: actionButtonStyle,
+                  onPressed: hasHistory
+                      ? () => context.read<BracketBloc>().add(
+                          const BracketEvent.replayRequested(),
+                        )
+                      : null,
+                  child: const Text('Replay All'),
+                ),
+
+              // ── History Drawer ──
+              TextButton(
+                style: actionButtonStyle,
+                onPressed: hasHistory
+                    ? () => _scaffoldKey.currentState?.openEndDrawer()
+                    : null,
+                child: const Text('History'),
+              ),
+
+              const SizedBox(width: 8),
+
+              // ── Edit Mode Toggle ──
+              TextButton(
+                style: TextButton.styleFrom(
+                  foregroundColor: isEditModeEnabled
+                      ? Colors.grey.shade400
+                      : Colors.white,
+                  disabledForegroundColor: Colors.grey,
+                ),
+                onPressed: isReplayInProgress
+                    ? null
+                    : () => context.read<BracketBloc>().add(
+                        const BracketEvent.editModeToggled(),
+                      ),
+                child: Text(isEditModeEnabled ? 'Exit Edit' : 'Edit Mode'),
+              ),
+
+              const SizedBox(width: 8),
+
+              // ── Regenerate ──
+              TextButton(
+                style: actionButtonStyle,
+                onPressed: () async {
+                  final confirm = await showDialog<bool>(
+                    context: context,
+                    builder: (c) => AlertDialog(
+                      title: const Text('Regenerate Bracket?'),
+                      content: const Text(
+                        'Current match scores and progress will be lost.',
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(c, false),
+                          child: const Text('Cancel'),
+                        ),
+                        ElevatedButton(
+                          onPressed: () => Navigator.pop(c, true),
+                          child: const Text('Regenerate'),
+                        ),
+                      ],
+                    ),
+                  );
+                  if (confirm == true && context.mounted) {
+                    context.read<BracketBloc>().add(
+                      const BracketRegenerateRequested(),
+                    );
+                  }
+                },
+                child: const Text('Regenerate'),
+              ),
+              const SizedBox(
+                height: 24,
+                child: VerticalDivider(width: 16, color: Colors.white24),
+              ),
+                  // ── Save Bracket ──
+              Tooltip(
+                message: 'Save explicitly to persist the current bracket state',
+                child: TextButton.icon(
+                  style: TextButton.styleFrom(
+                    foregroundColor: hasUnsavedChanges
+                        ? Colors.blueAccent
+                        : Colors.white,
+                    disabledForegroundColor: Colors.grey,
+                  ),
+                  onPressed: isSaving || !hasUnsavedChanges
+                      ? null
+                      : () {
+                          final updatedSnapshot = widget.snapshot.copyWith(
+                            result: result,
+                            participants: participants,
+                            updatedAt: DateTime.now(),
+                          );
+                          context.read<TournamentBloc>().add(
+                            TournamentBracketSnapshotUpdated(updatedSnapshot),
+                          );
+                          context.read<BracketBloc>().add(
+                            const BracketSaveRequested(),
+                          );
+                        },
+                  icon: isSaving
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.save),
+                  label: const Text('Save Bracket'),
+                ),
+              ),
+
+              
+
+            ],
+          ),
+        ),
       ),
       endDrawer: BracketHistoryDrawer(
         actionHistory: actionHistory,

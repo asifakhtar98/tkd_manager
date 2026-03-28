@@ -97,15 +97,19 @@ void main() {
         bracketId: 'bracket',
         includeThirdPlaceMatch: includeThirdPlaceMatch,
       );
-      final numbering = MatchNumberingUtility.buildGlobalMatchNumbers(
+      final numberedMatches = MatchNumberingUtility.assignGlobalMatchNumbers(
         matches: result.matches,
         isDoubleElimination: false,
       );
+      final numbering = {
+        for (final m in numberedMatches)
+          if (m.globalMatchDisplayNumber != null) m.id: m.globalMatchDisplayNumber!
+      };
       return (matches: result.matches, numbering: numbering);
     }
 
     test('empty matches returns empty map', () {
-      final result = MatchNumberingUtility.buildGlobalMatchNumbers(
+      final result = MatchNumberingUtility.assignGlobalMatchNumbers(
         matches: [],
         isDoubleElimination: false,
       );
@@ -284,12 +288,16 @@ void main() {
         losersBracketId: 'lb',
       );
 
-      final numbering = MatchNumberingUtility.buildGlobalMatchNumbers(
+      final numberedMatches = MatchNumberingUtility.assignGlobalMatchNumbers(
         matches: result.allMatches,
         isDoubleElimination: true,
         winnersBracketId: 'wb',
         losersBracketId: 'lb',
       );
+      final numbering = {
+        for (final m in numberedMatches)
+          if (m.globalMatchDisplayNumber != null) m.id: m.globalMatchDisplayNumber!
+      };
 
       return (
         allMatches: result.allMatches,

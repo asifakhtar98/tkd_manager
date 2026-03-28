@@ -2,8 +2,8 @@ import 'dart:convert';
 import 'dart:math';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'package:tkd_saas/features/bracket/domain/entities/bracket_medal_placement_entity.dart';
 import '../../domain/entities/match_entity.dart';
-import '../../domain/services/match_numbering_utility.dart';
 import '../../../tournament/domain/entities/tournament_entity.dart';
 import '../../../participant/domain/entities/participant_entity.dart';
 import 'participant_slot_hit_area.dart';
@@ -46,6 +46,8 @@ class TieSheetCanvasWidget extends StatefulWidget {
   /// Called when a participant slot is tapped in edit mode.
   final void Function(ParticipantSlotHitArea slot)? onParticipantSlotTapped;
 
+  final List<BracketMedalPlacementEntity>? finalMedalPlacements;
+
   const TieSheetCanvasWidget({
     super.key,
     required this.tournament,
@@ -57,6 +59,7 @@ class TieSheetCanvasWidget extends StatefulWidget {
     required this.includeThirdPlaceMatch,
     this.winnersBracketId,
     this.losersBracketId,
+    this.finalMedalPlacements,
     this.isEditModeEnabled = false,
     this.themeConfig = TieSheetThemeConfig.defaultPreset,
     this.classification = const BracketClassification(),
@@ -192,6 +195,7 @@ class _TieSheetCanvasWidgetState extends State<TieSheetCanvasWidget> {
     includeThirdPlaceMatch: widget.includeThirdPlaceMatch,
     winnersBracketId: widget.winnersBracketId,
     losersBracketId: widget.losersBracketId,
+    finalMedalPlacements: widget.finalMedalPlacements,
     isEditModeEnabled: widget.isEditModeEnabled,
     themeConfig: widget.themeConfig,
     classification: widget.classification,
@@ -396,6 +400,7 @@ class TieSheetPainter extends CustomPainter {
   final bool includeThirdPlaceMatch;
   final String? winnersBracketId;
   final String? losersBracketId;
+  final List<BracketMedalPlacementEntity>? finalMedalPlacements;
   final bool isEditModeEnabled;
   final TieSheetThemeConfig themeConfig;
 
@@ -408,7 +413,6 @@ class TieSheetPainter extends CustomPainter {
 
   final List<MapEntry<String, Rect>> matchHitAreas = [];
   final List<ParticipantSlotHitArea> participantSlotHitAreas = [];
-  final Map<String, int> _matchGlobalNumbers = {};
   final Map<String, Offset> _nodeOffsets = {};
 
   // ── Layout dimensions ──────────────────────────────────────────────────────
@@ -457,6 +461,7 @@ class TieSheetPainter extends CustomPainter {
     required this.includeThirdPlaceMatch,
     this.winnersBracketId,
     this.losersBracketId,
+    this.finalMedalPlacements,
     this.isEditModeEnabled = false,
     this.themeConfig = TieSheetThemeConfig.defaultPreset,
     this.classification = const BracketClassification(),
@@ -657,27 +662,10 @@ class TieSheetPainter extends CustomPainter {
     );
   }
 
-  /// Delegates global match numbering to [MatchNumberingUtility].
-  void _buildGlobalMatchNumbers() {
-    _matchGlobalNumbers
-      ..clear()
-      ..addAll(
-        MatchNumberingUtility.buildGlobalMatchNumbers(
-          matches: matches,
-          isDoubleElimination: _isDouble,
-          winnersBracketId: winnersBracketId,
-          losersBracketId: losersBracketId,
-        ),
-      );
-  }
-
-  // ── 3d  Paint entry-point ──────────────────────────────────────────────────
-
   @override
   void paint(Canvas canvas, Size size) {
     matchHitAreas.clear();
     _nodeOffsets.clear();
-    _buildGlobalMatchNumbers();
 
     canvas.drawRect(
       Rect.fromLTWH(0, 0, size.width, size.height),
@@ -1124,7 +1112,7 @@ class TieSheetPainter extends CustomPainter {
       match.winnerId != null ? winnerPen : pendingPen,
     );
 
-    final gNum = _matchGlobalNumbers[match.id];
+    final gNum = match.globalMatchDisplayNumber;
     final w = match.winnerId != null ? _findP(match.winnerId) : null;
     final wName = w != null ? _pName(w) : null;
 
@@ -1189,7 +1177,7 @@ class TieSheetPainter extends CustomPainter {
 
     _nodeOffsets['${match.id}_output'] = Offset(junctionX, rawMidY);
 
-    final gNum = _matchGlobalNumbers[match.id];
+    final gNum = match.globalMatchDisplayNumber;
     final w = match.winnerId != null ? _findP(match.winnerId) : null;
     final wName = w != null ? _pName(w) : null;
 
@@ -1849,7 +1837,7 @@ class TieSheetPainter extends CustomPainter {
       ..lineTo(junctionX, midY);
     canvas.drawPath(pathB, botPen);
 
-    final gNum = _matchGlobalNumbers[match.id];
+    final gNum = match.globalMatchDisplayNumber;
     final w = match.winnerId != null ? _findP(match.winnerId) : null;
     final wName = w != null ? _pName(w) : null;
 
@@ -2029,7 +2017,7 @@ class TieSheetPainter extends CustomPainter {
       ),
     );
 
-    final gNum = _matchGlobalNumbers[m.id];
+    final gNum = m.globalMatchDisplayNumber;
     if (gNum != null) {
       _drawMatchPill(canvas, '$gNum', x - 4, y);
     }
@@ -2182,53 +2170,35 @@ class TieSheetPainter extends CustomPainter {
     }
 
     // ── Populate winner names ──
-    final allRounds = matches.map((m) => m.roundNumber).reduce(max);
-    final finals = matches
-        .where((m) => m.roundNumber == allRounds && m.matchNumberInRound == 1)
-        .firstOrNull;
-    if (finals != null && finals.winnerId != null) {
-      final gold = _findP(finals.winnerId);
-      final silverId = finals.winnerId == finals.participantRedId
-          ? finals.participantBlueId
-          : finals.participantRedId;
-      final silver = _findP(silverId);
-      if (gold != null) {
-        _drawText(
-          canvas,
-          _pName(gold),
-          x + _medalBlankW + 14,
-          _centeredTextY(y, _medalRowH, _fontSize(11)),
-          _bold(11),
-        );
-      }
-      if (silver != null) {
-        _drawText(
-          canvas,
-          _pName(silver),
-          x + _medalBlankW + 14,
-          _centeredTextY(
-            y + (_medalRowH + themeConfig.medalRowGap),
-            _medalRowH,
-            _fontSize(11),
-          ),
-          _bold(11),
-        );
-      }
-    }
-    // 3rd-place match: winner = Bronze 1, loser = Bronze 2
-    final thirdM = matches
-        .where((m) => m.roundNumber == allRounds && m.matchNumberInRound == 2)
-        .firstOrNull;
-    if (thirdM != null) {
-      if (thirdM.winnerId != null) {
-        final bronze1 = _findP(thirdM.winnerId);
-        if (bronze1 != null) {
+    final resolvedPlacements = finalMedalPlacements;
+    if (resolvedPlacements != null && resolvedPlacements.isNotEmpty) {
+      // Paint frozen finalized medal placements
+      int currentBronzeRow = 2; // Rows 2 and 3 are for bronzes
+      for (final placement in resolvedPlacements) {
+        final p = _findP(placement.participantId);
+        if (p == null) continue;
+
+        int? rowIdx;
+        switch (placement.rankStatus) {
+          case 1:
+             rowIdx = 0;
+          case 2:
+             rowIdx = 1;
+          case 3:
+             rowIdx = currentBronzeRow;
+             if (currentBronzeRow < 3) currentBronzeRow++;
+          case 4:
+             rowIdx = currentBronzeRow;
+             if (currentBronzeRow < 3) currentBronzeRow++;
+        }
+
+        if (rowIdx != null && rowIdx <= 3) {
           _drawText(
             canvas,
-            _pName(bronze1),
+            _pName(p),
             x + _medalBlankW + 14,
             _centeredTextY(
-              y + 2 * (_medalRowH + themeConfig.medalRowGap),
+              y + rowIdx * (_medalRowH + themeConfig.medalRowGap),
               _medalRowH,
               _fontSize(11),
             ),
@@ -2236,23 +2206,80 @@ class TieSheetPainter extends CustomPainter {
           );
         }
       }
-      final loserId = thirdM.winnerId == thirdM.participantRedId
-          ? thirdM.participantBlueId
-          : thirdM.participantRedId;
-      if (loserId != null) {
-        final bronze2 = _findP(loserId);
-        if (bronze2 != null) {
+    } else {
+      // Dynamic runtime fallback for unfinalized brackets
+      final allRounds = matches.map((m) => m.roundNumber).reduce(max);
+      final finals = matches
+          .where((m) => m.roundNumber == allRounds && m.matchNumberInRound == 1)
+          .firstOrNull;
+      if (finals != null && finals.winnerId != null) {
+        final gold = _findP(finals.winnerId);
+        final silverId = finals.winnerId == finals.participantRedId
+            ? finals.participantBlueId
+            : finals.participantRedId;
+        final silver = _findP(silverId);
+        if (gold != null) {
           _drawText(
             canvas,
-            _pName(bronze2),
+            _pName(gold),
+            x + _medalBlankW + 14,
+            _centeredTextY(y, _medalRowH, _fontSize(11)),
+            _bold(11),
+          );
+        }
+        if (silver != null) {
+          _drawText(
+            canvas,
+            _pName(silver),
             x + _medalBlankW + 14,
             _centeredTextY(
-              y + 3 * (_medalRowH + themeConfig.medalRowGap),
+              y + (_medalRowH + themeConfig.medalRowGap),
               _medalRowH,
               _fontSize(11),
             ),
             _bold(11),
           );
+        }
+      }
+      // 3rd-place match: winner = Bronze 1, loser = Bronze 2
+      final thirdM = matches
+          .where((m) => m.roundNumber == allRounds && m.matchNumberInRound == 2)
+          .firstOrNull;
+      if (thirdM != null) {
+        if (thirdM.winnerId != null) {
+          final bronze1 = _findP(thirdM.winnerId);
+          if (bronze1 != null) {
+            _drawText(
+              canvas,
+              _pName(bronze1),
+              x + _medalBlankW + 14,
+              _centeredTextY(
+                y + 2 * (_medalRowH + themeConfig.medalRowGap),
+                _medalRowH,
+                _fontSize(11),
+              ),
+              _bold(11),
+            );
+          }
+        }
+        final loserId = thirdM.winnerId == thirdM.participantRedId
+            ? thirdM.participantBlueId
+            : thirdM.participantRedId;
+        if (loserId != null) {
+          final bronze2 = _findP(loserId);
+          if (bronze2 != null) {
+            _drawText(
+              canvas,
+              _pName(bronze2),
+              x + _medalBlankW + 14,
+              _centeredTextY(
+                y + 3 * (_medalRowH + themeConfig.medalRowGap),
+                _medalRowH,
+                _fontSize(11),
+              ),
+              _bold(11),
+            );
+          }
         }
       }
     }

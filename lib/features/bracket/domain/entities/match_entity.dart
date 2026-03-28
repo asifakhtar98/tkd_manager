@@ -145,6 +145,11 @@ abstract class MatchEntity with _$MatchEntity {
     /// Timestamp of soft deletion, if applicable.
     DateTime? deletedAtTimestamp,
 
+    /// Global display sequential number assigned across the entire Tie Sheet.
+    /// Computed once during bracket creation phase to preserve chronological integrity.
+    /// Example: 34 translates to "Match #34" in the Canvas UI.
+    int? globalMatchDisplayNumber,
+
   }) = _MatchEntity;
 
   factory MatchEntity.fromJson(Map<String, dynamic> json) =>
