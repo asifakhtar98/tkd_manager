@@ -8,12 +8,12 @@ import 'package:tkd_saas/features/bracket/domain/entities/match_entity.dart';
 /// Follows the real-world DinuFix convention:
 ///
 /// **Single Elimination**
-/// - Per round: left-side matches first (top → bottom), then right-side
+/// - Per round: ordered by rest priority (fewer incoming bouts go first), then top → bottom.
 /// - 3rd-place match numbered before the final
 /// - Final is always the last numbered match
 ///
 /// **Double Elimination**
-/// - WB section: left-first / right-second per round
+/// - WB section: ordered by rest priority per round
 /// - LB section: sequential round-by-round (no left/right split)
 /// - GF section: sequential after LB
 abstract final class MatchNumberingUtility {
@@ -30,15 +30,24 @@ abstract final class MatchNumberingUtility {
   }) {
     if (matches.isEmpty) return {};
 
+    final incomingNonByeCounts = <String, int>{};
+    for (final m in matches) {
+      if (!m.isBye && m.winnerAdvancesToMatchId != null) {
+        incomingNonByeCounts[m.winnerAdvancesToMatchId!] = 
+            (incomingNonByeCounts[m.winnerAdvancesToMatchId!] ?? 0) + 1;
+      }
+    }
+
     if (isDoubleElimination) {
       return _buildDoubleEliminationNumbering(
         matches: matches,
         winnersBracketId: winnersBracketId!,
         losersBracketId: losersBracketId!,
+        incomingNonByeCounts: incomingNonByeCounts,
       );
     }
 
-    return _buildSingleEliminationNumbering(matches);
+    return _buildSingleEliminationNumbering(matches, incomingNonByeCounts);
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -47,6 +56,7 @@ abstract final class MatchNumberingUtility {
 
   static Map<String, int> _buildSingleEliminationNumbering(
     List<MatchEntity> matches,
+    Map<String, int> incomingNonByeCounts,
   ) {
     final result = <String, int>{};
     final maxRound = _maxRound(matches);
@@ -78,21 +88,21 @@ abstract final class MatchNumberingUtility {
       // The final round (1 match) is handled specially below.
       if (roundNumber == mainMaxRound && matchCount == 1) break;
 
-      globalNumber = _numberMatchesLeftThenRight(
+      globalNumber = _numberMatchesWithRestPriority(
         roundMatches,
         result,
         globalNumber,
+        incomingNonByeCounts,
       );
     }
 
     // 3rd-place match comes before the final.
-    if (thirdPlaceMatch != null &&
-        thirdPlaceMatch.resultType != MatchResultType.bye) {
+    if (thirdPlaceMatch != null && !thirdPlaceMatch.isBye) {
       result[thirdPlaceMatch.id] = globalNumber++;
     }
 
     // Final match is always last.
-    if (finalMatch != null && finalMatch.resultType != MatchResultType.bye) {
+    if (finalMatch != null && !finalMatch.isBye) {
       result[finalMatch.id] = globalNumber++;
     }
 
@@ -107,6 +117,7 @@ abstract final class MatchNumberingUtility {
     required List<MatchEntity> matches,
     required String winnersBracketId,
     required String losersBracketId,
+    required Map<String, int> incomingNonByeCounts,
   }) {
     final result = <String, int>{};
 
@@ -125,28 +136,31 @@ abstract final class MatchNumberingUtility {
 
     var globalNumber = 1;
 
-    // Winners Bracket: left-first / right-second per round.
+    // Winners Bracket: sort by rest priority.
     final winnersMaxRound = winnersMatches.isEmpty
         ? 0
         : _maxRound(winnersMatches);
     final winnersByRound = _groupByRound(winnersMatches);
     for (var r = 1; r <= winnersMaxRound; r++) {
-      globalNumber = _numberMatchesLeftThenRight(
+      globalNumber = _numberMatchesWithRestPriority(
         winnersByRound[r] ?? [],
         result,
         globalNumber,
+        incomingNonByeCounts,
       );
     }
 
     // Losers Bracket: sequential round-by-round (no left/right split —
-    // LB is rendered linearly, not mirrored).
+    // LB is rendered linearly). Using rest priority here ensures that if an LB
+    // player advances via bye/walkover, they are given fair rest spacing too.
     final losersMaxRound = losersMatches.isEmpty ? 0 : _maxRound(losersMatches);
     final losersByRound = _groupByRound(losersMatches);
     for (var r = 1; r <= losersMaxRound; r++) {
-      globalNumber = _numberMatchesSequentially(
+      globalNumber = _numberMatchesWithRestPriority(
         losersByRound[r] ?? [],
         result,
         globalNumber,
+        incomingNonByeCounts,
       );
     }
 
@@ -159,7 +173,7 @@ abstract final class MatchNumberingUtility {
         return a.matchNumberInRound.compareTo(b.matchNumberInRound);
       });
     for (final match in grandFinalsSorted) {
-      if (match.resultType != MatchResultType.bye) {
+      if (!match.isBye) {
         result[match.id] = globalNumber++;
       }
     }
@@ -171,50 +185,33 @@ abstract final class MatchNumberingUtility {
   // Shared Helpers
   // ─────────────────────────────────────────────────────────────────────────
 
-  /// Numbers the round's matches left-first then right-second (split at the
-  /// midpoint of [matchNumberInRound]).
+  /// Numbers the round's matches ordering matches with fewer dependencies first
+  /// (rest priority), then top-to-bottom.
   ///
   /// Returns the next available global number.
-  static int _numberMatchesLeftThenRight(
+  static int _numberMatchesWithRestPriority(
     List<MatchEntity> roundMatches,
     Map<String, int> result,
     int startingNumber,
+    Map<String, int> incomingNonByeCounts,
   ) {
     var globalNumber = startingNumber;
-    final matchCount = roundMatches.length;
-    final leftHalfCount = (matchCount + 1) ~/ 2;
+    
+    // Sort matches:
+    // 1. Matches with FEWER incoming non-bye matches go FIRST.
+    // 2. Tie-breaker: natural layout order (matchNumberInRound).
+    final sortedMatches = List<MatchEntity>.from(roundMatches)
+      ..sort((a, b) {
+        final aIncoming = incomingNonByeCounts[a.id] ?? 0;
+        final bIncoming = incomingNonByeCounts[b.id] ?? 0;
+        if (aIncoming != bIncoming) {
+          return aIncoming.compareTo(bIncoming);
+        }
+        return a.matchNumberInRound.compareTo(b.matchNumberInRound);
+      });
 
-    final leftMatches = roundMatches
-        .where((m) => m.matchNumberInRound <= leftHalfCount)
-        .toList();
-    final rightMatches = roundMatches
-        .where((m) => m.matchNumberInRound > leftHalfCount)
-        .toList();
-
-    for (final match in leftMatches) {
-      if (match.resultType != MatchResultType.bye) {
-        result[match.id] = globalNumber++;
-      }
-    }
-    for (final match in rightMatches) {
-      if (match.resultType != MatchResultType.bye) {
-        result[match.id] = globalNumber++;
-      }
-    }
-    return globalNumber;
-  }
-
-  /// Numbers the matches in their natural [matchNumberInRound] order.
-  ///
-  /// Returns the next available global number.
-  static int _numberMatchesSequentially(
-    List<MatchEntity> roundMatches,
-    Map<String, int> result,
-    int startingNumber,
-  ) {
-    var globalNumber = startingNumber;
-    for (final match in roundMatches) {
-      if (match.resultType != MatchResultType.bye) {
+    for (final match in sortedMatches) {
+      if (!match.isBye) {
         result[match.id] = globalNumber++;
       }
     }
