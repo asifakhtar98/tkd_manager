@@ -11,6 +11,30 @@ part of 'bracket_edit_action.dart';
 
 // dart format off
 T _$identity<T>(T value) => value;
+BracketEditAction _$BracketEditActionFromJson(
+  Map<String, dynamic> json
+) {
+        switch (json['runtimeType']) {
+                  case 'participantSlotSwapped':
+          return BracketEditActionParticipantSlotSwapped.fromJson(
+            json
+          );
+                case 'participantDetailsUpdated':
+          return BracketEditActionParticipantDetailsUpdated.fromJson(
+            json
+          );
+        
+          default:
+            throw CheckedFromJsonException(
+  json,
+  'runtimeType',
+  'BracketEditAction',
+  'Invalid union type "${json['runtimeType']}"!'
+);
+        }
+      
+}
+
 /// @nodoc
 mixin _$BracketEditAction {
 
@@ -21,6 +45,8 @@ mixin _$BracketEditAction {
 @pragma('vm:prefer-inline')
 $BracketEditActionCopyWith<BracketEditAction> get copyWith => _$BracketEditActionCopyWithImpl<BracketEditAction>(this as BracketEditAction, _$identity);
 
+  /// Serializes this BracketEditAction to a JSON map.
+  Map<String, dynamic> toJson();
 
 
 @override
@@ -28,7 +54,7 @@ bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is BracketEditAction&&(identical(other.displayLabel, displayLabel) || other.displayLabel == displayLabel)&&(identical(other.recordedAt, recordedAt) || other.recordedAt == recordedAt));
 }
 
-
+@JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode => Object.hash(runtimeType,displayLabel,recordedAt);
 
@@ -204,11 +230,11 @@ return participantDetailsUpdated(_that.participantId,_that.updatedFullName,_that
 }
 
 /// @nodoc
-
+@JsonSerializable()
 
 class BracketEditActionParticipantSlotSwapped implements BracketEditAction {
-  const BracketEditActionParticipantSlotSwapped({required this.sourceMatchId, required this.sourceSlotPosition, required this.targetMatchId, required this.targetSlotPosition, required this.displayLabel, required this.recordedAt});
-  
+  const BracketEditActionParticipantSlotSwapped({required this.sourceMatchId, required this.sourceSlotPosition, required this.targetMatchId, required this.targetSlotPosition, required this.displayLabel, required this.recordedAt, final  String? $type}): $type = $type ?? 'participantSlotSwapped';
+  factory BracketEditActionParticipantSlotSwapped.fromJson(Map<String, dynamic> json) => _$BracketEditActionParticipantSlotSwappedFromJson(json);
 
  final  String sourceMatchId;
  final  String sourceSlotPosition;
@@ -217,20 +243,27 @@ class BracketEditActionParticipantSlotSwapped implements BracketEditAction {
 @override final  String displayLabel;
 @override final  DateTime recordedAt;
 
+@JsonKey(name: 'runtimeType')
+final String $type;
+
+
 /// Create a copy of BracketEditAction
 /// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $BracketEditActionParticipantSlotSwappedCopyWith<BracketEditActionParticipantSlotSwapped> get copyWith => _$BracketEditActionParticipantSlotSwappedCopyWithImpl<BracketEditActionParticipantSlotSwapped>(this, _$identity);
 
-
+@override
+Map<String, dynamic> toJson() {
+  return _$BracketEditActionParticipantSlotSwappedToJson(this, );
+}
 
 @override
 bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is BracketEditActionParticipantSlotSwapped&&(identical(other.sourceMatchId, sourceMatchId) || other.sourceMatchId == sourceMatchId)&&(identical(other.sourceSlotPosition, sourceSlotPosition) || other.sourceSlotPosition == sourceSlotPosition)&&(identical(other.targetMatchId, targetMatchId) || other.targetMatchId == targetMatchId)&&(identical(other.targetSlotPosition, targetSlotPosition) || other.targetSlotPosition == targetSlotPosition)&&(identical(other.displayLabel, displayLabel) || other.displayLabel == displayLabel)&&(identical(other.recordedAt, recordedAt) || other.recordedAt == recordedAt));
 }
 
-
+@JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode => Object.hash(runtimeType,sourceMatchId,sourceSlotPosition,targetMatchId,targetSlotPosition,displayLabel,recordedAt);
 
@@ -280,11 +313,11 @@ as DateTime,
 }
 
 /// @nodoc
-
+@JsonSerializable()
 
 class BracketEditActionParticipantDetailsUpdated implements BracketEditAction {
-  const BracketEditActionParticipantDetailsUpdated({required this.participantId, required this.updatedFullName, this.updatedRegistrationId, required this.displayLabel, required this.recordedAt});
-  
+  const BracketEditActionParticipantDetailsUpdated({required this.participantId, required this.updatedFullName, this.updatedRegistrationId, required this.displayLabel, required this.recordedAt, final  String? $type}): $type = $type ?? 'participantDetailsUpdated';
+  factory BracketEditActionParticipantDetailsUpdated.fromJson(Map<String, dynamic> json) => _$BracketEditActionParticipantDetailsUpdatedFromJson(json);
 
  final  String participantId;
  final  String updatedFullName;
@@ -292,20 +325,27 @@ class BracketEditActionParticipantDetailsUpdated implements BracketEditAction {
 @override final  String displayLabel;
 @override final  DateTime recordedAt;
 
+@JsonKey(name: 'runtimeType')
+final String $type;
+
+
 /// Create a copy of BracketEditAction
 /// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $BracketEditActionParticipantDetailsUpdatedCopyWith<BracketEditActionParticipantDetailsUpdated> get copyWith => _$BracketEditActionParticipantDetailsUpdatedCopyWithImpl<BracketEditActionParticipantDetailsUpdated>(this, _$identity);
 
-
+@override
+Map<String, dynamic> toJson() {
+  return _$BracketEditActionParticipantDetailsUpdatedToJson(this, );
+}
 
 @override
 bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is BracketEditActionParticipantDetailsUpdated&&(identical(other.participantId, participantId) || other.participantId == participantId)&&(identical(other.updatedFullName, updatedFullName) || other.updatedFullName == updatedFullName)&&(identical(other.updatedRegistrationId, updatedRegistrationId) || other.updatedRegistrationId == updatedRegistrationId)&&(identical(other.displayLabel, displayLabel) || other.displayLabel == displayLabel)&&(identical(other.recordedAt, recordedAt) || other.recordedAt == recordedAt));
 }
 
-
+@JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode => Object.hash(runtimeType,participantId,updatedFullName,updatedRegistrationId,displayLabel,recordedAt);
 

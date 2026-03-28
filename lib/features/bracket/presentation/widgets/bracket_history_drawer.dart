@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tkd_saas/features/bracket/domain/entities/bracket_edit_action.dart';
-import 'package:tkd_saas/features/bracket/presentation/bloc/bracket_state.dart';
+import 'package:tkd_saas/features/bracket/domain/entities/bracket_result.dart';
 
 /// A drawer widget that displays the chronological history of match-result
 /// actions. Each entry shows a human-readable label and timestamp. The

@@ -2,6 +2,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:tkd_saas/features/bracket/domain/entities/match_entity.dart';
 
 part 'bracket_match_action.freezed.dart';
+part 'bracket_match_action.g.dart';
 
 /// Metadata describing a single match-result recording action.
 ///
@@ -32,4 +33,7 @@ abstract class BracketMatchAction with _$BracketMatchAction {
     /// e.g. "R1-M2: John Doe won by Points (3-1)".
     required String displayLabel,
   }) = _BracketMatchAction;
+
+  factory BracketMatchAction.fromJson(Map<String, dynamic> json) =>
+      _$BracketMatchActionFromJson(json);
 }

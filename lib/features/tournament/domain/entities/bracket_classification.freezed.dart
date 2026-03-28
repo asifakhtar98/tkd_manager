@@ -11,6 +11,7 @@ part of 'bracket_classification.dart';
 
 // dart format off
 T _$identity<T>(T value) => value;
+
 /// @nodoc
 mixin _$BracketClassification {
 
@@ -24,6 +25,8 @@ mixin _$BracketClassification {
 @pragma('vm:prefer-inline')
 $BracketClassificationCopyWith<BracketClassification> get copyWith => _$BracketClassificationCopyWithImpl<BracketClassification>(this as BracketClassification, _$identity);
 
+  /// Serializes this BracketClassification to a JSON map.
+  Map<String, dynamic> toJson();
 
 
 @override
@@ -31,7 +34,7 @@ bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is BracketClassification&&(identical(other.ageCategoryLabel, ageCategoryLabel) || other.ageCategoryLabel == ageCategoryLabel)&&(identical(other.genderLabel, genderLabel) || other.genderLabel == genderLabel)&&(identical(other.weightDivisionLabel, weightDivisionLabel) || other.weightDivisionLabel == weightDivisionLabel));
 }
 
-
+@JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode => Object.hash(runtimeType,ageCategoryLabel,genderLabel,weightDivisionLabel);
 
@@ -208,11 +211,11 @@ return $default(_that.ageCategoryLabel,_that.genderLabel,_that.weightDivisionLab
 }
 
 /// @nodoc
-
+@JsonSerializable()
 
 class _BracketClassification implements BracketClassification {
   const _BracketClassification({this.ageCategoryLabel = '', this.genderLabel = '', this.weightDivisionLabel = ''});
-  
+  factory _BracketClassification.fromJson(Map<String, dynamic> json) => _$BracketClassificationFromJson(json);
 
 /// Age category label, e.g. "JUNIOR", "SENIOR", "CADET".
 @override@JsonKey() final  String ageCategoryLabel;
@@ -227,14 +230,17 @@ class _BracketClassification implements BracketClassification {
 @pragma('vm:prefer-inline')
 _$BracketClassificationCopyWith<_BracketClassification> get copyWith => __$BracketClassificationCopyWithImpl<_BracketClassification>(this, _$identity);
 
-
+@override
+Map<String, dynamic> toJson() {
+  return _$BracketClassificationToJson(this, );
+}
 
 @override
 bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is _BracketClassification&&(identical(other.ageCategoryLabel, ageCategoryLabel) || other.ageCategoryLabel == ageCategoryLabel)&&(identical(other.genderLabel, genderLabel) || other.genderLabel == genderLabel)&&(identical(other.weightDivisionLabel, weightDivisionLabel) || other.weightDivisionLabel == weightDivisionLabel));
 }
 
-
+@JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode => Object.hash(runtimeType,ageCategoryLabel,genderLabel,weightDivisionLabel);
 

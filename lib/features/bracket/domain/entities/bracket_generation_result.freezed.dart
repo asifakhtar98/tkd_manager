@@ -11,6 +11,7 @@ part of 'bracket_generation_result.dart';
 
 // dart format off
 T _$identity<T>(T value) => value;
+
 /// @nodoc
 mixin _$BracketGenerationResult {
 
@@ -21,6 +22,8 @@ mixin _$BracketGenerationResult {
 @pragma('vm:prefer-inline')
 $BracketGenerationResultCopyWith<BracketGenerationResult> get copyWith => _$BracketGenerationResultCopyWithImpl<BracketGenerationResult>(this as BracketGenerationResult, _$identity);
 
+  /// Serializes this BracketGenerationResult to a JSON map.
+  Map<String, dynamic> toJson();
 
 
 @override
@@ -28,7 +31,7 @@ bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is BracketGenerationResult&&(identical(other.bracket, bracket) || other.bracket == bracket)&&const DeepCollectionEquality().equals(other.matches, matches));
 }
 
-
+@JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode => Object.hash(runtimeType,bracket,const DeepCollectionEquality().hash(matches));
 
@@ -213,11 +216,11 @@ return $default(_that.bracket,_that.matches);case _:
 }
 
 /// @nodoc
-
+@JsonSerializable()
 
 class _BracketGenerationResult implements BracketGenerationResult {
   const _BracketGenerationResult({required this.bracket, required final  List<MatchEntity> matches}): _matches = matches;
-  
+  factory _BracketGenerationResult.fromJson(Map<String, dynamic> json) => _$BracketGenerationResultFromJson(json);
 
 @override final  BracketEntity bracket;
  final  List<MatchEntity> _matches;
@@ -234,14 +237,17 @@ class _BracketGenerationResult implements BracketGenerationResult {
 @pragma('vm:prefer-inline')
 _$BracketGenerationResultCopyWith<_BracketGenerationResult> get copyWith => __$BracketGenerationResultCopyWithImpl<_BracketGenerationResult>(this, _$identity);
 
-
+@override
+Map<String, dynamic> toJson() {
+  return _$BracketGenerationResultToJson(this, );
+}
 
 @override
 bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is _BracketGenerationResult&&(identical(other.bracket, bracket) || other.bracket == bracket)&&const DeepCollectionEquality().equals(other._matches, _matches));
 }
 
-
+@JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode => Object.hash(runtimeType,bracket,const DeepCollectionEquality().hash(_matches));
 

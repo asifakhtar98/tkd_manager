@@ -14,6 +14,8 @@ import 'package:tkd_saas/features/tournament/domain/entities/tournament_entity.d
 import 'package:tkd_saas/features/tournament/presentation/bloc/tournament_bloc.dart';
 import 'package:tkd_saas/features/tournament/presentation/screens/tournament_detail_screen.dart';
 
+export 'package:tkd_saas/features/bracket/domain/entities/bracket_format.dart';
+
 part 'app_routes.g.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -26,19 +28,7 @@ part 'app_routes.g.dart';
 /// Every bracket-related screen, BLoC event, and snapshot references this enum
 /// instead of a raw string, giving compile-time safety and a single source of
 /// truth for display labels.
-enum BracketFormat {
-  /// Standard single-elimination (knockout) tournament.
-  singleElimination('Single Elimination'),
-
-  /// Double-elimination tournament with winners / losers brackets and grand
-  /// finals.
-  doubleElimination('Double Elimination');
-
-  const BracketFormat(this.displayLabel);
-
-  /// Human-readable label used in UI text, PDF headers, and snapshot labels.
-  final String displayLabel;
-}
+// (moved export to top of file)
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Canonical route paths — used by the redirect guard and anywhere else
@@ -195,12 +185,7 @@ class BracketViewerRoute extends GoRouteData with $BracketViewerRoute {
     return BlocProvider(
       create: (_) => getIt<BracketBloc>()
         ..add(
-          BracketGenerateRequested(
-            participants: snapshot.participants,
-            bracketFormat: snapshot.format,
-            dojangSeparation: snapshot.dojangSeparation,
-            includeThirdPlaceMatch: snapshot.includeThirdPlaceMatch,
-          ),
+          BracketEvent.loadFromSnapshotRequested(snapshot),
         ),
       child: BracketViewerScreen(tournament: tournament, snapshot: snapshot),
     );

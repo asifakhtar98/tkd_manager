@@ -1,6 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'bracket_edit_action.freezed.dart';
+part 'bracket_edit_action.g.dart';
 
 /// Describes a single bracket edit-mode action (participant swap or detail
 /// update). Used by the undo/redo history stack alongside [BracketMatchAction].
@@ -24,4 +25,7 @@ sealed class BracketEditAction with _$BracketEditAction {
     required String displayLabel,
     required DateTime recordedAt,
   }) = BracketEditActionParticipantDetailsUpdated;
+
+  factory BracketEditAction.fromJson(Map<String, dynamic> json) =>
+      _$BracketEditActionFromJson(json);
 }

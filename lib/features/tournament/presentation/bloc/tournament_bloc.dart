@@ -31,20 +31,21 @@ class TournamentBloc extends Bloc<TournamentEvent, TournamentState> {
     on<TournamentBracketSnapshotRemoved>(_handleBracketSnapshotRemoved);
     on<TournamentDeleted>(_handleTournamentDeleted);
     on<TournamentUpdated>(_handleTournamentUpdated);
+    on<TournamentBracketSnapshotUpdated>(_handleTournamentBracketSnapshotUpdated);
   }
 
-  void _handleTournamentCreated(
+  Future<void> _handleTournamentCreated(
     TournamentCreated event,
     Emitter<TournamentState> emit,
-  ) {
+  ) async {
     final updatedTournamentList = [event.tournament, ...state.tournaments];
     emit(state.copyWith(tournaments: updatedTournamentList));
   }
 
-  void _handleBracketSnapshotAdded(
+  Future<void> _handleBracketSnapshotAdded(
     TournamentBracketSnapshotAdded event,
     Emitter<TournamentState> emit,
-  ) {
+  ) async {
     final existingSnapshots =
         state.bracketsByTournamentId[event.tournamentId] ?? [];
     final updatedBracketsMap = Map<String, List<BracketSnapshot>>.from(
@@ -53,10 +54,10 @@ class TournamentBloc extends Bloc<TournamentEvent, TournamentState> {
     emit(state.copyWith(bracketsByTournamentId: updatedBracketsMap));
   }
 
-  void _handleBracketSnapshotRemoved(
+  Future<void> _handleBracketSnapshotRemoved(
     TournamentBracketSnapshotRemoved event,
     Emitter<TournamentState> emit,
-  ) {
+  ) async {
     final existingSnapshots =
         state.bracketsByTournamentId[event.tournamentId] ?? [];
     final filteredSnapshots = existingSnapshots
@@ -68,10 +69,10 @@ class TournamentBloc extends Bloc<TournamentEvent, TournamentState> {
     emit(state.copyWith(bracketsByTournamentId: updatedBracketsMap));
   }
 
-  void _handleTournamentDeleted(
+  Future<void> _handleTournamentDeleted(
     TournamentDeleted event,
     Emitter<TournamentState> emit,
-  ) {
+  ) async {
     final updatedTournamentList = state.tournaments
         .where((tournament) => tournament.id != event.tournamentId)
         .toList();
@@ -86,16 +87,34 @@ class TournamentBloc extends Bloc<TournamentEvent, TournamentState> {
     );
   }
 
-  void _handleTournamentUpdated(
+  Future<void> _handleTournamentUpdated(
     TournamentUpdated event,
     Emitter<TournamentState> emit,
-  ) {
+  ) async {
     final updatedTournamentList = state.tournaments.map((tournament) {
       return tournament.id == event.tournament.id
           ? event.tournament
           : tournament;
     }).toList();
     emit(state.copyWith(tournaments: updatedTournamentList));
+  }
+
+  Future<void> _handleTournamentBracketSnapshotUpdated(
+    TournamentBracketSnapshotUpdated event,
+    Emitter<TournamentState> emit,
+  ) async {
+    final tournamentId = event.snapshot.tournamentId;
+    final existingSnapshots = state.bracketsByTournamentId[tournamentId] ?? [];
+    
+    final updatedSnapshots = existingSnapshots.map((snapshot) {
+      return snapshot.id == event.snapshot.id ? event.snapshot : snapshot;
+    }).toList();
+
+    final updatedBracketsMap = Map<String, List<BracketSnapshot>>.from(
+      state.bracketsByTournamentId,
+    )..[tournamentId] = updatedSnapshots;
+    
+    emit(state.copyWith(bracketsByTournamentId: updatedBracketsMap));
   }
 
   /// Convenience: look up a tournament by its unique identifier.

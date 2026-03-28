@@ -2,6 +2,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:tkd_saas/core/router/app_routes.dart';
 import 'package:tkd_saas/features/bracket/domain/entities/match_entity.dart';
 import 'package:tkd_saas/features/participant/domain/entities/participant_entity.dart';
+import 'package:tkd_saas/features/tournament/domain/entities/bracket_snapshot.dart';
 
 part 'bracket_event.freezed.dart';
 
@@ -22,6 +23,11 @@ sealed class BracketEvent with _$BracketEvent {
 
   /// Re-generate using the same params stored from the last [BracketGenerateRequested].
   const factory BracketEvent.regenerateRequested() = BracketRegenerateRequested;
+
+  /// Load a previously saved bracket snapshot instead of generating a new one.
+  const factory BracketEvent.loadFromSnapshotRequested(
+    BracketSnapshot snapshot,
+  ) = BracketLoadFromSnapshotRequested;
 
   /// Record a match result (winner, optional scores).
   const factory BracketEvent.matchResultRecorded({
@@ -72,4 +78,7 @@ sealed class BracketEvent with _$BracketEvent {
     required String updatedFullName,
     String? updatedRegistrationId,
   }) = BracketParticipantDetailsUpdated;
+
+  /// Triggered from UI to explicitly save the bracket to DB.
+  const factory BracketEvent.saveRequested() = BracketSaveRequested;
 }

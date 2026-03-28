@@ -1,7 +1,8 @@
 import 'package:tkd_saas/core/router/app_routes.dart';
 import 'package:tkd_saas/features/bracket/data/services/double_elimination_bracket_generator_service_implementation.dart';
 import 'package:tkd_saas/features/bracket/data/services/single_elimination_bracket_generator_service_implementation.dart';
-import 'package:tkd_saas/features/bracket/presentation/bloc/bracket_bloc.dart';
+import 'package:tkd_saas/features/bracket/domain/entities/bracket_format.dart';
+import 'package:tkd_saas/features/bracket/domain/entities/bracket_result.dart';
 import 'package:tkd_saas/features/participant/domain/entities/participant_entity.dart';
 import 'package:tkd_saas/features/tournament/domain/entities/bracket_classification.dart';
 import 'package:tkd_saas/features/tournament/domain/entities/bracket_snapshot.dart';
@@ -370,12 +371,15 @@ class DemoBracketSnapshotFactory {
       includeThirdPlaceMatch: includeThirdPlaceMatch,
     );
 
+    final snapshotId = _uuid.v4();
     final thirdPlaceSuffix = includeThirdPlaceMatch ? ' + 3rd Place' : '';
     final label =
         'Single Elim — $participantCount Players$thirdPlaceSuffix';
 
     return BracketSnapshot(
-      id: _uuid.v4(),
+      id: snapshotId,
+      userId: 'demo-user-1',
+      tournamentId: 'demo-tournament-1',
       label: label,
       format: BracketFormat.singleElimination,
       participantCount: participantCount,
@@ -383,6 +387,7 @@ class DemoBracketSnapshotFactory {
       dojangSeparation: false,
       classification: classification,
       generatedAt: generatedAt,
+      updatedAt: generatedAt,
       participants: participants,
       result: BracketResult.singleElimination(generationResult),
     );
@@ -405,17 +410,18 @@ class DemoBracketSnapshotFactory {
       losersBracketId: _uuid.v4(),
     );
 
-    final label = 'Double Elim — $participantCount Players';
-
     return BracketSnapshot(
-      id: _uuid.v4(),
-      label: label,
+      id: 'double_elim_demo',
+      userId: 'demo-user-1',
+      tournamentId: 'demo-tournament-1',
+      label: 'Double Elim - 8 Players',
       format: BracketFormat.doubleElimination,
       participantCount: participantCount,
       includeThirdPlaceMatch: false,
       dojangSeparation: false,
       classification: classification,
       generatedAt: generatedAt,
+      updatedAt: generatedAt,
       participants: participants,
       result: BracketResult.doubleElimination(generationResult),
     );

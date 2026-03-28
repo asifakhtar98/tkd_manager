@@ -87,6 +87,7 @@ class _CreateTournamentDialogState extends State<CreateTournamentDialog> {
     final tournament = TournamentEntity(
       // Preserve original id and createdAt when editing.
       id: existingTournament?.id ?? _uuid.v4(),
+      userId: existingTournament?.userId ?? '', // TODO: Get actual user ID
       name: _nameController.text.trim(),
       dateRange: _dateRangeController.text.trim(),
       venue: _venueController.text.trim(),
@@ -94,6 +95,7 @@ class _CreateTournamentDialogState extends State<CreateTournamentDialog> {
       leftLogoUrl: _leftLogoUrl,
       rightLogoUrl: _rightLogoUrl,
       createdAt: existingTournament?.createdAt ?? DateTime.now(),
+      updatedAt: DateTime.now(),
     );
 
     Navigator.pop(context, tournament);

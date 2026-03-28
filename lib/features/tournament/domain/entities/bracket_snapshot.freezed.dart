@@ -11,37 +11,44 @@ part of 'bracket_snapshot.dart';
 
 // dart format off
 T _$identity<T>(T value) => value;
+
 /// @nodoc
 mixin _$BracketSnapshot {
 
 /// Unique ID for this snapshot (UUID v4).
- String get id;/// Display label, e.g. "Single Elim — 8 Players".
+ String get id;/// Foreign key to 'auth.users'. The owner of the tournament snapshot.
+ String get userId;/// Foreign key to 'tournaments'. Which tournament this bracket belongs to.
+ String get tournamentId;/// Display label, e.g. "Single Elim — 8 Players".
  String get label;/// The elimination format used for this bracket generation.
  BracketFormat get format; int get participantCount; bool get includeThirdPlaceMatch; bool get dojangSeparation;/// Bracket-level classification labels displayed in the tie sheet header.
  BracketClassification get classification;/// Wall-clock time when the bracket was generated.
  DateTime get generatedAt;/// Full participant list at the time of generation.
  List<ParticipantEntity> get participants;/// The generated bracket data (single or double elimination union).
- BracketResult get result;
+ BracketResult get result;/// Soft delete flag.
+ bool get isDeleted;/// Last update timestamp.
+ DateTime get updatedAt;
 /// Create a copy of BracketSnapshot
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $BracketSnapshotCopyWith<BracketSnapshot> get copyWith => _$BracketSnapshotCopyWithImpl<BracketSnapshot>(this as BracketSnapshot, _$identity);
 
+  /// Serializes this BracketSnapshot to a JSON map.
+  Map<String, dynamic> toJson();
 
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is BracketSnapshot&&(identical(other.id, id) || other.id == id)&&(identical(other.label, label) || other.label == label)&&(identical(other.format, format) || other.format == format)&&(identical(other.participantCount, participantCount) || other.participantCount == participantCount)&&(identical(other.includeThirdPlaceMatch, includeThirdPlaceMatch) || other.includeThirdPlaceMatch == includeThirdPlaceMatch)&&(identical(other.dojangSeparation, dojangSeparation) || other.dojangSeparation == dojangSeparation)&&(identical(other.classification, classification) || other.classification == classification)&&(identical(other.generatedAt, generatedAt) || other.generatedAt == generatedAt)&&const DeepCollectionEquality().equals(other.participants, participants)&&(identical(other.result, result) || other.result == result));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is BracketSnapshot&&(identical(other.id, id) || other.id == id)&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.tournamentId, tournamentId) || other.tournamentId == tournamentId)&&(identical(other.label, label) || other.label == label)&&(identical(other.format, format) || other.format == format)&&(identical(other.participantCount, participantCount) || other.participantCount == participantCount)&&(identical(other.includeThirdPlaceMatch, includeThirdPlaceMatch) || other.includeThirdPlaceMatch == includeThirdPlaceMatch)&&(identical(other.dojangSeparation, dojangSeparation) || other.dojangSeparation == dojangSeparation)&&(identical(other.classification, classification) || other.classification == classification)&&(identical(other.generatedAt, generatedAt) || other.generatedAt == generatedAt)&&const DeepCollectionEquality().equals(other.participants, participants)&&(identical(other.result, result) || other.result == result)&&(identical(other.isDeleted, isDeleted) || other.isDeleted == isDeleted)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
 }
 
-
+@JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,label,format,participantCount,includeThirdPlaceMatch,dojangSeparation,classification,generatedAt,const DeepCollectionEquality().hash(participants),result);
+int get hashCode => Object.hash(runtimeType,id,userId,tournamentId,label,format,participantCount,includeThirdPlaceMatch,dojangSeparation,classification,generatedAt,const DeepCollectionEquality().hash(participants),result,isDeleted,updatedAt);
 
 @override
 String toString() {
-  return 'BracketSnapshot(id: $id, label: $label, format: $format, participantCount: $participantCount, includeThirdPlaceMatch: $includeThirdPlaceMatch, dojangSeparation: $dojangSeparation, classification: $classification, generatedAt: $generatedAt, participants: $participants, result: $result)';
+  return 'BracketSnapshot(id: $id, userId: $userId, tournamentId: $tournamentId, label: $label, format: $format, participantCount: $participantCount, includeThirdPlaceMatch: $includeThirdPlaceMatch, dojangSeparation: $dojangSeparation, classification: $classification, generatedAt: $generatedAt, participants: $participants, result: $result, isDeleted: $isDeleted, updatedAt: $updatedAt)';
 }
 
 
@@ -52,7 +59,7 @@ abstract mixin class $BracketSnapshotCopyWith<$Res>  {
   factory $BracketSnapshotCopyWith(BracketSnapshot value, $Res Function(BracketSnapshot) _then) = _$BracketSnapshotCopyWithImpl;
 @useResult
 $Res call({
- String id, String label, BracketFormat format, int participantCount, bool includeThirdPlaceMatch, bool dojangSeparation, BracketClassification classification, DateTime generatedAt, List<ParticipantEntity> participants, BracketResult result
+ String id, String userId, String tournamentId, String label, BracketFormat format, int participantCount, bool includeThirdPlaceMatch, bool dojangSeparation, BracketClassification classification, DateTime generatedAt, List<ParticipantEntity> participants, BracketResult result, bool isDeleted, DateTime updatedAt
 });
 
 
@@ -69,9 +76,11 @@ class _$BracketSnapshotCopyWithImpl<$Res>
 
 /// Create a copy of BracketSnapshot
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? label = null,Object? format = null,Object? participantCount = null,Object? includeThirdPlaceMatch = null,Object? dojangSeparation = null,Object? classification = null,Object? generatedAt = null,Object? participants = null,Object? result = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? userId = null,Object? tournamentId = null,Object? label = null,Object? format = null,Object? participantCount = null,Object? includeThirdPlaceMatch = null,Object? dojangSeparation = null,Object? classification = null,Object? generatedAt = null,Object? participants = null,Object? result = null,Object? isDeleted = null,Object? updatedAt = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String,userId: null == userId ? _self.userId : userId // ignore: cast_nullable_to_non_nullable
+as String,tournamentId: null == tournamentId ? _self.tournamentId : tournamentId // ignore: cast_nullable_to_non_nullable
 as String,label: null == label ? _self.label : label // ignore: cast_nullable_to_non_nullable
 as String,format: null == format ? _self.format : format // ignore: cast_nullable_to_non_nullable
 as BracketFormat,participantCount: null == participantCount ? _self.participantCount : participantCount // ignore: cast_nullable_to_non_nullable
@@ -81,7 +90,9 @@ as bool,classification: null == classification ? _self.classification : classifi
 as BracketClassification,generatedAt: null == generatedAt ? _self.generatedAt : generatedAt // ignore: cast_nullable_to_non_nullable
 as DateTime,participants: null == participants ? _self.participants : participants // ignore: cast_nullable_to_non_nullable
 as List<ParticipantEntity>,result: null == result ? _self.result : result // ignore: cast_nullable_to_non_nullable
-as BracketResult,
+as BracketResult,isDeleted: null == isDeleted ? _self.isDeleted : isDeleted // ignore: cast_nullable_to_non_nullable
+as bool,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
+as DateTime,
   ));
 }
 /// Create a copy of BracketSnapshot
@@ -184,10 +195,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String label,  BracketFormat format,  int participantCount,  bool includeThirdPlaceMatch,  bool dojangSeparation,  BracketClassification classification,  DateTime generatedAt,  List<ParticipantEntity> participants,  BracketResult result)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String userId,  String tournamentId,  String label,  BracketFormat format,  int participantCount,  bool includeThirdPlaceMatch,  bool dojangSeparation,  BracketClassification classification,  DateTime generatedAt,  List<ParticipantEntity> participants,  BracketResult result,  bool isDeleted,  DateTime updatedAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _BracketSnapshot() when $default != null:
-return $default(_that.id,_that.label,_that.format,_that.participantCount,_that.includeThirdPlaceMatch,_that.dojangSeparation,_that.classification,_that.generatedAt,_that.participants,_that.result);case _:
+return $default(_that.id,_that.userId,_that.tournamentId,_that.label,_that.format,_that.participantCount,_that.includeThirdPlaceMatch,_that.dojangSeparation,_that.classification,_that.generatedAt,_that.participants,_that.result,_that.isDeleted,_that.updatedAt);case _:
   return orElse();
 
 }
@@ -205,10 +216,10 @@ return $default(_that.id,_that.label,_that.format,_that.participantCount,_that.i
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String label,  BracketFormat format,  int participantCount,  bool includeThirdPlaceMatch,  bool dojangSeparation,  BracketClassification classification,  DateTime generatedAt,  List<ParticipantEntity> participants,  BracketResult result)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String userId,  String tournamentId,  String label,  BracketFormat format,  int participantCount,  bool includeThirdPlaceMatch,  bool dojangSeparation,  BracketClassification classification,  DateTime generatedAt,  List<ParticipantEntity> participants,  BracketResult result,  bool isDeleted,  DateTime updatedAt)  $default,) {final _that = this;
 switch (_that) {
 case _BracketSnapshot():
-return $default(_that.id,_that.label,_that.format,_that.participantCount,_that.includeThirdPlaceMatch,_that.dojangSeparation,_that.classification,_that.generatedAt,_that.participants,_that.result);case _:
+return $default(_that.id,_that.userId,_that.tournamentId,_that.label,_that.format,_that.participantCount,_that.includeThirdPlaceMatch,_that.dojangSeparation,_that.classification,_that.generatedAt,_that.participants,_that.result,_that.isDeleted,_that.updatedAt);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -225,10 +236,10 @@ return $default(_that.id,_that.label,_that.format,_that.participantCount,_that.i
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String label,  BracketFormat format,  int participantCount,  bool includeThirdPlaceMatch,  bool dojangSeparation,  BracketClassification classification,  DateTime generatedAt,  List<ParticipantEntity> participants,  BracketResult result)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String userId,  String tournamentId,  String label,  BracketFormat format,  int participantCount,  bool includeThirdPlaceMatch,  bool dojangSeparation,  BracketClassification classification,  DateTime generatedAt,  List<ParticipantEntity> participants,  BracketResult result,  bool isDeleted,  DateTime updatedAt)?  $default,) {final _that = this;
 switch (_that) {
 case _BracketSnapshot() when $default != null:
-return $default(_that.id,_that.label,_that.format,_that.participantCount,_that.includeThirdPlaceMatch,_that.dojangSeparation,_that.classification,_that.generatedAt,_that.participants,_that.result);case _:
+return $default(_that.id,_that.userId,_that.tournamentId,_that.label,_that.format,_that.participantCount,_that.includeThirdPlaceMatch,_that.dojangSeparation,_that.classification,_that.generatedAt,_that.participants,_that.result,_that.isDeleted,_that.updatedAt);case _:
   return null;
 
 }
@@ -237,14 +248,18 @@ return $default(_that.id,_that.label,_that.format,_that.participantCount,_that.i
 }
 
 /// @nodoc
-
+@JsonSerializable()
 
 class _BracketSnapshot implements BracketSnapshot {
-  const _BracketSnapshot({required this.id, required this.label, required this.format, required this.participantCount, required this.includeThirdPlaceMatch, required this.dojangSeparation, this.classification = const BracketClassification(), required this.generatedAt, required final  List<ParticipantEntity> participants, required this.result}): _participants = participants;
-  
+  const _BracketSnapshot({required this.id, required this.userId, required this.tournamentId, required this.label, required this.format, required this.participantCount, required this.includeThirdPlaceMatch, required this.dojangSeparation, this.classification = const BracketClassification(), required this.generatedAt, required final  List<ParticipantEntity> participants, required this.result, this.isDeleted = false, required this.updatedAt}): _participants = participants;
+  factory _BracketSnapshot.fromJson(Map<String, dynamic> json) => _$BracketSnapshotFromJson(json);
 
 /// Unique ID for this snapshot (UUID v4).
 @override final  String id;
+/// Foreign key to 'auth.users'. The owner of the tournament snapshot.
+@override final  String userId;
+/// Foreign key to 'tournaments'. Which tournament this bracket belongs to.
+@override final  String tournamentId;
 /// Display label, e.g. "Single Elim — 8 Players".
 @override final  String label;
 /// The elimination format used for this bracket generation.
@@ -267,6 +282,10 @@ class _BracketSnapshot implements BracketSnapshot {
 
 /// The generated bracket data (single or double elimination union).
 @override final  BracketResult result;
+/// Soft delete flag.
+@override@JsonKey() final  bool isDeleted;
+/// Last update timestamp.
+@override final  DateTime updatedAt;
 
 /// Create a copy of BracketSnapshot
 /// with the given fields replaced by the non-null parameter values.
@@ -274,20 +293,23 @@ class _BracketSnapshot implements BracketSnapshot {
 @pragma('vm:prefer-inline')
 _$BracketSnapshotCopyWith<_BracketSnapshot> get copyWith => __$BracketSnapshotCopyWithImpl<_BracketSnapshot>(this, _$identity);
 
-
+@override
+Map<String, dynamic> toJson() {
+  return _$BracketSnapshotToJson(this, );
+}
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _BracketSnapshot&&(identical(other.id, id) || other.id == id)&&(identical(other.label, label) || other.label == label)&&(identical(other.format, format) || other.format == format)&&(identical(other.participantCount, participantCount) || other.participantCount == participantCount)&&(identical(other.includeThirdPlaceMatch, includeThirdPlaceMatch) || other.includeThirdPlaceMatch == includeThirdPlaceMatch)&&(identical(other.dojangSeparation, dojangSeparation) || other.dojangSeparation == dojangSeparation)&&(identical(other.classification, classification) || other.classification == classification)&&(identical(other.generatedAt, generatedAt) || other.generatedAt == generatedAt)&&const DeepCollectionEquality().equals(other._participants, _participants)&&(identical(other.result, result) || other.result == result));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _BracketSnapshot&&(identical(other.id, id) || other.id == id)&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.tournamentId, tournamentId) || other.tournamentId == tournamentId)&&(identical(other.label, label) || other.label == label)&&(identical(other.format, format) || other.format == format)&&(identical(other.participantCount, participantCount) || other.participantCount == participantCount)&&(identical(other.includeThirdPlaceMatch, includeThirdPlaceMatch) || other.includeThirdPlaceMatch == includeThirdPlaceMatch)&&(identical(other.dojangSeparation, dojangSeparation) || other.dojangSeparation == dojangSeparation)&&(identical(other.classification, classification) || other.classification == classification)&&(identical(other.generatedAt, generatedAt) || other.generatedAt == generatedAt)&&const DeepCollectionEquality().equals(other._participants, _participants)&&(identical(other.result, result) || other.result == result)&&(identical(other.isDeleted, isDeleted) || other.isDeleted == isDeleted)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
 }
 
-
+@JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,label,format,participantCount,includeThirdPlaceMatch,dojangSeparation,classification,generatedAt,const DeepCollectionEquality().hash(_participants),result);
+int get hashCode => Object.hash(runtimeType,id,userId,tournamentId,label,format,participantCount,includeThirdPlaceMatch,dojangSeparation,classification,generatedAt,const DeepCollectionEquality().hash(_participants),result,isDeleted,updatedAt);
 
 @override
 String toString() {
-  return 'BracketSnapshot(id: $id, label: $label, format: $format, participantCount: $participantCount, includeThirdPlaceMatch: $includeThirdPlaceMatch, dojangSeparation: $dojangSeparation, classification: $classification, generatedAt: $generatedAt, participants: $participants, result: $result)';
+  return 'BracketSnapshot(id: $id, userId: $userId, tournamentId: $tournamentId, label: $label, format: $format, participantCount: $participantCount, includeThirdPlaceMatch: $includeThirdPlaceMatch, dojangSeparation: $dojangSeparation, classification: $classification, generatedAt: $generatedAt, participants: $participants, result: $result, isDeleted: $isDeleted, updatedAt: $updatedAt)';
 }
 
 
@@ -298,7 +320,7 @@ abstract mixin class _$BracketSnapshotCopyWith<$Res> implements $BracketSnapshot
   factory _$BracketSnapshotCopyWith(_BracketSnapshot value, $Res Function(_BracketSnapshot) _then) = __$BracketSnapshotCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String label, BracketFormat format, int participantCount, bool includeThirdPlaceMatch, bool dojangSeparation, BracketClassification classification, DateTime generatedAt, List<ParticipantEntity> participants, BracketResult result
+ String id, String userId, String tournamentId, String label, BracketFormat format, int participantCount, bool includeThirdPlaceMatch, bool dojangSeparation, BracketClassification classification, DateTime generatedAt, List<ParticipantEntity> participants, BracketResult result, bool isDeleted, DateTime updatedAt
 });
 
 
@@ -315,9 +337,11 @@ class __$BracketSnapshotCopyWithImpl<$Res>
 
 /// Create a copy of BracketSnapshot
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? label = null,Object? format = null,Object? participantCount = null,Object? includeThirdPlaceMatch = null,Object? dojangSeparation = null,Object? classification = null,Object? generatedAt = null,Object? participants = null,Object? result = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? userId = null,Object? tournamentId = null,Object? label = null,Object? format = null,Object? participantCount = null,Object? includeThirdPlaceMatch = null,Object? dojangSeparation = null,Object? classification = null,Object? generatedAt = null,Object? participants = null,Object? result = null,Object? isDeleted = null,Object? updatedAt = null,}) {
   return _then(_BracketSnapshot(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String,userId: null == userId ? _self.userId : userId // ignore: cast_nullable_to_non_nullable
+as String,tournamentId: null == tournamentId ? _self.tournamentId : tournamentId // ignore: cast_nullable_to_non_nullable
 as String,label: null == label ? _self.label : label // ignore: cast_nullable_to_non_nullable
 as String,format: null == format ? _self.format : format // ignore: cast_nullable_to_non_nullable
 as BracketFormat,participantCount: null == participantCount ? _self.participantCount : participantCount // ignore: cast_nullable_to_non_nullable
@@ -327,7 +351,9 @@ as bool,classification: null == classification ? _self.classification : classifi
 as BracketClassification,generatedAt: null == generatedAt ? _self.generatedAt : generatedAt // ignore: cast_nullable_to_non_nullable
 as DateTime,participants: null == participants ? _self._participants : participants // ignore: cast_nullable_to_non_nullable
 as List<ParticipantEntity>,result: null == result ? _self.result : result // ignore: cast_nullable_to_non_nullable
-as BracketResult,
+as BracketResult,isDeleted: null == isDeleted ? _self.isDeleted : isDeleted // ignore: cast_nullable_to_non_nullable
+as bool,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
+as DateTime,
   ));
 }
 

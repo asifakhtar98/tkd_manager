@@ -1,10 +1,12 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:tkd_saas/core/router/app_routes.dart';
-import 'package:tkd_saas/features/bracket/presentation/bloc/bracket_bloc.dart';
+import 'package:tkd_saas/features/bracket/domain/entities/bracket_format.dart';
+import 'package:tkd_saas/features/bracket/domain/entities/bracket_result.dart';
 import 'package:tkd_saas/features/participant/domain/entities/participant_entity.dart';
 import 'package:tkd_saas/features/tournament/domain/entities/bracket_classification.dart';
 
 part 'bracket_snapshot.freezed.dart';
+part 'bracket_snapshot.g.dart';
 
 /// Immutable record of a single bracket generation event within a tournament.
 /// Stored in [TournamentBloc] state as the in-memory history.
@@ -13,6 +15,12 @@ abstract class BracketSnapshot with _$BracketSnapshot {
   const factory BracketSnapshot({
     /// Unique ID for this snapshot (UUID v4).
     required String id,
+
+    /// Foreign key to 'auth.users'. The owner of the tournament snapshot.
+    required String userId,
+
+    /// Foreign key to 'tournaments'. Which tournament this bracket belongs to.
+    required String tournamentId,
 
     /// Display label, e.g. "Single Elim — 8 Players".
     required String label,
@@ -35,5 +43,14 @@ abstract class BracketSnapshot with _$BracketSnapshot {
 
     /// The generated bracket data (single or double elimination union).
     required BracketResult result,
+
+    /// Soft delete flag.
+    @Default(false) bool isDeleted,
+
+    /// Last update timestamp.
+    required DateTime updatedAt,
   }) = _BracketSnapshot;
+
+  factory BracketSnapshot.fromJson(Map<String, dynamic> json) =>
+      _$BracketSnapshotFromJson(json);
 }

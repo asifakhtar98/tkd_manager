@@ -11,6 +11,7 @@ part of 'bracket_match_action.dart';
 
 // dart format off
 T _$identity<T>(T value) => value;
+
 /// @nodoc
 mixin _$BracketMatchAction {
 
@@ -29,6 +30,8 @@ mixin _$BracketMatchAction {
 @pragma('vm:prefer-inline')
 $BracketMatchActionCopyWith<BracketMatchAction> get copyWith => _$BracketMatchActionCopyWithImpl<BracketMatchAction>(this as BracketMatchAction, _$identity);
 
+  /// Serializes this BracketMatchAction to a JSON map.
+  Map<String, dynamic> toJson();
 
 
 @override
@@ -36,7 +39,7 @@ bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is BracketMatchAction&&(identical(other.matchId, matchId) || other.matchId == matchId)&&(identical(other.winnerId, winnerId) || other.winnerId == winnerId)&&(identical(other.resultType, resultType) || other.resultType == resultType)&&(identical(other.blueScore, blueScore) || other.blueScore == blueScore)&&(identical(other.redScore, redScore) || other.redScore == redScore)&&(identical(other.recordedAt, recordedAt) || other.recordedAt == recordedAt)&&(identical(other.displayLabel, displayLabel) || other.displayLabel == displayLabel));
 }
 
-
+@JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode => Object.hash(runtimeType,matchId,winnerId,resultType,blueScore,redScore,recordedAt,displayLabel);
 
@@ -217,11 +220,11 @@ return $default(_that.matchId,_that.winnerId,_that.resultType,_that.blueScore,_t
 }
 
 /// @nodoc
-
+@JsonSerializable()
 
 class _BracketMatchAction implements BracketMatchAction {
   const _BracketMatchAction({required this.matchId, required this.winnerId, required this.resultType, this.blueScore, this.redScore, required this.recordedAt, required this.displayLabel});
-  
+  factory _BracketMatchAction.fromJson(Map<String, dynamic> json) => _$BracketMatchActionFromJson(json);
 
 /// The match that was scored.
 @override final  String matchId;
@@ -245,14 +248,17 @@ class _BracketMatchAction implements BracketMatchAction {
 @pragma('vm:prefer-inline')
 _$BracketMatchActionCopyWith<_BracketMatchAction> get copyWith => __$BracketMatchActionCopyWithImpl<_BracketMatchAction>(this, _$identity);
 
-
+@override
+Map<String, dynamic> toJson() {
+  return _$BracketMatchActionToJson(this, );
+}
 
 @override
 bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is _BracketMatchAction&&(identical(other.matchId, matchId) || other.matchId == matchId)&&(identical(other.winnerId, winnerId) || other.winnerId == winnerId)&&(identical(other.resultType, resultType) || other.resultType == resultType)&&(identical(other.blueScore, blueScore) || other.blueScore == blueScore)&&(identical(other.redScore, redScore) || other.redScore == redScore)&&(identical(other.recordedAt, recordedAt) || other.recordedAt == recordedAt)&&(identical(other.displayLabel, displayLabel) || other.displayLabel == displayLabel));
 }
 
-
+@JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode => Object.hash(runtimeType,matchId,winnerId,resultType,blueScore,redScore,recordedAt,displayLabel);
 

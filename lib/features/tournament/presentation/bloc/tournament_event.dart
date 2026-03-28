@@ -30,4 +30,9 @@ sealed class TournamentEvent with _$TournamentEvent {
   /// Replace existing tournament metadata (name, venue, dates, etc.).
   const factory TournamentEvent.updated(TournamentEntity tournament) =
       TournamentUpdated;
+
+  /// Update an existing bracket snapshot inside the tournament's history.
+  const factory TournamentEvent.bracketSnapshotUpdated(
+    BracketSnapshot snapshot,
+  ) = TournamentBracketSnapshotUpdated;
 }

@@ -1,6 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'tournament_entity.freezed.dart';
+part 'tournament_entity.g.dart';
 
 /// Core tournament identity object. Owns all metadata fields and groups
 /// multiple [BracketSnapshot]s generated under a single tournament.
@@ -9,6 +10,9 @@ abstract class TournamentEntity with _$TournamentEntity {
   const factory TournamentEntity({
     /// Globally unique identifier (UUID v4).
     required String id,
+
+    /// Creator of the tournament.
+    required String userId,
 
     /// Human-readable name shown across all screens and bracket headers.
     required String name,
@@ -28,7 +32,13 @@ abstract class TournamentEntity with _$TournamentEntity {
     @Default('https://lldlunqzkltclpfzpjxh.supabase.co/storage/v1/object/public/assets/World_Taekwondo+logo_356345.png')
     String leftLogoUrl,
 
-    /// Wall-clock time when this tournament was first created in-memory.
+    /// Wall-clock time when this tournament was first created.
     required DateTime createdAt,
+
+    /// Wall-clock time when this tournament was last updated.
+    required DateTime updatedAt,
   }) = _TournamentEntity;
+
+  factory TournamentEntity.fromJson(Map<String, dynamic> json) =>
+      _$TournamentEntityFromJson(json);
 }

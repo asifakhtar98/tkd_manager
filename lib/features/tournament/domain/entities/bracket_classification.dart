@@ -1,6 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'bracket_classification.freezed.dart';
+part 'bracket_classification.g.dart';
 
 /// Bracket-level classification labels displayed in the tie sheet header.
 ///
@@ -21,4 +22,7 @@ abstract class BracketClassification with _$BracketClassification {
     /// Weight division label, e.g. "UNDER 59 KG", "OVER 80 KG".
     @Default('') String weightDivisionLabel,
   }) = _BracketClassification;
+
+  factory BracketClassification.fromJson(Map<String, dynamic> json) =>
+      _$BracketClassificationFromJson(json);
 }

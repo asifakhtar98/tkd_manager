@@ -11,6 +11,7 @@ part of 'double_elimination_bracket_generation_result.dart';
 
 // dart format off
 T _$identity<T>(T value) => value;
+
 /// @nodoc
 mixin _$DoubleEliminationBracketGenerationResult {
 
@@ -21,6 +22,8 @@ mixin _$DoubleEliminationBracketGenerationResult {
 @pragma('vm:prefer-inline')
 $DoubleEliminationBracketGenerationResultCopyWith<DoubleEliminationBracketGenerationResult> get copyWith => _$DoubleEliminationBracketGenerationResultCopyWithImpl<DoubleEliminationBracketGenerationResult>(this as DoubleEliminationBracketGenerationResult, _$identity);
 
+  /// Serializes this DoubleEliminationBracketGenerationResult to a JSON map.
+  Map<String, dynamic> toJson();
 
 
 @override
@@ -28,7 +31,7 @@ bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is DoubleEliminationBracketGenerationResult&&(identical(other.winnersBracket, winnersBracket) || other.winnersBracket == winnersBracket)&&(identical(other.losersBracket, losersBracket) || other.losersBracket == losersBracket)&&(identical(other.grandFinalsMatch, grandFinalsMatch) || other.grandFinalsMatch == grandFinalsMatch)&&(identical(other.resetMatch, resetMatch) || other.resetMatch == resetMatch)&&const DeepCollectionEquality().equals(other.allMatches, allMatches));
 }
 
-
+@JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode => Object.hash(runtimeType,winnersBracket,losersBracket,grandFinalsMatch,resetMatch,const DeepCollectionEquality().hash(allMatches));
 
@@ -246,11 +249,11 @@ return $default(_that.winnersBracket,_that.losersBracket,_that.grandFinalsMatch,
 }
 
 /// @nodoc
-
+@JsonSerializable()
 
 class _DoubleEliminationBracketGenerationResult implements DoubleEliminationBracketGenerationResult {
   const _DoubleEliminationBracketGenerationResult({required this.winnersBracket, required this.losersBracket, required this.grandFinalsMatch, this.resetMatch, required final  List<MatchEntity> allMatches}): _allMatches = allMatches;
-  
+  factory _DoubleEliminationBracketGenerationResult.fromJson(Map<String, dynamic> json) => _$DoubleEliminationBracketGenerationResultFromJson(json);
 
 @override final  BracketEntity winnersBracket;
 @override final  BracketEntity losersBracket;
@@ -270,14 +273,17 @@ class _DoubleEliminationBracketGenerationResult implements DoubleEliminationBrac
 @pragma('vm:prefer-inline')
 _$DoubleEliminationBracketGenerationResultCopyWith<_DoubleEliminationBracketGenerationResult> get copyWith => __$DoubleEliminationBracketGenerationResultCopyWithImpl<_DoubleEliminationBracketGenerationResult>(this, _$identity);
 
-
+@override
+Map<String, dynamic> toJson() {
+  return _$DoubleEliminationBracketGenerationResultToJson(this, );
+}
 
 @override
 bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is _DoubleEliminationBracketGenerationResult&&(identical(other.winnersBracket, winnersBracket) || other.winnersBracket == winnersBracket)&&(identical(other.losersBracket, losersBracket) || other.losersBracket == losersBracket)&&(identical(other.grandFinalsMatch, grandFinalsMatch) || other.grandFinalsMatch == grandFinalsMatch)&&(identical(other.resetMatch, resetMatch) || other.resetMatch == resetMatch)&&const DeepCollectionEquality().equals(other._allMatches, _allMatches));
 }
 
-
+@JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode => Object.hash(runtimeType,winnersBracket,losersBracket,grandFinalsMatch,resetMatch,const DeepCollectionEquality().hash(_allMatches));
 

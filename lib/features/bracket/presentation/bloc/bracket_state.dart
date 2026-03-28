@@ -1,54 +1,10 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:tkd_saas/core/router/app_routes.dart';
-import 'package:tkd_saas/features/bracket/domain/entities/bracket_edit_action.dart';
-import 'package:tkd_saas/features/bracket/domain/entities/bracket_generation_result.dart';
-import 'package:tkd_saas/features/bracket/domain/entities/bracket_match_action.dart';
-import 'package:tkd_saas/features/bracket/domain/entities/double_elimination_bracket_generation_result.dart';
 import 'package:tkd_saas/features/participant/domain/entities/participant_entity.dart';
 
+import 'package:tkd_saas/features/bracket/domain/entities/bracket_result.dart';
+
 part 'bracket_state.freezed.dart';
-
-/// Tagged union wrapping either [BracketGenerationResult] or
-/// [DoubleEliminationBracketGenerationResult]. Eliminates `dynamic` from
-/// the presentation layer.
-@freezed
-sealed class BracketResult with _$BracketResult {
-  const factory BracketResult.singleElimination(BracketGenerationResult data) =
-      SingleEliminationResult;
-  const factory BracketResult.doubleElimination(
-    DoubleEliminationBracketGenerationResult data,
-  ) = DoubleEliminationResult;
-}
-
-/// Tagged union wrapping the two kinds of actions that can be stored in
-/// the undo/redo history: match-result recordings and bracket-edit operations.
-@freezed
-sealed class BracketAction with _$BracketAction {
-  const factory BracketAction.matchResult(BracketMatchAction data) =
-      BracketActionMatchResult;
-  const factory BracketAction.editAction(BracketEditAction data) =
-      BracketActionEditAction;
-}
-
-/// A single entry in the undo/redo history stack.
-///
-/// Pairs the action metadata (for display in the history panel) with the
-/// full [BracketResult] and [participants] snapshot produced after applying
-/// the action.
-@freezed
-abstract class BracketHistoryEntry with _$BracketHistoryEntry {
-  const factory BracketHistoryEntry({
-    /// Type-safe action metadata (match result or bracket edit).
-    required BracketAction action,
-
-    /// The full bracket result snapshot AFTER this action was applied.
-    required BracketResult resultSnapshot,
-
-    /// The full participants list snapshot AFTER this action was applied.
-    /// Needed because name/ID edits mutate participants, not matches.
-    required List<ParticipantEntity> participantsSnapshot,
-  }) = _BracketHistoryEntry;
-}
 
 // ─────────────────────────────────────────
 // State classes
@@ -90,6 +46,12 @@ sealed class BracketState with _$BracketState {
     /// The participants list immediately after generation, before any
     /// name/ID edits were applied. Used as the baseline for undo.
     List<ParticipantEntity>? initialParticipants,
+
+    /// True when saving bracket to DB
+    @Default(false) bool isSaving,
+
+    /// True if there are unsaved changes
+    @Default(false) bool hasUnsavedChanges,
   }) = BracketLoadSuccess;
   const factory BracketState.failure(String message) = BracketFailure;
 }

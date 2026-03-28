@@ -8,11 +8,6 @@ import '../../tournament/domain/entities/tournament_entity.dart';
 class DemoData {
   DemoData._();
 
-  // ── Deterministic IDs ──────────────────────────────────────────────────
-
-  /// Fixed tournament ID for the demo tournament.
-  static const _demoTournamentId = 'demo-tournament-00';
-
   // ── Tournament ─────────────────────────────────────────────────────────
 
   /// Returns a single, reusable demo [TournamentEntity].
@@ -20,11 +15,13 @@ class DemoData {
   /// Seeded into [TournamentBloc] at startup so the demo tournament
   /// appears in the tournament list like any user-created tournament.
   static TournamentEntity get demoTournament => TournamentEntity(
-    id: _demoTournamentId,
-    name: 'Demo Tournament',
-    dateRange: 'March 10, 2026',
-    venue: 'Demo Arena',
-    organizer: 'TKD Brackets',
-    createdAt: DateTime(2026, 3, 10),
+    id: 'demo-tournament-1',
+    userId: 'demo-user-1',
+    name: '1ST WTF OPEN NATIONAL TAEKWONDO CHAMPIONSHIP - 2026',
+    dateRange: '18 Jan. to 22 Jan, 2026',
+    venue: 'Sanskriti School, Ajmer, Rajasthan',
+    organizer: 'Rajasthan Taekwondo Association',
+    createdAt: DateTime.now(),
+    updatedAt: DateTime.now(),
   );
 }

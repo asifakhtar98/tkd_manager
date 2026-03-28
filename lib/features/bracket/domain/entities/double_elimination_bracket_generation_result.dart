@@ -3,6 +3,7 @@ import 'package:tkd_saas/features/bracket/domain/entities/bracket_entity.dart';
 import 'package:tkd_saas/features/bracket/domain/entities/match_entity.dart';
 
 part 'double_elimination_bracket_generation_result.freezed.dart';
+part 'double_elimination_bracket_generation_result.g.dart';
 
 /// Value object containing the results of a double elimination
 /// bracket generation operation.
@@ -16,4 +17,7 @@ abstract class DoubleEliminationBracketGenerationResult
     MatchEntity? resetMatch,
     required List<MatchEntity> allMatches,
   }) = _DoubleEliminationBracketGenerationResult;
+
+  factory DoubleEliminationBracketGenerationResult.fromJson(Map<String, dynamic> json) =>
+      _$DoubleEliminationBracketGenerationResultFromJson(json);
 }

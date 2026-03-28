@@ -7,12 +7,12 @@ import 'package:tkd_saas/core/router/app_routes.dart';
 import 'package:tkd_saas/features/bracket/domain/services/double_elimination_bracket_generator_service.dart';
 import 'package:tkd_saas/features/bracket/domain/services/participant_shuffle_service.dart';
 import 'package:tkd_saas/features/bracket/domain/services/single_elimination_bracket_generator_service.dart';
-import 'package:tkd_saas/features/bracket/presentation/bloc/bracket_bloc.dart';
 import 'package:tkd_saas/features/tournament/domain/entities/bracket_classification.dart';
 import 'package:tkd_saas/features/tournament/domain/entities/bracket_snapshot.dart';
 import 'package:tkd_saas/features/participant/domain/entities/participant_entity.dart';
 import 'package:tkd_saas/features/tournament/domain/entities/tournament_entity.dart';
 import 'package:tkd_saas/features/tournament/presentation/bloc/tournament_bloc.dart';
+import 'package:tkd_saas/features/bracket/domain/entities/bracket_result.dart';
 
 /// "New Bracket" setup screen.
 ///
@@ -268,6 +268,8 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
         _isThirdPlaceMatchIncluded ? ' + 3rd Place' : '';
     final snapshot = BracketSnapshot(
       id: snapshotId,
+      userId: tournament.userId,
+      tournamentId: widget.tournamentId,
       label:
           '${_selectedBracketFormat.displayLabel} — '
           '${orderedParticipants.length} Players$thirdPlaceSuffix',
@@ -277,6 +279,7 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
       dojangSeparation: _isDojangSeparationEnabled,
       classification: classification,
       generatedAt: DateTime.now(),
+      updatedAt: DateTime.now(),
       participants: orderedParticipants,
       result: bracketResult,
     );

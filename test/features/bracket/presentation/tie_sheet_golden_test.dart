@@ -25,12 +25,14 @@ void main() {
   );
 
   final defaultTournament = TournamentEntity(
-    id: 'golden-test',
-    name: '2ND FEDERATION CUP - 2026 (Kyorugi & Poomsae)',
-    dateRange: '18 Jan. to 22 Jan, 2026',
-    venue: 'SMS Indoor Stadium, Jaipur, Rajasthan',
-    organizer: 'INDIA TAEKWONDO',
-    createdAt: DateTime(2026),
+    id: 'test_tournament_1',
+    userId: 'test_user_1',
+    name: 'Golden Test Championship',
+    dateRange: 'Jan 15-16, 2024',
+    venue: 'National Arena',
+    organizer: 'Taekwondo Federation',
+    createdAt: DateTime(2024, 1, 1),
+    updatedAt: DateTime(2024, 1, 1),
   );
 
   List<ParticipantEntity> makeParticipants(int count) {

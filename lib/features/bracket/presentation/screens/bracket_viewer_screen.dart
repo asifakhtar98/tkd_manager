@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
+import 'package:tkd_saas/features/bracket/domain/entities/bracket_result.dart';
 import 'package:tkd_saas/features/bracket/data/services/bracket_pdf_generator_service.dart';
 import 'package:tkd_saas/features/bracket/presentation/models/print_export_settings.dart';
 import 'package:tkd_saas/features/bracket/domain/entities/match_entity.dart';
@@ -23,6 +24,7 @@ import 'package:tkd_saas/features/participant/domain/entities/participant_entity
 import 'package:tkd_saas/features/tournament/domain/entities/bracket_snapshot.dart';
 import 'package:tkd_saas/features/tournament/domain/entities/bracket_classification.dart';
 import 'package:tkd_saas/features/tournament/domain/entities/tournament_entity.dart';
+import 'package:tkd_saas/features/tournament/presentation/bloc/tournament_bloc.dart';
 
 /// Bracket viewer — now URL-driven via `/tournaments/:tId/brackets/:sId`.
 ///
@@ -397,6 +399,8 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
             :final historyPointer,
             :final isReplayInProgress,
             :final isEditModeEnabled,
+            :final isSaving,
+            :final hasUnsavedChanges,
           ) =>
             _buildViewer(
               context: context,
@@ -408,6 +412,8 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
               historyPointer: historyPointer,
               isReplayInProgress: isReplayInProgress,
               isEditModeEnabled: isEditModeEnabled,
+              isSaving: isSaving,
+              hasUnsavedChanges: hasUnsavedChanges,
             ),
         };
       },
@@ -424,6 +430,8 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
     required int historyPointer,
     required bool isReplayInProgress,
     required bool isEditModeEnabled,
+    required bool isSaving,
+    required bool hasUnsavedChanges,
   }) {
     final bracketData = _extractBracketDataFromResult(result);
 
@@ -454,6 +462,40 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
           onPressed: _navigateBackToTournamentDetail,
         ),
         actions: [
+          // ── Save Bracket ──
+          Tooltip(
+            message: 'Save explicitly to persist the current bracket state',
+            child: TextButton.icon(
+              style: TextButton.styleFrom(
+                foregroundColor: hasUnsavedChanges ? Colors.blueAccent : Colors.white,
+                disabledForegroundColor: Colors.grey,
+              ),
+              onPressed: isSaving || !hasUnsavedChanges
+                  ? null
+                  : () {
+                      final updatedSnapshot = widget.snapshot.copyWith(
+                        result: result,
+                        participants: participants,
+                        updatedAt: DateTime.now(),
+                      );
+                      context.read<TournamentBloc>().add(
+                            TournamentBracketSnapshotUpdated(updatedSnapshot),
+                          );
+                      context.read<BracketBloc>().add(const BracketSaveRequested());
+                    },
+              icon: isSaving
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.save),
+              label: const Text('Save Bracket'),
+            ),
+          ),
+          
+          const VerticalDivider(width: 8, indent: 14, endIndent: 14, color: Colors.white24),
+
           // ── Undo ──
           TextButton(
             style: actionButtonStyle,

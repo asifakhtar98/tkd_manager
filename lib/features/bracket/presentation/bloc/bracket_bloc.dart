@@ -5,6 +5,7 @@ import 'package:injectable/injectable.dart';
 import 'package:tkd_saas/core/router/app_routes.dart';
 import 'package:tkd_saas/features/bracket/domain/entities/bracket_edit_action.dart';
 import 'package:tkd_saas/features/bracket/domain/entities/bracket_match_action.dart';
+import 'package:tkd_saas/features/bracket/domain/entities/bracket_result.dart';
 import 'package:tkd_saas/features/bracket/domain/entities/match_entity.dart';
 import 'package:tkd_saas/features/bracket/domain/services/double_elimination_bracket_generator_service.dart';
 import 'package:tkd_saas/features/bracket/domain/services/match_progression_service.dart';
@@ -40,6 +41,8 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
     on<BracketEditModeToggled>(_handleEditModeToggled);
     on<BracketParticipantSlotSwapped>(_handleParticipantSlotSwapped);
     on<BracketParticipantDetailsUpdated>(_handleParticipantDetailsUpdated);
+    on<BracketSaveRequested>(_handleBracketSaveRequested);
+    on<BracketLoadFromSnapshotRequested>(_handleLoadFromSnapshotRequested);
   }
 
   final SingleEliminationBracketGeneratorService _singleEliminationGenerator;
@@ -147,6 +150,7 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
           errorMessage: null,
           actionHistory: newHistory,
           historyPointer: newPointer,
+          hasUnsavedChanges: true,
         ),
       );
     } on ArgumentError catch (e) {
@@ -185,6 +189,7 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
         participants: restoredParticipants,
         historyPointer: newPointer,
         errorMessage: null,
+        hasUnsavedChanges: true,
       ),
     );
   }
@@ -211,6 +216,7 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
         participants: entry.participantsSnapshot,
         historyPointer: newPointer,
         errorMessage: null,
+        hasUnsavedChanges: true,
       ),
     );
   }
@@ -468,6 +474,7 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
           errorMessage: null,
           actionHistory: newHistory,
           historyPointer: newPointer,
+          hasUnsavedChanges: true,
         ),
       );
     } on ArgumentError catch (e) {
@@ -549,6 +556,7 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
         errorMessage: null,
         actionHistory: newHistory,
         historyPointer: newPointer,
+        hasUnsavedChanges: true,
       ),
     );
   }
@@ -624,6 +632,28 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
     } catch (e) {
       emit(BracketState.failure(e.toString()));
     }
+  }
+
+  void _handleLoadFromSnapshotRequested(
+    BracketLoadFromSnapshotRequested event,
+    Emitter<BracketState> emit,
+  ) {
+    emit(
+      BracketState.loadSuccess(
+        result: event.snapshot.result,
+        participants: event.snapshot.participants,
+        format: event.snapshot.format,
+        includeThirdPlaceMatch: event.snapshot.includeThirdPlaceMatch,
+        initialResult: event.snapshot.result,
+        initialParticipants: event.snapshot.participants,
+        actionHistory: [],
+        historyPointer: -1,
+        isReplayInProgress: false,
+        isEditModeEnabled: false,
+        isSaving: false,
+        hasUnsavedChanges: false,
+      ),
+    );
   }
 
   // ── Helpers ────────────────────────────────────────────────────────────────
@@ -814,5 +844,22 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
   Future<void> close() {
     _cancelReplayTimer();
     return super.close();
+  }
+
+  // ── Save Requested ──────────────────────────────────────────────────────────
+
+  void _handleBracketSaveRequested(
+    BracketSaveRequested event,
+    Emitter<BracketState> emit,
+  ) {
+    if (state is! BracketLoadSuccess) return;
+    
+    // We emit `isSaving: true` if we were performing async ops.
+    // However, saving to the TournamentBloc in-memory store is synchronous,
+    // so we can just emit `hasUnsavedChanges: false` directly.
+    emit((state as BracketLoadSuccess).copyWith(
+      isSaving: false,
+      hasUnsavedChanges: false,
+    ));
   }
 }
