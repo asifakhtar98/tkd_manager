@@ -83,7 +83,6 @@ sealed class BracketEvent with _$BracketEvent {
   const factory BracketEvent.saveRequested() = BracketSaveRequested;
 
   /// Triggered from UI when the overarching TournamentBloc finishes saving.
-  const factory BracketEvent.saveOutcomeReceived({
-    required bool isSuccess,
-  }) = BracketSaveOutcomeReceived;
+  const factory BracketEvent.saveOutcomeReceived({required bool isSuccess}) =
+      BracketSaveOutcomeReceived;
 }

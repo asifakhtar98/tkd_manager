@@ -41,7 +41,7 @@ abstract final class AppTheme {
       useMaterial3: true,
       scaffoldBackgroundColor: const Color(0xFFF7F7F7),
       colorScheme: colorScheme,
-      
+
       // ── Core Text & Icon Themes ──
       iconTheme: const IconThemeData(color: _brandPrimaryBlack, size: 24),
       primaryIconTheme: const IconThemeData(color: Colors.white),
@@ -77,7 +77,10 @@ abstract final class AppTheme {
         backgroundColor: Colors.white,
         selectedIconTheme: IconThemeData(color: _brandPrimaryBlack),
         unselectedIconTheme: IconThemeData(color: _brandSecondaryGrey),
-        selectedLabelTextStyle: TextStyle(color: _brandPrimaryBlack, fontWeight: FontWeight.bold),
+        selectedLabelTextStyle: TextStyle(
+          color: _brandPrimaryBlack,
+          fontWeight: FontWeight.bold,
+        ),
         unselectedLabelTextStyle: TextStyle(color: _brandSecondaryGrey),
       ),
       drawerTheme: const DrawerThemeData(
@@ -183,10 +186,7 @@ abstract final class AppTheme {
           fontSize: 22,
           fontWeight: FontWeight.bold,
         ),
-        contentTextStyle: TextStyle(
-          color: Color(0xFF424242),
-          fontSize: 16,
-        ),
+        contentTextStyle: TextStyle(color: Color(0xFF424242), fontSize: 16),
       ),
       bottomSheetTheme: const BottomSheetThemeData(
         backgroundColor: Colors.white,
@@ -238,7 +238,10 @@ abstract final class AppTheme {
           borderRadius: const BorderRadius.all(Radius.circular(8)),
           borderSide: BorderSide(color: Colors.grey.shade300),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
         labelStyle: const TextStyle(color: _brandSecondaryGrey),
         hintStyle: const TextStyle(color: Color(0xFFBDBDBD)),
       ),
@@ -297,7 +300,10 @@ abstract final class AppTheme {
         headingRowColor: WidgetStatePropertyAll(_chipBackgroundGrey),
         dataRowColor: WidgetStatePropertyAll(Colors.white),
         dividerThickness: 1,
-        headingTextStyle: TextStyle(color: _brandPrimaryBlack, fontWeight: FontWeight.bold),
+        headingTextStyle: TextStyle(
+          color: _brandPrimaryBlack,
+          fontWeight: FontWeight.bold,
+        ),
         dataTextStyle: TextStyle(color: Color(0xFF424242)),
       ),
 
@@ -307,7 +313,9 @@ abstract final class AppTheme {
         linearTrackColor: _chipBackgroundGrey,
       ),
       scrollbarTheme: ScrollbarThemeData(
-        thumbColor: WidgetStatePropertyAll(_brandSecondaryGrey.withValues(alpha: 0.5)),
+        thumbColor: WidgetStatePropertyAll(
+          _brandSecondaryGrey.withValues(alpha: 0.5),
+        ),
         thickness: const WidgetStatePropertyAll(6),
         radius: const Radius.circular(10),
         interactive: true,
@@ -320,7 +328,10 @@ abstract final class AppTheme {
       ),
       chipTheme: ChipThemeData(
         backgroundColor: _chipBackgroundGrey,
-        labelStyle: const TextStyle(color: _brandPrimaryBlack, fontWeight: FontWeight.w600),
+        labelStyle: const TextStyle(
+          color: _brandPrimaryBlack,
+          fontWeight: FontWeight.w600,
+        ),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         side: BorderSide.none,
       ),

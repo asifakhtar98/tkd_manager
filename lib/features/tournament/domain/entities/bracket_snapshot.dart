@@ -44,7 +44,6 @@ abstract class BracketSnapshot with _$BracketSnapshot {
     /// The generated bracket data (single or double elimination union).
     required BracketResult result,
 
-
     /// Last update timestamp.
     required DateTime updatedAt,
   }) = _BracketSnapshot;

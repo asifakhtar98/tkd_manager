@@ -5,16 +5,23 @@ import 'package:tkd_saas/features/tournament/domain/entities/bracket_snapshot.da
 /// Repository interface for BracketSnapshot CRUD operations.
 abstract class BracketSnapshotRepository {
   /// Fetches all bracket snapshots for a given tournament.
-  Future<Either<Failure, List<BracketSnapshot>>> getBracketSnapshots(String tournamentId);
+  Future<Either<Failure, List<BracketSnapshot>>> getBracketSnapshots(
+    String tournamentId,
+  );
 
   /// Fetches a specific bracket snapshot by its ID.
   Future<Either<Failure, BracketSnapshot>> getBracketSnapshot(String id);
 
   /// Creates a new bracket snapshot and returns the persisted entity.
-  Future<Either<Failure, BracketSnapshot>> createBracketSnapshot(BracketSnapshot snapshot, String tournamentId);
+  Future<Either<Failure, BracketSnapshot>> createBracketSnapshot(
+    BracketSnapshot snapshot,
+    String tournamentId,
+  );
 
   /// Updates an existing bracket snapshot.
-  Future<Either<Failure, BracketSnapshot>> updateBracketSnapshot(BracketSnapshot snapshot);
+  Future<Either<Failure, BracketSnapshot>> updateBracketSnapshot(
+    BracketSnapshot snapshot,
+  );
 
   /// Deletes a bracket snapshot.
   Future<Either<Failure, void>> deleteBracketSnapshot(String id);

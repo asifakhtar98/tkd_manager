@@ -9,6 +9,8 @@ import 'package:tkd_saas/core/router/app_router.dart';
 import 'package:tkd_saas/core/theme/app_theme.dart';
 import 'package:tkd_saas/features/auth/presentation/bloc/authentication_bloc.dart';
 import 'package:tkd_saas/features/tournament/presentation/bloc/tournament_bloc.dart';
+import 'package:tkd_saas/features/activation/presentation/bloc/activation_status_bloc.dart';
+import 'package:tkd_saas/features/activation/presentation/bloc/activation_status_event.dart';
 
 import 'package:flutter_web_plugins/url_strategy.dart';
 
@@ -23,7 +25,11 @@ Future<void> main() async {
         anonKey: 'sb_publishable_Kf90GkwrSzNySWSCqhJT8Q_9b94d-UM',
       );
     } catch (e, st) {
-      log('Critical Error: Supabase failed to initialize on app boot.', error: e, stackTrace: st);
+      log(
+        'Critical Error: Supabase failed to initialize on app boot.',
+        error: e,
+        stackTrace: st,
+      );
       // The application will mount, but any features dependent on SupabaseClient
       // may throw late evaluation exceptions if accessed.
     }
@@ -47,12 +53,18 @@ class TkdTournamentApp extends StatelessWidget {
     // When auth is disabled, skip the AuthenticationBloc provider entirely
     // and pass null to the router so all redirect guards are bypassed.
     final List<BlocProvider> blocProviders = [
-      if (AppConfig.isAuthenticationEnabled)
+      if (AppConfig.isAuthenticationEnabled) ...[
         BlocProvider<AuthenticationBloc>(
           create: (_) =>
               getIt<AuthenticationBloc>()
                 ..add(const AuthenticationSubscriptionRequested()),
         ),
+        BlocProvider<ActivationStatusBloc>(
+          create: (_) =>
+              getIt<ActivationStatusBloc>()
+                ..add(const ActivationStatusEvent.loadRequested()),
+        ),
+      ],
       BlocProvider<TournamentBloc>(
         create: (_) {
           final bloc = getIt<TournamentBloc>();
@@ -86,8 +98,22 @@ class TkdTournamentApp extends StatelessWidget {
             app = BlocListener<AuthenticationBloc, AuthenticationState>(
               listener: (context, state) {
                 state.maybeWhen(
-                  authenticated: (_) => context.read<TournamentBloc>().add(const TournamentEvent.loadRequested()),
-                  unauthenticated: () => context.read<TournamentBloc>().add(const TournamentEvent.clearRequested()),
+                  authenticated: (_) {
+                    context.read<TournamentBloc>().add(
+                      const TournamentEvent.loadRequested(),
+                    );
+                    context.read<ActivationStatusBloc>().add(
+                      const ActivationStatusEvent.loadRequested(),
+                    );
+                  },
+                  unauthenticated: () {
+                    context.read<TournamentBloc>().add(
+                      const TournamentEvent.clearRequested(),
+                    );
+                    context.read<ActivationStatusBloc>().add(
+                      const ActivationStatusEvent.clearRequested(),
+                    );
+                  },
                   orElse: () {},
                 );
               },

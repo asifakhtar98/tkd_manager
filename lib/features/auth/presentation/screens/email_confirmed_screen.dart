@@ -69,97 +69,97 @@ class _EmailConfirmedScreenState extends State<EmailConfirmedScreen>
         ),
         child: Center(
           child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 48),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 420),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // ── Animated check icon ──
-                AnimatedBuilder(
-                  animation: _animationController,
-                  builder: (BuildContext context, Widget? child) {
-                    return Opacity(
-                      opacity: _opacityAnimation.value,
-                      child: Transform.scale(
-                        scale: _scaleAnimation.value,
-                        child: child,
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 48),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 420),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // ── Animated check icon ──
+                  AnimatedBuilder(
+                    animation: _animationController,
+                    builder: (BuildContext context, Widget? child) {
+                      return Opacity(
+                        opacity: _opacityAnimation.value,
+                        child: Transform.scale(
+                          scale: _scaleAnimation.value,
+                          child: child,
+                        ),
+                      );
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: colorScheme.primaryContainer,
+                        shape: BoxShape.circle,
                       ),
-                    );
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: colorScheme.primaryContainer,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Icons.verified_outlined,
-                      size: 56,
-                      color: colorScheme.onPrimaryContainer,
+                      child: Icon(
+                        Icons.verified_outlined,
+                        size: 56,
+                        color: colorScheme.onPrimaryContainer,
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 32),
+                  const SizedBox(height: 32),
 
-                // ── Card with confirmation message + CTA ──
-                Card(
-                  elevation: 4,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 32,
-                      vertical: 36,
+                  // ── Card with confirmation message + CTA ──
+                  Card(
+                    elevation: 4,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Text(
-                          'Email Verified!',
-                          style: theme.textTheme.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: colorScheme.onSurface,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 32,
+                        vertical: 36,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Text(
+                            'Email Verified!',
+                            style: theme.textTheme.headlineSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: colorScheme.onSurface,
+                            ),
+                            textAlign: TextAlign.center,
                           ),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          'Your email has been successfully verified.\n'
-                          'You can now sign in to your account.',
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: colorScheme.onSurfaceVariant,
-                            height: 1.5,
+                          const SizedBox(height: 12),
+                          Text(
+                            'Your email has been successfully verified.\n'
+                            'You can now sign in to your account.',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                              height: 1.5,
+                            ),
+                            textAlign: TextAlign.center,
                           ),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 32),
+                          const SizedBox(height: 32),
 
-                        // ── CTA button ──
-                        SizedBox(
-                          height: 48,
-                          child: FilledButton.icon(
-                            onPressed: () => context.go(RoutePaths.login),
-                            icon: const Icon(Icons.login),
-                            label: const Text(
-                              'Continue to Sign In',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
+                          // ── CTA button ──
+                          SizedBox(
+                            height: 48,
+                            child: FilledButton.icon(
+                              onPressed: () => context.go(RoutePaths.login),
+                              icon: const Icon(Icons.login),
+                              label: const Text(
+                                'Continue to Sign In',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
-      ),
       ),
     );
   }

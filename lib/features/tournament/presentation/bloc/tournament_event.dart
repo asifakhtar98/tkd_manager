@@ -11,7 +11,8 @@ sealed class TournamentEvent with _$TournamentEvent {
   const factory TournamentEvent.loadRequested() = TournamentLoadRequested;
 
   /// Request the next page of tournaments.
-  const factory TournamentEvent.loadMoreRequested() = TournamentLoadMoreRequested;
+  const factory TournamentEvent.loadMoreRequested() =
+      TournamentLoadMoreRequested;
 
   /// Clear all loaded tournaments and brackets (e.g. on sign out).
   const factory TournamentEvent.clearRequested() = TournamentClearRequested;

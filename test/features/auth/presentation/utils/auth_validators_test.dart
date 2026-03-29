@@ -74,42 +74,46 @@ void main() {
 
     group('validateConfirmPassword', () {
       test('returns error for null confirmation', () {
-        final TextEditingController controller =
-            TextEditingController(text: 'abc');
+        final TextEditingController controller = TextEditingController(
+          text: 'abc',
+        );
         final validator = AuthValidators.validateConfirmPassword(controller);
         expect(validator(null), isNotNull);
         controller.dispose();
       });
 
       test('returns error for empty confirmation', () {
-        final TextEditingController controller =
-            TextEditingController(text: 'abc');
+        final TextEditingController controller = TextEditingController(
+          text: 'abc',
+        );
         final validator = AuthValidators.validateConfirmPassword(controller);
         expect(validator(''), isNotNull);
         controller.dispose();
       });
 
       test('returns error when passwords do not match', () {
-        final TextEditingController controller =
-            TextEditingController(text: 'abc123');
+        final TextEditingController controller = TextEditingController(
+          text: 'abc123',
+        );
         final validator = AuthValidators.validateConfirmPassword(controller);
         expect(validator('xyz789'), isNotNull);
         controller.dispose();
       });
 
       test('returns null when passwords match', () {
-        final TextEditingController controller =
-            TextEditingController(text: 'abc123');
+        final TextEditingController controller = TextEditingController(
+          text: 'abc123',
+        );
         final validator = AuthValidators.validateConfirmPassword(controller);
         expect(validator('abc123'), isNull);
         controller.dispose();
       });
 
-      test(
-          'reads live controller text at validation time, '
+      test('reads live controller text at validation time, '
           'not stale text from closure creation time', () {
-        final TextEditingController controller =
-            TextEditingController(text: 'initial');
+        final TextEditingController controller = TextEditingController(
+          text: 'initial',
+        );
 
         // Create the validator when text is "initial".
         final validator = AuthValidators.validateConfirmPassword(controller);

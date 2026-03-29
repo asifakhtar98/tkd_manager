@@ -101,15 +101,14 @@ void main() {
 
         expect(afterRecord.actionHistory, hasLength(1));
         expect(afterRecord.historyPointer, 0);
-        expect(afterRecord.actionHistory.first.action,
-            isA<BracketActionMatchResult>());
-        final firstAction = afterRecord.actionHistory.first.action
-            as BracketActionMatchResult;
-        expect(firstAction.data.matchId, match.id);
         expect(
-          firstAction.data.displayLabel,
-          contains('won by'),
+          afterRecord.actionHistory.first.action,
+          isA<BracketActionMatchResult>(),
         );
+        final firstAction =
+            afterRecord.actionHistory.first.action as BracketActionMatchResult;
+        expect(firstAction.data.matchId, match.id);
+        expect(firstAction.data.displayLabel, contains('won by'));
       },
     );
 
@@ -281,8 +280,8 @@ void main() {
         expect(state.actionHistory, hasLength(2));
         expect(state.historyPointer, 1);
         // The second entry should reference the new match, not match2.
-        final secondAction = state.actionHistory[1].action
-            as BracketActionMatchResult;
+        final secondAction =
+            state.actionHistory[1].action as BracketActionMatchResult;
         expect(secondAction.data.matchId, equals(newMatch.id));
       },
     );
@@ -522,10 +521,11 @@ void main() {
       // Try to record a match during replay.
       bracketBloc.add(
         BracketEvent.matchResultRecorded(
-          matchId: (replayState.actionHistory.first.action
-                  as BracketActionMatchResult)
-              .data
-              .matchId,
+          matchId:
+              (replayState.actionHistory.first.action
+                      as BracketActionMatchResult)
+                  .data
+                  .matchId,
           winnerId: 'p1',
           resultType: MatchResultType.points,
         ),

@@ -149,7 +149,6 @@ abstract class MatchEntity with _$MatchEntity {
     /// Computed once during bracket creation phase to preserve chronological integrity.
     /// Example: 34 translates to "Match #34" in the Canvas UI.
     int? globalMatchDisplayNumber,
-
   }) = _MatchEntity;
 
   factory MatchEntity.fromJson(Map<String, dynamic> json) =>

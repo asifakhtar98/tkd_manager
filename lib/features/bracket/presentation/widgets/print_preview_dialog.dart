@@ -363,8 +363,9 @@ class _PrintPreviewDialogState extends State<PrintPreviewDialog> {
                 isSelected: _settings.resolutionQuality == quality,
                 colorScheme: colorScheme,
                 onTap: () => setState(
-                  () => _settings =
-                      _settings.copyWith(resolutionQuality: quality),
+                  () => _settings = _settings.copyWith(
+                    resolutionQuality: quality,
+                  ),
                 ),
               ),
             ),
@@ -384,15 +385,16 @@ class _PrintPreviewDialogState extends State<PrintPreviewDialog> {
             currentPageCount: _totalPages,
             colorScheme: colorScheme,
             onTap: () {
-              final computedScaleFactor =
-                  _settings.computeScaleFactorForTargetPageCount(
+              final computedScaleFactor = _settings
+                  .computeScaleFactorForTargetPageCount(
                     canvasWidth: widget.canvasSize.width,
                     canvasHeight: widget.canvasSize.height,
                     targetPageCount: targetPageCount,
                   );
               setState(
-                () => _settings =
-                    _settings.copyWith(scaleFactor: computedScaleFactor),
+                () => _settings = _settings.copyWith(
+                  scaleFactor: computedScaleFactor,
+                ),
               );
             },
           ),
@@ -424,8 +426,8 @@ class _PrintPreviewDialogState extends State<PrintPreviewDialog> {
           child: Switch.adaptive(
             value: _settings.showTileAssemblyHints,
             onChanged: (value) => setState(
-              () => _settings =
-                  _settings.copyWith(showTileAssemblyHints: value),
+              () =>
+                  _settings = _settings.copyWith(showTileAssemblyHints: value),
             ),
           ),
         ),
@@ -561,7 +563,7 @@ class _PrintPreviewDialogState extends State<PrintPreviewDialog> {
           _infoRow(
             'Resolution',
             '${_settings.resolutionQuality.label}'
-            ' (${_settings.resolutionQuality.maxTextureDimension.round()} px)',
+                ' (${_settings.resolutionQuality.maxTextureDimension.round()} px)',
             colorScheme,
           ),
         ],
@@ -911,8 +913,7 @@ class _PageTargetChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final borderColor =
-        _isActive ? colorScheme.primary : Colors.transparent;
+    final borderColor = _isActive ? colorScheme.primary : Colors.transparent;
     final backgroundColor = _isActive
         ? colorScheme.primary.withAlpha(20)
         : colorScheme.surfaceContainerHighest;

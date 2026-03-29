@@ -58,14 +58,12 @@ void main() {
       DoubleEliminationResult(:final data) => data.allMatches,
     };
 
-    final firstRoundMatches = allMatches
-        .where((matchEntity) => matchEntity.roundNumber == 1)
-        .toList()
-      ..sort(
-        (matchEntityA, matchEntityB) =>
-            matchEntityA.matchNumberInRound
+    final firstRoundMatches =
+        allMatches.where((matchEntity) => matchEntity.roundNumber == 1).toList()
+          ..sort(
+            (matchEntityA, matchEntityB) => matchEntityA.matchNumberInRound
                 .compareTo(matchEntityB.matchNumberInRound),
-      );
+          );
 
     final participantSlotIds = <String?>[];
     for (final match in firstRoundMatches) {
@@ -80,8 +78,9 @@ void main() {
       'regeneration produces a different participant ordering in Round 1',
       () async {
         final initialState = await generateBracket();
-        final initialSlotIds =
-            extractFirstRoundParticipantSlotIds(initialState);
+        final initialSlotIds = extractFirstRoundParticipantSlotIds(
+          initialState,
+        );
 
         // Regenerate.
         bracketBloc.add(const BracketEvent.regenerateRequested());
@@ -90,115 +89,106 @@ void main() {
           emitsThrough(isA<BracketLoadSuccess>()),
         );
         final afterRegeneration = bracketBloc.state as BracketLoadSuccess;
-        final regeneratedSlotIds =
-            extractFirstRoundParticipantSlotIds(afterRegeneration);
+        final regeneratedSlotIds = extractFirstRoundParticipantSlotIds(
+          afterRegeneration,
+        );
 
         // The participant IDs in Round 1 slots should differ from the original.
         expect(
           regeneratedSlotIds,
           isNot(equals(initialSlotIds)),
-          reason: 'Regeneration should shuffle participants into different '
+          reason:
+              'Regeneration should shuffle participants into different '
               'bracket positions.',
         );
       },
     );
 
-    test(
-      'regeneration preserves all participant identities',
-      () async {
-        final initialState = await generateBracket();
-        final initialParticipantIds = initialState.participants
-            .map((participant) => participant.id)
-            .toSet();
+    test('regeneration preserves all participant identities', () async {
+      final initialState = await generateBracket();
+      final initialParticipantIds = initialState.participants
+          .map((participant) => participant.id)
+          .toSet();
 
+      bracketBloc.add(const BracketEvent.regenerateRequested());
+      await expectLater(
+        bracketBloc.stream,
+        emitsThrough(isA<BracketLoadSuccess>()),
+      );
+      final afterRegeneration = bracketBloc.state as BracketLoadSuccess;
+      final regeneratedParticipantIds = afterRegeneration.participants
+          .map((participant) => participant.id)
+          .toSet();
+
+      expect(regeneratedParticipantIds, equals(initialParticipantIds));
+    });
+
+    test('regeneration clears action history', () async {
+      final initialState = await generateBracket();
+
+      // Verify we start clean.
+      expect(initialState.actionHistory, isEmpty);
+      expect(initialState.historyPointer, -1);
+
+      bracketBloc.add(const BracketEvent.regenerateRequested());
+      await expectLater(
+        bracketBloc.stream,
+        emitsThrough(isA<BracketLoadSuccess>()),
+      );
+      final afterRegeneration = bracketBloc.state as BracketLoadSuccess;
+
+      expect(afterRegeneration.actionHistory, isEmpty);
+      expect(afterRegeneration.historyPointer, -1);
+    });
+
+    test('multiple regenerations produce varied results', () async {
+      await generateBracket();
+
+      final observedOrderings = <String>[];
+
+      for (var attempt = 0; attempt < 5; attempt++) {
         bracketBloc.add(const BracketEvent.regenerateRequested());
         await expectLater(
           bracketBloc.stream,
           emitsThrough(isA<BracketLoadSuccess>()),
         );
-        final afterRegeneration = bracketBloc.state as BracketLoadSuccess;
-        final regeneratedParticipantIds = afterRegeneration.participants
-            .map((participant) => participant.id)
-            .toSet();
+        final currentState = bracketBloc.state as BracketLoadSuccess;
+        final slotIds = extractFirstRoundParticipantSlotIds(currentState);
+        observedOrderings.add(slotIds.join(','));
+      }
 
-        expect(regeneratedParticipantIds, equals(initialParticipantIds));
-      },
-    );
+      // At least 2 distinct orderings should appear in 5 attempts.
+      final uniqueOrderings = observedOrderings.toSet();
+      expect(
+        uniqueOrderings.length,
+        greaterThanOrEqualTo(2),
+        reason:
+            '5 regenerations should produce at least 2 distinct '
+            'participant orderings.',
+      );
+    });
 
-    test(
-      'regeneration clears action history',
-      () async {
-        final initialState = await generateBracket();
+    test('regeneration works for double elimination format', () async {
+      final initialState = await generateBracket(
+        format: BracketFormat.doubleElimination,
+      );
+      final initialSlotIds = extractFirstRoundParticipantSlotIds(initialState);
 
-        // Verify we start clean.
-        expect(initialState.actionHistory, isEmpty);
-        expect(initialState.historyPointer, -1);
+      bracketBloc.add(const BracketEvent.regenerateRequested());
+      await expectLater(
+        bracketBloc.stream,
+        emitsThrough(isA<BracketLoadSuccess>()),
+      );
+      final afterRegeneration = bracketBloc.state as BracketLoadSuccess;
+      final regeneratedSlotIds = extractFirstRoundParticipantSlotIds(
+        afterRegeneration,
+      );
 
-        bracketBloc.add(const BracketEvent.regenerateRequested());
-        await expectLater(
-          bracketBloc.stream,
-          emitsThrough(isA<BracketLoadSuccess>()),
-        );
-        final afterRegeneration = bracketBloc.state as BracketLoadSuccess;
-
-        expect(afterRegeneration.actionHistory, isEmpty);
-        expect(afterRegeneration.historyPointer, -1);
-      },
-    );
-
-    test(
-      'multiple regenerations produce varied results',
-      () async {
-        await generateBracket();
-
-        final observedOrderings = <String>[];
-
-        for (var attempt = 0; attempt < 5; attempt++) {
-          bracketBloc.add(const BracketEvent.regenerateRequested());
-          await expectLater(
-            bracketBloc.stream,
-            emitsThrough(isA<BracketLoadSuccess>()),
-          );
-          final currentState = bracketBloc.state as BracketLoadSuccess;
-          final slotIds = extractFirstRoundParticipantSlotIds(currentState);
-          observedOrderings.add(slotIds.join(','));
-        }
-
-        // At least 2 distinct orderings should appear in 5 attempts.
-        final uniqueOrderings = observedOrderings.toSet();
-        expect(
-          uniqueOrderings.length,
-          greaterThanOrEqualTo(2),
-          reason: '5 regenerations should produce at least 2 distinct '
-              'participant orderings.',
-        );
-      },
-    );
-
-    test(
-      'regeneration works for double elimination format',
-      () async {
-        final initialState = await generateBracket(
-          format: BracketFormat.doubleElimination,
-        );
-        final initialSlotIds =
-            extractFirstRoundParticipantSlotIds(initialState);
-
-        bracketBloc.add(const BracketEvent.regenerateRequested());
-        await expectLater(
-          bracketBloc.stream,
-          emitsThrough(isA<BracketLoadSuccess>()),
-        );
-        final afterRegeneration = bracketBloc.state as BracketLoadSuccess;
-        final regeneratedSlotIds =
-            extractFirstRoundParticipantSlotIds(afterRegeneration);
-
-        expect(
-          regeneratedSlotIds,
-          isNot(equals(initialSlotIds)),
-          reason: 'DE regeneration should also shuffle participants.',
-        );
-      },
-    );
+      expect(
+        regeneratedSlotIds,
+        isNot(equals(initialSlotIds)),
+        reason: 'DE regeneration should also shuffle participants.',
+      );
+    });
   });
 }

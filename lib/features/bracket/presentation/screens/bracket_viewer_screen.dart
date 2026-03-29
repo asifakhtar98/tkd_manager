@@ -372,85 +372,86 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
         ),
       ],
       child: BlocConsumer<BracketBloc, BracketState>(
-      listenWhen: (prev, current) => current is BracketLoadSuccess,
-      listener: (context, state) {
-        if (state case BracketLoadSuccess(:final errorMessage)) {
-          // Show error as SnackBar without destroying bracket state.
-          if (errorMessage != null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(errorMessage),
-                backgroundColor: Colors.grey.shade800,
-              ),
-            );
-            // Clear the error so it doesn't re-fire on rebuild.
-            context.read<BracketBloc>().add(
-              const BracketEvent.errorDismissed(),
-            );
+        listenWhen: (prev, current) => current is BracketLoadSuccess,
+        listener: (context, state) {
+          if (state case BracketLoadSuccess(:final errorMessage)) {
+            // Show error as SnackBar without destroying bracket state.
+            if (errorMessage != null) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(errorMessage),
+                  backgroundColor: Colors.grey.shade800,
+                ),
+              );
+              // Clear the error so it doesn't re-fire on rebuild.
+              context.read<BracketBloc>().add(
+                const BracketEvent.errorDismissed(),
+              );
+            }
           }
-        }
-      },
-      builder: (context, state) {
-        return switch (state) {
-          BracketInitial() || BracketGenerating() => Scaffold(
-            appBar: AppBar(
-              title: Text(
-                '${_bracketFormat.displayLabel} — ${widget.snapshot.participantCount} Players',
+        },
+        builder: (context, state) {
+          return switch (state) {
+            BracketInitial() || BracketGenerating() => Scaffold(
+              appBar: AppBar(
+                title: Text(
+                  '${_bracketFormat.displayLabel} — ${widget.snapshot.participantCount} Players',
+                ),
+              ),
+              body: const Center(child: CircularProgressIndicator()),
+            ),
+            BracketFailure(:final message) => Scaffold(
+              appBar: AppBar(
+                title: const Text('Error'),
+                leading: IconButton(
+                  icon: const Icon(Icons.arrow_back),
+                  onPressed: _navigateBackToTournamentDetail,
+                ),
+              ),
+              body: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.error_outline,
+                      size: 48,
+                      color: Colors.grey.shade800,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(message, textAlign: TextAlign.center),
+                  ],
+                ),
               ),
             ),
-            body: const Center(child: CircularProgressIndicator()),
-          ),
-          BracketFailure(:final message) => Scaffold(
-            appBar: AppBar(
-              title: const Text('Error'),
-              leading: IconButton(
-                icon: const Icon(Icons.arrow_back),
-                onPressed: _navigateBackToTournamentDetail,
+            BracketLoadSuccess(
+              :final result,
+              :final participants,
+              :final format,
+              :final includeThirdPlaceMatch,
+              :final actionHistory,
+              :final historyPointer,
+              :final isReplayInProgress,
+              :final isEditModeEnabled,
+              :final isSaving,
+              :final hasUnsavedChanges,
+            ) =>
+              _buildViewer(
+                context: context,
+                result: result,
+                participants: participants,
+                format: format,
+                includeThirdPlaceMatch: includeThirdPlaceMatch,
+                actionHistory: actionHistory,
+                historyPointer: historyPointer,
+                isReplayInProgress: isReplayInProgress,
+                isEditModeEnabled: isEditModeEnabled,
+                isSaving: isSaving,
+                hasUnsavedChanges: hasUnsavedChanges,
               ),
-            ),
-            body: Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.error_outline,
-                    size: 48,
-                    color: Colors.grey.shade800,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(message, textAlign: TextAlign.center),
-                ],
-              ),
-            ),
-          ),
-          BracketLoadSuccess(
-            :final result,
-            :final participants,
-            :final format,
-            :final includeThirdPlaceMatch,
-            :final actionHistory,
-            :final historyPointer,
-            :final isReplayInProgress,
-            :final isEditModeEnabled,
-            :final isSaving,
-            :final hasUnsavedChanges,
-          ) =>
-            _buildViewer(
-              context: context,
-              result: result,
-              participants: participants,
-              format: format,
-              includeThirdPlaceMatch: includeThirdPlaceMatch,
-              actionHistory: actionHistory,
-              historyPointer: historyPointer,
-              isReplayInProgress: isReplayInProgress,
-              isEditModeEnabled: isEditModeEnabled,
-              isSaving: isSaving,
-              hasUnsavedChanges: hasUnsavedChanges,
-            ),
-        };
-      },
-    ));
+          };
+        },
+      ),
+    );
   }
 
   Widget _buildViewer({
@@ -594,7 +595,6 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-          
               // ── Undo ──
               TextButton(
                 style: actionButtonStyle,
@@ -701,7 +701,7 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
                 height: 24,
                 child: VerticalDivider(width: 16, color: Colors.white24),
               ),
-                  // ── Save Bracket ──
+              // ── Save Bracket ──
               Tooltip(
                 message: 'Save explicitly to persist the current bracket state',
                 child: TextButton.icon(
@@ -736,9 +736,6 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
                   label: const Text('Save Bracket'),
                 ),
               ),
-
-              
-
             ],
           ),
         ),

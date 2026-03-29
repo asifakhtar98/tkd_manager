@@ -33,9 +33,12 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _passwordController = TextEditingController(
     text: (DebugConfig.forceDebugMode) ? DebugConfig.debugPassword : null,
   );
-  final TextEditingController _organizationNameController = TextEditingController(
-    text: (DebugConfig.forceDebugMode) ? DebugConfig.debugOrganizationName : null,
-  );
+  final TextEditingController _organizationNameController =
+      TextEditingController(
+        text: (DebugConfig.forceDebugMode)
+            ? DebugConfig.debugOrganizationName
+            : null,
+      );
 
   _AuthMode _authMode = _AuthMode.signIn;
 
@@ -135,168 +138,176 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         child: Center(
           child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 48),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 420),
-            child: BlocConsumer<AuthenticationBloc, AuthenticationState>(
-              listener: _authStateListener,
-              builder: (BuildContext context, AuthenticationState state) {
-                final bool isLoading = state is AuthenticationInProgress;
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 48),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 420),
+              child: BlocConsumer<AuthenticationBloc, AuthenticationState>(
+                listener: _authStateListener,
+                builder: (BuildContext context, AuthenticationState state) {
+                  final bool isLoading = state is AuthenticationInProgress;
 
-                return Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // ── Branding ──
-                    const AuthBrandingHeader(
-                      icon: Icons.sports_martial_arts,
-                      title: 'TKD Tournament Manager',
-                    ),
-                    const SizedBox(height: 40),
-
-                    // ── Card with form ──
-                    Card(
-                      elevation: 4,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // ── Branding ──
+                      const AuthBrandingHeader(
+                        icon: Icons.sports_martial_arts,
+                        title: 'TKD Tournament Manager',
                       ),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 32,
-                          vertical: 36,
+                      const SizedBox(height: 40),
+
+                      // ── Card with form ──
+                      Card(
+                        elevation: 4,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
                         ),
-                        child: AutofillGroup(
-                          child: Form(
-                            key: _formKey,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                Text(
-                                  _headerTitle,
-                                  style: theme.textTheme.headlineSmall
-                                      ?.copyWith(
-                                        fontWeight: FontWeight.bold,
-                                        color: colorScheme.onSurface,
-                                      ),
-                                  textAlign: TextAlign.center,
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  _headerSubtitle,
-                                  style: theme.textTheme.bodyMedium?.copyWith(
-                                    color: colorScheme.onSurfaceVariant,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 32,
+                            vertical: 36,
+                          ),
+                          child: AutofillGroup(
+                            child: Form(
+                              key: _formKey,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  Text(
+                                    _headerTitle,
+                                    style: theme.textTheme.headlineSmall
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                          color: colorScheme.onSurface,
+                                        ),
+                                    textAlign: TextAlign.center,
                                   ),
-                                  textAlign: TextAlign.center,
-                                ),
-                                const SizedBox(height: 32),
-
-                                // ── Email field (always visible) ──
-                                TextFormField(
-                                  controller: _emailController,
-                                  keyboardType: TextInputType.emailAddress,
-                                  textInputAction:
-                                      _authMode == _AuthMode.forgotPassword
-                                      ? TextInputAction.done
-                                      : TextInputAction.next,
-                                  autofillHints: const [AutofillHints.email],
-                                  enabled: !isLoading,
-                                  decoration: const InputDecoration(
-                                    labelText: 'Email',
-                                    prefixIcon: Icon(Icons.email_outlined),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    _headerSubtitle,
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      color: colorScheme.onSurfaceVariant,
+                                    ),
+                                    textAlign: TextAlign.center,
                                   ),
-                                  validator: AuthValidators.validateEmail,
-                                  onFieldSubmitted:
-                                      _authMode == _AuthMode.forgotPassword
-                                      ? (_) => _submitForm()
-                                      : null,
-                                ),
+                                  const SizedBox(height: 32),
 
-                                // ── Organization Name field (sign-up mode only) ──
-                                if (_authMode == _AuthMode.signUp) ...[
-                                  const SizedBox(height: 20),
+                                  // ── Email field (always visible) ──
                                   TextFormField(
-                                    controller: _organizationNameController,
-                                    keyboardType: TextInputType.name,
-                                    textInputAction: TextInputAction.next,
-                                    autofillHints: const [AutofillHints.organizationName],
+                                    controller: _emailController,
+                                    keyboardType: TextInputType.emailAddress,
+                                    textInputAction:
+                                        _authMode == _AuthMode.forgotPassword
+                                        ? TextInputAction.done
+                                        : TextInputAction.next,
+                                    autofillHints: const [AutofillHints.email],
                                     enabled: !isLoading,
                                     decoration: const InputDecoration(
-                                      labelText: 'Organization Name',
-                                      prefixIcon: Icon(Icons.business_outlined),
+                                      labelText: 'Email',
+                                      prefixIcon: Icon(Icons.email_outlined),
                                     ),
-                                    validator: (value) {
-                                      if (value == null || value.trim().isEmpty) {
-                                        return 'Please enter your organization name';
-                                      }
-                                      return null;
-                                    },
+                                    validator: AuthValidators.validateEmail,
+                                    onFieldSubmitted:
+                                        _authMode == _AuthMode.forgotPassword
+                                        ? (_) => _submitForm()
+                                        : null,
                                   ),
-                                ],
 
-                                // ── Password field (hidden in forgot-password mode) ──
-                                if (_authMode != _AuthMode.forgotPassword) ...[
-                                  const SizedBox(height: 20),
-                                  PasswordTextFormField(
-                                    controller: _passwordController,
-                                    enabled: !isLoading,
-                                    autofillHints: _authMode == _AuthMode.signUp
-                                        ? const [AutofillHints.newPassword]
-                                        : const [AutofillHints.password],
-                                    validator: AuthValidators.validatePassword,
-                                    onFieldSubmitted: (_) => _submitForm(),
-                                  ),
-                                ],
+                                  // ── Organization Name field (sign-up mode only) ──
+                                  if (_authMode == _AuthMode.signUp) ...[
+                                    const SizedBox(height: 20),
+                                    TextFormField(
+                                      controller: _organizationNameController,
+                                      keyboardType: TextInputType.name,
+                                      textInputAction: TextInputAction.next,
+                                      autofillHints: const [
+                                        AutofillHints.organizationName,
+                                      ],
+                                      enabled: !isLoading,
+                                      decoration: const InputDecoration(
+                                        labelText: 'Organization Name',
+                                        prefixIcon: Icon(
+                                          Icons.business_outlined,
+                                        ),
+                                      ),
+                                      validator: (value) {
+                                        if (value == null ||
+                                            value.trim().isEmpty) {
+                                          return 'Please enter your organization name';
+                                        }
+                                        return null;
+                                      },
+                                    ),
+                                  ],
 
-                                // ── Forgot Password link (sign-in mode only) ──
-                                if (_authMode == _AuthMode.signIn) ...[
-                                  const SizedBox(height: 4),
-                                  Align(
-                                    alignment: Alignment.centerRight,
-                                    child: TextButton(
-                                      onPressed: isLoading
-                                          ? null
-                                          : () => _switchToMode(
-                                              _AuthMode.forgotPassword,
-                                            ),
-                                      child: Text(
-                                        'Forgot Password?',
-                                        style: TextStyle(
-                                          color: colorScheme.primary,
-                                          fontSize: 13,
+                                  // ── Password field (hidden in forgot-password mode) ──
+                                  if (_authMode !=
+                                      _AuthMode.forgotPassword) ...[
+                                    const SizedBox(height: 20),
+                                    PasswordTextFormField(
+                                      controller: _passwordController,
+                                      enabled: !isLoading,
+                                      autofillHints:
+                                          _authMode == _AuthMode.signUp
+                                          ? const [AutofillHints.newPassword]
+                                          : const [AutofillHints.password],
+                                      validator:
+                                          AuthValidators.validatePassword,
+                                      onFieldSubmitted: (_) => _submitForm(),
+                                    ),
+                                  ],
+
+                                  // ── Forgot Password link (sign-in mode only) ──
+                                  if (_authMode == _AuthMode.signIn) ...[
+                                    const SizedBox(height: 4),
+                                    Align(
+                                      alignment: Alignment.centerRight,
+                                      child: TextButton(
+                                        onPressed: isLoading
+                                            ? null
+                                            : () => _switchToMode(
+                                                _AuthMode.forgotPassword,
+                                              ),
+                                        child: Text(
+                                          'Forgot Password?',
+                                          style: TextStyle(
+                                            color: colorScheme.primary,
+                                            fontSize: 13,
+                                          ),
                                         ),
                                       ),
                                     ),
+                                  ],
+
+                                  const SizedBox(height: 20),
+
+                                  // ── Submit button ──
+                                  AuthSubmitButton(
+                                    label: _submitButtonLabel,
+                                    isLoading: isLoading,
+                                    onPressed: _submitForm,
+                                  ),
+                                  const SizedBox(height: 16),
+
+                                  // ── Toggle links ──
+                                  _buildToggleLinks(
+                                    isLoading,
+                                    colorScheme,
+                                    theme,
                                   ),
                                 ],
-
-                                const SizedBox(height: 20),
-
-                                // ── Submit button ──
-                                AuthSubmitButton(
-                                  label: _submitButtonLabel,
-                                  isLoading: isLoading,
-                                  onPressed: _submitForm,
-                                ),
-                                const SizedBox(height: 16),
-
-                                // ── Toggle links ──
-                                _buildToggleLinks(
-                                  isLoading,
-                                  colorScheme,
-                                  theme,
-                                ),
-                              ],
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
-                );
-              },
+                    ],
+                  );
+                },
+              ),
             ),
           ),
         ),
-      ),
       ),
     );
   }

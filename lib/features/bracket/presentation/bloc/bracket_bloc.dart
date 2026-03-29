@@ -85,11 +85,11 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
     _cancelReplayTimer();
 
     // Shuffle participants for a fresh draw, respecting dojang separation.
-    final shuffledParticipants =
-        _participantShuffleService.shuffleParticipantsForBracketGeneration(
-      participants: cachedRequest.participants,
-      dojangSeparation: cachedRequest.dojangSeparation,
-    );
+    final shuffledParticipants = _participantShuffleService
+        .shuffleParticipantsForBracketGeneration(
+          participants: cachedRequest.participants,
+          dojangSeparation: cachedRequest.dojangSeparation,
+        );
     final shuffledRequest = cachedRequest.copyWith(
       participants: shuffledParticipants,
     );
@@ -409,7 +409,8 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
     if (_hasCompletedMatches(currentState)) {
       emit(
         currentState.copyWith(
-          errorMessage: 'Cannot swap participants after matches have been scored.',
+          errorMessage:
+              'Cannot swap participants after matches have been scored.',
         ),
       );
       return;
@@ -513,8 +514,8 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
     final resolvedRegistrationId = event.updatedRegistrationId == null
         ? oldParticipant.registrationId
         : (event.updatedRegistrationId!.isEmpty
-            ? null
-            : event.updatedRegistrationId);
+              ? null
+              : event.updatedRegistrationId);
 
     final updatedParticipant = oldParticipant.copyWith(
       fullName: event.updatedFullName,
@@ -542,10 +543,7 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
     );
 
     final truncatedHistory = currentState.historyPointer >= 0
-        ? currentState.actionHistory.sublist(
-            0,
-            currentState.historyPointer + 1,
-          )
+        ? currentState.actionHistory.sublist(0, currentState.historyPointer + 1)
         : <BracketHistoryEntry>[];
 
     final newHistory = [...truncatedHistory, newEntry];
@@ -710,11 +708,13 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
 
     final sourceMatch = allMatches.firstWhere(
       (matchEntity) => matchEntity.id == sourceMatchId,
-      orElse: () => throw ArgumentError('Source match not found: $sourceMatchId'),
+      orElse: () =>
+          throw ArgumentError('Source match not found: $sourceMatchId'),
     );
     final targetMatch = allMatches.firstWhere(
       (matchEntity) => matchEntity.id == targetMatchId,
-      orElse: () => throw ArgumentError('Target match not found: $targetMatchId'),
+      orElse: () =>
+          throw ArgumentError('Target match not found: $targetMatchId'),
     );
 
     final sourceParticipantId = sourceSlotPosition == 'blue'
@@ -745,12 +745,12 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
     }).toList();
 
     return switch (currentResult) {
-      SingleEliminationResult(:final data) =>
-        BracketResult.singleElimination(data.copyWith(matches: updatedMatches)),
-      DoubleEliminationResult(:final data) =>
-        BracketResult.doubleElimination(
-          data.copyWith(allMatches: updatedMatches),
-        ),
+      SingleEliminationResult(:final data) => BracketResult.singleElimination(
+        data.copyWith(matches: updatedMatches),
+      ),
+      DoubleEliminationResult(:final data) => BracketResult.doubleElimination(
+        data.copyWith(allMatches: updatedMatches),
+      ),
     };
   }
 
@@ -854,12 +854,10 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
     Emitter<BracketState> emit,
   ) {
     if (state is! BracketLoadSuccess) return;
-    
+
     // Set isSaving to true to show loading indicator in UI.
     // Wait for the TournamentBloc to finish before clearing hasUnsavedChanges.
-    emit((state as BracketLoadSuccess).copyWith(
-      isSaving: true,
-    ));
+    emit((state as BracketLoadSuccess).copyWith(isSaving: true));
   }
 
   void _handleBracketSaveOutcomeReceived(
@@ -869,15 +867,19 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
     if (state is! BracketLoadSuccess) return;
 
     if (event.isSuccess) {
-      emit((state as BracketLoadSuccess).copyWith(
-        isSaving: false,
-        hasUnsavedChanges: false,
-      ));
+      emit(
+        (state as BracketLoadSuccess).copyWith(
+          isSaving: false,
+          hasUnsavedChanges: false,
+        ),
+      );
     } else {
-      emit((state as BracketLoadSuccess).copyWith(
-        isSaving: false,
-        // hasUnsavedChanges remains true because the save failed
-      ));
+      emit(
+        (state as BracketLoadSuccess).copyWith(
+          isSaving: false,
+          // hasUnsavedChanges remains true because the save failed
+        ),
+      );
     }
   }
 }

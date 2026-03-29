@@ -17,10 +17,7 @@ class ParticipantEditResult {
 /// Shows pre-filled text fields for the current values and returns
 /// a [ParticipantEditResult] on confirmation, or null on cancel.
 class ParticipantEditDialog extends StatefulWidget {
-  const ParticipantEditDialog({
-    required this.participant,
-    super.key,
-  });
+  const ParticipantEditDialog({required this.participant, super.key});
 
   final ParticipantEntity participant;
 
@@ -72,10 +69,7 @@ class _ParticipantEditDialogState extends State<ParticipantEditDialog> {
         children: [
           Icon(Icons.edit, color: colorScheme.primary),
           const SizedBox(width: 8),
-          Text(
-            'Edit Participant',
-            style: theme.textTheme.titleLarge,
-          ),
+          Text('Edit Participant', style: theme.textTheme.titleLarge),
         ],
       ),
       content: SizedBox(
@@ -154,10 +148,7 @@ class _ParticipantEditDialogState extends State<ParticipantEditDialog> {
           onPressed: () => Navigator.of(context).pop(),
           child: const Text('Cancel'),
         ),
-        FilledButton(
-          onPressed: _handleConfirm,
-          child: const Text('Save'),
-        ),
+        FilledButton(onPressed: _handleConfirm, child: const Text('Save')),
       ],
     );
   }
@@ -175,8 +166,9 @@ class _ParticipantEditDialogState extends State<ParticipantEditDialog> {
     Navigator.of(context).pop(
       ParticipantEditResult(
         updatedFullName: trimmedFullName,
-        updatedRegistrationId:
-            registrationIdChanged ? trimmedRegistrationId : null,
+        updatedRegistrationId: registrationIdChanged
+            ? trimmedRegistrationId
+            : null,
       ),
     );
   }

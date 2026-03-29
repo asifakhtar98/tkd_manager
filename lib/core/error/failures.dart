@@ -11,9 +11,9 @@ sealed class Failure {
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
-    return other is Failure && 
-           other.runtimeType == runtimeType && 
-           other.message == message;
+    return other is Failure &&
+        other.runtimeType == runtimeType &&
+        other.message == message;
   }
 
   @override
@@ -35,12 +35,16 @@ class DatabaseFailure extends Failure {
 
 /// Failure when a requested resource is not found.
 class NotFoundFailure extends Failure {
-  const NotFoundFailure([super.message = 'The requested resource was not found.']);
+  const NotFoundFailure([
+    super.message = 'The requested resource was not found.',
+  ]);
 }
 
 /// Failure resulting from network connectivity issues (sockets/timeouts).
 class NetworkFailure extends Failure {
-  const NetworkFailure([super.message = 'Network error. Please check your connection.']);
+  const NetworkFailure([
+    super.message = 'Network error. Please check your connection.',
+  ]);
 }
 
 /// Failure from the bracket or seeding generation engine.

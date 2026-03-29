@@ -144,7 +144,6 @@ void main() {
         },
       );
 
-
       test(
         'emits passwordRecoveryInProgress when auth stream fires passwordRecovery',
         () async {

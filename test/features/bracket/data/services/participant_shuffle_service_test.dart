@@ -81,8 +81,9 @@ void main() {
 
       expect(result, hasLength(8));
       final resultIds = result.map((participant) => participant.id).toSet();
-      final originalIds =
-          participants.map((participant) => participant.id).toSet();
+      final originalIds = participants
+          .map((participant) => participant.id)
+          .toSet();
       expect(resultIds, equals(originalIds));
     });
 
@@ -104,8 +105,9 @@ void main() {
         dojangSeparation: false,
       );
 
-      final originalIds =
-          participants.map((participant) => participant.id).toList();
+      final originalIds = participants
+          .map((participant) => participant.id)
+          .toList();
       final resultIds = result.map((participant) => participant.id).toList();
       // With 8 participants and seed 42, it's virtually impossible for
       // the shuffle to produce the exact same order.
@@ -114,16 +116,18 @@ void main() {
 
     test('original list is not mutated by shuffle', () {
       final participants = buildParticipants(8);
-      final originalIds =
-          participants.map((participant) => participant.id).toList();
+      final originalIds = participants
+          .map((participant) => participant.id)
+          .toList();
 
       shuffleService.shuffleParticipantsForBracketGeneration(
         participants: participants,
         dojangSeparation: false,
       );
 
-      final idsAfterCall =
-          participants.map((participant) => participant.id).toList();
+      final idsAfterCall = participants
+          .map((participant) => participant.id)
+          .toList();
       expect(idsAfterCall, equals(originalIds));
     });
 
@@ -178,62 +182,56 @@ void main() {
           .toList();
 
       // Each dojang should have at most 1 athlete in each half.
-      final dojangAInTopHalf =
-          topHalfDojangs.where((name) => name == 'DojangA').length;
-      final dojangAInBottomHalf =
-          bottomHalfDojangs.where((name) => name == 'DojangA').length;
+      final dojangAInTopHalf = topHalfDojangs
+          .where((name) => name == 'DojangA')
+          .length;
+      final dojangAInBottomHalf = bottomHalfDojangs
+          .where((name) => name == 'DojangA')
+          .length;
       expect(dojangAInTopHalf, lessThanOrEqualTo(1));
       expect(dojangAInBottomHalf, lessThanOrEqualTo(1));
     });
 
-    test(
-      'three athletes from same dojang: at most 2 in one half',
-      () {
-        final participants = buildParticipantsWithDojangs({
-          'DojangA': 3,
-          'DojangB': 1,
-          'DojangC': 2,
-        });
+    test('three athletes from same dojang: at most 2 in one half', () {
+      final participants = buildParticipantsWithDojangs({
+        'DojangA': 3,
+        'DojangB': 1,
+        'DojangC': 2,
+      });
 
-        final result = shuffleService.shuffleParticipantsForBracketGeneration(
-          participants: participants,
-          dojangSeparation: true,
-        );
+      final result = shuffleService.shuffleParticipantsForBracketGeneration(
+        participants: participants,
+        dojangSeparation: true,
+      );
 
-        final halfBoundary = result.length ~/ 2;
-        final topHalfDojangACount = result
-            .sublist(0, halfBoundary)
-            .where((p) => p.schoolOrDojangName == 'DojangA')
-            .length;
-        final bottomHalfDojangACount = result
-            .sublist(halfBoundary)
-            .where((p) => p.schoolOrDojangName == 'DojangA')
-            .length;
+      final halfBoundary = result.length ~/ 2;
+      final topHalfDojangACount = result
+          .sublist(0, halfBoundary)
+          .where((p) => p.schoolOrDojangName == 'DojangA')
+          .length;
+      final bottomHalfDojangACount = result
+          .sublist(halfBoundary)
+          .where((p) => p.schoolOrDojangName == 'DojangA')
+          .length;
 
-        // ceil(3/2) = 2 max per half.
-        expect(topHalfDojangACount, lessThanOrEqualTo(2));
-        expect(bottomHalfDojangACount, lessThanOrEqualTo(2));
-      },
-    );
+      // ceil(3/2) = 2 max per half.
+      expect(topHalfDojangACount, lessThanOrEqualTo(2));
+      expect(bottomHalfDojangACount, lessThanOrEqualTo(2));
+    });
 
-    test(
-      'all athletes from same dojang degenerates gracefully',
-      () {
-        final participants = buildParticipantsWithDojangs({
-          'DojangA': 6,
-        });
+    test('all athletes from same dojang degenerates gracefully', () {
+      final participants = buildParticipantsWithDojangs({'DojangA': 6});
 
-        // Should not throw — just does best-effort.
-        final result = shuffleService.shuffleParticipantsForBracketGeneration(
-          participants: participants,
-          dojangSeparation: true,
-        );
+      // Should not throw — just does best-effort.
+      final result = shuffleService.shuffleParticipantsForBracketGeneration(
+        participants: participants,
+        dojangSeparation: true,
+      );
 
-        expect(result, hasLength(6));
-        final resultIds = result.map((participant) => participant.id).toSet();
-        expect(resultIds, hasLength(6));
-      },
-    );
+      expect(result, hasLength(6));
+      final resultIds = result.map((participant) => participant.id).toSet();
+      expect(resultIds, hasLength(6));
+    });
 
     test('participants with no dojang name are not grouped together', () {
       // 4 unaffiliated + 2 from same dojang.
@@ -245,9 +243,7 @@ void main() {
       final uniqueParticipants = participants
           .asMap()
           .entries
-          .map(
-            (entry) => entry.value.copyWith(id: 'p${entry.key + 1}'),
-          )
+          .map((entry) => entry.value.copyWith(id: 'p${entry.key + 1}'))
           .toList();
 
       final result = shuffleService.shuffleParticipantsForBracketGeneration(
@@ -261,79 +257,74 @@ void main() {
       expect(resultIds, hasLength(6));
     });
 
-    test(
-      'eight participants across four dojangs are well-distributed',
-      () {
-        final participants = buildParticipantsWithDojangs({
-          'Alpha': 3,
-          'Beta': 2,
-          'Gamma': 2,
-          'Delta': 1,
-        });
+    test('eight participants across four dojangs are well-distributed', () {
+      final participants = buildParticipantsWithDojangs({
+        'Alpha': 3,
+        'Beta': 2,
+        'Gamma': 2,
+        'Delta': 1,
+      });
 
-        final result = shuffleService.shuffleParticipantsForBracketGeneration(
-          participants: participants,
-          dojangSeparation: true,
-        );
+      final result = shuffleService.shuffleParticipantsForBracketGeneration(
+        participants: participants,
+        dojangSeparation: true,
+      );
 
-        final halfBoundary = result.length ~/ 2;
-        for (final dojangName in ['Alpha', 'Beta', 'Gamma']) {
-          final inTopHalf = result
-              .sublist(0, halfBoundary)
-              .where((p) => p.schoolOrDojangName == dojangName)
-              .length;
-          final totalForDojang = result
-              .where((p) => p.schoolOrDojangName == dojangName)
-              .length;
-          final maximumAllowed = (totalForDojang + 1) ~/ 2;
-          expect(
-            inTopHalf,
-            lessThanOrEqualTo(maximumAllowed),
-            reason:
-                '$dojangName has $inTopHalf in top half '
-                '(max allowed: $maximumAllowed)',
-          );
-        }
-      },
-    );
-
-    test(
-      'dojangSeparation=false does NOT apply constraint repair',
-      () {
-        // Even with same-dojang participants, no separation is enforced.
-        final participants = buildParticipantsWithDojangs({
-          'DojangA': 4,
-          'DojangB': 4,
-        });
-
-        // Run 10 shuffles and confirm that at least one has >2 same-dojang
-        // in one half (which separation would prevent).
-        bool foundUnseparatedShuffle = false;
-        for (var attempt = 0; attempt < 10; attempt++) {
-          final service = ParticipantShuffleServiceImplementation.seeded(
-            Random(attempt),
-          );
-          final result = service.shuffleParticipantsForBracketGeneration(
-            participants: participants,
-            dojangSeparation: false,
-          );
-          final halfBoundary = result.length ~/ 2;
-          final dojangAInTopHalf = result
-              .sublist(0, halfBoundary)
-              .where((p) => p.schoolOrDojangName == 'DojangA')
-              .length;
-          if (dojangAInTopHalf > 2) {
-            foundUnseparatedShuffle = true;
-            break;
-          }
-        }
+      final halfBoundary = result.length ~/ 2;
+      for (final dojangName in ['Alpha', 'Beta', 'Gamma']) {
+        final inTopHalf = result
+            .sublist(0, halfBoundary)
+            .where((p) => p.schoolOrDojangName == dojangName)
+            .length;
+        final totalForDojang = result
+            .where((p) => p.schoolOrDojangName == dojangName)
+            .length;
+        final maximumAllowed = (totalForDojang + 1) ~/ 2;
         expect(
-          foundUnseparatedShuffle,
-          isTrue,
-          reason: 'Without separation, at least one random seed should '
-              'produce >2 same-dojang participants in one half.',
+          inTopHalf,
+          lessThanOrEqualTo(maximumAllowed),
+          reason:
+              '$dojangName has $inTopHalf in top half '
+              '(max allowed: $maximumAllowed)',
         );
-      },
-    );
+      }
+    });
+
+    test('dojangSeparation=false does NOT apply constraint repair', () {
+      // Even with same-dojang participants, no separation is enforced.
+      final participants = buildParticipantsWithDojangs({
+        'DojangA': 4,
+        'DojangB': 4,
+      });
+
+      // Run 10 shuffles and confirm that at least one has >2 same-dojang
+      // in one half (which separation would prevent).
+      bool foundUnseparatedShuffle = false;
+      for (var attempt = 0; attempt < 10; attempt++) {
+        final service = ParticipantShuffleServiceImplementation.seeded(
+          Random(attempt),
+        );
+        final result = service.shuffleParticipantsForBracketGeneration(
+          participants: participants,
+          dojangSeparation: false,
+        );
+        final halfBoundary = result.length ~/ 2;
+        final dojangAInTopHalf = result
+            .sublist(0, halfBoundary)
+            .where((p) => p.schoolOrDojangName == 'DojangA')
+            .length;
+        if (dojangAInTopHalf > 2) {
+          foundUnseparatedShuffle = true;
+          break;
+        }
+      }
+      expect(
+        foundUnseparatedShuffle,
+        isTrue,
+        reason:
+            'Without separation, at least one random seed should '
+            'produce >2 same-dojang participants in one half.',
+      );
+    });
   });
 }

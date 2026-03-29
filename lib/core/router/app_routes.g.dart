@@ -10,6 +10,8 @@ List<RouteBase> get $appRoutes => [
   $loginRoute,
   $passwordResetRoute,
   $emailConfirmedRoute,
+  $activateRoute,
+  $adminRoute,
   $dashboardRoute,
 ];
 
@@ -73,6 +75,52 @@ mixin $EmailConfirmedRoute on GoRouteData {
 
   @override
   String get location => GoRouteData.$location('/email-confirmed');
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+RouteBase get $activateRoute =>
+    GoRouteData.$route(path: '/activate', factory: $ActivateRoute._fromState);
+
+mixin $ActivateRoute on GoRouteData {
+  static ActivateRoute _fromState(GoRouterState state) => const ActivateRoute();
+
+  @override
+  String get location => GoRouteData.$location('/activate');
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+RouteBase get $adminRoute =>
+    GoRouteData.$route(path: '/admin', factory: $AdminRoute._fromState);
+
+mixin $AdminRoute on GoRouteData {
+  static AdminRoute _fromState(GoRouterState state) => const AdminRoute();
+
+  @override
+  String get location => GoRouteData.$location('/admin');
 
   @override
   void go(BuildContext context) => context.go(location);

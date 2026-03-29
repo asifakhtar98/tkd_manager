@@ -446,14 +446,8 @@ void main() {
           targetPageCount: 1,
         );
 
-        expect(
-          scale,
-          greaterThanOrEqualTo(PrintExportSettings.minScaleFactor),
-        );
-        expect(
-          scale,
-          lessThanOrEqualTo(PrintExportSettings.maxScaleFactor),
-        );
+        expect(scale, greaterThanOrEqualTo(PrintExportSettings.minScaleFactor));
+        expect(scale, lessThanOrEqualTo(PrintExportSettings.maxScaleFactor));
       });
 
       test('degenerate inputs return 1.0', () {

@@ -34,7 +34,7 @@ abstract final class MatchNumberingUtility {
     final incomingNonByeCounts = <String, int>{};
     for (final m in matches) {
       if (!m.isBye && m.winnerAdvancesToMatchId != null) {
-        incomingNonByeCounts[m.winnerAdvancesToMatchId!] = 
+        incomingNonByeCounts[m.winnerAdvancesToMatchId!] =
             (incomingNonByeCounts[m.winnerAdvancesToMatchId!] ?? 0) + 1;
       }
     }
@@ -48,7 +48,10 @@ abstract final class MatchNumberingUtility {
         incomingNonByeCounts: incomingNonByeCounts,
       );
     } else {
-      numberingMap = _buildSingleEliminationNumbering(matches, incomingNonByeCounts);
+      numberingMap = _buildSingleEliminationNumbering(
+        matches,
+        incomingNonByeCounts,
+      );
     }
 
     // Apply the numbers to the entity
@@ -207,7 +210,7 @@ abstract final class MatchNumberingUtility {
     Map<String, int> incomingNonByeCounts,
   ) {
     var globalNumber = startingNumber;
-    
+
     // Sort matches:
     // 1. Matches with FEWER incoming non-bye matches go FIRST.
     // 2. Tie-breaker: natural layout order (matchNumberInRound).

@@ -86,39 +86,33 @@ void main() {
         expect(marks.length, greaterThanOrEqualTo(4));
       });
 
-      test(
-        'interior tile has marks on all four edges',
-        () {
-          final marks = renderer.buildRegistrationMarks(
-            row: 1,
-            col: 1,
-            totalColumns: 3,
-            totalRows: 3,
-            settings: tiledSettings,
-          );
+      test('interior tile has marks on all four edges', () {
+        final marks = renderer.buildRegistrationMarks(
+          row: 1,
+          col: 1,
+          totalColumns: 3,
+          totalRows: 3,
+          settings: tiledSettings,
+        );
 
-          // All 4 edges × (top+bottom+mid or left+right+mid) = up to 12 marks
-          expect(marks, isNotEmpty);
-          expect(marks.length, greaterThan(8));
-        },
-      );
+        // All 4 edges × (top+bottom+mid or left+right+mid) = up to 12 marks
+        expect(marks, isNotEmpty);
+        expect(marks.length, greaterThan(8));
+      });
 
-      test(
-        'edge tile (0, middle) has marks on left, right, and bottom',
-        () {
-          final marks = renderer.buildRegistrationMarks(
-            row: 0,
-            col: 1,
-            totalColumns: 3,
-            totalRows: 3,
-            settings: tiledSettings,
-          );
+      test('edge tile (0, middle) has marks on left, right, and bottom', () {
+        final marks = renderer.buildRegistrationMarks(
+          row: 0,
+          col: 1,
+          totalColumns: 3,
+          totalRows: 3,
+          settings: tiledSettings,
+        );
 
-          // 3 edges with marks (left, right, bottom) — no top.
-          expect(marks, isNotEmpty);
-          expect(marks.length, greaterThanOrEqualTo(6));
-        },
-      );
+        // 3 edges with marks (left, right, bottom) — no top.
+        expect(marks, isNotEmpty);
+        expect(marks.length, greaterThanOrEqualTo(6));
+      });
     });
 
     // ── Edge Neighbor Labels ────────────────────────────────────────────

@@ -19,20 +19,17 @@ export 'tournament_state.dart';
 /// the same instance is shared across the dashboard, setup, and detail screens.
 @lazySingleton
 class TournamentBloc extends Bloc<TournamentEvent, TournamentState> {
-  TournamentBloc(
-    this._tournamentRepository,
-    this._bracketSnapshotRepository,
-  ) : super(
-          TournamentState(
-            tournaments: [DemoData.demoTournament],
-            bracketsByTournamentId: {
-              DemoData.demoTournament.id:
-                  DemoBracketSnapshotFactory
-                      .generateAllDemoBracketSnapshots(),
-            },
-            isLoading: false,
-          ),
-        ) {
+  TournamentBloc(this._tournamentRepository, this._bracketSnapshotRepository)
+    : super(
+        TournamentState(
+          tournaments: [DemoData.demoTournament],
+          bracketsByTournamentId: {
+            DemoData.demoTournament.id:
+                DemoBracketSnapshotFactory.generateAllDemoBracketSnapshots(),
+          },
+          isLoading: false,
+        ),
+      ) {
     on<TournamentLoadRequested>(_handleLoadRequested);
     on<TournamentLoadMoreRequested>(_handleLoadMoreRequested);
     on<TournamentCreated>(_handleTournamentCreated);
@@ -40,7 +37,9 @@ class TournamentBloc extends Bloc<TournamentEvent, TournamentState> {
     on<TournamentBracketSnapshotRemoved>(_handleBracketSnapshotRemoved);
     on<TournamentDeleted>(_handleTournamentDeleted);
     on<TournamentUpdated>(_handleTournamentUpdated);
-    on<TournamentBracketSnapshotUpdated>(_handleTournamentBracketSnapshotUpdated);
+    on<TournamentBracketSnapshotUpdated>(
+      _handleTournamentBracketSnapshotUpdated,
+    );
     on<TournamentClearRequested>(_handleClearRequested);
   }
 
@@ -51,15 +50,18 @@ class TournamentBloc extends Bloc<TournamentEvent, TournamentState> {
     TournamentLoadRequested event,
     Emitter<TournamentState> emit,
   ) async {
-    emit(state.copyWith(
-      isLoading: true, 
-      errorMessage: null,
-      isFetchingMore: false,
-      hasReachedMax: false,
-    ));
+    emit(
+      state.copyWith(
+        isLoading: true,
+        errorMessage: null,
+        isFetchingMore: false,
+        hasReachedMax: false,
+      ),
+    );
     try {
-      final remoteTournamentsResult = await _tournamentRepository.getTournaments();
-      
+      final remoteTournamentsResult = await _tournamentRepository
+          .getTournaments();
+
       await remoteTournamentsResult.fold(
         (failure) async {
           log('Failed to load remote tournaments: ${failure.message}');
@@ -67,22 +69,28 @@ class TournamentBloc extends Bloc<TournamentEvent, TournamentState> {
         },
         (remoteTournaments) async {
           final Map<String, List<BracketSnapshot>> remoteBrackets = {};
-          
+
           for (final t in remoteTournaments) {
-            final snapshotsResult = await _bracketSnapshotRepository.getBracketSnapshots(t.id);
+            final snapshotsResult = await _bracketSnapshotRepository
+                .getBracketSnapshots(t.id);
             snapshotsResult.fold(
               (failure) {
-                log('Failed to load brackets for tournament ${t.id}: ${failure.message}');
+                log(
+                  'Failed to load brackets for tournament ${t.id}: ${failure.message}',
+                );
                 remoteBrackets[t.id] = [];
               },
               (snapshots) {
                 remoteBrackets[t.id] = snapshots;
-              }
+              },
             );
           }
 
           // Preserve demo data
-          final allTournaments = [DemoData.demoTournament, ...remoteTournaments];
+          final allTournaments = [
+            DemoData.demoTournament,
+            ...remoteTournaments,
+          ];
           final allBrackets = {
             ...state.bracketsByTournamentId,
             ...remoteBrackets,
@@ -96,11 +104,16 @@ class TournamentBloc extends Bloc<TournamentEvent, TournamentState> {
               hasReachedMax: remoteTournaments.length < 20,
             ),
           );
-        }
+        },
       );
     } catch (e) {
       log('Unexpected error loading remote tournaments: $e');
-      emit(state.copyWith(isLoading: false, errorMessage: 'Failed to load tournaments.'));
+      emit(
+        state.copyWith(
+          isLoading: false,
+          errorMessage: 'Failed to load tournaments.',
+        ),
+      );
     }
   }
 
@@ -113,19 +126,21 @@ class TournamentBloc extends Bloc<TournamentEvent, TournamentState> {
     emit(state.copyWith(isFetchingMore: true, errorMessage: null));
 
     try {
-      final int offset = state.tournaments.where((t) => t.id != DemoData.demoTournament.id).length;
-      final remoteTournamentsResult = await _tournamentRepository.getTournaments(
-        limit: 20,
-        offset: offset,
-      );
+      final int offset = state.tournaments
+          .where((t) => t.id != DemoData.demoTournament.id)
+          .length;
+      final remoteTournamentsResult = await _tournamentRepository
+          .getTournaments(limit: 20, offset: offset);
 
       await remoteTournamentsResult.fold(
         (failure) async {
           log('Failed to load more tournaments: ${failure.message}');
-          emit(state.copyWith(
-            isFetchingMore: false,
-            errorMessage: failure.message,
-          ));
+          emit(
+            state.copyWith(
+              isFetchingMore: false,
+              errorMessage: failure.message,
+            ),
+          );
         },
         (remoteTournaments) async {
           if (remoteTournaments.isEmpty) {
@@ -135,14 +150,17 @@ class TournamentBloc extends Bloc<TournamentEvent, TournamentState> {
 
           final Map<String, List<BracketSnapshot>> remoteBrackets = {};
           for (final t in remoteTournaments) {
-            final snapshotsResult = await _bracketSnapshotRepository.getBracketSnapshots(t.id);
+            final snapshotsResult = await _bracketSnapshotRepository
+                .getBracketSnapshots(t.id);
             snapshotsResult.fold(
               (failure) {
-                log('Failed to load brackets for tournament ${t.id}: ${failure.message}');
+                log(
+                  'Failed to load brackets for tournament ${t.id}: ${failure.message}',
+                );
               },
               (snapshots) {
                 remoteBrackets[t.id] = snapshots;
-              }
+              },
             );
           }
 
@@ -160,14 +178,16 @@ class TournamentBloc extends Bloc<TournamentEvent, TournamentState> {
               hasReachedMax: remoteTournaments.length < 20,
             ),
           );
-        }
+        },
       );
     } catch (e, st) {
       log('Failed to load more tournaments', error: e, stackTrace: st);
-      emit(state.copyWith(
-        isFetchingMore: false,
-        errorMessage: 'Failed to load more tournaments.',
-      ));
+      emit(
+        state.copyWith(
+          isFetchingMore: false,
+          errorMessage: 'Failed to load more tournaments.',
+        ),
+      );
     }
   }
 
@@ -177,30 +197,32 @@ class TournamentBloc extends Bloc<TournamentEvent, TournamentState> {
   ) async {
     emit(state.copyWith(isSaving: true, lastMutationError: null));
     try {
-      final persistedResult = await _tournamentRepository.createTournament(event.tournament);
-      
+      final persistedResult = await _tournamentRepository.createTournament(
+        event.tournament,
+      );
+
       persistedResult.fold(
         (failure) {
           log('Failed to create tournament: ${failure.message}');
-          emit(state.copyWith(
-            isSaving: false,
-            lastMutationError: failure.message,
-          ));
+          emit(
+            state.copyWith(isSaving: false, lastMutationError: failure.message),
+          );
         },
         (persisted) {
           final updatedTournamentList = [persisted, ...state.tournaments];
-          emit(state.copyWith(
-            tournaments: updatedTournamentList,
-            isSaving: false,
-          ));
-        }
+          emit(
+            state.copyWith(tournaments: updatedTournamentList, isSaving: false),
+          );
+        },
       );
     } catch (e) {
       log('Unexpected error creating tournament: $e');
-      emit(state.copyWith(
-        isSaving: false,
-        lastMutationError: 'Failed to create tournament.',
-      ));
+      emit(
+        state.copyWith(
+          isSaving: false,
+          lastMutationError: 'Failed to create tournament.',
+        ),
+      );
     }
   }
 
@@ -209,48 +231,56 @@ class TournamentBloc extends Bloc<TournamentEvent, TournamentState> {
     Emitter<TournamentState> emit,
   ) async {
     emit(state.copyWith(isSaving: true, lastMutationError: null));
-    
+
     if (event.tournamentId == DemoData.demoTournament.id) {
-      final existingSnapshots = state.bracketsByTournamentId[event.tournamentId] ?? [];
+      final existingSnapshots =
+          state.bracketsByTournamentId[event.tournamentId] ?? [];
       final updatedBracketsMap = Map<String, List<BracketSnapshot>>.from(
         state.bracketsByTournamentId,
       )..[event.tournamentId] = [event.snapshot, ...existingSnapshots];
-      emit(state.copyWith(
-        bracketsByTournamentId: updatedBracketsMap,
-        isSaving: false,
-      ));
+      emit(
+        state.copyWith(
+          bracketsByTournamentId: updatedBracketsMap,
+          isSaving: false,
+        ),
+      );
       return;
     }
 
     try {
-      final persistedResult = await _bracketSnapshotRepository.createBracketSnapshot(event.snapshot, event.tournamentId);
-      
+      final persistedResult = await _bracketSnapshotRepository
+          .createBracketSnapshot(event.snapshot, event.tournamentId);
+
       persistedResult.fold(
         (failure) {
           log('Failed to add bracket snapshot: ${failure.message}');
-          emit(state.copyWith(
-            isSaving: false,
-            lastMutationError: failure.message,
-          ));
+          emit(
+            state.copyWith(isSaving: false, lastMutationError: failure.message),
+          );
         },
         (persisted) {
-          final existingSnapshots = state.bracketsByTournamentId[event.tournamentId] ?? [];
+          final existingSnapshots =
+              state.bracketsByTournamentId[event.tournamentId] ?? [];
           final updatedBracketsMap = Map<String, List<BracketSnapshot>>.from(
             state.bracketsByTournamentId,
           )..[event.tournamentId] = [persisted, ...existingSnapshots];
-          
-          emit(state.copyWith(
-            bracketsByTournamentId: updatedBracketsMap,
-            isSaving: false,
-          ));
-        }
+
+          emit(
+            state.copyWith(
+              bracketsByTournamentId: updatedBracketsMap,
+              isSaving: false,
+            ),
+          );
+        },
       );
     } catch (e) {
       log('Unexpected error adding bracket snapshot: $e');
-      emit(state.copyWith(
-        isSaving: false,
-        lastMutationError: 'Failed to save bracket snapshot.',
-      ));
+      emit(
+        state.copyWith(
+          isSaving: false,
+          lastMutationError: 'Failed to save bracket snapshot.',
+        ),
+      );
     }
   }
 
@@ -261,52 +291,61 @@ class TournamentBloc extends Bloc<TournamentEvent, TournamentState> {
     emit(state.copyWith(isSaving: true, lastMutationError: null));
 
     if (event.tournamentId == DemoData.demoTournament.id) {
-      final existingSnapshots = state.bracketsByTournamentId[event.tournamentId] ?? [];
+      final existingSnapshots =
+          state.bracketsByTournamentId[event.tournamentId] ?? [];
       final filteredSnapshots = existingSnapshots
           .where((snapshot) => snapshot.id != event.snapshotId)
           .toList();
       final updatedBracketsMap = Map<String, List<BracketSnapshot>>.from(
         state.bracketsByTournamentId,
       )..[event.tournamentId] = filteredSnapshots;
-      emit(state.copyWith(
-        bracketsByTournamentId: updatedBracketsMap,
-        isSaving: false,
-      ));
+      emit(
+        state.copyWith(
+          bracketsByTournamentId: updatedBracketsMap,
+          isSaving: false,
+        ),
+      );
       return;
     }
 
     try {
-      final result = await _bracketSnapshotRepository.deleteBracketSnapshot(event.snapshotId);
-      
+      final result = await _bracketSnapshotRepository.deleteBracketSnapshot(
+        event.snapshotId,
+      );
+
       result.fold(
         (failure) {
           log('Failed to remove bracket snapshot: ${failure.message}');
-          emit(state.copyWith(
-            isSaving: false,
-            lastMutationError: failure.message,
-          ));
+          emit(
+            state.copyWith(isSaving: false, lastMutationError: failure.message),
+          );
         },
         (_) {
-          final existingSnapshots = state.bracketsByTournamentId[event.tournamentId] ?? [];
+          final existingSnapshots =
+              state.bracketsByTournamentId[event.tournamentId] ?? [];
           final filteredSnapshots = existingSnapshots
               .where((snapshot) => snapshot.id != event.snapshotId)
               .toList();
           final updatedBracketsMap = Map<String, List<BracketSnapshot>>.from(
             state.bracketsByTournamentId,
           )..[event.tournamentId] = filteredSnapshots;
-          
-          emit(state.copyWith(
-            bracketsByTournamentId: updatedBracketsMap,
-            isSaving: false,
-          ));
-        }
+
+          emit(
+            state.copyWith(
+              bracketsByTournamentId: updatedBracketsMap,
+              isSaving: false,
+            ),
+          );
+        },
       );
     } catch (e) {
       log('Unexpected error removing bracket snapshot: $e');
-      emit(state.copyWith(
-        isSaving: false,
-        lastMutationError: 'Failed to remove bracket snapshot.',
-      ));
+      emit(
+        state.copyWith(
+          isSaving: false,
+          lastMutationError: 'Failed to remove bracket snapshot.',
+        ),
+      );
     }
   }
 
@@ -334,15 +373,16 @@ class TournamentBloc extends Bloc<TournamentEvent, TournamentState> {
     }
 
     try {
-      final result = await _tournamentRepository.deleteTournament(event.tournamentId);
-      
+      final result = await _tournamentRepository.deleteTournament(
+        event.tournamentId,
+      );
+
       result.fold(
         (failure) {
           log('Failed to delete tournament: ${failure.message}');
-          emit(state.copyWith(
-            isSaving: false,
-            lastMutationError: failure.message,
-          ));
+          emit(
+            state.copyWith(isSaving: false, lastMutationError: failure.message),
+          );
         },
         (_) {
           final updatedTournamentList = state.tournaments
@@ -351,7 +391,7 @@ class TournamentBloc extends Bloc<TournamentEvent, TournamentState> {
           final updatedBracketsMap = Map<String, List<BracketSnapshot>>.from(
             state.bracketsByTournamentId,
           )..remove(event.tournamentId);
-          
+
           emit(
             state.copyWith(
               tournaments: updatedTournamentList,
@@ -359,14 +399,16 @@ class TournamentBloc extends Bloc<TournamentEvent, TournamentState> {
               isSaving: false,
             ),
           );
-        }
+        },
       );
     } catch (e) {
       log('Unexpected error deleting tournament: $e');
-      emit(state.copyWith(
-        isSaving: false,
-        lastMutationError: 'Failed to delete tournament.',
-      ));
+      emit(
+        state.copyWith(
+          isSaving: false,
+          lastMutationError: 'Failed to delete tournament.',
+        ),
+      );
     }
   }
 
@@ -382,42 +424,39 @@ class TournamentBloc extends Bloc<TournamentEvent, TournamentState> {
             ? event.tournament
             : tournament;
       }).toList();
-      emit(state.copyWith(
-        tournaments: updatedTournamentList,
-        isSaving: false,
-      ));
+      emit(state.copyWith(tournaments: updatedTournamentList, isSaving: false));
       return;
     }
 
     try {
-      final persistedResult = await _tournamentRepository.updateTournament(event.tournament);
-      
+      final persistedResult = await _tournamentRepository.updateTournament(
+        event.tournament,
+      );
+
       persistedResult.fold(
         (failure) {
           log('Failed to update tournament: ${failure.message}');
-          emit(state.copyWith(
-            isSaving: false,
-            lastMutationError: failure.message,
-          ));
+          emit(
+            state.copyWith(isSaving: false, lastMutationError: failure.message),
+          );
         },
         (persisted) {
           final updatedTournamentList = state.tournaments.map((tournament) {
-            return tournament.id == persisted.id
-                ? persisted
-                : tournament;
+            return tournament.id == persisted.id ? persisted : tournament;
           }).toList();
-          emit(state.copyWith(
-            tournaments: updatedTournamentList,
-            isSaving: false,
-          ));
-        }
+          emit(
+            state.copyWith(tournaments: updatedTournamentList, isSaving: false),
+          );
+        },
       );
     } catch (e) {
       log('Unexpected error updating tournament: $e');
-      emit(state.copyWith(
-        isSaving: false,
-        lastMutationError: 'Failed to update tournament.',
-      ));
+      emit(
+        state.copyWith(
+          isSaving: false,
+          lastMutationError: 'Failed to update tournament.',
+        ),
+      );
     }
   }
 
@@ -426,38 +465,42 @@ class TournamentBloc extends Bloc<TournamentEvent, TournamentState> {
     Emitter<TournamentState> emit,
   ) async {
     final tournamentId = event.snapshot.tournamentId;
-    
+
     emit(state.copyWith(isSaving: true, lastMutationError: null));
 
     if (tournamentId == DemoData.demoTournament.id) {
-       final existingSnapshots = state.bracketsByTournamentId[tournamentId] ?? [];
+      final existingSnapshots =
+          state.bracketsByTournamentId[tournamentId] ?? [];
       final updatedSnapshots = existingSnapshots.map((snapshot) {
         return snapshot.id == event.snapshot.id ? event.snapshot : snapshot;
       }).toList();
       final updatedBracketsMap = Map<String, List<BracketSnapshot>>.from(
         state.bracketsByTournamentId,
       )..[tournamentId] = updatedSnapshots;
-      emit(state.copyWith(
-        bracketsByTournamentId: updatedBracketsMap,
-        isSaving: false,
-      ));
+      emit(
+        state.copyWith(
+          bracketsByTournamentId: updatedBracketsMap,
+          isSaving: false,
+        ),
+      );
       return;
     }
 
     try {
-      final persistedResult = await _bracketSnapshotRepository.updateBracketSnapshot(event.snapshot);
-      
+      final persistedResult = await _bracketSnapshotRepository
+          .updateBracketSnapshot(event.snapshot);
+
       persistedResult.fold(
         (failure) {
           log('Failed to update bracket snapshot: ${failure.message}');
-          emit(state.copyWith(
-            isSaving: false,
-            lastMutationError: failure.message,
-          ));
+          emit(
+            state.copyWith(isSaving: false, lastMutationError: failure.message),
+          );
         },
         (persisted) {
-          final existingSnapshots = state.bracketsByTournamentId[tournamentId] ?? [];
-          
+          final existingSnapshots =
+              state.bracketsByTournamentId[tournamentId] ?? [];
+
           final updatedSnapshots = existingSnapshots.map((snapshot) {
             return snapshot.id == persisted.id ? persisted : snapshot;
           }).toList();
@@ -465,19 +508,23 @@ class TournamentBloc extends Bloc<TournamentEvent, TournamentState> {
           final updatedBracketsMap = Map<String, List<BracketSnapshot>>.from(
             state.bracketsByTournamentId,
           )..[tournamentId] = updatedSnapshots;
-          
-          emit(state.copyWith(
-            bracketsByTournamentId: updatedBracketsMap,
-            isSaving: false,
-          ));
-        }
+
+          emit(
+            state.copyWith(
+              bracketsByTournamentId: updatedBracketsMap,
+              isSaving: false,
+            ),
+          );
+        },
       );
     } catch (e) {
       log('Unexpected error updating bracket snapshot: $e');
-      emit(state.copyWith(
-        isSaving: false,
-        lastMutationError: 'Failed to update bracket snapshot.',
-      ));
+      emit(
+        state.copyWith(
+          isSaving: false,
+          lastMutationError: 'Failed to update bracket snapshot.',
+        ),
+      );
     }
   }
 

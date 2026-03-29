@@ -64,106 +64,107 @@ class _PasswordResetScreenState extends State<PasswordResetScreen> {
         ),
         child: Center(
           child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 48),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 420),
-            child: BlocConsumer<AuthenticationBloc, AuthenticationState>(
-              listener: _authStateListener,
-              builder: (BuildContext context, AuthenticationState state) {
-                final bool isLoading = state is AuthenticationInProgress;
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 48),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 420),
+              child: BlocConsumer<AuthenticationBloc, AuthenticationState>(
+                listener: _authStateListener,
+                builder: (BuildContext context, AuthenticationState state) {
+                  final bool isLoading = state is AuthenticationInProgress;
 
-                return Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // ── Branding ──
-                    const AuthBrandingHeader(
-                      icon: Icons.lock_reset,
-                      title: 'Reset Your Password',
-                    ),
-                    const SizedBox(height: 40),
-
-                    // ── Card with form ──
-                    Card(
-                      elevation: 4,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // ── Branding ──
+                      const AuthBrandingHeader(
+                        icon: Icons.lock_reset,
+                        title: 'Reset Your Password',
                       ),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 32,
-                          vertical: 36,
+                      const SizedBox(height: 40),
+
+                      // ── Card with form ──
+                      Card(
+                        elevation: 4,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
                         ),
-                        child: AutofillGroup(
-                          child: Form(
-                            key: _formKey,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                Text(
-                                  'Set New Password',
-                                  style: theme.textTheme.headlineSmall
-                                      ?.copyWith(
-                                        fontWeight: FontWeight.bold,
-                                        color: colorScheme.onSurface,
-                                      ),
-                                  textAlign: TextAlign.center,
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  'Enter your new password below',
-                                  style: theme.textTheme.bodyMedium?.copyWith(
-                                    color: colorScheme.onSurfaceVariant,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 32,
+                            vertical: 36,
+                          ),
+                          child: AutofillGroup(
+                            child: Form(
+                              key: _formKey,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  Text(
+                                    'Set New Password',
+                                    style: theme.textTheme.headlineSmall
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                          color: colorScheme.onSurface,
+                                        ),
+                                    textAlign: TextAlign.center,
                                   ),
-                                  textAlign: TextAlign.center,
-                                ),
-                                const SizedBox(height: 32),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'Enter your new password below',
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      color: colorScheme.onSurfaceVariant,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  const SizedBox(height: 32),
 
-                                // ── New Password ──
-                                PasswordTextFormField(
-                                  controller: _passwordController,
-                                  labelText: 'New Password',
-                                  textInputAction: TextInputAction.next,
-                                  autofillHints: const [
-                                    AutofillHints.newPassword,
-                                  ],
-                                  enabled: !isLoading,
-                                  validator: AuthValidators.validatePassword,
-                                ),
-                                const SizedBox(height: 20),
+                                  // ── New Password ──
+                                  PasswordTextFormField(
+                                    controller: _passwordController,
+                                    labelText: 'New Password',
+                                    textInputAction: TextInputAction.next,
+                                    autofillHints: const [
+                                      AutofillHints.newPassword,
+                                    ],
+                                    enabled: !isLoading,
+                                    validator: AuthValidators.validatePassword,
+                                  ),
+                                  const SizedBox(height: 20),
 
-                                // ── Confirm Password ──
-                                PasswordTextFormField(
-                                  controller: _confirmPasswordController,
-                                  labelText: 'Confirm Password',
-                                  prefixIcon: Icons.lock_reset_outlined,
-                                  enabled: !isLoading,
-                                  validator:
-                                      AuthValidators.validateConfirmPassword(
-                                        _passwordController,
-                                      ),
-                                  onFieldSubmitted: (_) => _submitNewPassword(),
-                                ),
-                                const SizedBox(height: 28),
+                                  // ── Confirm Password ──
+                                  PasswordTextFormField(
+                                    controller: _confirmPasswordController,
+                                    labelText: 'Confirm Password',
+                                    prefixIcon: Icons.lock_reset_outlined,
+                                    enabled: !isLoading,
+                                    validator:
+                                        AuthValidators.validateConfirmPassword(
+                                          _passwordController,
+                                        ),
+                                    onFieldSubmitted: (_) =>
+                                        _submitNewPassword(),
+                                  ),
+                                  const SizedBox(height: 28),
 
-                                // ── Submit button ──
-                                AuthSubmitButton(
-                                  label: 'Update Password',
-                                  isLoading: isLoading,
-                                  onPressed: _submitNewPassword,
-                                ),
-                              ],
+                                  // ── Submit button ──
+                                  AuthSubmitButton(
+                                    label: 'Update Password',
+                                    isLoading: isLoading,
+                                    onPressed: _submitNewPassword,
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
-                );
-              },
+                    ],
+                  );
+                },
+              ),
             ),
           ),
         ),
-      ),
       ),
     );
   }

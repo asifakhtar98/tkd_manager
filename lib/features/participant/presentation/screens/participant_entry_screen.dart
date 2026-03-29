@@ -48,7 +48,6 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
   BracketFormat _selectedBracketFormat = BracketFormat.singleElimination;
   String? _pendingSnapshotId;
 
-
   // ── Bracket-level classification controllers ───────────────────────────────
   final _bracketAgeCategoryController = TextEditingController();
   final _bracketGenderController = TextEditingController();
@@ -86,8 +85,7 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
   /// insensitive) already exists in the roster.
   bool _isDuplicateParticipantName(String fullName) {
     final normalizedName = fullName.trim().toLowerCase();
-    return _participants
-        .any((p) => p.fullName.toLowerCase() == normalizedName);
+    return _participants.any((p) => p.fullName.toLowerCase() == normalizedName);
   }
 
   // ── Actions ────────────────────────────────────────────────────────────────
@@ -118,10 +116,8 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
           id: _uuid.v4(),
           genderId: 'manual_division',
           fullName: fullName,
-          registrationId:
-              registrationId.isNotEmpty ? registrationId : null,
-          schoolOrDojangName:
-              dojangName.isNotEmpty ? dojangName : null,
+          registrationId: registrationId.isNotEmpty ? registrationId : null,
+          schoolOrDojangName: dojangName.isNotEmpty ? dojangName : null,
           seedNumber: _participants.length + 1,
         ),
       );
@@ -155,20 +151,16 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
         }
 
         // CSV column order: Name, RegID, Dojang
-        final registrationId =
-            parts.length > 1 ? parts[1].trim() : '';
-        final dojangName =
-            parts.length > 2 ? parts[2].trim() : '';
+        final registrationId = parts.length > 1 ? parts[1].trim() : '';
+        final dojangName = parts.length > 2 ? parts[2].trim() : '';
 
         _participants.add(
           ParticipantEntity(
             id: _uuid.v4(),
             genderId: 'manual_division',
             fullName: name,
-            registrationId:
-                registrationId.isNotEmpty ? registrationId : null,
-            schoolOrDojangName:
-                dojangName.isNotEmpty ? dojangName : null,
+            registrationId: registrationId.isNotEmpty ? registrationId : null,
+            schoolOrDojangName: dojangName.isNotEmpty ? dojangName : null,
             seedNumber: _participants.length + 1,
           ),
         );
@@ -179,13 +171,10 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
     if (mounted) {
       final message = skippedCount > 0
           ? 'Imported $importedCount participant${importedCount == 1 ? '' : 's'}, '
-              'skipped $skippedCount invalid row${skippedCount == 1 ? '' : 's'}.'
+                'skipped $skippedCount invalid row${skippedCount == 1 ? '' : 's'}.'
           : 'Imported $importedCount participant${importedCount == 1 ? '' : 's'}.';
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(message),
-          behavior: SnackBarBehavior.floating,
-        ),
+        SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
       );
     }
   }
@@ -218,18 +207,17 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
     final List<ParticipantEntity> orderedParticipants;
     if (_isDojangSeparationEnabled) {
       final shuffleService = getIt<ParticipantShuffleService>();
-      orderedParticipants =
-          shuffleService.shuffleParticipantsForBracketGeneration(
-        participants: participants,
-        dojangSeparation: true,
-      );
+      orderedParticipants = shuffleService
+          .shuffleParticipantsForBracketGeneration(
+            participants: participants,
+            dojangSeparation: true,
+          );
     } else {
       orderedParticipants = participants;
     }
 
     // ── Generate bracket inline ──────────────────────────────────────
-    final participantIds =
-        orderedParticipants.map((p) => p.id).toList();
+    final participantIds = orderedParticipants.map((p) => p.id).toList();
 
     late final BracketResult bracketResult;
     try {
@@ -267,8 +255,7 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
 
     // ── Create snapshot and persist to TournamentBloc ────────────────
     final snapshotId = _uuid.v4();
-    final thirdPlaceSuffix =
-        _isThirdPlaceMatchIncluded ? ' + 3rd Place' : '';
+    final thirdPlaceSuffix = _isThirdPlaceMatchIncluded ? ' + 3rd Place' : '';
     final snapshot = BracketSnapshot(
       id: snapshotId,
       userId: tournament.userId,
@@ -288,7 +275,7 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
     );
 
     if (!context.mounted) return;
-    
+
     setState(() {
       _pendingSnapshotId = snapshotId;
     });
@@ -310,7 +297,8 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
     return BlocConsumer<TournamentBloc, TournamentState>(
       listenWhen: (prev, current) {
         if (_pendingSnapshotId == null) return false;
-        final wasAdded = current.bracketsFor(widget.tournamentId)
+        final wasAdded = current
+            .bracketsFor(widget.tournamentId)
             .any((s) => s.id == _pendingSnapshotId);
         if (wasAdded) return true;
         if (prev.isSaving && !current.isSaving) return true;
@@ -318,10 +306,11 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
       },
       listener: (context, state) {
         if (_pendingSnapshotId == null) return;
-        
-        final wasAdded = state.bracketsFor(widget.tournamentId)
+
+        final wasAdded = state
+            .bracketsFor(widget.tournamentId)
             .any((s) => s.id == _pendingSnapshotId);
-            
+
         if (wasAdded) {
           final idToGo = _pendingSnapshotId!;
           _pendingSnapshotId = null;
@@ -371,17 +360,17 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                   message: !_hasEnoughParticipantsToGenerate
                       ? 'Add at least $_minimumParticipantsForBracket players to generate a bracket'
                       : tournament == null
-                          ? 'Tournament not found'
-                          : 'Generate Bracket',
+                      ? 'Tournament not found'
+                      : 'Generate Bracket',
                   child: ElevatedButton.icon(
-                    icon: isGenerating 
+                    icon: isGenerating
                         ? const SizedBox(
-                            width: 16, 
-                            height: 16, 
+                            width: 16,
+                            height: 16,
                             child: CircularProgressIndicator(
-                              strokeWidth: 2, 
-                              color: Colors.white
-                            )
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
                           )
                         : const Icon(Icons.bolt),
                     label: Text(
@@ -395,12 +384,11 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                       disabledForegroundColor: Colors.grey.shade600,
                     ),
                     onPressed:
-                        _hasEnoughParticipantsToGenerate && tournament != null && !isGenerating
-                            ? () => _handleGenerateBracketRequested(
-                                  context,
-                                  state,
-                                )
-                            : null,
+                        _hasEnoughParticipantsToGenerate &&
+                            tournament != null &&
+                            !isGenerating
+                        ? () => _handleGenerateBracketRequested(context, state)
+                        : null,
                   ),
                 ),
               ),
@@ -465,12 +453,11 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                     'Tournament not found. Go back and select a valid tournament.',
                     style: TextStyle(color: Colors.red),
                   )
-                    : Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                              if (tournament.leftLogoUrl.isNotEmpty ||
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (tournament.leftLogoUrl.isNotEmpty ||
                           tournament.rightLogoUrl.isNotEmpty) ...[
-                        
                         Row(
                           children: [
                             if (tournament.leftLogoUrl.isNotEmpty)
@@ -484,47 +471,40 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                         ),
                         const SizedBox(height: 16),
                       ],
-                          _ReadOnlyField(
-                            label: 'Name',
-                            value: tournament.name,
-                          ),
-                          if (tournament.dateRange.isNotEmpty)
-                            _ReadOnlyField(
-                              label: 'Date Range',
-                              value: tournament.dateRange,
-                            ),
-                          if (tournament.venue.isNotEmpty)
-                            _ReadOnlyField(
-                              label: 'Venue',
-                              value: tournament.venue,
-                            ),
-                          if (tournament.organizer.isNotEmpty)
-                            _ReadOnlyField(
-                              label: 'Organizer',
-                              value: tournament.organizer,
-                            ),
-                      
-                        ],
-                      ),
-            ),
+                      _ReadOnlyField(label: 'Name', value: tournament.name),
+                      if (tournament.dateRange.isNotEmpty)
+                        _ReadOnlyField(
+                          label: 'Date Range',
+                          value: tournament.dateRange,
+                        ),
+                      if (tournament.venue.isNotEmpty)
+                        _ReadOnlyField(label: 'Venue', value: tournament.venue),
+                      if (tournament.organizer.isNotEmpty)
+                        _ReadOnlyField(
+                          label: 'Organizer',
+                          value: tournament.organizer,
+                        ),
+                    ],
+                  ),
           ),
-        ],
-      );
-    }
+        ),
+      ],
+    );
+  }
 
-    Widget _buildLogoImage(String url) {
-      return Image.network(
-        url,
+  Widget _buildLogoImage(String url) {
+    return Image.network(
+      url,
+      width: 64,
+      height: 64,
+      fit: BoxFit.contain,
+      errorBuilder: (context, error, stackTrace) => const SizedBox(
         width: 64,
         height: 64,
-        fit: BoxFit.contain,
-        errorBuilder: (context, error, stackTrace) => const SizedBox(
-          width: 64,
-          height: 64,
-          child: Icon(Icons.broken_image, color: Colors.grey, size: 32),
-        ),
-      );
-    }
+        child: Icon(Icons.broken_image, color: Colors.grey, size: 32),
+      ),
+    );
+  }
 
   // ─────────────────────────────────────────────────────────────────────────
   // Bracket details section (age category, gender, weight division)
@@ -547,18 +527,14 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
               children: [
                 TextField(
                   controller: _bracketAgeCategoryController,
-                  decoration: const InputDecoration(
-                    labelText: 'Age Category',
-                  ),
+                  decoration: const InputDecoration(labelText: 'Age Category'),
                   maxLength: _maximumClassificationFieldLength,
                   textInputAction: TextInputAction.next,
                 ),
                 const SizedBox(height: 8),
                 TextField(
                   controller: _bracketGenderController,
-                  decoration: const InputDecoration(
-                    labelText: 'Gender',
-                  ),
+                  decoration: const InputDecoration(labelText: 'Gender'),
                   maxLength: _maximumClassificationFieldLength,
                   textInputAction: TextInputAction.next,
                 ),
@@ -611,9 +587,7 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                       .toList(),
                   onChanged: (selectedFormat) {
                     if (selectedFormat != null) {
-                      setState(
-                        () => _selectedBracketFormat = selectedFormat,
-                      );
+                      setState(() => _selectedBracketFormat = selectedFormat);
                     }
                   },
                 ),
@@ -625,16 +599,13 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                   onChanged: (isEnabled) =>
                       setState(() => _isDojangSeparationEnabled = isEnabled),
                 ),
-                if (_selectedBracketFormat ==
-                    BracketFormat.singleElimination)
+                if (_selectedBracketFormat == BracketFormat.singleElimination)
                   SwitchListTile(
                     title: const Text('3rd Place Match'),
-                    subtitle:
-                        const Text('Bronze medal match for semi losers'),
+                    subtitle: const Text('Bronze medal match for semi losers'),
                     value: _isThirdPlaceMatchIncluded,
-                    onChanged: (isEnabled) => setState(
-                      () => _isThirdPlaceMatchIncluded = isEnabled,
-                    ),
+                    onChanged: (isEnabled) =>
+                        setState(() => _isThirdPlaceMatchIncluded = isEnabled),
                   ),
               ],
             ),
@@ -675,14 +646,11 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                     ),
                     maxLength: _maximumFullNameLength,
                     inputFormatters: [
-                      LengthLimitingTextInputFormatter(
-                        _maximumFullNameLength,
-                      ),
+                      LengthLimitingTextInputFormatter(_maximumFullNameLength),
                     ],
                     textInputAction: TextInputAction.next,
                     validator: _validateFullName,
-                    onFieldSubmitted: (_) =>
-                        _addParticipantFromFormFields(),
+                    onFieldSubmitted: (_) => _addParticipantFromFormFields(),
                   ),
                   const SizedBox(height: 8),
 
@@ -699,8 +667,7 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                       ),
                     ],
                     textInputAction: TextInputAction.next,
-                    onFieldSubmitted: (_) =>
-                        _addParticipantFromFormFields(),
+                    onFieldSubmitted: (_) => _addParticipantFromFormFields(),
                   ),
                   const SizedBox(height: 8),
 
@@ -717,8 +684,7 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                       ),
                     ],
                     textInputAction: TextInputAction.done,
-                    onFieldSubmitted: (_) =>
-                        _addParticipantFromFormFields(),
+                    onFieldSubmitted: (_) => _addParticipantFromFormFields(),
                   ),
                   const SizedBox(height: 16),
 
@@ -738,9 +704,7 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                     width: double.infinity,
                     child: OutlinedButton.icon(
                       icon: const Icon(Icons.paste),
-                      label: const Text(
-                        'Paste CSV (Name, RegID, Dojang)',
-                      ),
+                      label: const Text('Paste CSV (Name, RegID, Dojang)'),
                       onPressed: () => _showCsvImportDialog(),
                     ),
                   ),
@@ -772,10 +736,7 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
               children: [
                 Text(
                   'Format: Name, RegID, Dojang (one participant per line)',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey.shade600,
-                  ),
+                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                 ),
                 const SizedBox(height: 8),
                 TextField(
@@ -796,8 +757,7 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
               child: const Text('Cancel'),
             ),
             ElevatedButton(
-              onPressed: () =>
-                  Navigator.pop(dialogContext, csvController.text),
+              onPressed: () => Navigator.pop(dialogContext, csvController.text),
               child: const Text('Import'),
             ),
           ],
@@ -890,9 +850,7 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                         ),
                         title: Text(
                           participant.fullName.toUpperCase(),
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
                         subtitle: Text(
                           [
@@ -900,25 +858,20 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                                 participant.registrationId!.isNotEmpty)
                               'Reg: ${participant.registrationId}',
                             if (participant.schoolOrDojangName != null &&
-                                participant
-                                    .schoolOrDojangName!.isNotEmpty)
+                                participant.schoolOrDojangName!.isNotEmpty)
                               'Dojang: ${participant.schoolOrDojangName}',
                           ].join(' | '),
                         ),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(
-                              Icons.drag_handle,
-                              color: Colors.grey,
-                            ),
+                            const Icon(Icons.drag_handle, color: Colors.grey),
                             IconButton(
                               icon: Icon(
                                 Icons.close,
                                 color: Colors.grey.shade800,
                               ),
-                              onPressed: () =>
-                                  _removeParticipant(index),
+                              onPressed: () => _removeParticipant(index),
                             ),
                           ],
                         ),
@@ -994,9 +947,7 @@ class _ReadOnlyField extends StatelessWidget {
               ),
             ),
           ),
-          Expanded(
-            child: Text(value, style: const TextStyle(fontSize: 13)),
-          ),
+          Expanded(child: Text(value, style: const TextStyle(fontSize: 13))),
         ],
       ),
     );

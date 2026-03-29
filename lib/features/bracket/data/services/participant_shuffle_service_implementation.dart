@@ -20,7 +20,7 @@ class ParticipantShuffleServiceImplementation
 
   /// Test-only constructor allowing a seeded [Random] for deterministic tests.
   ParticipantShuffleServiceImplementation.seeded(Random random)
-      : _random = random;
+    : _random = random;
 
   final Random _random;
 
@@ -79,8 +79,10 @@ class ParticipantShuffleServiceImplementation
       remainingIterations--;
 
       // Rebuild the dojang-to-indices map from CURRENT list state.
-      final dojangToIndicesMap =
-          _buildDojangToIndicesMap(participants, totalParticipantCount);
+      final dojangToIndicesMap = _buildDojangToIndicesMap(
+        participants,
+        totalParticipantCount,
+      );
 
       // Find the most imbalanced dojang group (largest first).
       final imbalancedEntry = _findMostImbalancedDojangGroup(
@@ -161,14 +163,17 @@ class ParticipantShuffleServiceImplementation
       if (entry.value.length <= 1) continue; // No separation needed.
 
       final maximumAllowedPerHalf = (entry.value.length + 1) ~/ 2;
-      final inTopHalf =
-          entry.value.where((index) => index < halfBoundary).length;
+      final inTopHalf = entry.value
+          .where((index) => index < halfBoundary)
+          .length;
       final inBottomHalf = entry.value.length - inTopHalf;
 
-      final topOverflow =
-          inTopHalf > maximumAllowedPerHalf ? inTopHalf - maximumAllowedPerHalf : 0;
-      final bottomOverflow =
-          inBottomHalf > maximumAllowedPerHalf ? inBottomHalf - maximumAllowedPerHalf : 0;
+      final topOverflow = inTopHalf > maximumAllowedPerHalf
+          ? inTopHalf - maximumAllowedPerHalf
+          : 0;
+      final bottomOverflow = inBottomHalf > maximumAllowedPerHalf
+          ? inBottomHalf - maximumAllowedPerHalf
+          : 0;
       final imbalance = topOverflow + bottomOverflow;
 
       if (imbalance > worstImbalance) {
@@ -198,15 +203,17 @@ class ParticipantShuffleServiceImplementation
 
     // Find a safe swap target in the other half: someone whose dojang
     // doesn't match the one we're trying to separate.
-    for (var candidateIndex = targetHalfStartIndex;
-        candidateIndex < targetHalfEndIndex;
-        candidateIndex++) {
+    for (
+      var candidateIndex = targetHalfStartIndex;
+      candidateIndex < targetHalfEndIndex;
+      candidateIndex++
+    ) {
       final candidateRawDojang =
           participants[candidateIndex].schoolOrDojangName;
       final candidateDojangKey =
           (candidateRawDojang != null && candidateRawDojang.trim().isNotEmpty)
-              ? candidateRawDojang.trim().toLowerCase()
-              : null;
+          ? candidateRawDojang.trim().toLowerCase()
+          : null;
 
       if (candidateDojangKey != dojangKey) {
         // Swap.

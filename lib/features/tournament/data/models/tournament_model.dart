@@ -16,15 +16,20 @@ abstract class TournamentModel with _$TournamentModel {
     @Default('') String dateRange,
     @Default('') String venue,
     @Default('') String organizer,
-    @Default('https://lldlunqzkltclpfzpjxh.supabase.co/storage/v1/object/public/assets/India_Taekwondo_logo_5346.png')
+    @Default(
+      'https://lldlunqzkltclpfzpjxh.supabase.co/storage/v1/object/public/assets/India_Taekwondo_logo_5346.png',
+    )
     String rightLogoUrl,
-    @Default('https://lldlunqzkltclpfzpjxh.supabase.co/storage/v1/object/public/assets/World_Taekwondo+logo_356345.png')
+    @Default(
+      'https://lldlunqzkltclpfzpjxh.supabase.co/storage/v1/object/public/assets/World_Taekwondo+logo_356345.png',
+    )
     String leftLogoUrl,
     required DateTime createdAt,
     required DateTime updatedAt,
   }) = _TournamentModel;
 
-  factory TournamentModel.fromJson(Map<String, dynamic> json) => _$TournamentModelFromJson(json);
+  factory TournamentModel.fromJson(Map<String, dynamic> json) =>
+      _$TournamentModelFromJson(json);
 
   factory TournamentModel.fromEntity(TournamentEntity entity) {
     return TournamentModel(

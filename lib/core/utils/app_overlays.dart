@@ -5,7 +5,10 @@ abstract final class AppOverlays {
   /// Displays a full-screen, non-dismissible loading overlay using [showGeneralDialog].
   ///
   /// Call [hideLoading] to dismiss it when the operation completes.
-  static void showLoading(BuildContext context, {String message = 'Loading...'}) {
+  static void showLoading(
+    BuildContext context, {
+    String message = 'Loading...',
+  }) {
     showGeneralDialog(
       context: context,
       barrierDismissible: false,

@@ -184,8 +184,7 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
                       presetConfig: TieSheetThemeConfig.defaultPreset,
                     ),
                     icon: const Icon(Icons.visibility, size: 14),
-                    label:
-                        const Text('Screen', style: TextStyle(fontSize: 12)),
+                    label: const Text('Screen', style: TextStyle(fontSize: 12)),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 6),
                       visualDensity: VisualDensity.compact,
@@ -205,8 +204,7 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
                       presetConfig: TieSheetThemeConfig.printPreset,
                     ),
                     icon: const Icon(Icons.print, size: 14),
-                    label:
-                        const Text('Print', style: TextStyle(fontSize: 12)),
+                    label: const Text('Print', style: TextStyle(fontSize: 12)),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 6),
                       visualDensity: VisualDensity.compact,
@@ -790,7 +788,6 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
     );
   }
 
-
   // ── Shadows ───────────────────────────────────────────────────────────────
 
   Widget _buildShadowsSection(BuildContext context) {
@@ -886,7 +883,6 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
       ],
     );
   }
-
 
   // ── Layout Dimensions ──────────────────────────────────────────────────────
 
@@ -1375,13 +1371,11 @@ class _SliderTile extends StatelessWidget {
                 child: Text(label, style: const TextStyle(fontSize: 12)),
               ),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
                 decoration: BoxDecoration(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .primaryContainer
-                      .withValues(alpha: 0.5),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.primaryContainer.withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(

@@ -114,18 +114,17 @@ class BracketHistoryDrawer extends StatelessWidget {
                       final timestamp = switch (entry.action) {
                         BracketActionMatchResult(:final data) =>
                           data.recordedAt,
-                        BracketActionEditAction(:final data) =>
-                          data.recordedAt,
+                        BracketActionEditAction(:final data) => data.recordedAt,
                       };
                       final actionType = switch (entry.action) {
                         BracketActionMatchResult() =>
                           _HistoryActionType.matchResult,
                         BracketActionEditAction(
-                          data: BracketEditActionParticipantSlotSwapped()
+                          data: BracketEditActionParticipantSlotSwapped(),
                         ) =>
                           _HistoryActionType.swap,
                         BracketActionEditAction(
-                          data: BracketEditActionParticipantDetailsUpdated()
+                          data: BracketEditActionParticipantDetailsUpdated(),
                         ) =>
                           _HistoryActionType.detailEdit,
                       };

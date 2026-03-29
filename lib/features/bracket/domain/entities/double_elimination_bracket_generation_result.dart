@@ -18,6 +18,7 @@ abstract class DoubleEliminationBracketGenerationResult
     required List<MatchEntity> allMatches,
   }) = _DoubleEliminationBracketGenerationResult;
 
-  factory DoubleEliminationBracketGenerationResult.fromJson(Map<String, dynamic> json) =>
-      _$DoubleEliminationBracketGenerationResultFromJson(json);
+  factory DoubleEliminationBracketGenerationResult.fromJson(
+    Map<String, dynamic> json,
+  ) => _$DoubleEliminationBracketGenerationResultFromJson(json);
 }

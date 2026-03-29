@@ -13,6 +13,18 @@ import 'package:get_it/get_it.dart' as _i174;
 import 'package:injectable/injectable.dart' as _i526;
 import 'package:supabase_flutter/supabase_flutter.dart' as _i454;
 import 'package:tkd_saas/core/di/injection_module.dart' as _i256;
+import 'package:tkd_saas/features/activation/data/datasources/activation_remote_datasource.dart'
+    as _i423;
+import 'package:tkd_saas/features/activation/data/repositories/activation_repository_impl.dart'
+    as _i1013;
+import 'package:tkd_saas/features/activation/domain/repositories/i_activation_repository.dart'
+    as _i936;
+import 'package:tkd_saas/features/activation/presentation/bloc/activation_bloc.dart'
+    as _i84;
+import 'package:tkd_saas/features/activation/presentation/bloc/activation_status_bloc.dart'
+    as _i558;
+import 'package:tkd_saas/features/activation/presentation/bloc/admin_activation_bloc.dart'
+    as _i784;
 import 'package:tkd_saas/features/auth/data/repositories/authentication_repository_implementation.dart'
     as _i330;
 import 'package:tkd_saas/features/auth/domain/repositories/authentication_repository.dart'
@@ -81,6 +93,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i547.TournamentRepository>(
       () => _i987.SupabaseTournamentRepository(gh<_i454.SupabaseClient>()),
     );
+    gh.lazySingleton<_i423.ActivationRemoteDataSource>(
+      () => _i423.ActivationRemoteDataSourceImpl(gh<_i454.SupabaseClient>()),
+    );
     gh.lazySingleton<_i791.AuthenticationRepository>(
       () => _i330.AuthenticationRepositoryImplementation(
         gh<_i454.SupabaseClient>(),
@@ -110,6 +125,20 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i547.TournamentRepository>(),
         gh<_i529.BracketSnapshotRepository>(),
       ),
+    );
+    gh.lazySingleton<_i936.IActivationRepository>(
+      () => _i1013.ActivationRepositoryImpl(
+        gh<_i423.ActivationRemoteDataSource>(),
+      ),
+    );
+    gh.factory<_i84.ActivationBloc>(
+      () => _i84.ActivationBloc(gh<_i936.IActivationRepository>()),
+    );
+    gh.factory<_i784.AdminActivationBloc>(
+      () => _i784.AdminActivationBloc(gh<_i936.IActivationRepository>()),
+    );
+    gh.lazySingleton<_i558.ActivationStatusBloc>(
+      () => _i558.ActivationStatusBloc(gh<_i936.IActivationRepository>()),
     );
     return this;
   }

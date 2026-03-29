@@ -122,7 +122,6 @@ abstract class TieSheetThemeConfig with _$TieSheetThemeConfig {
     required Color losersLabelColor,
 
     // ── Medal table tokens ──────────────────────────────────────────────────
-
     required Color medalGoldFillColor,
     required Color medalSilverFillColor,
     required Color medalBronzeFillColor,

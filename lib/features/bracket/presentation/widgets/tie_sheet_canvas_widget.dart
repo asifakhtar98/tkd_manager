@@ -503,10 +503,8 @@ class TieSheetPainter extends CustomPainter {
         );
 
   /// BYE advancement dashed-line pen.
-  Paint get _byeConnectorPen => _getThinPen(
-    themeConfig.mutedColor,
-    w: themeConfig.subtleStrokeWidth,
-  );
+  Paint get _byeConnectorPen =>
+      _getThinPen(themeConfig.mutedColor, w: themeConfig.subtleStrokeWidth);
 
   /// Generic connector pen (vertical trunk between arms).
   Paint get _genericConnectorPen => _getThinPen(themeConfig.mutedColor);
@@ -1054,7 +1052,10 @@ class TieSheetPainter extends CustomPainter {
         color.withValues(alpha: themeConfig.sectionLabelBackgroundOpacity),
       ),
     );
-    canvas.drawRRect(rect, _getThinPen(color, w: themeConfig.subtleStrokeWidth));
+    canvas.drawRRect(
+      rect,
+      _getThinPen(color, w: themeConfig.subtleStrokeWidth),
+    );
     _drawText(
       canvas,
       label,
@@ -1462,7 +1463,9 @@ class TieSheetPainter extends CustomPainter {
         Radius.circular(themeConfig.elementBorderRadius),
       );
       canvas.drawRRect(
-        cardRect.shift(Offset(themeConfig.shadowOffsetX, themeConfig.shadowOffsetY)),
+        cardRect.shift(
+          Offset(themeConfig.shadowOffsetX, themeConfig.shadowOffsetY),
+        ),
         _themedShadow(),
       );
       canvas.drawRRect(cardRect, _Pens.fill(themeConfig.rowFillColor));
@@ -1525,7 +1528,9 @@ class TieSheetPainter extends CustomPainter {
         Radius.circular(themeConfig.elementBorderRadius),
       );
       canvas.drawRRect(
-        cardRect.shift(Offset(-themeConfig.shadowOffsetX, themeConfig.shadowOffsetY)),
+        cardRect.shift(
+          Offset(-themeConfig.shadowOffsetX, themeConfig.shadowOffsetY),
+        ),
         _themedShadow(),
       );
       canvas.drawRRect(cardRect, _Pens.fill(themeConfig.rowFillColor));
@@ -2083,7 +2088,9 @@ class TieSheetPainter extends CustomPainter {
         Radius.circular(themeConfig.elementBorderRadius),
       );
       canvas.drawRRect(
-        fullRect.shift(Offset(themeConfig.shadowOffsetX, themeConfig.shadowOffsetY)),
+        fullRect.shift(
+          Offset(themeConfig.shadowOffsetX, themeConfig.shadowOffsetY),
+        ),
         _themedShadow(),
       );
 
@@ -2181,15 +2188,15 @@ class TieSheetPainter extends CustomPainter {
         int? rowIdx;
         switch (placement.rankStatus) {
           case 1:
-             rowIdx = 0;
+            rowIdx = 0;
           case 2:
-             rowIdx = 1;
+            rowIdx = 1;
           case 3:
-             rowIdx = currentBronzeRow;
-             if (currentBronzeRow < 3) currentBronzeRow++;
+            rowIdx = currentBronzeRow;
+            if (currentBronzeRow < 3) currentBronzeRow++;
           case 4:
-             rowIdx = currentBronzeRow;
-             if (currentBronzeRow < 3) currentBronzeRow++;
+            rowIdx = currentBronzeRow;
+            if (currentBronzeRow < 3) currentBronzeRow++;
         }
 
         if (rowIdx != null && rowIdx <= 3) {
@@ -2385,7 +2392,12 @@ class TieSheetPainter extends CustomPainter {
       Radius.circular(halfHeight),
     );
     canvas.drawRRect(
-      pillRect.shift(Offset(themeConfig.shadowOffsetX * 0.5, themeConfig.shadowOffsetY * 0.5)),
+      pillRect.shift(
+        Offset(
+          themeConfig.shadowOffsetX * 0.5,
+          themeConfig.shadowOffsetY * 0.5,
+        ),
+      ),
       _themedShadow(),
     );
     canvas.drawRRect(pillRect, _Pens.fill(themeConfig.matchPillFillColor));

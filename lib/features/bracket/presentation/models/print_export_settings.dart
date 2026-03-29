@@ -268,7 +268,7 @@ abstract class PrintExportSettings with _$PrintExportSettings {
 
       final double scaleForRows =
           (printable.height + (maxRows - 1) * netPrintableHeight) /
-              canvasHeight;
+          canvasHeight;
 
       // Must satisfy both axes — take the smaller of the two.
       final double candidateScale = min(scaleForColumns, scaleForRows);

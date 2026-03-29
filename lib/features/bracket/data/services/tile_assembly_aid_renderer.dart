@@ -440,7 +440,8 @@ class TileAssemblyAidRenderer {
     if (row > 0) {
       final neighborPageNumber = pageNumberOf(row - 1, col);
       final labelText = '↑ P$neighborPageNumber';
-      final estimatedLabelWidth = labelText.length * _neighborLabelFontSize * 0.5;
+      final estimatedLabelWidth =
+          labelText.length * _neighborLabelFontSize * 0.5;
       labels.add(
         pw.Positioned(
           left: printable.width / 2 - estimatedLabelWidth / 2,
@@ -454,7 +455,8 @@ class TileAssemblyAidRenderer {
     if (row < totalRows - 1) {
       final neighborPageNumber = pageNumberOf(row + 1, col);
       final labelText = '↓ P$neighborPageNumber';
-      final estimatedLabelWidth = labelText.length * _neighborLabelFontSize * 0.5;
+      final estimatedLabelWidth =
+          labelText.length * _neighborLabelFontSize * 0.5;
       labels.add(
         pw.Positioned(
           left: printable.width / 2 - estimatedLabelWidth / 2,

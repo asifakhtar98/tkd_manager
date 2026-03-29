@@ -29,7 +29,8 @@ abstract class BracketSnapshotModel with _$BracketSnapshotModel {
     required DateTime updatedAt,
   }) = _BracketSnapshotModel;
 
-  factory BracketSnapshotModel.fromJson(Map<String, dynamic> json) => _$BracketSnapshotModelFromJson(json);
+  factory BracketSnapshotModel.fromJson(Map<String, dynamic> json) =>
+      _$BracketSnapshotModelFromJson(json);
 
   factory BracketSnapshotModel.fromEntity(BracketSnapshot entity) {
     return BracketSnapshotModel(

@@ -12,10 +12,10 @@ abstract class BracketMedalPlacementEntity with _$BracketMedalPlacementEntity {
     required String participantId,
 
     /// Absolute numerical rank status (1 = Gold, 2 = Silver, 3 = Bronze A, 4 = Bronze B).
-    required int rankStatus, 
+    required int rankStatus,
 
     /// Verbose human-readable label for UI rendering (e.g., "1st", "2nd", "3rd").
-    required String displayPlacementLabel, 
+    required String displayPlacementLabel,
   }) = _BracketMedalPlacementEntity;
 
   factory BracketMedalPlacementEntity.fromJson(Map<String, dynamic> json) =>

@@ -487,9 +487,11 @@ class DoubleEliminationBracketGeneratorServiceImplementation
     );
 
     // Update specific assigned match objects
-    final assignedGf = numberedMatches.firstWhere((m) => m.id == grandFinalsMatch.id);
-    final assignedReset = resetMatch != null 
-        ? numberedMatches.firstWhere((m) => m.id == resetMatch!.id) 
+    final assignedGf = numberedMatches.firstWhere(
+      (m) => m.id == grandFinalsMatch.id,
+    );
+    final assignedReset = resetMatch != null
+        ? numberedMatches.firstWhere((m) => m.id == resetMatch!.id)
         : null;
 
     return DoubleEliminationBracketGenerationResult(

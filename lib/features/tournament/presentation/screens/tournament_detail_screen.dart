@@ -5,6 +5,7 @@ import 'package:tkd_saas/features/tournament/domain/entities/bracket_snapshot.da
 import 'package:tkd_saas/features/tournament/domain/entities/tournament_entity.dart';
 import 'package:tkd_saas/features/tournament/presentation/bloc/tournament_bloc.dart';
 import 'package:tkd_saas/features/tournament/presentation/widgets/create_tournament_dialog.dart';
+import 'package:tkd_saas/features/activation/presentation/widgets/activation_guard_builder.dart';
 
 /// Shows the detail of a tournament — its metadata and all previously
 /// generated bracket snapshots. Tapping any snapshot re-opens the bracket
@@ -60,11 +61,16 @@ class TournamentDetailScreen extends StatelessWidget {
               ),
             ],
           ),
-          floatingActionButton: FloatingActionButton.extended(
-            icon: const Icon(Icons.add),
-            label: const Text('Add Bracket'),
-            onPressed: () =>
-                BracketSetupRoute(tournamentId: tournamentId).go(context),
+          floatingActionButton: ActivationGuardBuilder(
+            builder: (context, isLocked) => FloatingActionButton.extended(
+              icon: isLocked ? const Icon(Icons.lock) : const Icon(Icons.add),
+              label: const Text('Add Bracket'),
+              onPressed: isLocked
+                  ? null
+                  : () => BracketSetupRoute(
+                      tournamentId: tournamentId,
+                    ).go(context),
+            ),
           ),
           body: CustomScrollView(
             slivers: [

@@ -13,6 +13,8 @@ import 'package:tkd_saas/features/tournament/domain/entities/bracket_snapshot.da
 import 'package:tkd_saas/features/tournament/domain/entities/tournament_entity.dart';
 import 'package:tkd_saas/features/tournament/presentation/bloc/tournament_bloc.dart';
 import 'package:tkd_saas/features/tournament/presentation/screens/tournament_detail_screen.dart';
+import 'package:tkd_saas/features/activation/presentation/screens/activate_software_screen.dart';
+import 'package:tkd_saas/features/activation/presentation/screens/admin_activation_screen.dart';
 
 export 'package:tkd_saas/features/bracket/domain/entities/bracket_format.dart';
 
@@ -58,6 +60,12 @@ abstract final class RoutePaths {
     required String tournamentId,
     required String snapshotId,
   }) => '/tournaments/$tournamentId/brackets/$snapshotId';
+
+  /// Builds the activation software path `/activate`
+  static const String activate = '/activate';
+
+  /// Admin panel route path `/admin`
+  static const String admin = '/admin';
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -104,6 +112,26 @@ class EmailConfirmedRoute extends GoRouteData with $EmailConfirmedRoute {
   @override
   Widget build(BuildContext context, GoRouterState state) =>
       const EmailConfirmedScreen();
+}
+
+@TypedGoRoute<ActivateRoute>(path: '/activate')
+@immutable
+class ActivateRoute extends GoRouteData with $ActivateRoute {
+  const ActivateRoute();
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      const ActivateSoftwareScreen();
+}
+
+@TypedGoRoute<AdminRoute>(path: '/admin')
+@immutable
+class AdminRoute extends GoRouteData with $AdminRoute {
+  const AdminRoute();
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      const AdminActivationScreen();
 }
 
 // ── Main app routes (nested hierarchy) ───────────────────────────────────────
@@ -185,9 +213,13 @@ class BracketViewerRoute extends GoRouteData with $BracketViewerRoute {
         }
 
         return BlocProvider(
-          create: (_) => getIt<BracketBloc>()
-            ..add(BracketEvent.loadFromSnapshotRequested(snapshot)),
-          child: BracketViewerScreen(tournament: tournament, snapshot: snapshot),
+          create: (_) =>
+              getIt<BracketBloc>()
+                ..add(BracketEvent.loadFromSnapshotRequested(snapshot)),
+          child: BracketViewerScreen(
+            tournament: tournament,
+            snapshot: snapshot,
+          ),
         );
       },
     );

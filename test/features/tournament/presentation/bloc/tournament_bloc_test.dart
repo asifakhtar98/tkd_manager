@@ -12,9 +12,14 @@ import 'package:tkd_saas/features/bracket/domain/entities/bracket_entity.dart';
 
 import 'package:fpdart/fpdart.dart';
 import 'package:tkd_saas/core/error/failures.dart';
+
 class MockTournamentRepository extends Mock implements TournamentRepository {}
-class MockBracketSnapshotRepository extends Mock implements BracketSnapshotRepository {}
+
+class MockBracketSnapshotRepository extends Mock
+    implements BracketSnapshotRepository {}
+
 class FakeTournamentEntity extends Fake implements TournamentEntity {}
+
 class FakeBracketSnapshot extends Fake implements BracketSnapshot {}
 
 void main() {
@@ -44,17 +49,19 @@ void main() {
       includeThirdPlaceMatch: false,
       dojangSeparation: false,
       participants: const [],
-      result: BracketResult.singleElimination(BracketGenerationResult(
-        bracket: BracketEntity(
-          id: 'b1', 
-          genderId: '', 
-          bracketType: BracketType.winners, 
-          totalRounds: 2, 
-          createdAtTimestamp: DateTime.now(), 
-          updatedAtTimestamp: DateTime.now()
-        ), 
-        matches: [],
-      )),
+      result: BracketResult.singleElimination(
+        BracketGenerationResult(
+          bracket: BracketEntity(
+            id: 'b1',
+            genderId: '',
+            bracketType: BracketType.winners,
+            totalRounds: 2,
+            createdAtTimestamp: DateTime.now(),
+            updatedAtTimestamp: DateTime.now(),
+          ),
+          matches: [],
+        ),
+      ),
       generatedAt: DateTime.now(),
       updatedAt: DateTime.now(),
     );
@@ -75,32 +82,46 @@ void main() {
     });
 
     group('Load Requested', () {
-      test('emits loaded tournaments maintaining DemoData on success', () async {
-        when(() => mockTournamentRepo.getTournaments()).thenAnswer((_) async => Right([dummyTournament]));
-        when(() => mockBracketRepo.getBracketSnapshots(dummyTournament.id)).thenAnswer((_) async => Right([dummyBracketSnapshot]));
-        
-        final expectedStates = <TournamentState>[];
-        final subscription = bloc.stream.listen(expectedStates.add);
+      test(
+        'emits loaded tournaments maintaining DemoData on success',
+        () async {
+          when(
+            () => mockTournamentRepo.getTournaments(),
+          ).thenAnswer((_) async => Right([dummyTournament]));
+          when(
+            () => mockBracketRepo.getBracketSnapshots(dummyTournament.id),
+          ).thenAnswer((_) async => Right([dummyBracketSnapshot]));
 
-        bloc.add(const TournamentLoadRequested());
+          final expectedStates = <TournamentState>[];
+          final subscription = bloc.stream.listen(expectedStates.add);
 
-        // Give event loop time to process async repository call
-        await Future.delayed(Duration.zero);
-        await subscription.cancel();
+          bloc.add(const TournamentLoadRequested());
 
-        expect(expectedStates, isNotEmpty);
-        expect(expectedStates.first.isLoading, isTrue); // initial emission
-        expect(expectedStates.last.isLoading, isFalse);
-        expect(expectedStates.last.tournaments.length, 2); // demo + remote
-        expect(expectedStates.last.bracketsByTournamentId.containsKey(dummyTournament.id), true);
-        
-        verify(() => mockTournamentRepo.getTournaments()).called(1);
-      });
+          // Give event loop time to process async repository call
+          await Future.delayed(Duration.zero);
+          await subscription.cancel();
+
+          expect(expectedStates, isNotEmpty);
+          expect(expectedStates.first.isLoading, isTrue); // initial emission
+          expect(expectedStates.last.isLoading, isFalse);
+          expect(expectedStates.last.tournaments.length, 2); // demo + remote
+          expect(
+            expectedStates.last.bracketsByTournamentId.containsKey(
+              dummyTournament.id,
+            ),
+            true,
+          );
+
+          verify(() => mockTournamentRepo.getTournaments()).called(1);
+        },
+      );
 
       test('emits errorMessage when load encounters an exception', () async {
-        when(() => mockTournamentRepo.getTournaments())
-            .thenAnswer((_) async => const Left(NetworkFailure('Failed to load tournaments.')));
-            
+        when(() => mockTournamentRepo.getTournaments()).thenAnswer(
+          (_) async =>
+              const Left(NetworkFailure('Failed to load tournaments.')),
+        );
+
         final expectedStates = <TournamentState>[];
         final subscription = bloc.stream.listen(expectedStates.add);
 
@@ -118,30 +139,40 @@ void main() {
     });
 
     group('Load More Requested', () {
-      test('emits new tournaments and sets hasReachedMax if less than limit', () async {
-        when(() => mockTournamentRepo.getTournaments(limit: 20, offset: any(named: 'offset')))
-            .thenAnswer((_) async => Right([dummyTournament]));
-        when(() => mockBracketRepo.getBracketSnapshots(dummyTournament.id)).thenAnswer((_) async => const Right([]));
+      test(
+        'emits new tournaments and sets hasReachedMax if less than limit',
+        () async {
+          when(
+            () => mockTournamentRepo.getTournaments(
+              limit: 20,
+              offset: any(named: 'offset'),
+            ),
+          ).thenAnswer((_) async => Right([dummyTournament]));
+          when(
+            () => mockBracketRepo.getBracketSnapshots(dummyTournament.id),
+          ).thenAnswer((_) async => const Right([]));
 
-        final expectedStates = <TournamentState>[];
-        final subscription = bloc.stream.listen(expectedStates.add);
+          final expectedStates = <TournamentState>[];
+          final subscription = bloc.stream.listen(expectedStates.add);
 
-        bloc.add(const TournamentLoadMoreRequested());
+          bloc.add(const TournamentLoadMoreRequested());
 
-        await Future.delayed(Duration.zero);
-        await subscription.cancel();
+          await Future.delayed(Duration.zero);
+          await subscription.cancel();
 
-        expect(expectedStates, isNotEmpty);
-        expect(expectedStates.last.isFetchingMore, isFalse);
-        expect(expectedStates.last.hasReachedMax, isTrue);
-        expect(expectedStates.last.tournaments.length, 2);
-      });
+          expect(expectedStates, isNotEmpty);
+          expect(expectedStates.last.isFetchingMore, isFalse);
+          expect(expectedStates.last.hasReachedMax, isTrue);
+          expect(expectedStates.last.tournaments.length, 2);
+        },
+      );
     });
 
     group('Mutations', () {
       test('TournamentCreated adds tournament to top of list', () async {
-        when(() => mockTournamentRepo.createTournament(any()))
-            .thenAnswer((_) async => Right(dummyTournament));
+        when(
+          () => mockTournamentRepo.createTournament(any()),
+        ).thenAnswer((_) async => Right(dummyTournament));
 
         final expectedStates = <TournamentState>[];
         final subscription = bloc.stream.listen(expectedStates.add);
@@ -156,37 +187,54 @@ void main() {
       });
 
       test('TournamentUpdated updates the specific tournament', () async {
-        final updatedTournament = dummyTournament.copyWith(name: 'Updated Name');
-        
-        // Let's set the initial state to have the tournament
-         when(() => mockTournamentRepo.getTournaments()).thenAnswer((_) async => Right([dummyTournament]));
-         when(() => mockBracketRepo.getBracketSnapshots(dummyTournament.id)).thenAnswer((_) async => const Right([]));
-         bloc.add(const TournamentLoadRequested());
-         await Future.delayed(Duration.zero);
+        final updatedTournament = dummyTournament.copyWith(
+          name: 'Updated Name',
+        );
 
-        when(() => mockTournamentRepo.updateTournament(any()))
-            .thenAnswer((_) async => Right(updatedTournament));
+        // Let's set the initial state to have the tournament
+        when(
+          () => mockTournamentRepo.getTournaments(),
+        ).thenAnswer((_) async => Right([dummyTournament]));
+        when(
+          () => mockBracketRepo.getBracketSnapshots(dummyTournament.id),
+        ).thenAnswer((_) async => const Right([]));
+        bloc.add(const TournamentLoadRequested());
+        await Future.delayed(Duration.zero);
+
+        when(
+          () => mockTournamentRepo.updateTournament(any()),
+        ).thenAnswer((_) async => Right(updatedTournament));
 
         final expectedStates = <TournamentState>[];
         final subscription = bloc.stream.listen(expectedStates.add);
 
         bloc.add(TournamentUpdated(updatedTournament));
 
-         await Future.delayed(Duration.zero);
-         await subscription.cancel();
+        await Future.delayed(Duration.zero);
+        await subscription.cancel();
 
-         expect(expectedStates.last.isSaving, isFalse);
-         expect(expectedStates.last.tournaments.firstWhere((t) => t.id == 'tourney_1').name, 'Updated Name');
+        expect(expectedStates.last.isSaving, isFalse);
+        expect(
+          expectedStates.last.tournaments
+              .firstWhere((t) => t.id == 'tourney_1')
+              .name,
+          'Updated Name',
+        );
       });
 
       test('TournamentDeleted removes the tournament', () async {
-        when(() => mockTournamentRepo.getTournaments()).thenAnswer((_) async => Right([dummyTournament]));
-        when(() => mockBracketRepo.getBracketSnapshots(dummyTournament.id)).thenAnswer((_) async => Right([dummyBracketSnapshot]));
+        when(
+          () => mockTournamentRepo.getTournaments(),
+        ).thenAnswer((_) async => Right([dummyTournament]));
+        when(
+          () => mockBracketRepo.getBracketSnapshots(dummyTournament.id),
+        ).thenAnswer((_) async => Right([dummyBracketSnapshot]));
         bloc.add(const TournamentLoadRequested());
         await Future.delayed(Duration.zero);
 
-        when(() => mockTournamentRepo.deleteTournament(any()))
-            .thenAnswer((_) async => const Right(null));
+        when(
+          () => mockTournamentRepo.deleteTournament(any()),
+        ).thenAnswer((_) async => const Right(null));
 
         final expectedStates = <TournamentState>[];
         final subscription = bloc.stream.listen(expectedStates.add);
@@ -197,51 +245,107 @@ void main() {
         await subscription.cancel();
 
         expect(expectedStates.last.isSaving, isFalse);
-        expect(expectedStates.last.tournaments.where((t) => t.id == dummyTournament.id), isEmpty);
-        expect(expectedStates.last.bracketsByTournamentId.containsKey(dummyTournament.id), isFalse);
+        expect(
+          expectedStates.last.tournaments.where(
+            (t) => t.id == dummyTournament.id,
+          ),
+          isEmpty,
+        );
+        expect(
+          expectedStates.last.bracketsByTournamentId.containsKey(
+            dummyTournament.id,
+          ),
+          isFalse,
+        );
       });
 
       test('TournamentBracketSnapshotAdded adds snapshot to map', () async {
-        when(() => mockBracketRepo.createBracketSnapshot(any(), any()))
-            .thenAnswer((_) async => Right(dummyBracketSnapshot));
+        when(
+          () => mockBracketRepo.createBracketSnapshot(any(), any()),
+        ).thenAnswer((_) async => Right(dummyBracketSnapshot));
 
-        bloc.add(TournamentBracketSnapshotAdded(snapshot: dummyBracketSnapshot, tournamentId: dummyTournament.id));
+        bloc.add(
+          TournamentBracketSnapshotAdded(
+            snapshot: dummyBracketSnapshot,
+            tournamentId: dummyTournament.id,
+          ),
+        );
         await Future.delayed(Duration.zero);
 
-        expect(bloc.state.bracketsByTournamentId[dummyTournament.id]?.first, dummyBracketSnapshot);
+        expect(
+          bloc.state.bracketsByTournamentId[dummyTournament.id]?.first,
+          dummyBracketSnapshot,
+        );
       });
 
-      test('TournamentBracketSnapshotRemoved removes snapshot from map', () async {
-        when(() => mockBracketRepo.createBracketSnapshot(any(), any()))
-            .thenAnswer((_) async => Right(dummyBracketSnapshot));
-        bloc.add(TournamentBracketSnapshotAdded(snapshot: dummyBracketSnapshot, tournamentId: dummyTournament.id));
-        await Future.delayed(Duration.zero);
-        
-        when(() => mockBracketRepo.deleteBracketSnapshot(any()))
-            .thenAnswer((_) async => const Right(null));
+      test(
+        'TournamentBracketSnapshotRemoved removes snapshot from map',
+        () async {
+          when(
+            () => mockBracketRepo.createBracketSnapshot(any(), any()),
+          ).thenAnswer((_) async => Right(dummyBracketSnapshot));
+          bloc.add(
+            TournamentBracketSnapshotAdded(
+              snapshot: dummyBracketSnapshot,
+              tournamentId: dummyTournament.id,
+            ),
+          );
+          await Future.delayed(Duration.zero);
 
-        bloc.add(TournamentBracketSnapshotRemoved(snapshotId: dummyBracketSnapshot.id, tournamentId: dummyTournament.id));
-        await Future.delayed(Duration.zero);
+          when(
+            () => mockBracketRepo.deleteBracketSnapshot(any()),
+          ).thenAnswer((_) async => const Right(null));
 
-        expect(bloc.state.bracketsByTournamentId[dummyTournament.id]?.where((s) => s.id == dummyBracketSnapshot.id), isEmpty);
-      });
-      
-      test('TournamentBracketSnapshotUpdated updates snapshot in map', () async {
-        when(() => mockBracketRepo.createBracketSnapshot(any(), any()))
-            .thenAnswer((_) async => Right(dummyBracketSnapshot));
-        bloc.add(TournamentBracketSnapshotAdded(snapshot: dummyBracketSnapshot, tournamentId: dummyTournament.id));
-        await Future.delayed(Duration.zero);
+          bloc.add(
+            TournamentBracketSnapshotRemoved(
+              snapshotId: dummyBracketSnapshot.id,
+              tournamentId: dummyTournament.id,
+            ),
+          );
+          await Future.delayed(Duration.zero);
 
-        final updatedSnapshot = dummyBracketSnapshot.copyWith(label: 'Updated Label');
+          expect(
+            bloc.state.bracketsByTournamentId[dummyTournament.id]?.where(
+              (s) => s.id == dummyBracketSnapshot.id,
+            ),
+            isEmpty,
+          );
+        },
+      );
 
-        when(() => mockBracketRepo.updateBracketSnapshot(any()))
-            .thenAnswer((_) async => Right(updatedSnapshot));
+      test(
+        'TournamentBracketSnapshotUpdated updates snapshot in map',
+        () async {
+          when(
+            () => mockBracketRepo.createBracketSnapshot(any(), any()),
+          ).thenAnswer((_) async => Right(dummyBracketSnapshot));
+          bloc.add(
+            TournamentBracketSnapshotAdded(
+              snapshot: dummyBracketSnapshot,
+              tournamentId: dummyTournament.id,
+            ),
+          );
+          await Future.delayed(Duration.zero);
 
-        bloc.add(TournamentBracketSnapshotUpdated(updatedSnapshot));
-        await Future.delayed(Duration.zero);
+          final updatedSnapshot = dummyBracketSnapshot.copyWith(
+            label: 'Updated Label',
+          );
 
-        expect(bloc.state.bracketsByTournamentId[dummyTournament.id]?.firstWhere((s) => s.id == dummyBracketSnapshot.id).label, 'Updated Label');
-      });
+          when(
+            () => mockBracketRepo.updateBracketSnapshot(any()),
+          ).thenAnswer((_) async => Right(updatedSnapshot));
+
+          bloc.add(TournamentBracketSnapshotUpdated(updatedSnapshot));
+          await Future.delayed(Duration.zero);
+
+          expect(
+            bloc.state.bracketsByTournamentId[dummyTournament.id]
+                ?.firstWhere((s) => s.id == dummyBracketSnapshot.id)
+                .label,
+            'Updated Label',
+          );
+        },
+      );
     });
   });
 }

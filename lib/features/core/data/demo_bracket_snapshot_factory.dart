@@ -361,8 +361,9 @@ class DemoBracketSnapshotFactory {
     required DateTime generatedAt,
   }) {
     final participants = _generateParticipants(participantCount);
-    final participantIds =
-        participants.map((participant) => participant.id).toList();
+    final participantIds = participants
+        .map((participant) => participant.id)
+        .toList();
 
     final generationResult = generator.generate(
       genderId: 'demo-gender-${_uuid.v4()}',
@@ -373,8 +374,7 @@ class DemoBracketSnapshotFactory {
 
     final snapshotId = _uuid.v4();
     final thirdPlaceSuffix = includeThirdPlaceMatch ? ' + 3rd Place' : '';
-    final label =
-        'Single Elim — $participantCount Players$thirdPlaceSuffix';
+    final label = 'Single Elim — $participantCount Players$thirdPlaceSuffix';
 
     return BracketSnapshot(
       id: snapshotId,
@@ -400,8 +400,9 @@ class DemoBracketSnapshotFactory {
     required DateTime generatedAt,
   }) {
     final participants = _generateParticipants(participantCount);
-    final participantIds =
-        participants.map((participant) => participant.id).toList();
+    final participantIds = participants
+        .map((participant) => participant.id)
+        .toList();
 
     final generationResult = generator.generate(
       genderId: 'demo-gender-${_uuid.v4()}',

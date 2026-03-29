@@ -103,7 +103,8 @@ void main() {
       );
       final numbering = {
         for (final m in numberedMatches)
-          if (m.globalMatchDisplayNumber != null) m.id: m.globalMatchDisplayNumber!
+          if (m.globalMatchDisplayNumber != null)
+            m.id: m.globalMatchDisplayNumber!,
       };
       return (matches: result.matches, numbering: numbering);
     }
@@ -296,7 +297,8 @@ void main() {
       );
       final numbering = {
         for (final m in numberedMatches)
-          if (m.globalMatchDisplayNumber != null) m.id: m.globalMatchDisplayNumber!
+          if (m.globalMatchDisplayNumber != null)
+            m.id: m.globalMatchDisplayNumber!,
       };
 
       return (

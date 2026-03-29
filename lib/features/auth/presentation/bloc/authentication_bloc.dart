@@ -33,7 +33,9 @@ class AuthenticationBloc
     extends Bloc<AuthenticationEvent, AuthenticationState> {
   AuthenticationBloc({
     required AuthenticationRepository authenticationRepository,
-    @factoryParam @visibleForTesting IsEmailConfirmationRedirectPredicate? isEmailConfirmationRedirect,
+    @factoryParam
+    @visibleForTesting
+    IsEmailConfirmationRedirectPredicate? isEmailConfirmationRedirect,
   }) : _authenticationRepository = authenticationRepository,
        _isEmailConfirmationRedirectOverride = isEmailConfirmationRedirect,
        super(const AuthenticationState.unknown()) {
@@ -52,7 +54,8 @@ class AuthenticationBloc
 
   /// Optional override for testing — when non-null, this predicate is used
   /// instead of the default `Uri.base` check.
-  final IsEmailConfirmationRedirectPredicate? _isEmailConfirmationRedirectOverride;
+  final IsEmailConfirmationRedirectPredicate?
+  _isEmailConfirmationRedirectOverride;
 
   StreamSubscription<AuthState>? _authStateSubscription;
 
@@ -110,13 +113,13 @@ class AuthenticationBloc
       return _isEmailConfirmationRedirectOverride();
     }
     if (!kIsWeb) return false;
-    
+
     final bool isCorrectPath = Uri.base.path == '/email-confirmed';
     // Validate it's an actual PKCE redirect via URL parameters
     final bool hasCodeAndType = Uri.base.queryParameters.containsKey('code');
     // Mobile links might return parameters in the fragment, but we only target Web here: `#access_token=...`
     final bool hasFragment = Uri.base.fragment.contains('access_token=');
-    
+
     return isCorrectPath && (hasCodeAndType || hasFragment);
   }
 

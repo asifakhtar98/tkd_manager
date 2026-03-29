@@ -12,7 +12,9 @@ Failure handleSupabaseError(Object error, StackTrace st, String contextMsg) {
     if (error.code == 'PGRST116') {
       return NotFoundFailure('Resource not found: ${error.message}');
     } else if (error.code == '42501') {
-      return DatabaseFailure('Unauthorized access or RLS violation: ${error.message}');
+      return DatabaseFailure(
+        'Unauthorized access or RLS violation: ${error.message}',
+      );
     } else if (error.code != null && error.code!.startsWith('23')) {
       return DatabaseFailure('Database constraint violation: ${error.message}');
     } else {

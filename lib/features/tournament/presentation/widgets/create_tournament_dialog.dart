@@ -67,10 +67,10 @@ class _CreateTournamentDialogState extends State<CreateTournamentDialog> {
     _organizerController = TextEditingController(
       text: existingTournament?.organizer ?? '',
     );
-    _leftLogoUrl = existingTournament?.leftLogoUrl ??
-        TournamentLogoDefaults.leftLogoUrl;
-    _rightLogoUrl = existingTournament?.rightLogoUrl ??
-        TournamentLogoDefaults.rightLogoUrl;
+    _leftLogoUrl =
+        existingTournament?.leftLogoUrl ?? TournamentLogoDefaults.leftLogoUrl;
+    _rightLogoUrl =
+        existingTournament?.rightLogoUrl ?? TournamentLogoDefaults.rightLogoUrl;
   }
 
   @override
@@ -89,7 +89,12 @@ class _CreateTournamentDialogState extends State<CreateTournamentDialog> {
     final tournament = TournamentEntity(
       // Preserve original id and createdAt when editing.
       id: existingTournament?.id ?? _uuid.v4(),
-      userId: existingTournament?.userId ?? context.read<AuthenticationBloc>().state.mapOrNull(authenticated: (state) => state.user.id) ?? '',
+      userId:
+          existingTournament?.userId ??
+          context.read<AuthenticationBloc>().state.mapOrNull(
+            authenticated: (state) => state.user.id,
+          ) ??
+          '',
       name: _nameController.text.trim(),
       dateRange: _dateRangeController.text.trim(),
       venue: _venueController.text.trim(),
@@ -330,12 +335,12 @@ class _LogoPickerCard extends StatelessWidget {
   }
 
   static Widget _buildBrokenIcon() => Center(
-        child: Icon(
-          Icons.broken_image_outlined,
-          size: 28,
-          color: Colors.grey.shade600,
-        ),
-      );
+    child: Icon(
+      Icons.broken_image_outlined,
+      size: 28,
+      color: Colors.grey.shade600,
+    ),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -376,10 +381,7 @@ class _LogoPickerCard extends StatelessWidget {
           // ── Label ──
           Text(
             label,
-            style: const TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-            ),
+            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 6),
           // ── Action Buttons ──
