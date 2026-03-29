@@ -13,6 +13,18 @@
             ]
         },
         {
+            "name": "🚀 Dev (WASM / Chrome)",
+            "cwd": "${workspaceFolder}",
+            "request": "launch",
+            "type": "dart",
+            "program": "lib/main.dart",
+            "args": [
+                "-d", "chrome",
+                "--wasm",
+                "--web-port", "51886"
+            ]
+        },
+        {
             "name": " Dev (iPad / iOS Simulator)",
             "cwd": "${workspaceFolder}",
             "request": "launch",

@@ -2,19 +2,37 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "Flutter: Build Web",
-      "type": "flutter",
-      "command": "flutter",
-      "args": [
-        "build",
-        "web"
+      "label": "🌍 GOD MODE: Build & Deploy All",
+      "dependsOrder": "sequence",
+      "dependsOn": [
+        "🚀 Build: All",
+        "🚀 Deploy: All"
       ],
+      "problemMatcher": [],
+      "group": "build",
+      "detail": "The ultimate command: Builds and deploys everything at once"
+    },
+    {
+      "label": "Flutter: Build Web (SAAS)",
+      "type": "shell",
+      "command": "flutter build web --release && rm -rf build/web/saas && mkdir -p build/web/saas && cp -r build/web/* build/web/saas/",
       "options": {
         "cwd": "${workspaceFolder}"
       },
       "problemMatcher": [],
       "group": "build",
-      "detail": "Builds the Flutter web application"
+      "detail": "Builds standard Flutter web and moves to build/web/saas"
+    },
+    {
+      "label": "Flutter: Build Web (WASM)",
+      "type": "shell",
+      "command": "flutter build web --wasm --release && rm -rf build/web/wasm && mkdir -p build/web/wasm && cp -r build/web/* build/web/wasm/",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": [],
+      "group": "build",
+      "detail": "Builds WASM Flutter web and moves to build/web/wasm"
     },
     {
       "label": "Flutter: Generate Code",
@@ -70,7 +88,60 @@
       "group": "build"
     },
     {
-      "label": "Firebase: Deploy",
+      "label": "Firebase: Deploy (SAAS)",
+      "type": "shell",
+      "command": "firebase deploy --only hosting:tkd-saas",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": [],
+      "group": "build",
+      "detail": "Deploys to tkd-saas hosting"
+    },
+    {
+      "label": "Firebase: Deploy (WASM)",
+      "type": "shell",
+      "command": "firebase deploy --only hosting:tkd-manager-wasm",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": [],
+      "group": "build",
+      "detail": "Deploys to tkd-manager-wasm hosting"
+    },
+    {
+      "label": "🚀 Build & Deploy: SAAS",
+      "dependsOrder": "sequence",
+      "dependsOn": [
+        "Flutter: Build Web (SAAS)",
+        "Firebase: Deploy (SAAS)"
+      ],
+      "problemMatcher": [],
+      "group": "build"
+    },
+    {
+      "label": "🚀 Build & Deploy: WASM",
+      "dependsOrder": "sequence",
+      "dependsOn": [
+        "Flutter: Build Web (WASM)",
+        "Firebase: Deploy (WASM)"
+      ],
+      "problemMatcher": [],
+      "group": "build"
+    },
+    {
+      "label": "🚀 Build: All",
+      "dependsOrder": "sequence",
+      "dependsOn": [
+        "Flutter: Build Web (SAAS)",
+        "Flutter: Build Web (WASM)"
+      ],
+      "problemMatcher": [],
+      "group": "build",
+      "detail": "Builds both SAAS and WASM versions sequentially"
+    },
+    {
+      "label": "🚀 Deploy: All",
       "type": "shell",
       "command": "firebase deploy",
       "options": {
@@ -78,18 +149,7 @@
       },
       "problemMatcher": [],
       "group": "build",
-      "detail": "Deploys the application to Firebase"
-    },
-    {
-      "label": "Flutter: Build and Deploy Web",
-      "dependsOrder": "sequence",
-      "dependsOn": [
-        "Flutter: Build Web",
-        "Firebase: Deploy"
-      ],
-      "problemMatcher": [],
-      "group": "build",
-      "detail": "Builds the Flutter web application and deploys it to Firebase"
+      "detail": "Deploys all hosting targets to Firebase"
     }
   ]
 }

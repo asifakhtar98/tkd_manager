@@ -1,5 +1,25 @@
 {
   "projects": {
     "default": "tkd-saas"
-  }
+  },
+  "targets": {
+    "tkd-saas": {
+      "hosting": {
+        "tkd-saas": [
+          "tkd-saas"
+        ],
+        "tkd-manager-wasm": [
+          "tkd-manager-wasm"
+        ]
+      }
+    },
+    "tkd-manager-wasm": {
+      "hosting": {
+        "tkd-manager-wasm": [
+          "tkd-manager-wasm"
+        ]
+      }
+    }
+  },
+  "etags": {}
 }
