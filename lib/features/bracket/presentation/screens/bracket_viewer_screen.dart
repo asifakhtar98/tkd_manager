@@ -21,10 +21,9 @@ import 'package:tkd_saas/features/bracket/presentation/widgets/tie_sheet_canvas_
 import 'package:tkd_saas/features/bracket/presentation/widgets/tie_sheet_theme_config.dart';
 import 'package:tkd_saas/features/bracket/presentation/widgets/tie_sheet_theme_editor_panel.dart';
 import 'package:tkd_saas/features/participant/domain/entities/participant_entity.dart';
-import 'package:tkd_saas/features/tournament/domain/entities/bracket_snapshot.dart';
 import 'package:tkd_saas/features/tournament/domain/entities/bracket_classification.dart';
+import 'package:tkd_saas/features/tournament/domain/entities/bracket_snapshot.dart';
 import 'package:tkd_saas/features/tournament/domain/entities/tournament_entity.dart';
-import 'package:tkd_saas/features/tournament/presentation/bloc/tournament_bloc.dart';
 
 /// Bracket viewer — now URL-driven via `/tournaments/:tId/brackets/:sId`.
 ///
@@ -338,119 +337,114 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return MultiBlocListener(
-      listeners: [
-        BlocListener<TournamentBloc, TournamentState>(
-          listenWhen: (previous, current) {
-            // Only fire when TournamentBloc finishes a save cycle.
-            return previous.isSaving && !current.isSaving;
-          },
-          listener: (context, state) {
-            final isSuccess = state.lastMutationError == null;
-            context.read<BracketBloc>().add(
-              BracketEvent.saveOutcomeReceived(isSuccess: isSuccess),
-            );
+    return BlocConsumer<BracketBloc, BracketState>(
+      listenWhen: (prev, current) {
+        if (current is! BracketLoadSuccess) return false;
+        if (prev is! BracketLoadSuccess) return true;
 
-            if (!isSuccess) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(state.lastMutationError!),
-                  backgroundColor: Colors.red.shade800,
-                  duration: const Duration(seconds: 4),
-                ),
-              );
-            } else {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Bracket saved successfully.'),
-                  backgroundColor: Colors.green,
-                  duration: Duration(seconds: 2),
-                ),
-              );
-            }
-          },
-        ),
-      ],
-      child: BlocConsumer<BracketBloc, BracketState>(
-        listenWhen: (prev, current) => current is BracketLoadSuccess,
-        listener: (context, state) {
-          if (state case BracketLoadSuccess(:final errorMessage)) {
-            // Show error as SnackBar without destroying bracket state.
-            if (errorMessage != null) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(errorMessage),
-                  backgroundColor: Colors.grey.shade800,
-                ),
-              );
-              // Clear the error so it doesn't re-fire on rebuild.
-              context.read<BracketBloc>().add(
-                const BracketEvent.errorDismissed(),
-              );
-            }
+        // Fire when an error message appears.
+        final hasNewErrorMessage = current.errorMessage != null &&
+            current.errorMessage != prev.errorMessage;
+
+        // Fire when a save cycle completes (isSaving transitions false).
+        final saveJustCompleted = prev.isSaving && !current.isSaving;
+
+        return hasNewErrorMessage || saveJustCompleted;
+      },
+      listener: (context, state) {
+        if (state is! BracketLoadSuccess) return;
+
+        // Handle save completion feedback.
+        if (!state.isSaving && state.lastSaveTimestamp != null) {
+          if (state.saveError != null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.saveError!),
+                backgroundColor: Colors.red.shade800,
+                duration: const Duration(seconds: 4),
+              ),
+            );
           }
-        },
-        builder: (context, state) {
-          return switch (state) {
-            BracketInitial() || BracketGenerating() => Scaffold(
-              appBar: AppBar(
-                title: Text(
-                  '${_bracketFormat.displayLabel} — ${widget.snapshot.participantCount} Players',
-                ),
-              ),
-              body: const Center(child: CircularProgressIndicator()),
+          // Successful save is silent (auto-saves shouldn't spam the user).
+        }
+
+        // Handle bracket operation errors.
+        if (state.errorMessage != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.errorMessage!),
+              backgroundColor: Colors.grey.shade800,
             ),
-            BracketFailure(:final message) => Scaffold(
-              appBar: AppBar(
-                title: const Text('Error'),
-                leading: IconButton(
-                  icon: const Icon(Icons.arrow_back),
-                  onPressed: _navigateBackToTournamentDetail,
-                ),
-              ),
-              body: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.error_outline,
-                      size: 48,
-                      color: Colors.grey.shade800,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(message, textAlign: TextAlign.center),
-                  ],
-                ),
+          );
+          context.read<BracketBloc>().add(
+            const BracketEvent.errorDismissed(),
+          );
+        }
+      },
+      builder: (context, state) {
+        return switch (state) {
+          BracketInitial() || BracketGenerating() => Scaffold(
+            appBar: AppBar(
+              title: Text(
+                '${_bracketFormat.displayLabel} — ${widget.snapshot.participantCount} Players',
               ),
             ),
-            BracketLoadSuccess(
-              :final result,
-              :final participants,
-              :final format,
-              :final includeThirdPlaceMatch,
-              :final actionHistory,
-              :final historyPointer,
-              :final isReplayInProgress,
-              :final isEditModeEnabled,
-              :final isSaving,
-              :final hasUnsavedChanges,
-            ) =>
-              _buildViewer(
-                context: context,
-                result: result,
-                participants: participants,
-                format: format,
-                includeThirdPlaceMatch: includeThirdPlaceMatch,
-                actionHistory: actionHistory,
-                historyPointer: historyPointer,
-                isReplayInProgress: isReplayInProgress,
-                isEditModeEnabled: isEditModeEnabled,
-                isSaving: isSaving,
-                hasUnsavedChanges: hasUnsavedChanges,
+            body: const Center(child: CircularProgressIndicator()),
+          ),
+          BracketFailure(:final message) => Scaffold(
+            appBar: AppBar(
+              title: const Text('Error'),
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: _navigateBackToTournamentDetail,
               ),
-          };
-        },
-      ),
+            ),
+            body: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.error_outline,
+                    size: 48,
+                    color: Colors.grey.shade800,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(message, textAlign: TextAlign.center),
+                ],
+              ),
+            ),
+          ),
+          BracketLoadSuccess(
+            :final result,
+            :final participants,
+            :final format,
+            :final includeThirdPlaceMatch,
+            :final actionHistory,
+            :final historyPointer,
+            :final isReplayInProgress,
+            :final isEditModeEnabled,
+            :final isSaving,
+            :final hasUnsavedChanges,
+            :final lastSaveTimestamp,
+            :final saveError,
+          ) =>
+            _buildViewer(
+              context: context,
+              result: result,
+              participants: participants,
+              format: format,
+              includeThirdPlaceMatch: includeThirdPlaceMatch,
+              actionHistory: actionHistory,
+              historyPointer: historyPointer,
+              isReplayInProgress: isReplayInProgress,
+              isEditModeEnabled: isEditModeEnabled,
+              isSaving: isSaving,
+              hasUnsavedChanges: hasUnsavedChanges,
+              lastSaveTimestamp: lastSaveTimestamp,
+              saveError: saveError,
+            ),
+        };
+      },
     );
   }
 
@@ -466,6 +460,8 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
     required bool isEditModeEnabled,
     required bool isSaving,
     required bool hasUnsavedChanges,
+    required DateTime? lastSaveTimestamp,
+    required String? saveError,
   }) {
     final bracketData = _extractBracketDataFromResult(result);
 
@@ -701,6 +697,13 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
                 height: 24,
                 child: VerticalDivider(width: 16, color: Colors.white24),
               ),
+              // ── Save Status Indicator ──
+              _buildSaveStatusIndicator(
+                isSaving: isSaving,
+                hasUnsavedChanges: hasUnsavedChanges,
+                lastSaveTimestamp: lastSaveTimestamp,
+                saveError: saveError,
+              ),
               // ── Save Bracket ──
               Tooltip(
                 message: 'Save explicitly to persist the current bracket state',
@@ -714,14 +717,6 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
                   onPressed: isSaving || !hasUnsavedChanges
                       ? null
                       : () {
-                          final updatedSnapshot = widget.snapshot.copyWith(
-                            result: result,
-                            participants: participants,
-                            updatedAt: DateTime.now(),
-                          );
-                          context.read<TournamentBloc>().add(
-                            TournamentBracketSnapshotUpdated(updatedSnapshot),
-                          );
                           context.read<BracketBloc>().add(
                             const BracketSaveRequested(),
                           );
@@ -1025,5 +1020,85 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
         }
       },
     );
+  }
+
+  // ── Save Status Indicator ──────────────────────────────────────────────────
+
+  /// Builds a compact save status widget for the bottom bar.
+  ///
+  /// Shows:
+  /// - "Saving…" with spinner during active save
+  /// - "Save failed" with error icon on save error
+  /// - "Saved ✓" with relative timestamp on last successful save
+  /// - Nothing when there's no save history and no unsaved changes
+  Widget _buildSaveStatusIndicator({
+    required bool isSaving,
+    required bool hasUnsavedChanges,
+    required DateTime? lastSaveTimestamp,
+    required String? saveError,
+  }) {
+    if (isSaving) {
+      return const Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            width: 12,
+            height: 12,
+            child: CircularProgressIndicator(
+              strokeWidth: 1.5,
+              color: Colors.white54,
+            ),
+          ),
+          SizedBox(width: 6),
+          Text(
+            'Saving…',
+            style: TextStyle(color: Colors.white54, fontSize: 12),
+          ),
+          SizedBox(width: 8),
+        ],
+      );
+    }
+
+    if (saveError != null) {
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.error_outline, color: Colors.redAccent, size: 14),
+          const SizedBox(width: 4),
+          Text(
+            'Save failed',
+            style: TextStyle(color: Colors.red.shade300, fontSize: 12),
+          ),
+          const SizedBox(width: 8),
+        ],
+      );
+    }
+
+    if (lastSaveTimestamp != null && !hasUnsavedChanges) {
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.cloud_done_outlined, color: Colors.white38, size: 14),
+          const SizedBox(width: 4),
+          Text(
+            'Saved ${_formatRelativeTimestamp(lastSaveTimestamp)}',
+            style: const TextStyle(color: Colors.white38, fontSize: 12),
+          ),
+          const SizedBox(width: 8),
+        ],
+      );
+    }
+
+    return const SizedBox.shrink();
+  }
+
+  /// Formats a [DateTime] as a human-readable relative string.
+  String _formatRelativeTimestamp(DateTime timestamp) {
+    final difference = DateTime.now().difference(timestamp);
+    if (difference.inSeconds < 10) return 'just now';
+    if (difference.inSeconds < 60) return '${difference.inSeconds}s ago';
+    if (difference.inMinutes < 60) return '${difference.inMinutes}m ago';
+    if (difference.inHours < 24) return '${difference.inHours}h ago';
+    return '${difference.inDays}d ago';
   }
 }

@@ -125,6 +125,7 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i707.MatchProgressionService>(),
         gh<_i648.ParticipantShuffleService>(),
         gh<_i706.Uuid>(),
+        gh<_i529.BracketSnapshotRepository>(),
       ),
     );
     gh.lazySingleton<_i143.TournamentBloc>(

@@ -5,13 +5,15 @@ import 'package:tkd_saas/core/config/app_config.dart';
 import 'package:tkd_saas/core/di/injection.dart';
 import 'package:tkd_saas/features/auth/domain/repositories/authentication_repository.dart';
 
+import 'package:tkd_saas/features/bracket/domain/entities/bracket_match_action.dart';
+import 'package:tkd_saas/features/bracket/domain/entities/bracket_result.dart';
+import 'package:tkd_saas/features/bracket/domain/entities/match_entity.dart';
 import 'package:tkd_saas/features/core/data/demo_bracket_snapshot_factory.dart';
 
 import 'package:tkd_saas/features/tournament/domain/entities/bracket_snapshot.dart';
 import 'package:tkd_saas/features/tournament/domain/entities/tournament_entity.dart';
 import 'package:tkd_saas/features/tournament/domain/repositories/bracket_snapshot_repository.dart';
 import 'package:tkd_saas/features/tournament/domain/repositories/tournament_repository.dart';
-import 'package:tkd_saas/features/bracket/domain/entities/bracket_result.dart';
 import 'package:uuid/uuid.dart';
 
 void main() {
@@ -60,10 +62,10 @@ void main() {
       await authRepo.signOut();
     });
 
-    test('1. Execute CRUD pipeline purely via remote DB logic', () async {
+    test('1. Full CRUD pipeline with actionHistory persistence', () async {
       final String timestampTag = DateTime.now().toIso8601String();
 
-      // Step A: Create Tournament
+      // ── Step A: Create Tournament ──────────────────────────────────────
       TournamentEntity newTournament = TournamentEntity(
         id: const Uuid().v4(),
         userId: expectedUserId,
@@ -89,7 +91,7 @@ void main() {
         reason: 'Must return a generated ID',
       );
 
-      // Step B: Fetch Tournaments
+      // ── Step B: Fetch Tournaments ──────────────────────────────────────
       final fetchedListResult = await tournamentRepo.getTournaments();
       final fetchedList = fetchedListResult.getOrElse(
         (failure) => fail('Failed to fetch tournaments: ${failure.message}'),
@@ -101,13 +103,12 @@ void main() {
         reason: 'The newly created tournament must appear in the fetch list.',
       );
 
-      // Step C: Create Brackets (Diverse Demo Data Gallery)
+      // ── Step C: Create Brackets (Diverse Demo Data Gallery) ────────────
       final demoSnapshots =
           DemoBracketSnapshotFactory.generateAllDemoBracketSnapshots();
       late BracketSnapshot firstCreatedBracket;
 
       for (var i = 0; i < demoSnapshots.length; i++) {
-        // Hydrate demo snapshot with actual integration test relationships and valid local UUIDs
         final snap = demoSnapshots[i].copyWith(
           id: const Uuid().v4(),
           tournamentId: createdTournament!.id,
@@ -133,13 +134,38 @@ void main() {
         }
       }
 
-      // Step D: Update Bracket (using the first one generated)
-      final updatedBracket = firstCreatedBracket.copyWith(
-        label: 'Updated Label',
+      // ── Step D: Update Bracket with actionHistory ──────────────────────
+      // Build a realistic action history entry (simulates a match result).
+      final firstMatchId = firstCreatedBracket.result.map(
+        singleElimination: (s) => s.data.matches.first.id,
+        doubleElimination: (d) => d.data.allMatches.first.id,
+      );
+      final firstParticipantId = firstCreatedBracket.participants.first.id;
+
+      final syntheticMatchAction = BracketMatchAction(
+        matchId: firstMatchId,
+        winnerId: firstParticipantId,
+        resultType: MatchResultType.points,
+        blueScore: 7,
+        redScore: 3,
+        recordedAt: DateTime.now(),
+        displayLabel: 'R1-M1: ${firstCreatedBracket.participants.first.fullName}'
+            ' won by Points (7-3)',
       );
 
-      // Simulate Finalization inside the snapshot
-      final finalizedDataResult = updatedBracket.result.map(
+      final syntheticHistoryEntry = BracketHistoryEntry(
+        action: BracketAction.matchResult(syntheticMatchAction),
+        resultSnapshot: firstCreatedBracket.result,
+        participantsSnapshot: firstCreatedBracket.participants,
+      );
+
+      final updatedBracketWithHistory = firstCreatedBracket.copyWith(
+        label: 'Updated Label',
+        actionHistory: [syntheticHistoryEntry],
+      );
+
+      // Simulate finalization inside the snapshot
+      final finalizedDataResult = updatedBracketWithHistory.result.map(
         singleElimination: (s) => BracketResult.singleElimination(
           s.data.copyWith(
             bracket: s.data.bracket.copyWith(
@@ -158,26 +184,65 @@ void main() {
         ),
       );
 
-      final fullyUpdatedBracket = updatedBracket.copyWith(
+      final fullyUpdatedBracket = updatedBracketWithHistory.copyWith(
         result: finalizedDataResult,
       );
 
-      final savedUpdatedBracketResult = await bracketRepo.updateBracketSnapshot(
-        fullyUpdatedBracket,
-      );
+      final savedUpdatedBracketResult =
+          await bracketRepo.updateBracketSnapshot(fullyUpdatedBracket);
       final savedUpdatedBracket = savedUpdatedBracketResult.getOrElse(
         (failure) => fail('Failed to update bracket: ${failure.message}'),
       );
 
+      // Verify label update
       expect(savedUpdatedBracket.label, 'Updated Label');
 
+      // Verify finalization
       final dbBracketEntity = savedUpdatedBracket.result.map(
         singleElimination: (s) => s.data.bracket,
         doubleElimination: (d) => d.data.winnersBracket,
       );
       expect(dbBracketEntity.isFinalized, true);
 
-      // Step E: Fetch Bracket
+      // Verify actionHistory round-tripped through Supabase
+      expect(
+        savedUpdatedBracket.actionHistory.length,
+        1,
+        reason: 'actionHistory must survive the DB round-trip',
+      );
+      final restoredEntry = savedUpdatedBracket.actionHistory.first;
+      final restoredAction = restoredEntry.action as BracketActionMatchResult;
+      expect(restoredAction.data.matchId, firstMatchId);
+      expect(restoredAction.data.winnerId, firstParticipantId);
+      expect(restoredAction.data.blueScore, 7);
+      expect(restoredAction.data.redScore, 3);
+      expect(restoredAction.data.resultType, MatchResultType.points);
+      expect(
+        restoredEntry.participantsSnapshot.length,
+        firstCreatedBracket.participants.length,
+        reason: 'participantsSnapshot must survive round-trip',
+      );
+
+      // ── Step E: Re-fetch and verify persistence ────────────────────────
+      final refetchedResult = await bracketRepo.getBracketSnapshot(
+        savedUpdatedBracket.id,
+      );
+      final refetchedBracket = refetchedResult.getOrElse(
+        (failure) => fail('Failed to re-fetch bracket: ${failure.message}'),
+      );
+
+      expect(refetchedBracket.label, 'Updated Label');
+      expect(
+        refetchedBracket.actionHistory.length,
+        1,
+        reason: 'actionHistory must persist across separate fetch',
+      );
+      final refetchedAction =
+          refetchedBracket.actionHistory.first.action as BracketActionMatchResult;
+      expect(refetchedAction.data.matchId, firstMatchId);
+      expect(refetchedAction.data.displayLabel, contains('won by Points'));
+
+      // ── Step F: Fetch all snapshots for tournament ─────────────────────
       final snapshotsResult = await bracketRepo.getBracketSnapshots(
         createdTournament!.id,
       );
@@ -188,8 +253,6 @@ void main() {
 
       expect(snapshots.length, greaterThanOrEqualTo(1));
       expect(snapshots.any((b) => b.id == savedUpdatedBracket.id), true);
-
-      // Cleanup happens via tearDownAll or manual trigger if implemented.
     });
   });
 }

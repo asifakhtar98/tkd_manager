@@ -125,12 +125,12 @@ return failure(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  generating,TResult Function( BracketResult result,  List<ParticipantEntity> participants,  BracketFormat format,  bool includeThirdPlaceMatch,  String? errorMessage,  List<BracketHistoryEntry> actionHistory,  int historyPointer,  bool isReplayInProgress,  bool isEditModeEnabled,  BracketResult? initialResult,  List<ParticipantEntity>? initialParticipants,  bool isSaving,  bool hasUnsavedChanges)?  loadSuccess,TResult Function( String message)?  failure,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  generating,TResult Function( BracketResult result,  List<ParticipantEntity> participants,  BracketFormat format,  bool includeThirdPlaceMatch,  String? errorMessage,  List<BracketHistoryEntry> actionHistory,  int historyPointer,  bool isReplayInProgress,  bool isEditModeEnabled,  BracketResult? initialResult,  List<ParticipantEntity>? initialParticipants,  bool isSaving,  bool hasUnsavedChanges,  DateTime? lastSaveTimestamp,  String? saveError)?  loadSuccess,TResult Function( String message)?  failure,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case BracketInitial() when initial != null:
 return initial();case BracketGenerating() when generating != null:
 return generating();case BracketLoadSuccess() when loadSuccess != null:
-return loadSuccess(_that.result,_that.participants,_that.format,_that.includeThirdPlaceMatch,_that.errorMessage,_that.actionHistory,_that.historyPointer,_that.isReplayInProgress,_that.isEditModeEnabled,_that.initialResult,_that.initialParticipants,_that.isSaving,_that.hasUnsavedChanges);case BracketFailure() when failure != null:
+return loadSuccess(_that.result,_that.participants,_that.format,_that.includeThirdPlaceMatch,_that.errorMessage,_that.actionHistory,_that.historyPointer,_that.isReplayInProgress,_that.isEditModeEnabled,_that.initialResult,_that.initialParticipants,_that.isSaving,_that.hasUnsavedChanges,_that.lastSaveTimestamp,_that.saveError);case BracketFailure() when failure != null:
 return failure(_that.message);case _:
   return orElse();
 
@@ -149,12 +149,12 @@ return failure(_that.message);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  generating,required TResult Function( BracketResult result,  List<ParticipantEntity> participants,  BracketFormat format,  bool includeThirdPlaceMatch,  String? errorMessage,  List<BracketHistoryEntry> actionHistory,  int historyPointer,  bool isReplayInProgress,  bool isEditModeEnabled,  BracketResult? initialResult,  List<ParticipantEntity>? initialParticipants,  bool isSaving,  bool hasUnsavedChanges)  loadSuccess,required TResult Function( String message)  failure,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  generating,required TResult Function( BracketResult result,  List<ParticipantEntity> participants,  BracketFormat format,  bool includeThirdPlaceMatch,  String? errorMessage,  List<BracketHistoryEntry> actionHistory,  int historyPointer,  bool isReplayInProgress,  bool isEditModeEnabled,  BracketResult? initialResult,  List<ParticipantEntity>? initialParticipants,  bool isSaving,  bool hasUnsavedChanges,  DateTime? lastSaveTimestamp,  String? saveError)  loadSuccess,required TResult Function( String message)  failure,}) {final _that = this;
 switch (_that) {
 case BracketInitial():
 return initial();case BracketGenerating():
 return generating();case BracketLoadSuccess():
-return loadSuccess(_that.result,_that.participants,_that.format,_that.includeThirdPlaceMatch,_that.errorMessage,_that.actionHistory,_that.historyPointer,_that.isReplayInProgress,_that.isEditModeEnabled,_that.initialResult,_that.initialParticipants,_that.isSaving,_that.hasUnsavedChanges);case BracketFailure():
+return loadSuccess(_that.result,_that.participants,_that.format,_that.includeThirdPlaceMatch,_that.errorMessage,_that.actionHistory,_that.historyPointer,_that.isReplayInProgress,_that.isEditModeEnabled,_that.initialResult,_that.initialParticipants,_that.isSaving,_that.hasUnsavedChanges,_that.lastSaveTimestamp,_that.saveError);case BracketFailure():
 return failure(_that.message);}
 }
 /// A variant of `when` that fallback to returning `null`
@@ -169,12 +169,12 @@ return failure(_that.message);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  generating,TResult? Function( BracketResult result,  List<ParticipantEntity> participants,  BracketFormat format,  bool includeThirdPlaceMatch,  String? errorMessage,  List<BracketHistoryEntry> actionHistory,  int historyPointer,  bool isReplayInProgress,  bool isEditModeEnabled,  BracketResult? initialResult,  List<ParticipantEntity>? initialParticipants,  bool isSaving,  bool hasUnsavedChanges)?  loadSuccess,TResult? Function( String message)?  failure,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  generating,TResult? Function( BracketResult result,  List<ParticipantEntity> participants,  BracketFormat format,  bool includeThirdPlaceMatch,  String? errorMessage,  List<BracketHistoryEntry> actionHistory,  int historyPointer,  bool isReplayInProgress,  bool isEditModeEnabled,  BracketResult? initialResult,  List<ParticipantEntity>? initialParticipants,  bool isSaving,  bool hasUnsavedChanges,  DateTime? lastSaveTimestamp,  String? saveError)?  loadSuccess,TResult? Function( String message)?  failure,}) {final _that = this;
 switch (_that) {
 case BracketInitial() when initial != null:
 return initial();case BracketGenerating() when generating != null:
 return generating();case BracketLoadSuccess() when loadSuccess != null:
-return loadSuccess(_that.result,_that.participants,_that.format,_that.includeThirdPlaceMatch,_that.errorMessage,_that.actionHistory,_that.historyPointer,_that.isReplayInProgress,_that.isEditModeEnabled,_that.initialResult,_that.initialParticipants,_that.isSaving,_that.hasUnsavedChanges);case BracketFailure() when failure != null:
+return loadSuccess(_that.result,_that.participants,_that.format,_that.includeThirdPlaceMatch,_that.errorMessage,_that.actionHistory,_that.historyPointer,_that.isReplayInProgress,_that.isEditModeEnabled,_that.initialResult,_that.initialParticipants,_that.isSaving,_that.hasUnsavedChanges,_that.lastSaveTimestamp,_that.saveError);case BracketFailure() when failure != null:
 return failure(_that.message);case _:
   return null;
 
@@ -251,7 +251,7 @@ String toString() {
 
 
 class BracketLoadSuccess implements BracketState {
-  const BracketLoadSuccess({required this.result, required final  List<ParticipantEntity> participants, required this.format, required this.includeThirdPlaceMatch, this.errorMessage, final  List<BracketHistoryEntry> actionHistory = const [], this.historyPointer = -1, this.isReplayInProgress = false, this.isEditModeEnabled = false, this.initialResult, final  List<ParticipantEntity>? initialParticipants, this.isSaving = false, this.hasUnsavedChanges = false}): _participants = participants,_actionHistory = actionHistory,_initialParticipants = initialParticipants;
+  const BracketLoadSuccess({required this.result, required final  List<ParticipantEntity> participants, required this.format, required this.includeThirdPlaceMatch, this.errorMessage, final  List<BracketHistoryEntry> actionHistory = const [], this.historyPointer = -1, this.isReplayInProgress = false, this.isEditModeEnabled = false, this.initialResult, final  List<ParticipantEntity>? initialParticipants, this.isSaving = false, this.hasUnsavedChanges = false, this.lastSaveTimestamp, this.saveError}): _participants = participants,_actionHistory = actionHistory,_initialParticipants = initialParticipants;
   
 
  final  BracketResult result;
@@ -302,10 +302,15 @@ class BracketLoadSuccess implements BracketState {
   return EqualUnmodifiableListView(value);
 }
 
-/// True when saving bracket to DB
+/// True when saving bracket to DB.
 @JsonKey() final  bool isSaving;
-/// True if there are unsaved changes
+/// True if there are unsaved changes.
 @JsonKey() final  bool hasUnsavedChanges;
+/// Timestamp of the last successful save to DB.
+ final  DateTime? lastSaveTimestamp;
+/// Error message from the most recent failed save attempt.
+/// Cleared on the next successful save.
+ final  String? saveError;
 
 /// Create a copy of BracketState
 /// with the given fields replaced by the non-null parameter values.
@@ -317,16 +322,16 @@ $BracketLoadSuccessCopyWith<BracketLoadSuccess> get copyWith => _$BracketLoadSuc
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is BracketLoadSuccess&&(identical(other.result, result) || other.result == result)&&const DeepCollectionEquality().equals(other._participants, _participants)&&(identical(other.format, format) || other.format == format)&&(identical(other.includeThirdPlaceMatch, includeThirdPlaceMatch) || other.includeThirdPlaceMatch == includeThirdPlaceMatch)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage)&&const DeepCollectionEquality().equals(other._actionHistory, _actionHistory)&&(identical(other.historyPointer, historyPointer) || other.historyPointer == historyPointer)&&(identical(other.isReplayInProgress, isReplayInProgress) || other.isReplayInProgress == isReplayInProgress)&&(identical(other.isEditModeEnabled, isEditModeEnabled) || other.isEditModeEnabled == isEditModeEnabled)&&(identical(other.initialResult, initialResult) || other.initialResult == initialResult)&&const DeepCollectionEquality().equals(other._initialParticipants, _initialParticipants)&&(identical(other.isSaving, isSaving) || other.isSaving == isSaving)&&(identical(other.hasUnsavedChanges, hasUnsavedChanges) || other.hasUnsavedChanges == hasUnsavedChanges));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is BracketLoadSuccess&&(identical(other.result, result) || other.result == result)&&const DeepCollectionEquality().equals(other._participants, _participants)&&(identical(other.format, format) || other.format == format)&&(identical(other.includeThirdPlaceMatch, includeThirdPlaceMatch) || other.includeThirdPlaceMatch == includeThirdPlaceMatch)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage)&&const DeepCollectionEquality().equals(other._actionHistory, _actionHistory)&&(identical(other.historyPointer, historyPointer) || other.historyPointer == historyPointer)&&(identical(other.isReplayInProgress, isReplayInProgress) || other.isReplayInProgress == isReplayInProgress)&&(identical(other.isEditModeEnabled, isEditModeEnabled) || other.isEditModeEnabled == isEditModeEnabled)&&(identical(other.initialResult, initialResult) || other.initialResult == initialResult)&&const DeepCollectionEquality().equals(other._initialParticipants, _initialParticipants)&&(identical(other.isSaving, isSaving) || other.isSaving == isSaving)&&(identical(other.hasUnsavedChanges, hasUnsavedChanges) || other.hasUnsavedChanges == hasUnsavedChanges)&&(identical(other.lastSaveTimestamp, lastSaveTimestamp) || other.lastSaveTimestamp == lastSaveTimestamp)&&(identical(other.saveError, saveError) || other.saveError == saveError));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,result,const DeepCollectionEquality().hash(_participants),format,includeThirdPlaceMatch,errorMessage,const DeepCollectionEquality().hash(_actionHistory),historyPointer,isReplayInProgress,isEditModeEnabled,initialResult,const DeepCollectionEquality().hash(_initialParticipants),isSaving,hasUnsavedChanges);
+int get hashCode => Object.hash(runtimeType,result,const DeepCollectionEquality().hash(_participants),format,includeThirdPlaceMatch,errorMessage,const DeepCollectionEquality().hash(_actionHistory),historyPointer,isReplayInProgress,isEditModeEnabled,initialResult,const DeepCollectionEquality().hash(_initialParticipants),isSaving,hasUnsavedChanges,lastSaveTimestamp,saveError);
 
 @override
 String toString() {
-  return 'BracketState.loadSuccess(result: $result, participants: $participants, format: $format, includeThirdPlaceMatch: $includeThirdPlaceMatch, errorMessage: $errorMessage, actionHistory: $actionHistory, historyPointer: $historyPointer, isReplayInProgress: $isReplayInProgress, isEditModeEnabled: $isEditModeEnabled, initialResult: $initialResult, initialParticipants: $initialParticipants, isSaving: $isSaving, hasUnsavedChanges: $hasUnsavedChanges)';
+  return 'BracketState.loadSuccess(result: $result, participants: $participants, format: $format, includeThirdPlaceMatch: $includeThirdPlaceMatch, errorMessage: $errorMessage, actionHistory: $actionHistory, historyPointer: $historyPointer, isReplayInProgress: $isReplayInProgress, isEditModeEnabled: $isEditModeEnabled, initialResult: $initialResult, initialParticipants: $initialParticipants, isSaving: $isSaving, hasUnsavedChanges: $hasUnsavedChanges, lastSaveTimestamp: $lastSaveTimestamp, saveError: $saveError)';
 }
 
 
@@ -337,7 +342,7 @@ abstract mixin class $BracketLoadSuccessCopyWith<$Res> implements $BracketStateC
   factory $BracketLoadSuccessCopyWith(BracketLoadSuccess value, $Res Function(BracketLoadSuccess) _then) = _$BracketLoadSuccessCopyWithImpl;
 @useResult
 $Res call({
- BracketResult result, List<ParticipantEntity> participants, BracketFormat format, bool includeThirdPlaceMatch, String? errorMessage, List<BracketHistoryEntry> actionHistory, int historyPointer, bool isReplayInProgress, bool isEditModeEnabled, BracketResult? initialResult, List<ParticipantEntity>? initialParticipants, bool isSaving, bool hasUnsavedChanges
+ BracketResult result, List<ParticipantEntity> participants, BracketFormat format, bool includeThirdPlaceMatch, String? errorMessage, List<BracketHistoryEntry> actionHistory, int historyPointer, bool isReplayInProgress, bool isEditModeEnabled, BracketResult? initialResult, List<ParticipantEntity>? initialParticipants, bool isSaving, bool hasUnsavedChanges, DateTime? lastSaveTimestamp, String? saveError
 });
 
 
@@ -354,7 +359,7 @@ class _$BracketLoadSuccessCopyWithImpl<$Res>
 
 /// Create a copy of BracketState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? result = null,Object? participants = null,Object? format = null,Object? includeThirdPlaceMatch = null,Object? errorMessage = freezed,Object? actionHistory = null,Object? historyPointer = null,Object? isReplayInProgress = null,Object? isEditModeEnabled = null,Object? initialResult = freezed,Object? initialParticipants = freezed,Object? isSaving = null,Object? hasUnsavedChanges = null,}) {
+@pragma('vm:prefer-inline') $Res call({Object? result = null,Object? participants = null,Object? format = null,Object? includeThirdPlaceMatch = null,Object? errorMessage = freezed,Object? actionHistory = null,Object? historyPointer = null,Object? isReplayInProgress = null,Object? isEditModeEnabled = null,Object? initialResult = freezed,Object? initialParticipants = freezed,Object? isSaving = null,Object? hasUnsavedChanges = null,Object? lastSaveTimestamp = freezed,Object? saveError = freezed,}) {
   return _then(BracketLoadSuccess(
 result: null == result ? _self.result : result // ignore: cast_nullable_to_non_nullable
 as BracketResult,participants: null == participants ? _self._participants : participants // ignore: cast_nullable_to_non_nullable
@@ -369,7 +374,9 @@ as bool,initialResult: freezed == initialResult ? _self.initialResult : initialR
 as BracketResult?,initialParticipants: freezed == initialParticipants ? _self._initialParticipants : initialParticipants // ignore: cast_nullable_to_non_nullable
 as List<ParticipantEntity>?,isSaving: null == isSaving ? _self.isSaving : isSaving // ignore: cast_nullable_to_non_nullable
 as bool,hasUnsavedChanges: null == hasUnsavedChanges ? _self.hasUnsavedChanges : hasUnsavedChanges // ignore: cast_nullable_to_non_nullable
-as bool,
+as bool,lastSaveTimestamp: freezed == lastSaveTimestamp ? _self.lastSaveTimestamp : lastSaveTimestamp // ignore: cast_nullable_to_non_nullable
+as DateTime?,saveError: freezed == saveError ? _self.saveError : saveError // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 

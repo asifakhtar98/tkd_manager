@@ -1,9 +1,15 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tkd_saas/core/di/injection.dart';
 import 'package:tkd_saas/core/router/app_routes.dart';
+import 'package:tkd_saas/features/bracket/data/services/double_elimination_bracket_generator_service_implementation.dart';
+import 'package:tkd_saas/features/bracket/data/services/match_progression_service_implementation.dart';
+import 'package:tkd_saas/features/bracket/data/services/participant_shuffle_service_implementation.dart';
+import 'package:tkd_saas/features/bracket/data/services/single_elimination_bracket_generator_service_implementation.dart';
 import 'package:tkd_saas/features/bracket/domain/entities/bracket_result.dart';
 import 'package:tkd_saas/features/bracket/presentation/bloc/bracket_bloc.dart';
 import 'package:tkd_saas/features/participant/domain/entities/participant_entity.dart';
+import 'package:uuid/uuid.dart';
+
+import 'helpers/fake_bracket_snapshot_repository.dart';
 
 void main() {
   late BracketBloc bracketBloc;
@@ -20,13 +26,19 @@ void main() {
   ];
 
   setUp(() {
-    configureDependencies();
-    bracketBloc = getIt<BracketBloc>();
+    const uuid = Uuid();
+    bracketBloc = BracketBloc(
+      SingleEliminationBracketGeneratorServiceImplementation(uuid),
+      DoubleEliminationBracketGeneratorServiceImplementation(uuid),
+      MatchProgressionServiceImplementation(),
+      ParticipantShuffleServiceImplementation(),
+      uuid,
+      FakeBracketSnapshotRepository(),
+    );
   });
 
   tearDown(() async {
     await bracketBloc.close();
-    await getIt.reset();
   });
 
   /// Generates a bracket and waits for BracketLoadSuccess.

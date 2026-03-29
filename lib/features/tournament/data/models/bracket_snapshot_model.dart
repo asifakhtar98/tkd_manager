@@ -27,6 +27,7 @@ abstract class BracketSnapshotModel with _$BracketSnapshotModel {
     required List<ParticipantEntity> participants,
     required BracketResult result,
     required DateTime updatedAt,
+    @Default([]) List<BracketHistoryEntry> actionHistory,
   }) = _BracketSnapshotModel;
 
   factory BracketSnapshotModel.fromJson(Map<String, dynamic> json) =>
@@ -47,6 +48,7 @@ abstract class BracketSnapshotModel with _$BracketSnapshotModel {
       participants: entity.participants,
       result: entity.result,
       updatedAt: entity.updatedAt,
+      actionHistory: entity.actionHistory,
     );
   }
 }
@@ -67,6 +69,8 @@ extension BracketSnapshotModelToEntity on BracketSnapshotModel {
       participants: participants,
       result: result,
       updatedAt: updatedAt,
+      actionHistory: actionHistory,
     );
   }
 }
+

@@ -55,7 +55,7 @@ extension BracketEventPatterns on BracketEvent {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( BracketGenerateRequested value)?  generateRequested,TResult Function( BracketRegenerateRequested value)?  regenerateRequested,TResult Function( BracketLoadFromSnapshotRequested value)?  loadFromSnapshotRequested,TResult Function( BracketMatchResultRecorded value)?  matchResultRecorded,TResult Function( BracketErrorDismissed value)?  errorDismissed,TResult Function( BracketUndoRequested value)?  undoRequested,TResult Function( BracketRedoRequested value)?  redoRequested,TResult Function( BracketReplayRequested value)?  replayRequested,TResult Function( BracketReplayStepAdvanced value)?  replayStepAdvanced,TResult Function( BracketReplayCancelled value)?  replayCancelled,TResult Function( BracketHistoryJumpRequested value)?  historyJumpRequested,TResult Function( BracketEditModeToggled value)?  editModeToggled,TResult Function( BracketParticipantSlotSwapped value)?  participantSlotSwapped,TResult Function( BracketParticipantDetailsUpdated value)?  participantDetailsUpdated,TResult Function( BracketSaveRequested value)?  saveRequested,TResult Function( BracketSaveOutcomeReceived value)?  saveOutcomeReceived,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( BracketGenerateRequested value)?  generateRequested,TResult Function( BracketRegenerateRequested value)?  regenerateRequested,TResult Function( BracketLoadFromSnapshotRequested value)?  loadFromSnapshotRequested,TResult Function( BracketMatchResultRecorded value)?  matchResultRecorded,TResult Function( BracketErrorDismissed value)?  errorDismissed,TResult Function( BracketUndoRequested value)?  undoRequested,TResult Function( BracketRedoRequested value)?  redoRequested,TResult Function( BracketReplayRequested value)?  replayRequested,TResult Function( BracketReplayStepAdvanced value)?  replayStepAdvanced,TResult Function( BracketReplayCancelled value)?  replayCancelled,TResult Function( BracketHistoryJumpRequested value)?  historyJumpRequested,TResult Function( BracketEditModeToggled value)?  editModeToggled,TResult Function( BracketParticipantSlotSwapped value)?  participantSlotSwapped,TResult Function( BracketParticipantDetailsUpdated value)?  participantDetailsUpdated,TResult Function( BracketSaveRequested value)?  saveRequested,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
 case BracketGenerateRequested() when generateRequested != null:
@@ -73,8 +73,7 @@ return historyJumpRequested(_that);case BracketEditModeToggled() when editModeTo
 return editModeToggled(_that);case BracketParticipantSlotSwapped() when participantSlotSwapped != null:
 return participantSlotSwapped(_that);case BracketParticipantDetailsUpdated() when participantDetailsUpdated != null:
 return participantDetailsUpdated(_that);case BracketSaveRequested() when saveRequested != null:
-return saveRequested(_that);case BracketSaveOutcomeReceived() when saveOutcomeReceived != null:
-return saveOutcomeReceived(_that);case _:
+return saveRequested(_that);case _:
   return orElse();
 
 }
@@ -92,7 +91,7 @@ return saveOutcomeReceived(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( BracketGenerateRequested value)  generateRequested,required TResult Function( BracketRegenerateRequested value)  regenerateRequested,required TResult Function( BracketLoadFromSnapshotRequested value)  loadFromSnapshotRequested,required TResult Function( BracketMatchResultRecorded value)  matchResultRecorded,required TResult Function( BracketErrorDismissed value)  errorDismissed,required TResult Function( BracketUndoRequested value)  undoRequested,required TResult Function( BracketRedoRequested value)  redoRequested,required TResult Function( BracketReplayRequested value)  replayRequested,required TResult Function( BracketReplayStepAdvanced value)  replayStepAdvanced,required TResult Function( BracketReplayCancelled value)  replayCancelled,required TResult Function( BracketHistoryJumpRequested value)  historyJumpRequested,required TResult Function( BracketEditModeToggled value)  editModeToggled,required TResult Function( BracketParticipantSlotSwapped value)  participantSlotSwapped,required TResult Function( BracketParticipantDetailsUpdated value)  participantDetailsUpdated,required TResult Function( BracketSaveRequested value)  saveRequested,required TResult Function( BracketSaveOutcomeReceived value)  saveOutcomeReceived,}){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( BracketGenerateRequested value)  generateRequested,required TResult Function( BracketRegenerateRequested value)  regenerateRequested,required TResult Function( BracketLoadFromSnapshotRequested value)  loadFromSnapshotRequested,required TResult Function( BracketMatchResultRecorded value)  matchResultRecorded,required TResult Function( BracketErrorDismissed value)  errorDismissed,required TResult Function( BracketUndoRequested value)  undoRequested,required TResult Function( BracketRedoRequested value)  redoRequested,required TResult Function( BracketReplayRequested value)  replayRequested,required TResult Function( BracketReplayStepAdvanced value)  replayStepAdvanced,required TResult Function( BracketReplayCancelled value)  replayCancelled,required TResult Function( BracketHistoryJumpRequested value)  historyJumpRequested,required TResult Function( BracketEditModeToggled value)  editModeToggled,required TResult Function( BracketParticipantSlotSwapped value)  participantSlotSwapped,required TResult Function( BracketParticipantDetailsUpdated value)  participantDetailsUpdated,required TResult Function( BracketSaveRequested value)  saveRequested,}){
 final _that = this;
 switch (_that) {
 case BracketGenerateRequested():
@@ -110,8 +109,7 @@ return historyJumpRequested(_that);case BracketEditModeToggled():
 return editModeToggled(_that);case BracketParticipantSlotSwapped():
 return participantSlotSwapped(_that);case BracketParticipantDetailsUpdated():
 return participantDetailsUpdated(_that);case BracketSaveRequested():
-return saveRequested(_that);case BracketSaveOutcomeReceived():
-return saveOutcomeReceived(_that);}
+return saveRequested(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -125,7 +123,7 @@ return saveOutcomeReceived(_that);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( BracketGenerateRequested value)?  generateRequested,TResult? Function( BracketRegenerateRequested value)?  regenerateRequested,TResult? Function( BracketLoadFromSnapshotRequested value)?  loadFromSnapshotRequested,TResult? Function( BracketMatchResultRecorded value)?  matchResultRecorded,TResult? Function( BracketErrorDismissed value)?  errorDismissed,TResult? Function( BracketUndoRequested value)?  undoRequested,TResult? Function( BracketRedoRequested value)?  redoRequested,TResult? Function( BracketReplayRequested value)?  replayRequested,TResult? Function( BracketReplayStepAdvanced value)?  replayStepAdvanced,TResult? Function( BracketReplayCancelled value)?  replayCancelled,TResult? Function( BracketHistoryJumpRequested value)?  historyJumpRequested,TResult? Function( BracketEditModeToggled value)?  editModeToggled,TResult? Function( BracketParticipantSlotSwapped value)?  participantSlotSwapped,TResult? Function( BracketParticipantDetailsUpdated value)?  participantDetailsUpdated,TResult? Function( BracketSaveRequested value)?  saveRequested,TResult? Function( BracketSaveOutcomeReceived value)?  saveOutcomeReceived,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( BracketGenerateRequested value)?  generateRequested,TResult? Function( BracketRegenerateRequested value)?  regenerateRequested,TResult? Function( BracketLoadFromSnapshotRequested value)?  loadFromSnapshotRequested,TResult? Function( BracketMatchResultRecorded value)?  matchResultRecorded,TResult? Function( BracketErrorDismissed value)?  errorDismissed,TResult? Function( BracketUndoRequested value)?  undoRequested,TResult? Function( BracketRedoRequested value)?  redoRequested,TResult? Function( BracketReplayRequested value)?  replayRequested,TResult? Function( BracketReplayStepAdvanced value)?  replayStepAdvanced,TResult? Function( BracketReplayCancelled value)?  replayCancelled,TResult? Function( BracketHistoryJumpRequested value)?  historyJumpRequested,TResult? Function( BracketEditModeToggled value)?  editModeToggled,TResult? Function( BracketParticipantSlotSwapped value)?  participantSlotSwapped,TResult? Function( BracketParticipantDetailsUpdated value)?  participantDetailsUpdated,TResult? Function( BracketSaveRequested value)?  saveRequested,}){
 final _that = this;
 switch (_that) {
 case BracketGenerateRequested() when generateRequested != null:
@@ -143,8 +141,7 @@ return historyJumpRequested(_that);case BracketEditModeToggled() when editModeTo
 return editModeToggled(_that);case BracketParticipantSlotSwapped() when participantSlotSwapped != null:
 return participantSlotSwapped(_that);case BracketParticipantDetailsUpdated() when participantDetailsUpdated != null:
 return participantDetailsUpdated(_that);case BracketSaveRequested() when saveRequested != null:
-return saveRequested(_that);case BracketSaveOutcomeReceived() when saveOutcomeReceived != null:
-return saveOutcomeReceived(_that);case _:
+return saveRequested(_that);case _:
   return null;
 
 }
@@ -161,7 +158,7 @@ return saveOutcomeReceived(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( List<ParticipantEntity> participants,  BracketFormat bracketFormat,  bool dojangSeparation,  bool includeThirdPlaceMatch)?  generateRequested,TResult Function()?  regenerateRequested,TResult Function( BracketSnapshot snapshot)?  loadFromSnapshotRequested,TResult Function( String matchId,  String winnerId,  MatchResultType resultType,  int? blueScore,  int? redScore)?  matchResultRecorded,TResult Function()?  errorDismissed,TResult Function()?  undoRequested,TResult Function()?  redoRequested,TResult Function()?  replayRequested,TResult Function()?  replayStepAdvanced,TResult Function()?  replayCancelled,TResult Function( int targetHistoryIndex)?  historyJumpRequested,TResult Function()?  editModeToggled,TResult Function( String sourceMatchId,  String sourceSlotPosition,  String targetMatchId,  String targetSlotPosition)?  participantSlotSwapped,TResult Function( String participantId,  String updatedFullName,  String? updatedRegistrationId)?  participantDetailsUpdated,TResult Function()?  saveRequested,TResult Function( bool isSuccess)?  saveOutcomeReceived,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( List<ParticipantEntity> participants,  BracketFormat bracketFormat,  bool dojangSeparation,  bool includeThirdPlaceMatch)?  generateRequested,TResult Function()?  regenerateRequested,TResult Function( BracketSnapshot snapshot)?  loadFromSnapshotRequested,TResult Function( String matchId,  String winnerId,  MatchResultType resultType,  int? blueScore,  int? redScore)?  matchResultRecorded,TResult Function()?  errorDismissed,TResult Function()?  undoRequested,TResult Function()?  redoRequested,TResult Function()?  replayRequested,TResult Function()?  replayStepAdvanced,TResult Function()?  replayCancelled,TResult Function( int targetHistoryIndex)?  historyJumpRequested,TResult Function()?  editModeToggled,TResult Function( String sourceMatchId,  String sourceSlotPosition,  String targetMatchId,  String targetSlotPosition)?  participantSlotSwapped,TResult Function( String participantId,  String updatedFullName,  String? updatedRegistrationId)?  participantDetailsUpdated,TResult Function()?  saveRequested,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case BracketGenerateRequested() when generateRequested != null:
 return generateRequested(_that.participants,_that.bracketFormat,_that.dojangSeparation,_that.includeThirdPlaceMatch);case BracketRegenerateRequested() when regenerateRequested != null:
@@ -178,8 +175,7 @@ return historyJumpRequested(_that.targetHistoryIndex);case BracketEditModeToggle
 return editModeToggled();case BracketParticipantSlotSwapped() when participantSlotSwapped != null:
 return participantSlotSwapped(_that.sourceMatchId,_that.sourceSlotPosition,_that.targetMatchId,_that.targetSlotPosition);case BracketParticipantDetailsUpdated() when participantDetailsUpdated != null:
 return participantDetailsUpdated(_that.participantId,_that.updatedFullName,_that.updatedRegistrationId);case BracketSaveRequested() when saveRequested != null:
-return saveRequested();case BracketSaveOutcomeReceived() when saveOutcomeReceived != null:
-return saveOutcomeReceived(_that.isSuccess);case _:
+return saveRequested();case _:
   return orElse();
 
 }
@@ -197,7 +193,7 @@ return saveOutcomeReceived(_that.isSuccess);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( List<ParticipantEntity> participants,  BracketFormat bracketFormat,  bool dojangSeparation,  bool includeThirdPlaceMatch)  generateRequested,required TResult Function()  regenerateRequested,required TResult Function( BracketSnapshot snapshot)  loadFromSnapshotRequested,required TResult Function( String matchId,  String winnerId,  MatchResultType resultType,  int? blueScore,  int? redScore)  matchResultRecorded,required TResult Function()  errorDismissed,required TResult Function()  undoRequested,required TResult Function()  redoRequested,required TResult Function()  replayRequested,required TResult Function()  replayStepAdvanced,required TResult Function()  replayCancelled,required TResult Function( int targetHistoryIndex)  historyJumpRequested,required TResult Function()  editModeToggled,required TResult Function( String sourceMatchId,  String sourceSlotPosition,  String targetMatchId,  String targetSlotPosition)  participantSlotSwapped,required TResult Function( String participantId,  String updatedFullName,  String? updatedRegistrationId)  participantDetailsUpdated,required TResult Function()  saveRequested,required TResult Function( bool isSuccess)  saveOutcomeReceived,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( List<ParticipantEntity> participants,  BracketFormat bracketFormat,  bool dojangSeparation,  bool includeThirdPlaceMatch)  generateRequested,required TResult Function()  regenerateRequested,required TResult Function( BracketSnapshot snapshot)  loadFromSnapshotRequested,required TResult Function( String matchId,  String winnerId,  MatchResultType resultType,  int? blueScore,  int? redScore)  matchResultRecorded,required TResult Function()  errorDismissed,required TResult Function()  undoRequested,required TResult Function()  redoRequested,required TResult Function()  replayRequested,required TResult Function()  replayStepAdvanced,required TResult Function()  replayCancelled,required TResult Function( int targetHistoryIndex)  historyJumpRequested,required TResult Function()  editModeToggled,required TResult Function( String sourceMatchId,  String sourceSlotPosition,  String targetMatchId,  String targetSlotPosition)  participantSlotSwapped,required TResult Function( String participantId,  String updatedFullName,  String? updatedRegistrationId)  participantDetailsUpdated,required TResult Function()  saveRequested,}) {final _that = this;
 switch (_that) {
 case BracketGenerateRequested():
 return generateRequested(_that.participants,_that.bracketFormat,_that.dojangSeparation,_that.includeThirdPlaceMatch);case BracketRegenerateRequested():
@@ -214,8 +210,7 @@ return historyJumpRequested(_that.targetHistoryIndex);case BracketEditModeToggle
 return editModeToggled();case BracketParticipantSlotSwapped():
 return participantSlotSwapped(_that.sourceMatchId,_that.sourceSlotPosition,_that.targetMatchId,_that.targetSlotPosition);case BracketParticipantDetailsUpdated():
 return participantDetailsUpdated(_that.participantId,_that.updatedFullName,_that.updatedRegistrationId);case BracketSaveRequested():
-return saveRequested();case BracketSaveOutcomeReceived():
-return saveOutcomeReceived(_that.isSuccess);}
+return saveRequested();}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -229,7 +224,7 @@ return saveOutcomeReceived(_that.isSuccess);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( List<ParticipantEntity> participants,  BracketFormat bracketFormat,  bool dojangSeparation,  bool includeThirdPlaceMatch)?  generateRequested,TResult? Function()?  regenerateRequested,TResult? Function( BracketSnapshot snapshot)?  loadFromSnapshotRequested,TResult? Function( String matchId,  String winnerId,  MatchResultType resultType,  int? blueScore,  int? redScore)?  matchResultRecorded,TResult? Function()?  errorDismissed,TResult? Function()?  undoRequested,TResult? Function()?  redoRequested,TResult? Function()?  replayRequested,TResult? Function()?  replayStepAdvanced,TResult? Function()?  replayCancelled,TResult? Function( int targetHistoryIndex)?  historyJumpRequested,TResult? Function()?  editModeToggled,TResult? Function( String sourceMatchId,  String sourceSlotPosition,  String targetMatchId,  String targetSlotPosition)?  participantSlotSwapped,TResult? Function( String participantId,  String updatedFullName,  String? updatedRegistrationId)?  participantDetailsUpdated,TResult? Function()?  saveRequested,TResult? Function( bool isSuccess)?  saveOutcomeReceived,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( List<ParticipantEntity> participants,  BracketFormat bracketFormat,  bool dojangSeparation,  bool includeThirdPlaceMatch)?  generateRequested,TResult? Function()?  regenerateRequested,TResult? Function( BracketSnapshot snapshot)?  loadFromSnapshotRequested,TResult? Function( String matchId,  String winnerId,  MatchResultType resultType,  int? blueScore,  int? redScore)?  matchResultRecorded,TResult? Function()?  errorDismissed,TResult? Function()?  undoRequested,TResult? Function()?  redoRequested,TResult? Function()?  replayRequested,TResult? Function()?  replayStepAdvanced,TResult? Function()?  replayCancelled,TResult? Function( int targetHistoryIndex)?  historyJumpRequested,TResult? Function()?  editModeToggled,TResult? Function( String sourceMatchId,  String sourceSlotPosition,  String targetMatchId,  String targetSlotPosition)?  participantSlotSwapped,TResult? Function( String participantId,  String updatedFullName,  String? updatedRegistrationId)?  participantDetailsUpdated,TResult? Function()?  saveRequested,}) {final _that = this;
 switch (_that) {
 case BracketGenerateRequested() when generateRequested != null:
 return generateRequested(_that.participants,_that.bracketFormat,_that.dojangSeparation,_that.includeThirdPlaceMatch);case BracketRegenerateRequested() when regenerateRequested != null:
@@ -246,8 +241,7 @@ return historyJumpRequested(_that.targetHistoryIndex);case BracketEditModeToggle
 return editModeToggled();case BracketParticipantSlotSwapped() when participantSlotSwapped != null:
 return participantSlotSwapped(_that.sourceMatchId,_that.sourceSlotPosition,_that.targetMatchId,_that.targetSlotPosition);case BracketParticipantDetailsUpdated() when participantDetailsUpdated != null:
 return participantDetailsUpdated(_that.participantId,_that.updatedFullName,_that.updatedRegistrationId);case BracketSaveRequested() when saveRequested != null:
-return saveRequested();case BracketSaveOutcomeReceived() when saveOutcomeReceived != null:
-return saveOutcomeReceived(_that.isSuccess);case _:
+return saveRequested();case _:
   return null;
 
 }
@@ -979,71 +973,5 @@ String toString() {
 
 
 
-
-/// @nodoc
-
-
-class BracketSaveOutcomeReceived implements BracketEvent {
-  const BracketSaveOutcomeReceived({required this.isSuccess});
-  
-
- final  bool isSuccess;
-
-/// Create a copy of BracketEvent
-/// with the given fields replaced by the non-null parameter values.
-@JsonKey(includeFromJson: false, includeToJson: false)
-@pragma('vm:prefer-inline')
-$BracketSaveOutcomeReceivedCopyWith<BracketSaveOutcomeReceived> get copyWith => _$BracketSaveOutcomeReceivedCopyWithImpl<BracketSaveOutcomeReceived>(this, _$identity);
-
-
-
-@override
-bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is BracketSaveOutcomeReceived&&(identical(other.isSuccess, isSuccess) || other.isSuccess == isSuccess));
-}
-
-
-@override
-int get hashCode => Object.hash(runtimeType,isSuccess);
-
-@override
-String toString() {
-  return 'BracketEvent.saveOutcomeReceived(isSuccess: $isSuccess)';
-}
-
-
-}
-
-/// @nodoc
-abstract mixin class $BracketSaveOutcomeReceivedCopyWith<$Res> implements $BracketEventCopyWith<$Res> {
-  factory $BracketSaveOutcomeReceivedCopyWith(BracketSaveOutcomeReceived value, $Res Function(BracketSaveOutcomeReceived) _then) = _$BracketSaveOutcomeReceivedCopyWithImpl;
-@useResult
-$Res call({
- bool isSuccess
-});
-
-
-
-
-}
-/// @nodoc
-class _$BracketSaveOutcomeReceivedCopyWithImpl<$Res>
-    implements $BracketSaveOutcomeReceivedCopyWith<$Res> {
-  _$BracketSaveOutcomeReceivedCopyWithImpl(this._self, this._then);
-
-  final BracketSaveOutcomeReceived _self;
-  final $Res Function(BracketSaveOutcomeReceived) _then;
-
-/// Create a copy of BracketEvent
-/// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? isSuccess = null,}) {
-  return _then(BracketSaveOutcomeReceived(
-isSuccess: null == isSuccess ? _self.isSuccess : isSuccess // ignore: cast_nullable_to_non_nullable
-as bool,
-  ));
-}
-
-
-}
 
 // dart format on

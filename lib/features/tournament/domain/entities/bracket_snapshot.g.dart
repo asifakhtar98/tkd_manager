@@ -27,6 +27,13 @@ _BracketSnapshot _$BracketSnapshotFromJson(Map<String, dynamic> json) =>
           .toList(),
       result: BracketResult.fromJson(json['result'] as Map<String, dynamic>),
       updatedAt: DateTime.parse(json['updatedAt'] as String),
+      actionHistory:
+          (json['actionHistory'] as List<dynamic>?)
+              ?.map(
+                (e) => BracketHistoryEntry.fromJson(e as Map<String, dynamic>),
+              )
+              .toList() ??
+          const [],
     );
 
 Map<String, dynamic> _$BracketSnapshotToJson(_BracketSnapshot instance) =>
@@ -44,6 +51,7 @@ Map<String, dynamic> _$BracketSnapshotToJson(_BracketSnapshot instance) =>
       'participants': instance.participants.map((e) => e.toJson()).toList(),
       'result': instance.result.toJson(),
       'updatedAt': instance.updatedAt.toIso8601String(),
+      'actionHistory': instance.actionHistory.map((e) => e.toJson()).toList(),
     };
 
 const _$BracketFormatEnumMap = {

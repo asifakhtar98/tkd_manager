@@ -47,11 +47,18 @@ sealed class BracketState with _$BracketState {
     /// name/ID edits were applied. Used as the baseline for undo.
     List<ParticipantEntity>? initialParticipants,
 
-    /// True when saving bracket to DB
+    /// True when saving bracket to DB.
     @Default(false) bool isSaving,
 
-    /// True if there are unsaved changes
+    /// True if there are unsaved changes.
     @Default(false) bool hasUnsavedChanges,
+
+    /// Timestamp of the last successful save to DB.
+    DateTime? lastSaveTimestamp,
+
+    /// Error message from the most recent failed save attempt.
+    /// Cleared on the next successful save.
+    String? saveError,
   }) = BracketLoadSuccess;
   const factory BracketState.failure(String message) = BracketFailure;
 }

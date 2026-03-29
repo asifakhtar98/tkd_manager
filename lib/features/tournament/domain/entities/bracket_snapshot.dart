@@ -46,6 +46,12 @@ abstract class BracketSnapshot with _$BracketSnapshot {
 
     /// Last update timestamp.
     required DateTime updatedAt,
+
+    /// Persisted undo/redo history entries.
+    ///
+    /// Stored as JSONB in the `action_history` column so the full undo/redo
+    /// stack survives page navigation and browser reloads.
+    @Default([]) List<BracketHistoryEntry> actionHistory,
   }) = _BracketSnapshot;
 
   factory BracketSnapshot.fromJson(Map<String, dynamic> json) =>

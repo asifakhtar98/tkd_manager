@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
@@ -13,7 +14,10 @@ import 'package:tkd_saas/features/bracket/domain/services/participant_shuffle_se
 import 'package:tkd_saas/features/bracket/domain/services/single_elimination_bracket_generator_service.dart';
 import 'package:tkd_saas/features/bracket/presentation/bloc/bracket_event.dart';
 import 'package:tkd_saas/features/bracket/presentation/bloc/bracket_state.dart';
+import 'package:tkd_saas/features/core/data/demo_data.dart';
 import 'package:tkd_saas/features/participant/domain/entities/participant_entity.dart';
+import 'package:tkd_saas/features/tournament/domain/entities/bracket_snapshot.dart';
+import 'package:tkd_saas/features/tournament/domain/repositories/bracket_snapshot_repository.dart';
 import 'package:uuid/uuid.dart';
 
 export 'bracket_event.dart';
@@ -27,6 +31,7 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
     this._matchProgressionService,
     this._participantShuffleService,
     this._uuid,
+    this._bracketSnapshotRepository,
   ) : super(const BracketState.initial()) {
     on<BracketGenerateRequested>(_handleBracketGenerationRequested);
     on<BracketRegenerateRequested>(_handleBracketRegenerationRequested);
@@ -42,7 +47,6 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
     on<BracketParticipantSlotSwapped>(_handleParticipantSlotSwapped);
     on<BracketParticipantDetailsUpdated>(_handleParticipantDetailsUpdated);
     on<BracketSaveRequested>(_handleBracketSaveRequested);
-    on<BracketSaveOutcomeReceived>(_handleBracketSaveOutcomeReceived);
     on<BracketLoadFromSnapshotRequested>(_handleLoadFromSnapshotRequested);
   }
 
@@ -51,6 +55,12 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
   final MatchProgressionService _matchProgressionService;
   final ParticipantShuffleService _participantShuffleService;
   final Uuid _uuid;
+  final BracketSnapshotRepository _bracketSnapshotRepository;
+
+  /// The snapshot ID and tournament ID of the currently loaded bracket.
+  /// Required for save operations. Set when loading from a snapshot.
+  String? _currentSnapshotId;
+  String? _currentTournamentId;
 
   /// Caches the last generation request so [BracketRegenerateRequested] can
   /// replay it without the UI re-supplying all parameters.
@@ -68,18 +78,18 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
 
   // ── Generation ──────────────────────────────────────────────────────────────
 
-  void _handleBracketGenerationRequested(
+  Future<void> _handleBracketGenerationRequested(
     BracketGenerateRequested event,
     Emitter<BracketState> emit,
-  ) {
+  ) async {
     _cachedGenerationRequest = event;
-    _executeBracketGeneration(event, emit);
+    await _executeBracketGeneration(event, emit);
   }
 
-  void _handleBracketRegenerationRequested(
+  Future<void> _handleBracketRegenerationRequested(
     BracketRegenerateRequested event,
     Emitter<BracketState> emit,
-  ) {
+  ) async {
     final cachedRequest = _cachedGenerationRequest;
     if (cachedRequest == null) return;
     _cancelReplayTimer();
@@ -94,15 +104,15 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
       participants: shuffledParticipants,
     );
     _cachedGenerationRequest = shuffledRequest;
-    _executeBracketGeneration(shuffledRequest, emit);
+    await _executeBracketGeneration(shuffledRequest, emit);
   }
 
   // ── Match result recording (with history push) ─────────────────────────────
 
-  void _handleMatchResultRecorded(
+  Future<void> _handleMatchResultRecorded(
     BracketMatchResultRecorded event,
     Emitter<BracketState> emit,
-  ) {
+  ) async {
     final currentState = state;
     if (currentState is! BracketLoadSuccess) return;
     if (currentState.isReplayInProgress) return; // Block during replay.
@@ -154,6 +164,9 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
           hasUnsavedChanges: true,
         ),
       );
+
+      // Auto-save after match result recording.
+      await _triggerAutoSave(emit);
     } on ArgumentError catch (e) {
       emit(currentState.copyWith(errorMessage: e.message.toString()));
     } catch (e) {
@@ -374,10 +387,10 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
 
   // ── Participant slot swap ─────────────────────────────────────────────────
 
-  void _handleParticipantSlotSwapped(
+  Future<void> _handleParticipantSlotSwapped(
     BracketParticipantSlotSwapped event,
     Emitter<BracketState> emit,
-  ) {
+  ) async {
     final currentState = state;
     if (currentState is! BracketLoadSuccess) return;
     if (!currentState.isEditModeEnabled) return;
@@ -479,6 +492,9 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
           hasUnsavedChanges: true,
         ),
       );
+
+      // Auto-save after participant slot swap.
+      await _triggerAutoSave(emit);
     } on ArgumentError catch (e) {
       emit(currentState.copyWith(errorMessage: e.message.toString()));
     } catch (e) {
@@ -488,10 +504,10 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
 
   // ── Participant details update ────────────────────────────────────────────
 
-  void _handleParticipantDetailsUpdated(
+  Future<void> _handleParticipantDetailsUpdated(
     BracketParticipantDetailsUpdated event,
     Emitter<BracketState> emit,
-  ) {
+  ) async {
     final currentState = state;
     if (currentState is! BracketLoadSuccess) return;
     if (!currentState.isEditModeEnabled) return; // Bug 2: guard edit-mode.
@@ -558,6 +574,9 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
         hasUnsavedChanges: true,
       ),
     );
+
+    // Auto-save after participant detail edits.
+    await _triggerAutoSave(emit);
   }
 
   // ── Error dismiss ──────────────────────────────────────────────────────────
@@ -573,10 +592,10 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
 
   // ── Generation execution ───────────────────────────────────────────────────
 
-  void _executeBracketGeneration(
+  Future<void> _executeBracketGeneration(
     BracketGenerateRequested req,
     Emitter<BracketState> emit,
-  ) {
+  ) async {
     emit(const BracketState.generating());
     try {
       final participantIds = req.participants
@@ -626,6 +645,9 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
           isEditModeEnabled: false,
         ),
       );
+
+      // Auto-save after regeneration so the new draw is immediately persisted.
+      await _triggerAutoSave(emit);
     } on ArgumentError catch (e) {
       emit(BracketState.failure(e.message.toString()));
     } catch (e) {
@@ -637,16 +659,47 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
     BracketLoadFromSnapshotRequested event,
     Emitter<BracketState> emit,
   ) {
+    // Cache snapshot metadata for subsequent save operations.
+    _currentSnapshotId = event.snapshot.id;
+    _currentTournamentId = event.snapshot.tournamentId;
+
+    // Reconstruct the cached generation request from the snapshot so that
+    // BracketRegenerateRequested can replay it without the UI re-supplying
+    // all parameters. Without this, regenerate silently no-ops.
+    _cachedGenerationRequest = BracketGenerateRequested(
+      participants: event.snapshot.participants,
+      bracketFormat: event.snapshot.format,
+      dojangSeparation: event.snapshot.dojangSeparation,
+      includeThirdPlaceMatch: event.snapshot.includeThirdPlaceMatch,
+    );
+
+    final restoredActionHistory = event.snapshot.actionHistory;
+    final hasRestoredHistory = restoredActionHistory.isNotEmpty;
+
+    // When restoring from a snapshot that has persisted action history,
+    // the "current" result/participants are the snapshot at the latest
+    // history pointer (i.e. the last entry). The initial result is always
+    // the snapshot's result field (the generation baseline).
+    final restoredResult = hasRestoredHistory
+        ? restoredActionHistory.last.resultSnapshot
+        : event.snapshot.result;
+    final restoredParticipants = hasRestoredHistory
+        ? restoredActionHistory.last.participantsSnapshot
+        : event.snapshot.participants;
+    final restoredHistoryPointer = hasRestoredHistory
+        ? restoredActionHistory.length - 1
+        : -1;
+
     emit(
       BracketState.loadSuccess(
-        result: event.snapshot.result,
-        participants: event.snapshot.participants,
+        result: restoredResult,
+        participants: restoredParticipants,
         format: event.snapshot.format,
         includeThirdPlaceMatch: event.snapshot.includeThirdPlaceMatch,
         initialResult: event.snapshot.result,
         initialParticipants: event.snapshot.participants,
-        actionHistory: [],
-        historyPointer: -1,
+        actionHistory: restoredActionHistory,
+        historyPointer: restoredHistoryPointer,
         isReplayInProgress: false,
         isEditModeEnabled: false,
         isSaving: false,
@@ -849,37 +902,97 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
 
   // ── Save Requested ──────────────────────────────────────────────────────────
 
-  void _handleBracketSaveRequested(
+  Future<void> _handleBracketSaveRequested(
     BracketSaveRequested event,
     Emitter<BracketState> emit,
-  ) {
+  ) async {
     if (state is! BracketLoadSuccess) return;
-
-    // Set isSaving to true to show loading indicator in UI.
-    // Wait for the TournamentBloc to finish before clearing hasUnsavedChanges.
-    emit((state as BracketLoadSuccess).copyWith(isSaving: true));
+    await _executeSave(emit);
   }
 
-  void _handleBracketSaveOutcomeReceived(
-    BracketSaveOutcomeReceived event,
-    Emitter<BracketState> emit,
-  ) {
-    if (state is! BracketLoadSuccess) return;
+  // ── Consolidated Save Execution ────────────────────────────────────────────
 
-    if (event.isSuccess) {
+  /// Performs the actual snapshot update to the database.
+  ///
+  /// Builds a [BracketSnapshot] from the current BLoC state, including
+  /// persisted [actionHistory], then delegates to [BracketSnapshotRepository].
+  /// For demo tournament snapshots, saves are kept in-memory only.
+  Future<void> _executeSave(Emitter<BracketState> emit) async {
+    final currentState = state;
+    if (currentState is! BracketLoadSuccess) return;
+    if (_currentSnapshotId == null || _currentTournamentId == null) {
+      log('BracketBloc: Cannot save — snapshot metadata not set.');
+      return;
+    }
+
+    // Skip DB persistence for demo tournament data.
+    if (_currentTournamentId == DemoData.demoTournament.id) {
       emit(
-        (state as BracketLoadSuccess).copyWith(
+        currentState.copyWith(
           isSaving: false,
           hasUnsavedChanges: false,
+          lastSaveTimestamp: DateTime.now(),
+          saveError: null,
         ),
       );
-    } else {
-      emit(
-        (state as BracketLoadSuccess).copyWith(
-          isSaving: false,
-          // hasUnsavedChanges remains true because the save failed
-        ),
-      );
+      return;
     }
+
+    emit(currentState.copyWith(isSaving: true, saveError: null));
+
+    final snapshotToSave = BracketSnapshot(
+      id: _currentSnapshotId!,
+      userId: '', // Will be stripped by repository before update.
+      tournamentId: _currentTournamentId!,
+      label: '', // Not updated during bracket editing.
+      format: currentState.format,
+      participantCount: currentState.participants.length,
+      includeThirdPlaceMatch: currentState.includeThirdPlaceMatch,
+      dojangSeparation: false, // Preserved from original snapshot.
+      generatedAt: DateTime.now(), // Will be stripped by repository.
+      participants: currentState.participants,
+      result: currentState.result,
+      updatedAt: DateTime.now(),
+      actionHistory: currentState.actionHistory,
+    );
+
+    final saveResult = await _bracketSnapshotRepository.updateBracketSnapshot(
+      snapshotToSave,
+    );
+
+    // Re-check state after async gap — the bloc might have been closed or
+    // state could have transitioned away from BracketLoadSuccess.
+    if (state is! BracketLoadSuccess) return;
+    final postAwaitState = state as BracketLoadSuccess;
+
+    saveResult.fold(
+      (failure) {
+        log('BracketBloc: Save failed — ${failure.message}');
+        emit(
+          postAwaitState.copyWith(
+            isSaving: false,
+            saveError: failure.message,
+          ),
+        );
+      },
+      (persistedSnapshot) {
+        emit(
+          postAwaitState.copyWith(
+            isSaving: false,
+            hasUnsavedChanges: false,
+            lastSaveTimestamp: DateTime.now(),
+            saveError: null,
+          ),
+        );
+      },
+    );
+  }
+
+  /// Triggers an auto-save for the current bracket state.
+  ///
+  /// Called after major mutation events (match results, slot swaps,
+  /// participant edits). Fire-and-forget — does not block the UI.
+  Future<void> _triggerAutoSave(Emitter<BracketState> emit) async {
+    await _executeSave(emit);
   }
 }
