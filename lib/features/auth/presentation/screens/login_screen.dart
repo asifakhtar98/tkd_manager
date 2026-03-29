@@ -8,6 +8,7 @@ import 'package:tkd_saas/features/auth/presentation/widgets/auth_branding_header
 import 'package:tkd_saas/features/auth/presentation/widgets/auth_submit_button.dart';
 import 'package:tkd_saas/features/auth/presentation/widgets/password_text_form_field.dart';
 import 'package:tkd_saas/core/config/debug_config.dart';
+import 'package:extended_image/extended_image.dart';
 
 /// Authentication mode for the login screen.
 enum _AuthMode { signIn, signUp, forgotPassword }
@@ -130,9 +131,12 @@ class _LoginScreenState extends State<LoginScreen> {
 
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           image: DecorationImage(
-            image: NetworkImage(AppConfig.authBackgroundImage),
+            image: ExtendedNetworkImageProvider(
+              AppConfig.authBackgroundImage,
+              cache: true,
+            ),
             fit: BoxFit.cover,
           ),
         ),

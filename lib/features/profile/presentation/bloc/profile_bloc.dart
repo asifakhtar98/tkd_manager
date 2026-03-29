@@ -13,10 +13,9 @@ export 'profile_state.dart';
 /// Not to be confused with [AuthenticationBloc] which handles session lifecycles.
 @injectable
 class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
-  ProfileBloc({
-    required AuthenticationRepository authenticationRepository,
-  })  : _authenticationRepository = authenticationRepository,
-        super(const ProfileState.initial()) {
+  ProfileBloc({required AuthenticationRepository authenticationRepository})
+    : _authenticationRepository = authenticationRepository,
+      super(const ProfileState.initial()) {
     on<ProfileUpdateOrganizationRequested>(_onUpdateOrganizationRequested);
   }
 

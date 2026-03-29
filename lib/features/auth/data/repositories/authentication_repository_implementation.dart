@@ -152,7 +152,7 @@ class AuthenticationRepositoryImplementation
           AuthenticationFailure('Session expired. Please sign in again.'),
         );
       }
-      
+
       final Map<String, dynamic> metadata = {};
       if (organizationName != null) {
         metadata['display_name'] = organizationName;
@@ -168,7 +168,9 @@ class AuthenticationRepositoryImplementation
       final User? user = response.user;
       if (user == null) {
         return const Left(
-          AuthenticationFailure('Failed to update profile. User object returned null.'),
+          AuthenticationFailure(
+            'Failed to update profile. User object returned null.',
+          ),
         );
       }
       return Right(user);

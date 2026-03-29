@@ -14,7 +14,7 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
   final _formKey = GlobalKey<FormState>();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  
+
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
 
@@ -56,8 +56,9 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
           authenticated: (_) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                  content: Text('Password updated successfully.'),
-                  backgroundColor: Colors.green),
+                content: Text('Password updated successfully.'),
+                backgroundColor: Colors.green,
+              ),
             );
             if (Navigator.of(context).canPop()) {
               Navigator.of(context).pop();
@@ -93,9 +94,11 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
                     border: const OutlineInputBorder(),
                     prefixIcon: const Icon(Icons.lock_outline),
                     suffixIcon: IconButton(
-                      icon: Icon(_obscurePassword
-                          ? Icons.visibility
-                          : Icons.visibility_off),
+                      icon: Icon(
+                        _obscurePassword
+                            ? Icons.visibility
+                            : Icons.visibility_off,
+                      ),
                       onPressed: () {
                         setState(() {
                           _obscurePassword = !_obscurePassword;
@@ -120,9 +123,11 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
                     border: const OutlineInputBorder(),
                     prefixIcon: const Icon(Icons.lock_outline),
                     suffixIcon: IconButton(
-                      icon: Icon(_obscureConfirmPassword
-                          ? Icons.visibility
-                          : Icons.visibility_off),
+                      icon: Icon(
+                        _obscureConfirmPassword
+                            ? Icons.visibility
+                            : Icons.visibility_off,
+                      ),
                       onPressed: () {
                         setState(() {
                           _obscureConfirmPassword = !_obscureConfirmPassword;

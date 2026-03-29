@@ -9,6 +9,7 @@ import '../bloc/activation_status_bloc.dart';
 import '../bloc/activation_status_event.dart';
 import '../bloc/activation_status_state.dart';
 import '../../domain/entities/activation_status.dart';
+import 'package:extended_image/extended_image.dart';
 
 class ActivateSoftwareScreen extends StatelessWidget {
   const ActivateSoftwareScreen({super.key});
@@ -158,24 +159,38 @@ class _QrCodeSection extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: Colors.grey.shade300),
               ),
-              child: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.qr_code_2,
-                      size: 80,
-                      color: Colors.grey.shade500,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'QR Code Placeholder',
-                      style: TextStyle(
-                        color: Colors.grey.shade600,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: ExtendedImage.network(
+                  'https://lldlunqzkltclpfzpjxh.supabase.co/storage/v1/object/public/assets/sa_enterprise_qr_52463_.png',
+                  fit: BoxFit.cover,
+                  cache: true,
+                  loadStateChanged: (ExtendedImageState state) {
+                    switch (state.extendedImageLoadState) {
+                      case LoadState.loading:
+                        return const Center(child: CircularProgressIndicator());
+                      case LoadState.completed:
+                        return state.completedWidget;
+                      case LoadState.failed:
+                        return Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.error_outline,
+                                size: 48,
+                                color: Colors.grey.shade500,
+                              ),
+                              const SizedBox(height: 8),
+                              const Text(
+                                'Failed to load QR',
+                                style: TextStyle(color: Colors.grey),
+                              ),
+                            ],
+                          ),
+                        );
+                    }
+                  },
                 ),
               ),
             ),
@@ -266,16 +281,46 @@ class _ActivationFormSectionState extends State<_ActivationFormSection> {
                     ),
                     OutlinedButton.icon(
                       icon: const Icon(Icons.add),
-                      label: const Text('15 Days'),
+                      label: const Text('7 Days'),
                       onPressed: () => context.read<ActivationBloc>().add(
-                        const ActivationEvent.addDays(15),
+                        const ActivationEvent.addDays(7),
                       ),
                     ),
                     OutlinedButton.icon(
-                      icon: const Icon(Icons.add),
-                      label: const Text('1 Month (30 Days)'),
+                      icon: const Icon(Icons.check_circle_outline),
+                      label: const Text('15 Days (Save 15%)'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.blue.shade700,
+                        side: BorderSide(color: Colors.blue.shade700),
+                      ),
                       onPressed: () => context.read<ActivationBloc>().add(
-                        const ActivationEvent.addDays(30),
+                        const ActivationEvent.setDays(15),
+                      ),
+                    ),
+                    OutlinedButton.icon(
+                      icon: const Icon(Icons.check_circle_outline),
+                      label: const Text('1 Month (Save 25%)'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.purple.shade700,
+                        side: BorderSide(color: Colors.purple.shade700),
+                      ),
+                      onPressed: () => context.read<ActivationBloc>().add(
+                        const ActivationEvent.setDays(30),
+                      ),
+                    ),
+                    OutlinedButton.icon(
+                      icon: const Icon(Icons.star),
+                      label: const Text('1 Year (Save 50%)'),
+                      style: OutlinedButton.styleFrom(
+                        backgroundColor: Colors.amber.shade50,
+                        foregroundColor: Colors.amber.shade900,
+                        side: BorderSide(
+                          color: Colors.amber.shade700,
+                          width: 2,
+                        ),
+                      ),
+                      onPressed: () => context.read<ActivationBloc>().add(
+                        const ActivationEvent.setDays(365),
                       ),
                     ),
                   ],
@@ -321,7 +366,9 @@ class _ActivationFormSectionState extends State<_ActivationFormSection> {
                       if (state.discountAmount > 0) ...[
                         const SizedBox(height: 8),
                         _CostRow(
-                          label: 'Discount (₹50/day up to ₹450)',
+                          label: state.discountPercentage > 0
+                              ? 'Bulk Discount (${state.discountPercentage}%)'
+                              : 'Daily Discount (₹50/day)',
                           value: '- ₹${state.discountAmount}',
                           valueColor: Colors.green.shade700,
                         ),

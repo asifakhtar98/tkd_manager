@@ -55,11 +55,12 @@ extension ActivationEventPatterns on ActivationEvent {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( _AddDays value)?  addDays,TResult Function( _ClearDays value)?  clearDays,TResult Function( _ContactNameChanged value)?  contactNameChanged,TResult Function( _SubmitRequested value)?  submitRequested,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( _AddDays value)?  addDays,TResult Function( _SetDays value)?  setDays,TResult Function( _ClearDays value)?  clearDays,TResult Function( _ContactNameChanged value)?  contactNameChanged,TResult Function( _SubmitRequested value)?  submitRequested,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
 case _AddDays() when addDays != null:
-return addDays(_that);case _ClearDays() when clearDays != null:
+return addDays(_that);case _SetDays() when setDays != null:
+return setDays(_that);case _ClearDays() when clearDays != null:
 return clearDays(_that);case _ContactNameChanged() when contactNameChanged != null:
 return contactNameChanged(_that);case _SubmitRequested() when submitRequested != null:
 return submitRequested(_that);case _:
@@ -80,11 +81,12 @@ return submitRequested(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( _AddDays value)  addDays,required TResult Function( _ClearDays value)  clearDays,required TResult Function( _ContactNameChanged value)  contactNameChanged,required TResult Function( _SubmitRequested value)  submitRequested,}){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( _AddDays value)  addDays,required TResult Function( _SetDays value)  setDays,required TResult Function( _ClearDays value)  clearDays,required TResult Function( _ContactNameChanged value)  contactNameChanged,required TResult Function( _SubmitRequested value)  submitRequested,}){
 final _that = this;
 switch (_that) {
 case _AddDays():
-return addDays(_that);case _ClearDays():
+return addDays(_that);case _SetDays():
+return setDays(_that);case _ClearDays():
 return clearDays(_that);case _ContactNameChanged():
 return contactNameChanged(_that);case _SubmitRequested():
 return submitRequested(_that);case _:
@@ -104,11 +106,12 @@ return submitRequested(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( _AddDays value)?  addDays,TResult? Function( _ClearDays value)?  clearDays,TResult? Function( _ContactNameChanged value)?  contactNameChanged,TResult? Function( _SubmitRequested value)?  submitRequested,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( _AddDays value)?  addDays,TResult? Function( _SetDays value)?  setDays,TResult? Function( _ClearDays value)?  clearDays,TResult? Function( _ContactNameChanged value)?  contactNameChanged,TResult? Function( _SubmitRequested value)?  submitRequested,}){
 final _that = this;
 switch (_that) {
 case _AddDays() when addDays != null:
-return addDays(_that);case _ClearDays() when clearDays != null:
+return addDays(_that);case _SetDays() when setDays != null:
+return setDays(_that);case _ClearDays() when clearDays != null:
 return clearDays(_that);case _ContactNameChanged() when contactNameChanged != null:
 return contactNameChanged(_that);case _SubmitRequested() when submitRequested != null:
 return submitRequested(_that);case _:
@@ -128,10 +131,11 @@ return submitRequested(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( int days)?  addDays,TResult Function()?  clearDays,TResult Function( String name)?  contactNameChanged,TResult Function()?  submitRequested,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( int days)?  addDays,TResult Function( int days)?  setDays,TResult Function()?  clearDays,TResult Function( String name)?  contactNameChanged,TResult Function()?  submitRequested,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _AddDays() when addDays != null:
-return addDays(_that.days);case _ClearDays() when clearDays != null:
+return addDays(_that.days);case _SetDays() when setDays != null:
+return setDays(_that.days);case _ClearDays() when clearDays != null:
 return clearDays();case _ContactNameChanged() when contactNameChanged != null:
 return contactNameChanged(_that.name);case _SubmitRequested() when submitRequested != null:
 return submitRequested();case _:
@@ -152,10 +156,11 @@ return submitRequested();case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( int days)  addDays,required TResult Function()  clearDays,required TResult Function( String name)  contactNameChanged,required TResult Function()  submitRequested,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( int days)  addDays,required TResult Function( int days)  setDays,required TResult Function()  clearDays,required TResult Function( String name)  contactNameChanged,required TResult Function()  submitRequested,}) {final _that = this;
 switch (_that) {
 case _AddDays():
-return addDays(_that.days);case _ClearDays():
+return addDays(_that.days);case _SetDays():
+return setDays(_that.days);case _ClearDays():
 return clearDays();case _ContactNameChanged():
 return contactNameChanged(_that.name);case _SubmitRequested():
 return submitRequested();case _:
@@ -175,10 +180,11 @@ return submitRequested();case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( int days)?  addDays,TResult? Function()?  clearDays,TResult? Function( String name)?  contactNameChanged,TResult? Function()?  submitRequested,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( int days)?  addDays,TResult? Function( int days)?  setDays,TResult? Function()?  clearDays,TResult? Function( String name)?  contactNameChanged,TResult? Function()?  submitRequested,}) {final _that = this;
 switch (_that) {
 case _AddDays() when addDays != null:
-return addDays(_that.days);case _ClearDays() when clearDays != null:
+return addDays(_that.days);case _SetDays() when setDays != null:
+return setDays(_that.days);case _ClearDays() when clearDays != null:
 return clearDays();case _ContactNameChanged() when contactNameChanged != null:
 return contactNameChanged(_that.name);case _SubmitRequested() when submitRequested != null:
 return submitRequested();case _:
@@ -247,6 +253,72 @@ class __$AddDaysCopyWithImpl<$Res>
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? days = null,}) {
   return _then(_AddDays(
+null == days ? _self.days : days // ignore: cast_nullable_to_non_nullable
+as int,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
+class _SetDays implements ActivationEvent {
+  const _SetDays(this.days);
+  
+
+ final  int days;
+
+/// Create a copy of ActivationEvent
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$SetDaysCopyWith<_SetDays> get copyWith => __$SetDaysCopyWithImpl<_SetDays>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SetDays&&(identical(other.days, days) || other.days == days));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,days);
+
+@override
+String toString() {
+  return 'ActivationEvent.setDays(days: $days)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$SetDaysCopyWith<$Res> implements $ActivationEventCopyWith<$Res> {
+  factory _$SetDaysCopyWith(_SetDays value, $Res Function(_SetDays) _then) = __$SetDaysCopyWithImpl;
+@useResult
+$Res call({
+ int days
+});
+
+
+
+
+}
+/// @nodoc
+class __$SetDaysCopyWithImpl<$Res>
+    implements _$SetDaysCopyWith<$Res> {
+  __$SetDaysCopyWithImpl(this._self, this._then);
+
+  final _SetDays _self;
+  final $Res Function(_SetDays) _then;
+
+/// Create a copy of ActivationEvent
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? days = null,}) {
+  return _then(_SetDays(
 null == days ? _self.days : days // ignore: cast_nullable_to_non_nullable
 as int,
   ));

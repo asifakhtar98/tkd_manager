@@ -119,7 +119,6 @@ class _DashboardScreenBodyState extends State<_DashboardScreenBody> {
     );
   }
 
-
   Widget _buildTournamentSection(BuildContext context, ThemeData theme) {
     return BlocBuilder<TournamentBloc, TournamentState>(
       builder: (context, state) {
@@ -238,7 +237,10 @@ class _ActivationStatusBanner extends StatelessWidget {
 
   Widget _buildActiveBanner(BuildContext context, DateTime expiresAt) {
     final dateFormat = DateFormat('dd MMM yyyy');
-    final daysRemaining = expiresAt.difference(DateTime.now().toUtc()).inDays;
+    final difference = expiresAt.difference(DateTime.now().toUtc());
+    final daysRemaining = difference.isNegative
+        ? 0
+        : (difference.inMinutes / 1440).ceil();
 
     return Card(
       color: Colors.green.shade50,

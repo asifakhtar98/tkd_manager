@@ -12,6 +12,7 @@ class ActivationBloc extends Bloc<ActivationEvent, ActivationState> {
     on<ActivationEvent>((event, emit) async {
       await event.map(
         addDays: (addDaysEvent) async => _onAddDays(addDaysEvent.days, emit),
+        setDays: (setDaysEvent) async => _onSetDays(setDaysEvent.days, emit),
         clearDays: (_) async => _onClearDays(emit),
         contactNameChanged: (contactEvent) async =>
             _onContactNameChanged(contactEvent.name, emit),
@@ -28,6 +29,10 @@ class ActivationBloc extends Bloc<ActivationEvent, ActivationState> {
         isSuccess: false,
       ),
     );
+  }
+
+  void _onSetDays(int days, Emitter<ActivationState> emit) {
+    emit(state.copyWith(requestedDays: days, error: null, isSuccess: false));
   }
 
   void _onClearDays(Emitter<ActivationState> emit) {

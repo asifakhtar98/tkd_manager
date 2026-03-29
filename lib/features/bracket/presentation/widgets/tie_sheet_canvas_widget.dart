@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:math';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'package:extended_image/extended_image.dart';
 import 'package:tkd_saas/features/bracket/domain/entities/bracket_medal_placement_entity.dart';
 import '../../domain/entities/match_entity.dart';
 import '../../../tournament/domain/entities/tournament_entity.dart';
@@ -152,9 +153,12 @@ class _TieSheetCanvasWidgetState extends State<TieSheetCanvasWidget> {
     }
   }
 
-  /// Loads a network image via [NetworkImage] and delivers the [ui.Image].
+  /// Loads a network image via [ExtendedNetworkImageProvider] and delivers the [ui.Image].
   void _loadNetworkImage(String url, void Function(ui.Image) onLoaded) {
-    final imageStream = NetworkImage(url).resolve(ImageConfiguration.empty);
+    final imageStream = ExtendedNetworkImageProvider(
+      url,
+      cache: true,
+    ).resolve(ImageConfiguration.empty);
     late ImageStreamListener listener;
     listener = ImageStreamListener(
       (imageInfo, _) {

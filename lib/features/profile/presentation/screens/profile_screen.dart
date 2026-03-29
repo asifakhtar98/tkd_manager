@@ -27,9 +27,7 @@ class _ProfileView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('My Profile'),
-      ),
+      appBar: AppBar(title: const Text('My Profile')),
       body: BlocConsumer<ProfileBloc, ProfileState>(
         listener: (context, state) {
           state.whenOrNull(
@@ -40,7 +38,10 @@ class _ProfileView extends StatelessWidget {
             },
             updateSuccess: () {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Profile updated successfully'), backgroundColor: Colors.green),
+                const SnackBar(
+                  content: Text('Profile updated successfully'),
+                  backgroundColor: Colors.green,
+                ),
               );
             },
           );
@@ -53,9 +54,7 @@ class _ProfileView extends StatelessWidget {
               if (state is ProfileUpdateInProgress)
                 const ColoredBox(
                   color: Colors.black26,
-                  child: Center(
-                    child: CircularProgressIndicator(),
-                  ),
+                  child: Center(child: CircularProgressIndicator()),
                 ),
             ],
           );
@@ -70,7 +69,9 @@ class _ProfileView extends StatelessWidget {
       child: Align(
         alignment: Alignment.topCenter,
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 600), // Card constraints for desktop
+          constraints: const BoxConstraints(
+            maxWidth: 600,
+          ), // Card constraints for desktop
           child: Column(
             crossAxisAlignment: crossAxisAlignment,
             children: [
@@ -87,7 +88,7 @@ class _ProfileView extends StatelessWidget {
       ),
     );
   }
-  
+
   CrossAxisAlignment get crossAxisAlignment => CrossAxisAlignment.stretch;
 }
 
@@ -99,7 +100,8 @@ class _IdentityCard extends StatelessWidget {
         final user = state.whenOrNull(authenticated: (user) => user);
         if (user == null) return const SizedBox.shrink();
 
-        final orgName = user.userMetadata?['organization_name'] as String? ?? 'Admin';
+        final orgName =
+            user.userMetadata?['organization_name'] as String? ?? 'Admin';
         final initial = orgName.isNotEmpty ? orgName[0].toUpperCase() : 'A';
 
         return Card(
@@ -114,11 +116,18 @@ class _IdentityCard extends StatelessWidget {
               children: [
                 CircleAvatar(
                   radius: 36,
-                  backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                  foregroundColor: Theme.of(context).colorScheme.onPrimaryContainer,
+                  backgroundColor: Theme.of(
+                    context,
+                  ).colorScheme.primaryContainer,
+                  foregroundColor: Theme.of(
+                    context,
+                  ).colorScheme.onPrimaryContainer,
                   child: Text(
                     initial,
-                    style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 24),
@@ -128,16 +137,23 @@ class _IdentityCard extends StatelessWidget {
                     children: [
                       Text(
                         orgName,
-                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                        style: Theme.of(context).textTheme.headlineSmall
+                            ?.copyWith(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         user.email ?? 'No email associated',
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                              color: Colors.grey.shade600,
-                            ),
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'ID: ${user.id}',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Colors.grey.shade500,
+                          fontFamily: 'monospace',
+                        ),
                       ),
                     ],
                   ),
@@ -161,7 +177,7 @@ class _IdentityCard extends StatelessWidget {
 
   void _showEditOrganizationDialog(BuildContext context, String currentName) {
     final controller = TextEditingController(text: currentName);
-    
+
     showDialog(
       context: context,
       builder: (dContext) => AlertDialog(
@@ -184,7 +200,9 @@ class _IdentityCard extends StatelessWidget {
               if (newName != currentName) {
                 // Pass event to BLoC
                 context.read<ProfileBloc>().add(
-                  ProfileUpdateOrganizationRequested(newOrganizationName: newName),
+                  ProfileUpdateOrganizationRequested(
+                    newOrganizationName: newName,
+                  ),
                 );
               }
               Navigator.pop(dContext);
@@ -245,7 +263,9 @@ class _SoftwareStatusCard extends StatelessWidget {
           children: [
             Text(
               'Software Status',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
             BlocBuilder<ActivationStatusBloc, ActivationStatusState>(
@@ -264,7 +284,7 @@ class _SoftwareStatusCard extends StatelessWidget {
                 }
 
                 final activationStatus = state.activationStatus;
-                
+
                 if (activationStatus is ActivationStatusActive) {
                   return const _StatusRow(
                     icon: Icons.check_circle,
@@ -272,12 +292,14 @@ class _SoftwareStatusCard extends StatelessWidget {
                     title: 'Activated',
                     subtitle: 'Full access to all features',
                   );
-                } else if (activationStatus == null || activationStatus is ActivationStatusNotActivated) {
+                } else if (activationStatus == null ||
+                    activationStatus is ActivationStatusNotActivated) {
                   return const _StatusRow(
                     icon: Icons.lock,
                     color: Colors.red,
                     title: 'Inactive',
-                    subtitle: 'Needs activation. Missing payment or grace period expired.',
+                    subtitle:
+                        'Needs activation. Missing payment or grace period expired.',
                   );
                 } else {
                   return const _StatusRow(
@@ -300,7 +322,10 @@ class _SoftwareStatusCard extends StatelessWidget {
                         const Text('Total Tournaments Hosted'),
                         Text(
                           '${state.tournaments.length}',
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
                         ),
                       ],
                     ),
@@ -345,7 +370,10 @@ class _StatusRow extends StatelessWidget {
             children: [
               Text(
                 title,
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
               ),
               Text(
                 subtitle,
@@ -377,9 +405,9 @@ class _DangerZoneCard extends StatelessWidget {
             Text(
               'Danger Zone',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.red.shade900,
-                  ),
+                fontWeight: FontWeight.bold,
+                color: Colors.red.shade900,
+              ),
             ),
             const SizedBox(height: 16),
             SizedBox(
@@ -391,7 +419,9 @@ class _DangerZoneCard extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
                 onPressed: () {
-                  context.read<AuthenticationBloc>().add(const AuthenticationSignOutRequested());
+                  context.read<AuthenticationBloc>().add(
+                    const AuthenticationSignOutRequested(),
+                  );
                   // No need to redirect manually; the AuthenticationBloc's status stream listener
                   // inside the app handles kicking the user back to the login screen.
                 },

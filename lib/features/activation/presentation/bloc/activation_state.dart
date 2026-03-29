@@ -15,20 +15,30 @@ abstract class ActivationState with _$ActivationState {
 
   const ActivationState._();
 
+  int get discountPercentage {
+    if (requestedDays >= 365) return 50;
+    if (requestedDays >= 30) return 25;
+    if (requestedDays >= 15) return 15;
+    return 0;
+  }
+
   int get totalAmount {
     if (requestedDays <= 0) return 0;
-
-    // Base cost is 800 per day
     int baseCost = requestedDays * 800;
-
-    // Discount is 50 * number of days, capped at 450
-    int discount = (50 * requestedDays).clamp(0, 450).toInt();
-
-    return baseCost - discount;
+    return baseCost - discountAmount;
   }
 
   int get discountAmount {
     if (requestedDays <= 0) return 0;
-    return (50 * requestedDays).clamp(0, 450).toInt();
+
+    int baseCost = requestedDays * 800;
+
+    if (requestedDays < 15) {
+      // Direct discount of 50rs per day for less than 15 days
+      return 50 * requestedDays;
+    }
+
+    // Percentage discount for 15 or more days
+    return (baseCost * (discountPercentage / 100)).toInt();
   }
 }

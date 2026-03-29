@@ -12,9 +12,8 @@ sealed class ProfileState with _$ProfileState {
   const factory ProfileState.updateInProgress() = ProfileUpdateInProgress;
 
   /// The most recent profile update attempt failed with [message].
-  const factory ProfileState.updateFailure({
-    required String message,
-  }) = ProfileUpdateFailure;
+  const factory ProfileState.updateFailure({required String message}) =
+      ProfileUpdateFailure;
 
   /// A profile update was completely successful.
   const factory ProfileState.updateSuccess() = ProfileUpdateSuccess;
