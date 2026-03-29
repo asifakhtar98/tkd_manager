@@ -51,6 +51,8 @@ import 'package:tkd_saas/features/bracket/presentation/bloc/bracket_bloc.dart'
     as _i416;
 import 'package:tkd_saas/features/profile/presentation/bloc/profile_bloc.dart'
     as _i882;
+import 'package:tkd_saas/features/setup_bracket/presentation/bloc/setup_bracket_bloc.dart'
+    as _i366;
 import 'package:tkd_saas/features/tournament/data/repositories/supabase_bracket_snapshot_repository.dart'
     as _i900;
 import 'package:tkd_saas/features/tournament/data/repositories/supabase_tournament_repository.dart'
@@ -97,6 +99,10 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i423.ActivationRemoteDataSource>(
       () => _i423.ActivationRemoteDataSourceImpl(gh<_i454.SupabaseClient>()),
+    );
+    gh.factoryParam<_i366.SetupBracketBloc, String, dynamic>(
+      (tournamentId, _) =>
+          _i366.SetupBracketBloc(tournamentId, gh<_i706.Uuid>()),
     );
     gh.lazySingleton<_i791.AuthenticationRepository>(
       () => _i330.AuthenticationRepositoryImplementation(

@@ -2,7 +2,7 @@ import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tkd_saas/features/bracket/data/services/participant_shuffle_service_implementation.dart';
-import 'package:tkd_saas/features/participant/domain/entities/participant_entity.dart';
+import 'package:tkd_saas/features/setup_bracket/domain/entities/participant_entity.dart';
 
 void main() {
   late ParticipantShuffleServiceImplementation shuffleService;

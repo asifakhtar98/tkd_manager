@@ -3,7 +3,7 @@ import 'package:tkd_saas/features/bracket/domain/entities/bracket_edit_action.da
 import 'package:tkd_saas/features/bracket/domain/entities/bracket_generation_result.dart';
 import 'package:tkd_saas/features/bracket/domain/entities/bracket_match_action.dart';
 import 'package:tkd_saas/features/bracket/domain/entities/double_elimination_bracket_generation_result.dart';
-import 'package:tkd_saas/features/participant/domain/entities/participant_entity.dart';
+import 'package:tkd_saas/features/setup_bracket/domain/entities/participant_entity.dart';
 
 part 'bracket_result.freezed.dart';
 part 'bracket_result.g.dart';

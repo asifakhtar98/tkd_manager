@@ -1,4 +1,4 @@
-import 'package:tkd_saas/features/participant/domain/entities/participant_entity.dart';
+import 'package:tkd_saas/features/setup_bracket/domain/entities/participant_entity.dart';
 
 /// Domain service for shuffling participants before bracket generation.
 ///

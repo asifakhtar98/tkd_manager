@@ -3,7 +3,7 @@ import 'package:tkd_saas/features/bracket/data/services/double_elimination_brack
 import 'package:tkd_saas/features/bracket/data/services/single_elimination_bracket_generator_service_implementation.dart';
 import 'package:tkd_saas/features/bracket/domain/entities/bracket_format.dart';
 import 'package:tkd_saas/features/bracket/domain/entities/bracket_result.dart';
-import 'package:tkd_saas/features/participant/domain/entities/participant_entity.dart';
+import 'package:tkd_saas/features/setup_bracket/domain/entities/participant_entity.dart';
 import 'package:tkd_saas/features/tournament/domain/entities/bracket_classification.dart';
 import 'package:tkd_saas/features/tournament/domain/entities/bracket_snapshot.dart';
 import 'package:uuid/uuid.dart';

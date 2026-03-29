@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hydrated_bloc/hydrated_bloc.dart';
 import 'package:tkd_saas/core/di/injection.dart';
 import 'package:tkd_saas/core/router/app_router.dart';
 import 'package:tkd_saas/features/bracket/presentation/widgets/tie_sheet_canvas_widget.dart';
@@ -33,9 +34,20 @@ class MockUser extends Mock implements User {}
 
 class FakeBracketSnapshot extends Fake implements BracketSnapshot {}
 
+class _MockHydratedStorage extends Mock implements Storage {}
+
 void main() {
   setUpAll(() {
     registerFallbackValue(FakeBracketSnapshot());
+
+    final mockHydratedStorage = _MockHydratedStorage();
+    when(() => mockHydratedStorage.write(any(), any())).thenAnswer(
+      (_) async {},
+    );
+    when(() => mockHydratedStorage.read(any())).thenReturn(null);
+    when(() => mockHydratedStorage.delete(any())).thenAnswer((_) async {});
+    when(() => mockHydratedStorage.clear()).thenAnswer((_) async {});
+    HydratedBloc.storage = mockHydratedStorage;
   });
 
   setUp(() async {
@@ -120,7 +132,7 @@ void main() {
   });
 
   /// Navigates from the Dashboard → Demo Tournament Detail → Add Bracket FAB
-  /// → Bracket Setup screen (ParticipantEntryScreen).
+  /// → Bracket Setup screen (SetupBracketScreen).
   Future<void> navigateToSetup(WidgetTester tester) async {
     tester.view.physicalSize = const Size(1920, 1080);
     tester.view.devicePixelRatio = 1.0;

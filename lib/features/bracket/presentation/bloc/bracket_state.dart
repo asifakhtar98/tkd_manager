@@ -1,6 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:tkd_saas/core/router/app_routes.dart';
-import 'package:tkd_saas/features/participant/domain/entities/participant_entity.dart';
+import 'package:tkd_saas/features/setup_bracket/domain/entities/participant_entity.dart';
 
 import 'package:tkd_saas/features/bracket/domain/entities/bracket_result.dart';
 

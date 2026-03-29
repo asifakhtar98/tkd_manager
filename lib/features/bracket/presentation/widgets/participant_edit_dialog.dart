@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:tkd_saas/features/participant/domain/entities/participant_entity.dart';
+import 'package:tkd_saas/features/setup_bracket/domain/entities/participant_entity.dart';
 
 /// Result returned from [ParticipantEditDialog] with updated fields.
 class ParticipantEditResult {

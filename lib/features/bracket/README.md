@@ -21,5 +21,5 @@ Handles bracket generation, seeding algorithms, match tree construction, and bra
 - `lib/core/database/tables/brackets_table.dart` - Drift table (to be created in Story 5.2)
 - `lib/core/database/tables/matches_table.dart` - Drift table (to be created in Story 5.3)
 - `lib/features/division/domain/entities/division_entity.dart` - BracketFormat enum (created in Epic 3)
-- `lib/features/participant/domain/entities/participant_entity.dart` - ParticipantEntity (created in Epic 4)
+- `lib/features/setup_bracket/domain/entities/participant_entity.dart` - ParticipantEntity (created in Epic 4)
 - `lib/core/algorithms/seeding/` - Seeding algorithms (to be created in Story 5.7)

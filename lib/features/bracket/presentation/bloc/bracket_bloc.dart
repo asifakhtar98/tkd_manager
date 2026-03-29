@@ -15,7 +15,7 @@ import 'package:tkd_saas/features/bracket/domain/services/single_elimination_bra
 import 'package:tkd_saas/features/bracket/presentation/bloc/bracket_event.dart';
 import 'package:tkd_saas/features/bracket/presentation/bloc/bracket_state.dart';
 import 'package:tkd_saas/features/core/data/demo_data.dart';
-import 'package:tkd_saas/features/participant/domain/entities/participant_entity.dart';
+import 'package:tkd_saas/features/setup_bracket/domain/entities/participant_entity.dart';
 import 'package:tkd_saas/features/tournament/domain/entities/bracket_snapshot.dart';
 import 'package:tkd_saas/features/tournament/domain/repositories/bracket_snapshot_repository.dart';
 import 'package:uuid/uuid.dart';

@@ -2,7 +2,7 @@ import 'dart:math';
 
 import 'package:injectable/injectable.dart';
 import 'package:tkd_saas/features/bracket/domain/services/participant_shuffle_service.dart';
-import 'package:tkd_saas/features/participant/domain/entities/participant_entity.dart';
+import 'package:tkd_saas/features/setup_bracket/domain/entities/participant_entity.dart';
 
 /// Implementation of [ParticipantShuffleService].
 ///

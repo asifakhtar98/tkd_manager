@@ -8,7 +8,8 @@ import 'package:tkd_saas/features/auth/presentation/screens/password_reset_scree
 import 'package:tkd_saas/features/bracket/presentation/bloc/bracket_bloc.dart';
 import 'package:tkd_saas/features/bracket/presentation/screens/bracket_viewer_screen.dart';
 import 'package:tkd_saas/features/dashboard/presentation/screens/dashboard_screen.dart';
-import 'package:tkd_saas/features/participant/presentation/screens/participant_entry_screen.dart';
+import 'package:tkd_saas/features/setup_bracket/presentation/bloc/setup_bracket_bloc.dart';
+import 'package:tkd_saas/features/setup_bracket/presentation/screens/setup_bracket_screen.dart';
 import 'package:tkd_saas/features/tournament/domain/entities/bracket_snapshot.dart';
 import 'package:tkd_saas/features/tournament/domain/entities/tournament_entity.dart';
 import 'package:tkd_saas/features/tournament/presentation/bloc/tournament_bloc.dart';
@@ -31,7 +32,6 @@ part 'app_routes.g.dart';
 /// Every bracket-related screen, BLoC event, and snapshot references this enum
 /// instead of a raw string, giving compile-time safety and a single source of
 /// truth for display labels.
-// (moved export to top of file)
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Canonical route paths — used by the redirect guard and anywhere else
@@ -191,7 +191,10 @@ class BracketSetupRoute extends GoRouteData with $BracketSetupRoute {
 
   @override
   Widget build(BuildContext context, GoRouterState state) =>
-      ParticipantEntryScreen(tournamentId: tournamentId);
+      BlocProvider<SetupBracketBloc>(
+        create: (_) => getIt<SetupBracketBloc>(param1: tournamentId),
+        child: SetupBracketScreen(tournamentId: tournamentId),
+      );
 }
 
 @immutable

@@ -8,7 +8,7 @@ import 'package:tkd_saas/features/bracket/data/services/match_progression_servic
 import 'package:tkd_saas/features/bracket/domain/entities/match_entity.dart';
 import 'package:tkd_saas/features/bracket/presentation/widgets/tie_sheet_canvas_widget.dart';
 import 'package:tkd_saas/features/bracket/presentation/widgets/tie_sheet_theme_config.dart';
-import 'package:tkd_saas/features/participant/domain/entities/participant_entity.dart';
+import 'package:tkd_saas/features/setup_bracket/domain/entities/participant_entity.dart';
 import 'package:tkd_saas/features/tournament/domain/entities/bracket_classification.dart';
 
 /// Shared constant used across all tie sheet golden tests.

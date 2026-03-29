@@ -1,63 +1,79 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:uuid/uuid.dart';
 import 'package:tkd_saas/core/di/injection.dart';
 import 'package:tkd_saas/core/router/app_routes.dart';
 import 'package:tkd_saas/features/bracket/domain/services/double_elimination_bracket_generator_service.dart';
 import 'package:tkd_saas/features/bracket/domain/services/participant_shuffle_service.dart';
 import 'package:tkd_saas/features/bracket/domain/services/single_elimination_bracket_generator_service.dart';
+import 'package:tkd_saas/features/setup_bracket/domain/entities/participant_entity.dart';
+import 'package:tkd_saas/features/setup_bracket/presentation/bloc/setup_bracket_bloc.dart';
 import 'package:tkd_saas/features/tournament/domain/entities/bracket_classification.dart';
 import 'package:tkd_saas/features/tournament/domain/entities/bracket_snapshot.dart';
-import 'package:tkd_saas/features/participant/domain/entities/participant_entity.dart';
 import 'package:tkd_saas/features/tournament/domain/entities/tournament_entity.dart';
 import 'package:tkd_saas/features/tournament/presentation/bloc/tournament_bloc.dart';
 import 'package:tkd_saas/features/bracket/domain/entities/bracket_result.dart';
 import 'package:tkd_saas/core/utils/app_overlays.dart';
+import 'package:uuid/uuid.dart';
 
-/// "New Bracket" setup screen.
+/// Bracket setup screen — the entry point for configuring and generating
+/// a new bracket for a given tournament.
 ///
-/// The tournament is always pre-selected — users navigate here from
-/// [TournamentDetailScreen]'s "Add Bracket" FAB with a required
-/// [tournamentId]. There is no inline tournament-creation flow.
-class ParticipantEntryScreen extends StatefulWidget {
-  const ParticipantEntryScreen({super.key, required this.tournamentId});
+/// All session state (participants, format, classification, config) is owned by
+/// [SetupBracketBloc], which persists it via [HydratedBloc] so that work is
+/// not lost on accidental navigation or page refresh during a long event.
+///
+/// The screen itself only holds [TextEditingController]s, which are ephemeral
+/// UI concerns not worth persisting.
+class SetupBracketScreen extends StatefulWidget {
+  const SetupBracketScreen({super.key, required this.tournamentId});
 
-  /// The owning tournament — always required.
+  /// The owning tournament — always required and inherited from the route.
   final String tournamentId;
 
   @override
-  State<ParticipantEntryScreen> createState() => _ParticipantEntryScreenState();
+  State<SetupBracketScreen> createState() => _SetupBracketScreenState();
 }
 
-class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
+class _SetupBracketScreenState extends State<SetupBracketScreen> {
   // ── Constants ──────────────────────────────────────────────────────────────
   static const int _maximumFullNameLength = 100;
   static const int _maximumRegistrationIdLength = 100;
   static const int _maximumDojangNameLength = 100;
   static const int _maximumClassificationFieldLength = 100;
-  static const int _minimumParticipantsForBracket = 2;
 
-  // ── Participant roster ─────────────────────────────────────────────────────
-  final List<ParticipantEntity> _participants = [];
+  // ── Generator services ────────────────────────────────────────────────────
   final Uuid _uuid = const Uuid();
 
-  // ── Configuration state ────────────────────────────────────────────────────
-  bool _isDojangSeparationEnabled = true;
-  bool _isThirdPlaceMatchIncluded = false;
-  BracketFormat _selectedBracketFormat = BracketFormat.singleElimination;
-  String? _pendingSnapshotId;
-
-  // ── Bracket-level classification controllers ───────────────────────────────
-  final _bracketAgeCategoryController = TextEditingController();
-  final _bracketGenderController = TextEditingController();
-  final _bracketWeightDivisionController = TextEditingController();
+  // ── Bracket-level classification controllers (ephemeral UI) ───────────────
+  late final TextEditingController _bracketAgeCategoryController;
+  late final TextEditingController _bracketGenderController;
+  late final TextEditingController _bracketWeightDivisionController;
 
   // ── Participant quick-add form ─────────────────────────────────────────────
   final _participantFormKey = GlobalKey<FormState>();
   final _fullNameController = TextEditingController();
   final _registrationIdController = TextEditingController();
   final _dojangController = TextEditingController();
+
+  late final SetupBracketBloc _setupBracketBloc;
+
+  @override
+  void initState() {
+    super.initState();
+    _setupBracketBloc = context.read<SetupBracketBloc>();
+    // Seed controllers from persisted bloc state so they show restored values.
+    final persistedState = _setupBracketBloc.state;
+    _bracketAgeCategoryController = TextEditingController(
+      text: persistedState.bracketAgeCategoryLabel,
+    );
+    _bracketGenderController = TextEditingController(
+      text: persistedState.bracketGenderLabel,
+    );
+    _bracketWeightDivisionController = TextEditingController(
+      text: persistedState.bracketWeightDivisionLabel,
+    );
+  }
 
   @override
   void dispose() {
@@ -72,33 +88,20 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
 
   // ── Helpers ────────────────────────────────────────────────────────────────
 
-  TournamentEntity? _findOwningTournament(TournamentState state) {
-    return state.tournaments
+  TournamentEntity? _findOwningTournament(TournamentState tournamentState) {
+    return tournamentState.tournaments
         .where((tournament) => tournament.id == widget.tournamentId)
         .firstOrNull;
   }
 
-  bool get _hasEnoughParticipantsToGenerate =>
-      _participants.length >= _minimumParticipantsForBracket;
-
-  /// Returns `true` when a participant with the exact same full name (case-
-  /// insensitive) already exists in the roster.
-  bool _isDuplicateParticipantName(String fullName) {
-    final normalizedName = fullName.trim().toLowerCase();
-    return _participants.any((p) => p.fullName.toLowerCase() == normalizedName);
-  }
-
   // ── Actions ────────────────────────────────────────────────────────────────
 
-  void _addParticipantFromFormFields() {
+  void _submitParticipantFromFormFields(SetupBracketState setupState) {
     if (!_participantFormKey.currentState!.validate()) return;
 
     final fullName = _fullNameController.text.trim();
-    final registrationId = _registrationIdController.text.trim();
-    final dojangName = _dojangController.text.trim();
 
-    // Check for duplicates (soft warning — does not block)
-    if (_isDuplicateParticipantName(fullName)) {
+    if (setupState.isDuplicateParticipantName(fullName)) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -110,84 +113,36 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
       );
     }
 
-    setState(() {
-      _participants.add(
-        ParticipantEntity(
-          id: _uuid.v4(),
-          genderId: 'manual_division',
-          fullName: fullName,
-          registrationId: registrationId.isNotEmpty ? registrationId : null,
-          schoolOrDojangName: dojangName.isNotEmpty ? dojangName : null,
-          seedNumber: _participants.length + 1,
-        ),
-      );
-      _fullNameController.clear();
-      _registrationIdController.clear();
-      _dojangController.clear();
-    });
+    _setupBracketBloc.add(
+      SetupBracketEvent.participantAdded(
+        fullName: fullName,
+        registrationId: _registrationIdController.text.trim(),
+        schoolOrDojangName: _dojangController.text.trim(),
+      ),
+    );
+
+    _fullNameController.clear();
+    _registrationIdController.clear();
+    _dojangController.clear();
   }
 
-  void _importParticipantsFromCsvData(String csvData) {
-    if (csvData.trim().isEmpty) return;
-
-    final lines = csvData.trim().split('\n');
-    int importedCount = 0;
-    int skippedCount = 0;
-
-    setState(() {
-      for (final csvLine in lines) {
-        final trimmedLine = csvLine.trim();
-        if (trimmedLine.isEmpty) {
-          skippedCount++;
-          continue;
-        }
-
-        final parts = trimmedLine.split(',');
-        final name = parts.isNotEmpty ? parts[0].trim() : '';
-
-        if (name.isEmpty) {
-          skippedCount++;
-          continue;
-        }
-
-        // CSV column order: Name, RegID, Dojang
-        final registrationId = parts.length > 1 ? parts[1].trim() : '';
-        final dojangName = parts.length > 2 ? parts[2].trim() : '';
-
-        _participants.add(
-          ParticipantEntity(
-            id: _uuid.v4(),
-            genderId: 'manual_division',
-            fullName: name,
-            registrationId: registrationId.isNotEmpty ? registrationId : null,
-            schoolOrDojangName: dojangName.isNotEmpty ? dojangName : null,
-            seedNumber: _participants.length + 1,
-          ),
-        );
-        importedCount++;
-      }
-    });
-
-    if (mounted) {
-      final message = skippedCount > 0
-          ? 'Imported $importedCount participant${importedCount == 1 ? '' : 's'}, '
-                'skipped $skippedCount invalid row${skippedCount == 1 ? '' : 's'}.'
-          : 'Imported $importedCount participant${importedCount == 1 ? '' : 's'}.';
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
-      );
-    }
+  void _dispatchClassificationUpdate() {
+    _setupBracketBloc.add(
+      SetupBracketEvent.classificationUpdated(
+        ageCategoryLabel: _bracketAgeCategoryController.text.trim(),
+        genderLabel: _bracketGenderController.text.trim(),
+        weightDivisionLabel: _bracketWeightDivisionController.text.trim(),
+      ),
+    );
   }
-
-  void _removeParticipant(int index) =>
-      setState(() => _participants.removeAt(index));
 
   Future<void> _handleGenerateBracketRequested(
     BuildContext context,
-    TournamentState state,
+    TournamentState tournamentState,
+    SetupBracketState setupState,
   ) async {
-    final tournament = _findOwningTournament(state);
-    if (tournament == null) {
+    final owningTournament = _findOwningTournament(tournamentState);
+    if (owningTournament == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Tournament not found. Please go back and try again.'),
@@ -196,39 +151,40 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
       return;
     }
 
-    final participants = List<ParticipantEntity>.from(_participants);
+    // Sync classification from controllers to bloc state before generation.
+    _dispatchClassificationUpdate();
+
+    final participants = List<ParticipantEntity>.from(setupState.participants);
     final classification = BracketClassification(
       ageCategoryLabel: _bracketAgeCategoryController.text.trim(),
       genderLabel: _bracketGenderController.text.trim(),
       weightDivisionLabel: _bracketWeightDivisionController.text.trim(),
     );
 
-    // ── Shuffle participants if dojang separation is enabled ──────────
+    // ── Shuffle participants if dojang separation is enabled ──────────────
     final List<ParticipantEntity> orderedParticipants;
-    if (_isDojangSeparationEnabled) {
+    if (setupState.isDojangSeparationEnabled) {
       final shuffleService = getIt<ParticipantShuffleService>();
-      orderedParticipants = shuffleService
-          .shuffleParticipantsForBracketGeneration(
-            participants: participants,
-            dojangSeparation: true,
-          );
+      orderedParticipants = shuffleService.shuffleParticipantsForBracketGeneration(
+        participants: participants,
+        dojangSeparation: true,
+      );
     } else {
       orderedParticipants = participants;
     }
 
-    // ── Generate bracket inline ──────────────────────────────────────
+    // ── Generate bracket ──────────────────────────────────────────────────
     final participantIds = orderedParticipants.map((p) => p.id).toList();
-
     late final BracketResult bracketResult;
     try {
-      switch (_selectedBracketFormat) {
+      switch (setupState.selectedBracketFormat) {
         case BracketFormat.singleElimination:
           final generator = getIt<SingleEliminationBracketGeneratorService>();
           final result = generator.generate(
             genderId: _uuid.v4(),
             participantIds: participantIds,
             bracketId: _uuid.v4(),
-            includeThirdPlaceMatch: _isThirdPlaceMatchIncluded,
+            includeThirdPlaceMatch: setupState.isThirdPlaceMatchIncluded,
           );
           bracketResult = BracketResult.singleElimination(result);
         case BracketFormat.doubleElimination:
@@ -253,20 +209,20 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
       return;
     }
 
-    // ── Create snapshot and persist to TournamentBloc ────────────────
+    // ── Create snapshot and persist to TournamentBloc ─────────────────────
     final snapshotId = _uuid.v4();
-    final thirdPlaceSuffix = _isThirdPlaceMatchIncluded ? ' + 3rd Place' : '';
+    final thirdPlaceSuffix = setupState.isThirdPlaceMatchIncluded ? ' + 3rd Place' : '';
     final snapshot = BracketSnapshot(
       id: snapshotId,
-      userId: tournament.userId,
+      userId: owningTournament.userId,
       tournamentId: widget.tournamentId,
       label:
-          '${_selectedBracketFormat.displayLabel} — '
+          '${setupState.selectedBracketFormat.displayLabel} — '
           '${orderedParticipants.length} Players$thirdPlaceSuffix',
-      format: _selectedBracketFormat,
+      format: setupState.selectedBracketFormat,
       participantCount: orderedParticipants.length,
-      includeThirdPlaceMatch: _isThirdPlaceMatchIncluded,
-      dojangSeparation: _isDojangSeparationEnabled,
+      includeThirdPlaceMatch: setupState.isThirdPlaceMatchIncluded,
+      dojangSeparation: setupState.isDojangSeparationEnabled,
       classification: classification,
       generatedAt: DateTime.now(),
       updatedAt: DateTime.now(),
@@ -276,15 +232,17 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
 
     if (!context.mounted) return;
 
-    setState(() {
-      _pendingSnapshotId = snapshotId;
-    });
+    _setupBracketBloc.add(
+      SetupBracketEvent.bracketGenerationDispatched(
+        pendingSnapshotId: snapshotId,
+      ),
+    );
 
     AppOverlays.showLoading(context, message: 'Generating Bracket...');
 
     context.read<TournamentBloc>().add(
       TournamentBracketSnapshotAdded(
-        tournamentId: tournament.id,
+        tournamentId: owningTournament.id,
         snapshot: snapshot,
       ),
     );
@@ -295,146 +253,168 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<TournamentBloc, TournamentState>(
-      listenWhen: (prev, current) {
-        if (_pendingSnapshotId == null) return false;
-        final wasAdded = current
+      listenWhen: (previousTournamentState, currentTournamentState) {
+        final pendingSnapshotId =
+            context.read<SetupBracketBloc>().state.pendingSnapshotId;
+        if (pendingSnapshotId == null) return false;
+
+        final wasSnapshotAdded = currentTournamentState
             .bracketsFor(widget.tournamentId)
-            .any((s) => s.id == _pendingSnapshotId);
-        if (wasAdded) return true;
-        if (prev.isSaving && !current.isSaving) return true;
+            .any((snapshot) => snapshot.id == pendingSnapshotId);
+        if (wasSnapshotAdded) return true;
+        if (previousTournamentState.isSaving && !currentTournamentState.isSaving) {
+          return true;
+        }
         return false;
       },
-      listener: (context, state) {
-        if (_pendingSnapshotId == null) return;
+      listener: (context, tournamentState) {
+        final setupBracketBloc = context.read<SetupBracketBloc>();
+        final pendingSnapshotId = setupBracketBloc.state.pendingSnapshotId;
+        if (pendingSnapshotId == null) return;
 
-        final wasAdded = state
+        final wasSnapshotAdded = tournamentState
             .bracketsFor(widget.tournamentId)
-            .any((s) => s.id == _pendingSnapshotId);
+            .any((snapshot) => snapshot.id == pendingSnapshotId);
 
-        if (wasAdded) {
-          final idToGo = _pendingSnapshotId!;
-          _pendingSnapshotId = null;
+        if (wasSnapshotAdded) {
+          final snapshotIdToNavigateTo = pendingSnapshotId;
+          setupBracketBloc.add(
+            const SetupBracketEvent.bracketGenerationSucceeded(),
+          );
           AppOverlays.hideLoading(context);
           BracketViewerRoute(
             tournamentId: widget.tournamentId,
-            snapshotId: idToGo,
+            snapshotId: snapshotIdToNavigateTo,
           ).go(context);
-        } else if (!state.isSaving) {
-          setState(() {
-            _pendingSnapshotId = null;
-          });
+        } else if (!tournamentState.isSaving) {
+          setupBracketBloc.add(
+            const SetupBracketEvent.bracketGenerationFailed(),
+          );
           AppOverlays.hideLoading(context);
-          if (state.lastMutationError != null) {
+          if (tournamentState.lastMutationError != null) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Generation failed: ${state.lastMutationError}'),
+                content: Text(
+                  'Generation failed: ${tournamentState.lastMutationError}',
+                ),
                 backgroundColor: Colors.red.shade800,
               ),
             );
           }
         }
       },
-      builder: (context, state) {
-        if (state.isLoading) {
+      builder: (context, tournamentState) {
+        if (tournamentState.isLoading) {
           return const Scaffold(
             body: Center(child: CircularProgressIndicator()),
           );
         }
 
-        final tournament = _findOwningTournament(state);
-        final isGenerating = _pendingSnapshotId != null || state.isSaving;
+        final owningTournament = _findOwningTournament(tournamentState);
 
-        return Scaffold(
-          appBar: AppBar(
-            title: const Text('New Bracket Setup'),
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back),
-              onPressed: () => TournamentDetailRoute(
-                tournamentId: widget.tournamentId,
-              ).go(context),
-            ),
-            actions: [
-              Padding(
-                padding: const EdgeInsets.only(right: 16.0),
-                child: Tooltip(
-                  message: !_hasEnoughParticipantsToGenerate
-                      ? 'Add at least $_minimumParticipantsForBracket players to generate a bracket'
-                      : tournament == null
-                      ? 'Tournament not found'
-                      : 'Generate Bracket',
-                  child: ElevatedButton.icon(
-                    icon: isGenerating
-                        ? const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : const Icon(Icons.bolt),
-                    label: Text(
-                      isGenerating ? 'GENERATING...' : 'GENERATE',
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.grey.shade800,
-                      foregroundColor: Colors.white,
-                      disabledBackgroundColor: Colors.grey.shade300,
-                      disabledForegroundColor: Colors.grey.shade600,
-                    ),
-                    onPressed:
-                        _hasEnoughParticipantsToGenerate &&
-                            tournament != null &&
-                            !isGenerating
-                        ? () => _handleGenerateBracketRequested(context, state)
-                        : null,
-                  ),
+        return BlocBuilder<SetupBracketBloc, SetupBracketState>(
+          builder: (context, setupState) {
+            final bool isGenerating = setupState.isAwaitingBracketGeneration ||
+                tournamentState.isSaving;
+
+            return Scaffold(
+              appBar: AppBar(
+                title: const Text('New Bracket Setup'),
+                leading: IconButton(
+                  icon: const Icon(Icons.arrow_back),
+                  onPressed: () => TournamentDetailRoute(
+                    tournamentId: widget.tournamentId,
+                  ).go(context),
                 ),
-              ),
-            ],
-          ),
-          body: Row(
-            children: [
-              // ── LEFT PANEL: Tournament Info + Config ─────────────────────
-              Expanded(
-                flex: 2,
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildTournamentInfoHeader(tournament),
-                        const SizedBox(height: 24),
-                        _buildBracketDetailsSection(),
-                        const SizedBox(height: 24),
-                        _buildConfigurationSection(),
-                        const SizedBox(height: 24),
-                        _buildQuickAddPlayerSection(),
-                      ],
+                actions: [
+                  Padding(
+                    padding: const EdgeInsets.only(right: 16.0),
+                    child: Tooltip(
+                      message: !setupState.hasEnoughParticipantsToGenerate
+                          ? 'Add at least '
+                                '${SetupBracketState.minimumParticipantsRequiredForGeneration} '
+                                'players to generate a bracket'
+                          : owningTournament == null
+                          ? 'Tournament not found'
+                          : 'Generate Bracket',
+                      child: ElevatedButton.icon(
+                        icon: isGenerating
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Icon(Icons.bolt),
+                        label: Text(
+                          isGenerating ? 'GENERATING...' : 'GENERATE',
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.grey.shade800,
+                          foregroundColor: Colors.white,
+                          disabledBackgroundColor: Colors.grey.shade300,
+                          disabledForegroundColor: Colors.grey.shade600,
+                        ),
+                        onPressed: setupState.hasEnoughParticipantsToGenerate &&
+                                owningTournament != null &&
+                                !isGenerating
+                            ? () => _handleGenerateBracketRequested(
+                                context,
+                                tournamentState,
+                                setupState,
+                              )
+                            : null,
+                      ),
                     ),
                   ),
-                ),
+                ],
               ),
-              // ── RIGHT PANEL: Participant Roster ─────────────────────────
-              Expanded(
-                flex: 3,
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: _buildParticipantRoster(),
-                ),
+              body: Row(
+                children: [
+                  // ── LEFT PANEL: Tournament Info + Configuration ───────────
+                  Expanded(
+                    flex: 2,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: SingleChildScrollView(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildTournamentInfoHeader(owningTournament),
+                            const SizedBox(height: 24),
+                            _buildBracketDetailsSection(setupState),
+                            const SizedBox(height: 24),
+                            _buildConfigurationSection(setupState),
+                            const SizedBox(height: 24),
+                            _buildQuickAddPlayerSection(setupState),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  // ── RIGHT PANEL: Participant Roster ───────────────────────
+                  Expanded(
+                    flex: 3,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: _buildParticipantRoster(setupState),
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            );
+          },
         );
       },
     );
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
+  // ──────────────────────────────────────────────────────────────────────────
   // Tournament info header (read-only)
-  // ─────────────────────────────────────────────────────────────────────────
+  // ──────────────────────────────────────────────────────────────────────────
 
   Widget _buildTournamentInfoHeader(TournamentEntity? tournament) {
     return Column(
@@ -506,11 +486,11 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
     );
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
+  // ──────────────────────────────────────────────────────────────────────────
   // Bracket details section (age category, gender, weight division)
-  // ─────────────────────────────────────────────────────────────────────────
+  // ──────────────────────────────────────────────────────────────────────────
 
-  Widget _buildBracketDetailsSection() {
+  Widget _buildBracketDetailsSection(SetupBracketState setupState) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -530,6 +510,7 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                   decoration: const InputDecoration(labelText: 'Age Category'),
                   maxLength: _maximumClassificationFieldLength,
                   textInputAction: TextInputAction.next,
+                  onChanged: (_) => _dispatchClassificationUpdate(),
                 ),
                 const SizedBox(height: 8),
                 TextField(
@@ -537,6 +518,7 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                   decoration: const InputDecoration(labelText: 'Gender'),
                   maxLength: _maximumClassificationFieldLength,
                   textInputAction: TextInputAction.next,
+                  onChanged: (_) => _dispatchClassificationUpdate(),
                 ),
                 const SizedBox(height: 8),
                 TextField(
@@ -546,6 +528,7 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                   ),
                   maxLength: _maximumClassificationFieldLength,
                   textInputAction: TextInputAction.done,
+                  onChanged: (_) => _dispatchClassificationUpdate(),
                 ),
               ],
             ),
@@ -555,11 +538,11 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
     );
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
+  // ──────────────────────────────────────────────────────────────────────────
   // Configuration section
-  // ─────────────────────────────────────────────────────────────────────────
+  // ──────────────────────────────────────────────────────────────────────────
 
-  Widget _buildConfigurationSection() {
+  Widget _buildConfigurationSection(SetupBracketState setupState) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -575,7 +558,7 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 DropdownButton<BracketFormat>(
-                  value: _selectedBracketFormat,
+                  value: setupState.selectedBracketFormat,
                   isExpanded: true,
                   items: BracketFormat.values
                       .map(
@@ -587,7 +570,11 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                       .toList(),
                   onChanged: (selectedFormat) {
                     if (selectedFormat != null) {
-                      setState(() => _selectedBracketFormat = selectedFormat);
+                      _setupBracketBloc.add(
+                        SetupBracketEvent.bracketFormatChanged(
+                          newFormat: selectedFormat,
+                        ),
+                      );
                     }
                   },
                 ),
@@ -595,17 +582,24 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                 SwitchListTile(
                   title: const Text('Dojang / School Separation'),
                   subtitle: const Text('Auto-distribute teammates'),
-                  value: _isDojangSeparationEnabled,
-                  onChanged: (isEnabled) =>
-                      setState(() => _isDojangSeparationEnabled = isEnabled),
+                  value: setupState.isDojangSeparationEnabled,
+                  onChanged: (isEnabled) => _setupBracketBloc.add(
+                    SetupBracketEvent.dojangSeparationToggled(
+                      isEnabled: isEnabled,
+                    ),
+                  ),
                 ),
-                if (_selectedBracketFormat == BracketFormat.singleElimination)
+                if (setupState.selectedBracketFormat ==
+                    BracketFormat.singleElimination)
                   SwitchListTile(
                     title: const Text('3rd Place Match'),
                     subtitle: const Text('Bronze medal match for semi losers'),
-                    value: _isThirdPlaceMatchIncluded,
-                    onChanged: (isEnabled) =>
-                        setState(() => _isThirdPlaceMatchIncluded = isEnabled),
+                    value: setupState.isThirdPlaceMatchIncluded,
+                    onChanged: (isEnabled) => _setupBracketBloc.add(
+                      SetupBracketEvent.thirdPlaceMatchToggled(
+                        isEnabled: isEnabled,
+                      ),
+                    ),
                   ),
               ],
             ),
@@ -615,13 +609,11 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
     );
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
+  // ──────────────────────────────────────────────────────────────────────────
   // Quick Add Player section
-  //
-  // Field order: Full Name → Registration ID → Dojang / Club
-  // ─────────────────────────────────────────────────────────────────────────
+  // ──────────────────────────────────────────────────────────────────────────
 
-  Widget _buildQuickAddPlayerSection() {
+  Widget _buildQuickAddPlayerSection(SetupBracketState setupState) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -637,7 +629,7 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
               key: _participantFormKey,
               child: Column(
                 children: [
-                  // ── Full Name (required) ────────────────────────────────
+                  // ── Full Name (required) ──────────────────────────────────
                   TextFormField(
                     controller: _fullNameController,
                     decoration: const InputDecoration(
@@ -650,11 +642,12 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                     ],
                     textInputAction: TextInputAction.next,
                     validator: _validateFullName,
-                    onFieldSubmitted: (_) => _addParticipantFromFormFields(),
+                    onFieldSubmitted: (_) =>
+                        _submitParticipantFromFormFields(setupState),
                   ),
                   const SizedBox(height: 8),
 
-                  // ── Registration ID (optional) ──────────────────────────
+                  // ── Registration ID (optional) ────────────────────────────
                   TextFormField(
                     controller: _registrationIdController,
                     decoration: const InputDecoration(
@@ -667,11 +660,12 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                       ),
                     ],
                     textInputAction: TextInputAction.next,
-                    onFieldSubmitted: (_) => _addParticipantFromFormFields(),
+                    onFieldSubmitted: (_) =>
+                        _submitParticipantFromFormFields(setupState),
                   ),
                   const SizedBox(height: 8),
 
-                  // ── Dojang / Club (optional) ────────────────────────────
+                  // ── Dojang / Club (optional) ──────────────────────────────
                   TextFormField(
                     controller: _dojangController,
                     decoration: const InputDecoration(
@@ -684,22 +678,24 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                       ),
                     ],
                     textInputAction: TextInputAction.done,
-                    onFieldSubmitted: (_) => _addParticipantFromFormFields(),
+                    onFieldSubmitted: (_) =>
+                        _submitParticipantFromFormFields(setupState),
                   ),
                   const SizedBox(height: 16),
 
-                  // ── Add button ──────────────────────────────────────────
+                  // ── Add button ────────────────────────────────────────────
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
                       icon: const Icon(Icons.add),
                       label: const Text('Add Participant'),
-                      onPressed: _addParticipantFromFormFields,
+                      onPressed: () =>
+                          _submitParticipantFromFormFields(setupState),
                     ),
                   ),
                   const SizedBox(height: 16),
 
-                  // ── CSV import button ───────────────────────────────────
+                  // ── CSV import button ─────────────────────────────────────
                   SizedBox(
                     width: double.infinity,
                     child: OutlinedButton.icon(
@@ -717,9 +713,9 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
     );
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
+  // ──────────────────────────────────────────────────────────────────────────
   // CSV import dialog
-  // ─────────────────────────────────────────────────────────────────────────
+  // ──────────────────────────────────────────────────────────────────────────
 
   Future<void> _showCsvImportDialog() async {
     final csvText = await showDialog<String>(
@@ -757,21 +753,46 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
               child: const Text('Cancel'),
             ),
             ElevatedButton(
-              onPressed: () => Navigator.pop(dialogContext, csvController.text),
+              onPressed: () =>
+                  Navigator.pop(dialogContext, csvController.text),
               child: const Text('Import'),
             ),
           ],
         );
       },
     );
+
     if (csvText != null && csvText.isNotEmpty) {
-      _importParticipantsFromCsvData(csvText);
+      final importedCountBefore = _setupBracketBloc.state.participants.length;
+
+      _setupBracketBloc.add(
+        SetupBracketEvent.participantsImportedFromCsv(csvRawText: csvText),
+      );
+
+      // Show feedback after the event propagates on the next frame.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        final importedCountAfter =
+            _setupBracketBloc.state.participants.length;
+        final importedCount = importedCountAfter - importedCountBefore;
+        if (importedCount > 0) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Imported $importedCount '
+                'participant${importedCount == 1 ? '' : 's'}.',
+              ),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      });
     }
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
+  // ──────────────────────────────────────────────────────────────────────────
   // Validators
-  // ─────────────────────────────────────────────────────────────────────────
+  // ──────────────────────────────────────────────────────────────────────────
 
   String? _validateFullName(String? value) {
     if (value == null || value.trim().isEmpty) {
@@ -783,11 +804,11 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
     return null;
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
+  // ──────────────────────────────────────────────────────────────────────────
   // Participant roster (right panel)
-  // ─────────────────────────────────────────────────────────────────────────
+  // ──────────────────────────────────────────────────────────────────────────
 
-  Widget _buildParticipantRoster() {
+  Widget _buildParticipantRoster(SetupBracketState setupState) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -796,7 +817,7 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
           children: [
             Expanded(
               child: Text(
-                'Participant Roster (${_participants.length})',
+                'Participant Roster (${setupState.participants.length})',
                 style: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
@@ -809,7 +830,7 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                 'Clear All',
                 style: TextStyle(color: Colors.grey.shade800),
               ),
-              onPressed: _participants.isEmpty
+              onPressed: setupState.participants.isEmpty
                   ? null
                   : () => _confirmClearAllParticipants(),
             ),
@@ -817,7 +838,7 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
         ),
         const SizedBox(height: 16),
         Expanded(
-          child: _participants.isEmpty
+          child: setupState.participants.isEmpty
               ? const Center(
                   child: Text(
                     'Add players to start building your bracket.',
@@ -825,21 +846,17 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                   ),
                 )
               : ReorderableListView.builder(
-                  itemCount: _participants.length,
+                  itemCount: setupState.participants.length,
                   onReorder: (oldIndex, newIndex) {
-                    setState(() {
-                      if (oldIndex < newIndex) newIndex -= 1;
-                      final item = _participants.removeAt(oldIndex);
-                      _participants.insert(newIndex, item);
-                      for (int i = 0; i < _participants.length; i++) {
-                        _participants[i] = _participants[i].copyWith(
-                          seedNumber: i + 1,
-                        );
-                      }
-                    });
+                    _setupBracketBloc.add(
+                      SetupBracketEvent.participantsReordered(
+                        oldIndex: oldIndex,
+                        newIndex: newIndex,
+                      ),
+                    );
                   },
                   itemBuilder: (context, index) {
-                    final participant = _participants[index];
+                    final participant = setupState.participants[index];
                     return Card(
                       key: ValueKey(participant.id),
                       margin: const EdgeInsets.symmetric(vertical: 4),
@@ -871,7 +888,11 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
                                 Icons.close,
                                 color: Colors.grey.shade800,
                               ),
-                              onPressed: () => _removeParticipant(index),
+                              onPressed: () => _setupBracketBloc.add(
+                                SetupBracketEvent.participantRemoved(
+                                  rosterIndex: index,
+                                ),
+                              ),
                             ),
                           ],
                         ),
@@ -884,17 +905,18 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
     );
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
+  // ──────────────────────────────────────────────────────────────────────────
   // Clear-all confirmation
-  // ─────────────────────────────────────────────────────────────────────────
+  // ──────────────────────────────────────────────────────────────────────────
 
   Future<void> _confirmClearAllParticipants() async {
+    final participantCount = _setupBracketBloc.state.participants.length;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Clear All Participants?'),
         content: Text(
-          'This will remove all ${_participants.length} '
+          'This will remove all $participantCount '
           'participants from the roster.',
         ),
         actions: [
@@ -914,7 +936,7 @@ class _ParticipantEntryScreenState extends State<ParticipantEntryScreen> {
       ),
     );
     if (confirmed == true) {
-      setState(() => _participants.clear());
+      _setupBracketBloc.add(const SetupBracketEvent.participantsCleared());
     }
   }
 }

@@ -6,7 +6,7 @@ import 'package:extended_image/extended_image.dart';
 import 'package:tkd_saas/features/bracket/domain/entities/bracket_medal_placement_entity.dart';
 import '../../domain/entities/match_entity.dart';
 import '../../../tournament/domain/entities/tournament_entity.dart';
-import '../../../participant/domain/entities/participant_entity.dart';
+import 'package:tkd_saas/features/setup_bracket/domain/entities/participant_entity.dart';
 import 'participant_slot_hit_area.dart';
 import 'tie_sheet_theme_config.dart';
 import '../../../tournament/domain/entities/bracket_classification.dart';

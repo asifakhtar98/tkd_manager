@@ -7,7 +7,7 @@ import 'package:tkd_saas/features/bracket/data/services/match_progression_servic
 import 'package:tkd_saas/features/bracket/data/services/participant_shuffle_service_implementation.dart';
 import 'package:tkd_saas/features/bracket/data/services/single_elimination_bracket_generator_service_implementation.dart';
 import 'package:tkd_saas/features/bracket/presentation/bloc/bracket_bloc.dart';
-import 'package:tkd_saas/features/participant/domain/entities/participant_entity.dart';
+import 'package:tkd_saas/features/setup_bracket/domain/entities/participant_entity.dart';
 import 'package:uuid/uuid.dart';
 
 import 'helpers/fake_bracket_snapshot_repository.dart';
