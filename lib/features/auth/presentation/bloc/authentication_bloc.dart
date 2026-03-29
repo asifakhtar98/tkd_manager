@@ -99,6 +99,10 @@ class AuthenticationBloc
         // Events we acknowledge but take no auth-routing action for.
         // `userDeleted` is deprecated but must be matched since it's an enum.
         case AuthChangeEvent.userUpdated:
+          if (data.session?.user != null) {
+            add(AuthenticationEvent.statusChanged(user: data.session!.user));
+          }
+          break;
         case AuthChangeEvent.mfaChallengeVerified:
         // ignore: deprecated_member_use
         case AuthChangeEvent.userDeleted:

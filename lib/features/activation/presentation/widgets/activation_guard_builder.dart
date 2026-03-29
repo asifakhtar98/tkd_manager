@@ -7,8 +7,8 @@ import 'package:tkd_saas/features/activation/presentation/bloc/activation_status
 /// A utility widget that provides a boolean `isLocked` to its builder based on
 /// the global [ActivationStatusBloc] state.
 ///
-/// Features are considered locked if the user is NOT an admin AND their
-/// subscription state is NOT [ActivationStatusActive].
+/// Features are considered locked if the user's subscription state is NOT
+/// [ActivationStatusActive]. Admin status does not bypass this lock.
 class ActivationGuardBuilder extends StatelessWidget {
   const ActivationGuardBuilder({super.key, required this.builder});
 
@@ -19,9 +19,9 @@ class ActivationGuardBuilder extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<ActivationStatusBloc, ActivationStatusState>(
       builder: (context, state) {
-        // Feature is unlocked if either: user is an Admin, OR user has an active subscription.
+        // Feature is unlocked if user has an active subscription.
         final bool isUnlocked =
-            state.isAdmin || state.activationStatus is ActivationStatusActive;
+            state.activationStatus is ActivationStatusActive;
 
         // Feature is locked if not unlocked
         final bool isLocked = !isUnlocked;

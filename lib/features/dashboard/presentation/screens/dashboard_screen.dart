@@ -6,7 +6,6 @@ import 'package:tkd_saas/core/router/app_routes.dart';
 import 'package:tkd_saas/features/activation/domain/entities/activation_status.dart';
 import 'package:tkd_saas/features/activation/presentation/bloc/activation_status_bloc.dart';
 import 'package:tkd_saas/features/activation/presentation/bloc/activation_status_state.dart';
-import 'package:tkd_saas/features/auth/presentation/bloc/authentication_bloc.dart';
 import 'package:tkd_saas/features/tournament/domain/entities/tournament_entity.dart';
 import 'package:tkd_saas/features/tournament/presentation/bloc/tournament_bloc.dart';
 import 'package:tkd_saas/features/tournament/presentation/widgets/create_tournament_dialog.dart';
@@ -59,27 +58,10 @@ class _DashboardScreenBodyState extends State<_DashboardScreenBody> {
                         icon: const Icon(Icons.admin_panel_settings),
                         onPressed: () => const AdminRoute().go(context),
                       ),
-                    PopupMenuButton<String>(
-                      icon: const Icon(Icons.more_vert),
-                      tooltip: 'More options',
-                      onSelected: (value) {
-                        switch (value) {
-                          case 'sign_out':
-                            _confirmSignOut(context);
-                        }
-                      },
-                      itemBuilder: (context) => [
-                        const PopupMenuItem(
-                          value: 'sign_out',
-                          child: Row(
-                            children: [
-                              Icon(Icons.logout, size: 20),
-                              SizedBox(width: 12),
-                              Text('Sign Out'),
-                            ],
-                          ),
-                        ),
-                      ],
+                    IconButton(
+                      tooltip: 'My Profile',
+                      icon: const Icon(Icons.account_circle),
+                      onPressed: () => const ProfileRoute().go(context),
                     ),
                   ],
                 );
@@ -137,35 +119,6 @@ class _DashboardScreenBodyState extends State<_DashboardScreenBody> {
     );
   }
 
-  Future<void> _confirmSignOut(BuildContext context) async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (c) => AlertDialog(
-        title: const Text('Sign Out?'),
-        content: const Text('Are you sure you want to sign out?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(c, false),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.grey.shade800,
-              foregroundColor: Colors.white,
-            ),
-            onPressed: () => Navigator.pop(c, true),
-            child: const Text('Sign Out'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirm == true && context.mounted) {
-      context.read<AuthenticationBloc>().add(
-        const AuthenticationSignOutRequested(),
-      );
-    }
-  }
 
   Widget _buildTournamentSection(BuildContext context, ThemeData theme) {
     return BlocBuilder<TournamentBloc, TournamentState>(

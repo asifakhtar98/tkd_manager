@@ -138,6 +138,48 @@ class AuthenticationRepositoryImplementation
   }
 
   // ───────────────────────────────────────────────────────────────────────────
+  // Profile Update
+  // ───────────────────────────────────────────────────────────────────────────
+
+  @override
+  Future<Either<Failure, User>> updateProfileDetails({
+    String? email,
+    String? organizationName,
+  }) async {
+    try {
+      if (_supabaseClient.auth.currentUser == null) {
+        return const Left(
+          AuthenticationFailure('Session expired. Please sign in again.'),
+        );
+      }
+      
+      final Map<String, dynamic> metadata = {};
+      if (organizationName != null) {
+        metadata['display_name'] = organizationName;
+      }
+
+      final UserResponse response = await _supabaseClient.auth.updateUser(
+        UserAttributes(
+          email: email,
+          data: metadata.isNotEmpty ? metadata : null,
+        ),
+      );
+
+      final User? user = response.user;
+      if (user == null) {
+        return const Left(
+          AuthenticationFailure('Failed to update profile. User object returned null.'),
+        );
+      }
+      return Right(user);
+    } on AuthException catch (authException) {
+      return Left(AuthenticationFailure(_humanReadableMessage(authException)));
+    } on Exception catch (exception) {
+      return Left(AuthenticationFailure(exception.toString()));
+    }
+  }
+
+  // ───────────────────────────────────────────────────────────────────────────
   // Sign Out
   // ───────────────────────────────────────────────────────────────────────────
 

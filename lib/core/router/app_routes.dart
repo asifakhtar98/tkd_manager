@@ -15,6 +15,7 @@ import 'package:tkd_saas/features/tournament/presentation/bloc/tournament_bloc.d
 import 'package:tkd_saas/features/tournament/presentation/screens/tournament_detail_screen.dart';
 import 'package:tkd_saas/features/activation/presentation/screens/activate_software_screen.dart';
 import 'package:tkd_saas/features/activation/presentation/screens/admin_activation_screen.dart';
+import 'package:tkd_saas/features/profile/presentation/screens/profile_screen.dart';
 
 export 'package:tkd_saas/features/bracket/domain/entities/bracket_format.dart';
 
@@ -66,6 +67,9 @@ abstract final class RoutePaths {
 
   /// Admin panel route path `/admin`
   static const String admin = '/admin';
+
+  /// Profile route path `/profile`
+  static const String profile = '/profile';
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -132,6 +136,16 @@ class AdminRoute extends GoRouteData with $AdminRoute {
   @override
   Widget build(BuildContext context, GoRouterState state) =>
       const AdminActivationScreen();
+}
+
+@TypedGoRoute<ProfileRoute>(path: '/profile')
+@immutable
+class ProfileRoute extends GoRouteData with $ProfileRoute {
+  const ProfileRoute();
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      const ProfileScreen();
 }
 
 // ── Main app routes (nested hierarchy) ───────────────────────────────────────

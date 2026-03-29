@@ -39,6 +39,15 @@ abstract interface class AuthenticationRepository {
   /// on the password-reset screen.
   Future<Either<Failure, Unit>> updatePassword({required String newPassword});
 
+  /// Updates the currently authenticated user's profile details.
+  ///
+  /// This updates the `email` internally and any user-visible details such as
+  /// the `display_name` via user metadata.
+  Future<Either<Failure, User>> updateProfileDetails({
+    String? email,
+    String? organizationName,
+  });
+
   /// Signs the current user out and destroys the local session.
   Future<void> signOut();
 
