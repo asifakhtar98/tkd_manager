@@ -57,10 +57,9 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
   final Uuid _uuid;
   final BracketSnapshotRepository _bracketSnapshotRepository;
 
-  /// The snapshot ID and tournament ID of the currently loaded bracket.
-  /// Required for save operations. Set when loading from a snapshot.
-  String? _currentSnapshotId;
-  String? _currentTournamentId;
+  /// The currently loaded bracket snapshot.
+  /// Required for save operations so we do not overwrite non-editable fields (label, classification).
+  BracketSnapshot? _currentSnapshot;
 
   /// Caches the last generation request so [BracketRegenerateRequested] can
   /// replay it without the UI re-supplying all parameters.
@@ -660,8 +659,7 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
     Emitter<BracketState> emit,
   ) {
     // Cache snapshot metadata for subsequent save operations.
-    _currentSnapshotId = event.snapshot.id;
-    _currentTournamentId = event.snapshot.tournamentId;
+    _currentSnapshot = event.snapshot;
 
     // Reconstruct the cached generation request from the snapshot so that
     // BracketRegenerateRequested can replay it without the UI re-supplying
@@ -920,13 +918,13 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
   Future<void> _executeSave(Emitter<BracketState> emit) async {
     final currentState = state;
     if (currentState is! BracketLoadSuccess) return;
-    if (_currentSnapshotId == null || _currentTournamentId == null) {
+    if (_currentSnapshot == null) {
       log('BracketBloc: Cannot save — snapshot metadata not set.');
       return;
     }
 
     // Skip DB persistence for demo tournament data.
-    if (_currentTournamentId == DemoData.demoTournament.id) {
+    if (_currentSnapshot!.tournamentId == DemoData.demoTournament.id) {
       emit(
         currentState.copyWith(
           isSaving: false,
@@ -940,16 +938,10 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
 
     emit(currentState.copyWith(isSaving: true, saveError: null));
 
-    final snapshotToSave = BracketSnapshot(
-      id: _currentSnapshotId!,
-      userId: '', // Will be stripped by repository before update.
-      tournamentId: _currentTournamentId!,
-      label: '', // Not updated during bracket editing.
+    final snapshotToSave = _currentSnapshot!.copyWith(
       format: currentState.format,
       participantCount: currentState.participants.length,
       includeThirdPlaceMatch: currentState.includeThirdPlaceMatch,
-      dojangSeparation: false, // Preserved from original snapshot.
-      generatedAt: DateTime.now(), // Will be stripped by repository.
       participants: currentState.participants,
       result: currentState.result,
       updatedAt: DateTime.now(),
