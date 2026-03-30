@@ -31,6 +31,8 @@ import 'package:tkd_saas/features/auth/domain/repositories/authentication_reposi
     as _i791;
 import 'package:tkd_saas/features/auth/presentation/bloc/authentication_bloc.dart'
     as _i923;
+import 'package:tkd_saas/features/bracket/data/repositories/supabase_bracket_theme_preset_repository.dart'
+    as _i854;
 import 'package:tkd_saas/features/bracket/data/services/double_elimination_bracket_generator_service_implementation.dart'
     as _i82;
 import 'package:tkd_saas/features/bracket/data/services/match_progression_service_implementation.dart'
@@ -39,6 +41,8 @@ import 'package:tkd_saas/features/bracket/data/services/participant_shuffle_serv
     as _i92;
 import 'package:tkd_saas/features/bracket/data/services/single_elimination_bracket_generator_service_implementation.dart'
     as _i34;
+import 'package:tkd_saas/features/bracket/domain/repositories/bracket_theme_preset_repository.dart'
+    as _i1033;
 import 'package:tkd_saas/features/bracket/domain/services/double_elimination_bracket_generator_service.dart'
     as _i1044;
 import 'package:tkd_saas/features/bracket/domain/services/match_progression_service.dart'
@@ -49,6 +53,10 @@ import 'package:tkd_saas/features/bracket/domain/services/single_elimination_bra
     as _i937;
 import 'package:tkd_saas/features/bracket/presentation/bloc/bracket_bloc.dart'
     as _i416;
+import 'package:tkd_saas/features/bracket/presentation/bloc/bracket_theme_preset_bloc.dart'
+    as _i973;
+import 'package:tkd_saas/features/bracket/presentation/bloc/bracket_theme_selection_bloc.dart'
+    as _i225;
 import 'package:tkd_saas/features/profile/presentation/bloc/profile_bloc.dart'
     as _i882;
 import 'package:tkd_saas/features/setup_bracket/presentation/bloc/setup_bracket_bloc.dart'
@@ -73,6 +81,9 @@ extension GetItInjectableX on _i174.GetIt {
   }) {
     final gh = _i526.GetItHelper(this, environment, environmentFilter);
     final appModule = _$AppModule();
+    gh.factory<_i225.BracketThemeSelectionBloc>(
+      () => _i225.BracketThemeSelectionBloc(),
+    );
     gh.lazySingleton<_i706.Uuid>(() => appModule.uuid);
     gh.lazySingleton<_i454.SupabaseClient>(() => appModule.supabaseClient);
     gh.lazySingleton<_i707.MatchProgressionService>(
@@ -94,6 +105,11 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i529.BracketSnapshotRepository>(
       () => _i900.SupabaseBracketSnapshotRepository(gh<_i454.SupabaseClient>()),
     );
+    gh.lazySingleton<_i1033.BracketThemePresetRepository>(
+      () => _i854.SupabaseBracketThemePresetRepository(
+        gh<_i454.SupabaseClient>(),
+      ),
+    );
     gh.lazySingleton<_i547.TournamentRepository>(
       () => _i987.SupabaseTournamentRepository(gh<_i454.SupabaseClient>()),
     );
@@ -107,6 +123,11 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i791.AuthenticationRepository>(
       () => _i330.AuthenticationRepositoryImplementation(
         gh<_i454.SupabaseClient>(),
+      ),
+    );
+    gh.factory<_i973.BracketThemePresetBloc>(
+      () => _i973.BracketThemePresetBloc(
+        gh<_i1033.BracketThemePresetRepository>(),
       ),
     );
     gh.factory<_i882.ProfileBloc>(

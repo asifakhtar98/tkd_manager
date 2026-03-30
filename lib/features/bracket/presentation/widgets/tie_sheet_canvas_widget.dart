@@ -3,6 +3,7 @@ import 'dart:math';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:extended_image/extended_image.dart';
+import 'package:tkd_saas/features/bracket/data/services/bracket_medal_computation_service_implementation.dart';
 import 'package:tkd_saas/features/bracket/domain/entities/bracket_medal_placement_entity.dart';
 import '../../domain/entities/match_entity.dart';
 import '../../../tournament/domain/entities/tournament_entity.dart';
@@ -10,6 +11,7 @@ import 'package:tkd_saas/features/setup_bracket/domain/entities/participant_enti
 import 'participant_slot_hit_area.dart';
 import 'tie_sheet_theme_config.dart';
 import '../../../tournament/domain/entities/bracket_classification.dart';
+import '../../../../core/config/app_config.dart';
 
 // ══════════════════════════════════════════════════════════════════════════════
 // SECTION 1 — WIDGET  (TieSheetCanvasWidget + _TieSheetCanvasWidgetState)
@@ -264,13 +266,27 @@ class _TieSheetCanvasWidgetState extends State<TieSheetCanvasWidget> {
   /// Builds a draggable + tappable overlay for a participant slot in edit mode.
   Widget _buildEditModeSlotOverlay(ParticipantSlotHitArea slot) {
     final rect = slot.boundingRect;
+
+    final Widget tapTarget = Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(6),
+        hoverColor: Colors.amber.withValues(alpha: 0.1),
+        onTap: () {
+          widget.onParticipantSlotTapped?.call(slot);
+        },
+        child: Container(),
+      ),
+    );
+
     return Positioned(
       left: rect.left,
       top: rect.top,
       width: rect.width,
       height: rect.height,
-      child: LongPressDraggable<ParticipantSlotHitArea>(
-        data: slot,
+      child: AppConfig.isSpecialPowerEnabled
+          ? LongPressDraggable<ParticipantSlotHitArea>(
+              data: slot,
         delay: const Duration(milliseconds: 300),
         feedback: Material(
           elevation: 6,
@@ -338,7 +354,8 @@ class _TieSheetCanvasWidgetState extends State<TieSheetCanvasWidget> {
             );
           },
         ),
-      ),
+      )
+      : tapTarget,
     );
   }
 
@@ -2181,117 +2198,49 @@ class TieSheetPainter extends CustomPainter {
     }
 
     // ── Populate winner names ──
-    final resolvedPlacements = finalMedalPlacements;
-    if (resolvedPlacements != null && resolvedPlacements.isNotEmpty) {
-      // Paint frozen finalized medal placements
-      int currentBronzeRow = 2; // Rows 2 and 3 are for bronzes
-      for (final placement in resolvedPlacements) {
-        final p = _findP(placement.participantId);
-        if (p == null) continue;
-
-        int? rowIdx;
-        switch (placement.rankStatus) {
-          case 1:
-            rowIdx = 0;
-          case 2:
-            rowIdx = 1;
-          case 3:
-            rowIdx = currentBronzeRow;
-            if (currentBronzeRow < 3) currentBronzeRow++;
-          case 4:
-            rowIdx = currentBronzeRow;
-            if (currentBronzeRow < 3) currentBronzeRow++;
-        }
-
-        if (rowIdx != null && rowIdx <= 3) {
-          _drawText(
-            canvas,
-            _pName(p),
-            x + _medalBlankW + 14,
-            _centeredTextY(
-              y + rowIdx * (_medalRowH + themeConfig.medalRowGap),
-              _medalRowH,
-              _fontSize(11),
-            ),
-            _bold(11),
-          );
-        }
-      }
-    } else {
-      // Dynamic runtime fallback for unfinalized brackets
-      final allRounds = matches.map((m) => m.roundNumber).reduce(max);
-      final finals = matches
-          .where((m) => m.roundNumber == allRounds && m.matchNumberInRound == 1)
-          .firstOrNull;
-      if (finals != null && finals.winnerId != null) {
-        final gold = _findP(finals.winnerId);
-        final silverId = finals.winnerId == finals.participantRedId
-            ? finals.participantBlueId
-            : finals.participantRedId;
-        final silver = _findP(silverId);
-        if (gold != null) {
-          _drawText(
-            canvas,
-            _pName(gold),
-            x + _medalBlankW + 14,
-            _centeredTextY(y, _medalRowH, _fontSize(11)),
-            _bold(11),
-          );
-        }
-        if (silver != null) {
-          _drawText(
-            canvas,
-            _pName(silver),
-            x + _medalBlankW + 14,
-            _centeredTextY(
-              y + (_medalRowH + themeConfig.medalRowGap),
-              _medalRowH,
-              _fontSize(11),
-            ),
-            _bold(11),
-          );
-        }
-      }
-      // 3rd-place match: winner = Bronze 1, loser = Bronze 2
-      final thirdM = matches
-          .where((m) => m.roundNumber == allRounds && m.matchNumberInRound == 2)
-          .firstOrNull;
-      if (thirdM != null) {
-        if (thirdM.winnerId != null) {
-          final bronze1 = _findP(thirdM.winnerId);
-          if (bronze1 != null) {
-            _drawText(
-              canvas,
-              _pName(bronze1),
-              x + _medalBlankW + 14,
-              _centeredTextY(
-                y + 2 * (_medalRowH + themeConfig.medalRowGap),
-                _medalRowH,
-                _fontSize(11),
-              ),
-              _bold(11),
+    // Use finalized placements if available; otherwise compute at runtime
+    // via the medal computation service (handles both SE and DE correctly).
+    final resolvedPlacements = finalMedalPlacements ??
+        const BracketMedalComputationServiceImplementation()
+            .computeRuntimeMedalPlacements(
+              matches: matches,
+              isDoubleElimination: _isDouble,
+              winnersBracketId: winnersBracketId,
+              losersBracketId: losersBracketId,
+              includeThirdPlaceMatch: includeThirdPlaceMatch,
             );
-          }
-        }
-        final loserId = thirdM.winnerId == thirdM.participantRedId
-            ? thirdM.participantBlueId
-            : thirdM.participantRedId;
-        if (loserId != null) {
-          final bronze2 = _findP(loserId);
-          if (bronze2 != null) {
-            _drawText(
-              canvas,
-              _pName(bronze2),
-              x + _medalBlankW + 14,
-              _centeredTextY(
-                y + 3 * (_medalRowH + themeConfig.medalRowGap),
-                _medalRowH,
-                _fontSize(11),
-              ),
-              _bold(11),
-            );
-          }
-        }
+
+    int currentBronzeRow = 2; // Rows 2 and 3 are for bronzes
+    for (final placement in resolvedPlacements) {
+      final participantEntity = _findP(placement.participantId);
+      if (participantEntity == null) continue;
+
+      int? rowIndex;
+      switch (placement.rankStatus) {
+        case 1:
+          rowIndex = 0;
+        case 2:
+          rowIndex = 1;
+        case 3:
+          rowIndex = currentBronzeRow;
+          if (currentBronzeRow < 3) currentBronzeRow++;
+        case 4:
+          rowIndex = currentBronzeRow;
+          if (currentBronzeRow < 3) currentBronzeRow++;
+      }
+
+      if (rowIndex != null && rowIndex <= 3) {
+        _drawText(
+          canvas,
+          _pName(participantEntity),
+          x + _medalBlankW + 14,
+          _centeredTextY(
+            y + rowIndex * (_medalRowH + themeConfig.medalRowGap),
+            _medalRowH,
+            _fontSize(11),
+          ),
+          _bold(11),
+        );
       }
     }
   }

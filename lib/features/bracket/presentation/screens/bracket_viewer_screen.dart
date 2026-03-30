@@ -11,14 +11,21 @@ import 'package:tkd_saas/features/bracket/data/services/bracket_pdf_generator_se
 import 'package:tkd_saas/features/bracket/presentation/models/print_export_settings.dart';
 import 'package:tkd_saas/features/bracket/domain/entities/match_entity.dart';
 import 'package:tkd_saas/core/router/app_routes.dart';
+import 'package:tkd_saas/core/config/app_config.dart';
+import 'package:tkd_saas/features/bracket/domain/value_objects/bracket_theme_selection.dart';
 import 'package:tkd_saas/features/bracket/presentation/bloc/bracket_bloc.dart';
+import 'package:tkd_saas/features/bracket/presentation/bloc/bracket_theme_preset_bloc.dart';
+import 'package:tkd_saas/features/bracket/presentation/bloc/bracket_theme_preset_state.dart';
+import 'package:tkd_saas/features/bracket/presentation/bloc/bracket_theme_selection_bloc.dart';
+import 'package:tkd_saas/features/bracket/presentation/bloc/bracket_theme_selection_event.dart';
+import 'package:tkd_saas/features/bracket/presentation/bloc/bracket_theme_selection_state.dart';
 import 'package:tkd_saas/features/bracket/presentation/widgets/bracket_history_drawer.dart';
 import 'package:tkd_saas/features/bracket/presentation/widgets/participant_edit_dialog.dart';
 import 'package:tkd_saas/features/bracket/presentation/widgets/print_preview_dialog.dart';
 import 'package:tkd_saas/features/bracket/presentation/widgets/participant_slot_hit_area.dart';
 import 'package:tkd_saas/features/bracket/presentation/widgets/score_entry_dialog.dart';
 import 'package:tkd_saas/features/bracket/presentation/widgets/tie_sheet_canvas_widget.dart';
-import 'package:tkd_saas/features/bracket/presentation/widgets/tie_sheet_theme_config.dart';
+import 'package:tkd_saas/features/bracket/domain/value_objects/tie_sheet_theme_config.dart';
 import 'package:tkd_saas/features/bracket/presentation/widgets/tie_sheet_theme_editor_panel.dart';
 import 'package:tkd_saas/features/setup_bracket/domain/entities/participant_entity.dart';
 import 'package:tkd_saas/features/tournament/domain/entities/bracket_classification.dart';
@@ -55,23 +62,21 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
   double? _pdfExportProgress;
   String _pdfExportStatusMessage = '';
 
-  /// The currently active tie-sheet visual theme mode.
-  TieSheetThemeMode _activeTieSheetThemeMode = TieSheetThemeMode.defaultMode;
-
-  /// The user-customised theme config, mutated via the editor panel.
-  /// Starts from the default preset and accumulates per-token overrides.
-  TieSheetThemeConfig _customThemeConfig = TieSheetThemeConfig.defaultPreset;
-
   bool get _isExportingPdf => _pdfExportProgress != null;
 
-  /// Returns the theme config that the canvas should render with.
-  /// For Screen / Print modes, uses the preset. For Custom mode,
-  /// returns the user-edited [_customThemeConfig].
-  TieSheetThemeConfig get _resolvedThemeConfig {
-    if (_activeTieSheetThemeMode == TieSheetThemeMode.customMode) {
-      return _customThemeConfig;
-    }
-    return TieSheetThemeConfig.fromMode(_activeTieSheetThemeMode);
+  TieSheetThemeConfig _resolveThemeConfigFromSelection(
+    BracketThemeSelectionState selectionState,
+  ) {
+    return selectionState.activeThemeSelection.when(
+      defaultModeSelected: () => TieSheetThemeConfig.defaultPreset,
+      printModeSelected: () => TieSheetThemeConfig.printPreset,
+      cloudPresetSelected: (_) =>
+          selectionState.liveCustomThemeConfiguration ??
+          TieSheetThemeConfig.defaultPreset,
+      customModeSelected: () =>
+          selectionState.liveCustomThemeConfiguration ??
+          TieSheetThemeConfig.defaultPreset,
+    );
   }
 
   // ── Convenience accessors from snapshot ─────────────────────────────────────
@@ -127,6 +132,7 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
     if (blocState is! BracketLoadSuccess) return null;
 
     final bracketData = _extractBracketDataFromResult(blocState.result);
+    final themeSelectionState = context.read<BracketThemeSelectionBloc>().state;
 
     return TieSheetPainter(
       tournament: widget.tournament,
@@ -137,7 +143,7 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
       winnersBracketId: bracketData.winnersBracketId,
       losersBracketId: bracketData.losersBracketId,
       isEditModeEnabled: false,
-      themeConfig: _resolvedThemeConfig,
+      themeConfig: _resolveThemeConfigFromSelection(themeSelectionState),
       classification: _classification,
     );
   }
@@ -337,7 +343,19 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocConsumer<BracketBloc, BracketState>(
+    return BlocListener<BracketThemePresetBloc, BracketThemePresetState>(
+      listenWhen: (prev, current) =>
+          prev is! BracketThemePresetLoaded && current is BracketThemePresetLoaded,
+      listener: (context, presetState) {
+        if (presetState is BracketThemePresetLoaded) {
+          context.read<BracketThemeSelectionBloc>().add(
+                BracketThemeSelectionEvent.hydratedSelectionResolved(
+                  availableCloudPresets: presetState.presets,
+                ),
+              );
+        }
+      },
+      child: BlocConsumer<BracketBloc, BracketState>(
       listenWhen: (prev, current) {
         if (current is! BracketLoadSuccess) return false;
         if (prev is! BracketLoadSuccess) return true;
@@ -445,6 +463,7 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
             ),
         };
       },
+    ),
     );
   }
 
@@ -465,13 +484,9 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
   }) {
     final bracketData = _extractBracketDataFromResult(result);
 
-    final view = _buildBracketView(
-      bracketData.allMatches,
-      participants,
-      winnersBracketId: bracketData.winnersBracketId,
-      losersBracketId: bracketData.losersBracketId,
-      isEditModeEnabled: isEditModeEnabled,
-    );
+    // NOTE: _buildBracketView is called inside the BlocConsumer builder
+    // (see line with `Expanded(child: ...)` below) so the canvas reacts
+    // to theme-selection changes.
 
     final bool canUndo = historyPointer >= 0 && !isReplayInProgress;
     final bool canRedo =
@@ -483,45 +498,87 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
       disabledForegroundColor: Colors.grey,
     );
 
-    return Scaffold(
-      key: _scaffoldKey,
-      appBar: AppBar(
-        title: Text('${format.displayLabel} — ${participants.length} Players'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: _navigateBackToTournamentDetail,
-        ),
-        actions: [
-          // ── Canvas Theme Toggle ──
-          SegmentedButton<TieSheetThemeMode>(
-            segments: TieSheetThemeMode.values
-                .map(
-                  (mode) => ButtonSegment<TieSheetThemeMode>(
-                    value: mode,
-                    icon: Icon(switch (mode) {
-                      TieSheetThemeMode.defaultMode => Icons.visibility,
-                      TieSheetThemeMode.printMode => Icons.print,
-                      TieSheetThemeMode.customMode => Icons.tune,
-                    }, size: 16),
-                    label: Text(
-                      mode.label,
-                      style: const TextStyle(fontSize: 12),
-                    ),
-                  ),
-                )
-                .toList(),
-            selected: {_activeTieSheetThemeMode},
-            onSelectionChanged: (selected) {
-              setState(() => _activeTieSheetThemeMode = selected.first);
-            },
-            style: const ButtonStyle(
-              visualDensity: VisualDensity.compact,
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              padding: WidgetStatePropertyAll(
-                EdgeInsets.symmetric(horizontal: 8),
+    return BlocConsumer<BracketThemeSelectionBloc, BracketThemeSelectionState>(
+      listenWhen: (previous, current) =>
+          current.themeExpiredMessage != null &&
+          current.themeExpiredMessage != previous.themeExpiredMessage,
+      listener: (context, selectionState) {
+        if (selectionState.themeExpiredMessage != null) {
+          ScaffoldMessenger.of(context)
+            ..hideCurrentSnackBar()
+            ..showSnackBar(
+              SnackBar(
+                content: Text(selectionState.themeExpiredMessage!),
+                backgroundColor: Theme.of(context).colorScheme.error,
+                duration: const Duration(seconds: 4),
               ),
+            );
+          context.read<BracketThemeSelectionBloc>().add(
+            const BracketThemeSelectionEvent.themeExpiredMessageDismissed(),
+          );
+        }
+      },
+      builder: (context, selectionState) {
+        final TieSheetThemeMode activeSegment =
+            selectionState.activeThemeSelection.when(
+          defaultModeSelected: () => TieSheetThemeMode.defaultMode,
+          printModeSelected: () => TieSheetThemeMode.printMode,
+          cloudPresetSelected: (_) => TieSheetThemeMode.customMode,
+          customModeSelected: () => TieSheetThemeMode.customMode,
+        );
+
+        final bracketCanvasView = _buildBracketView(
+          bracketData.allMatches,
+          participants,
+          winnersBracketId: bracketData.winnersBracketId,
+          losersBracketId: bracketData.losersBracketId,
+          isEditModeEnabled: isEditModeEnabled,
+          themeConfig: _resolveThemeConfigFromSelection(selectionState),
+        );
+
+        return Scaffold(
+          key: _scaffoldKey,
+          appBar: AppBar(
+            title: Text('${format.displayLabel} — ${participants.length} Players'),
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: _navigateBackToTournamentDetail,
             ),
-          ),
+            actions: [
+              // ── Canvas Theme Toggle ──
+              SegmentedButton<TieSheetThemeMode>(
+                segments: TieSheetThemeMode.values
+                    .map(
+                      (mode) => ButtonSegment<TieSheetThemeMode>(
+                        value: mode,
+                        icon: Icon(switch (mode) {
+                          TieSheetThemeMode.defaultMode => Icons.visibility,
+                          TieSheetThemeMode.printMode => Icons.print,
+                          TieSheetThemeMode.customMode => Icons.tune,
+                        }, size: 16),
+                        label: Text(
+                          mode.label,
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                      ),
+                    )
+                    .toList(),
+                selected: {activeSegment},
+                onSelectionChanged: (selected) {
+                  context.read<BracketThemeSelectionBloc>().add(
+                    BracketThemeSelectionEvent.themeModeToggled(
+                      selectedMode: selected.first,
+                    ),
+                  );
+                },
+                style: const ButtonStyle(
+                  visualDensity: VisualDensity.compact,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  padding: WidgetStatePropertyAll(
+                    EdgeInsets.symmetric(horizontal: 8),
+                  ),
+                ),
+              ),
 
           const SizedBox(width: 8),
 
@@ -691,7 +748,7 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
                     );
                   }
                 },
-                child: const Text('Regenerate'),
+                child: const Text('Regenerate & Shuffle'),
               ),
               const SizedBox(
                 height: 24,
@@ -772,9 +829,11 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
                             SizedBox(width: 8),
                             Expanded(
                               child: Text(
-                                'Edit Mode — Tap a participant to edit details, '
-                                'or long-press and drag to swap positions.',
-                                style: TextStyle(
+                                AppConfig.isSpecialPowerEnabled
+                                    ? 'Edit Mode — Tap a participant to edit details, '
+                                      'or long-press and drag to swap positions.'
+                                    : 'Edit Mode — Tap a participant to edit details.',
+                                style: const TextStyle(
                                   fontSize: 12,
                                   color: Color(0xFF92400E),
                                 ),
@@ -790,18 +849,31 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
                         minHeight: 4,
                       ),
                     // ── Bracket canvas ──
-                    Expanded(child: view),
+                    Expanded(child: bracketCanvasView),
                   ],
                 ),
               ),
               // ── Custom theme editor side panel ──
-              if (_activeTieSheetThemeMode == TieSheetThemeMode.customMode)
+              if (activeSegment == TieSheetThemeMode.customMode)
                 SizedBox(
                   width: 340,
                   child: TieSheetThemeEditorPanel(
-                    currentThemeConfig: _customThemeConfig,
+                    currentThemeConfig: selectionState.liveCustomThemeConfiguration ??
+                        TieSheetThemeConfig.defaultPreset,
+                    onCloudPresetApplied: (preset) {
+                      context.read<BracketThemeSelectionBloc>().add(
+                        BracketThemeSelectionEvent.cloudPresetApplied(
+                          presetId: preset.id,
+                          resolvedThemeConfiguration: preset.themeConfiguration,
+                        ),
+                      );
+                    },
                     onThemeConfigChanged: (newConfig) {
-                      setState(() => _customThemeConfig = newConfig);
+                      context.read<BracketThemeSelectionBloc>().add(
+                        BracketThemeSelectionEvent.customThemeConfigurationUpdated(
+                          updatedThemeConfiguration: newConfig,
+                        ),
+                      );
                     },
                   ),
                 ),
@@ -847,6 +919,8 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
         ],
       ),
     );
+      },
+    );
   }
 
   Widget _buildBracketView(
@@ -855,6 +929,7 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
     String? winnersBracketId,
     String? losersBracketId,
     bool isEditModeEnabled = false,
+    required TieSheetThemeConfig themeConfig,
   }) {
     return InteractiveViewer(
       transformationController: _transformController,
@@ -877,7 +952,7 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
             winnersBracketId: winnersBracketId,
             losersBracketId: losersBracketId,
             isEditModeEnabled: isEditModeEnabled,
-            themeConfig: _resolvedThemeConfig,
+            themeConfig: themeConfig,
             classification: _classification,
             onParticipantSlotSwapped: (source, target) {
               _handleParticipantSwap(

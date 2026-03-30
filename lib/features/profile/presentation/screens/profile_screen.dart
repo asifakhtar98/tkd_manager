@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
 import 'package:tkd_saas/core/di/injection.dart';
 import 'package:tkd_saas/features/auth/presentation/bloc/authentication_bloc.dart';
 import 'package:tkd_saas/features/profile/presentation/bloc/profile_bloc.dart';
@@ -101,7 +102,7 @@ class _IdentityCard extends StatelessWidget {
         if (user == null) return const SizedBox.shrink();
 
         final orgName =
-            user.userMetadata?['organization_name'] as String? ?? 'Admin';
+            user.userMetadata?['display_name'] as String? ?? 'N/A';
         final initial = orgName.isNotEmpty ? orgName[0].toUpperCase() : 'A';
 
         return Card(
@@ -161,7 +162,7 @@ class _IdentityCard extends StatelessWidget {
                 // Only show Edit if there's an organization string editable
                 IconButton(
                   onPressed: () {
-                    // TODO: Open Edit Dialog
+                    
                     _showEditOrganizationDialog(context, orgName);
                   },
                   icon: const Icon(Icons.edit_outlined),
@@ -274,39 +275,36 @@ class _SoftwareStatusCard extends StatelessWidget {
                   return const Text('Loading status...');
                 }
 
-                if (state.isAdmin) {
-                  return const _StatusRow(
-                    icon: Icons.admin_panel_settings,
-                    color: Colors.blue,
-                    title: 'System Administrator',
-                    subtitle: 'Unrestricted access to the application',
-                  );
-                }
-
                 final activationStatus = state.activationStatus;
 
                 if (activationStatus is ActivationStatusActive) {
-                  return const _StatusRow(
+                  final expiresAt = activationStatus.expiresAt;
+                  final dateFormat = DateFormat('dd MMM yyyy');
+                  final difference = expiresAt.difference(DateTime.now().toUtc());
+                  final daysRemaining = difference.isNegative
+                      ? 0
+                      : (difference.inMinutes / 1440).ceil();
+
+                  return _StatusRow(
                     icon: Icons.check_circle,
                     color: Colors.green,
-                    title: 'Activated',
-                    subtitle: 'Full access to all features',
+                    title: 'Product Activated',
+                    subtitle: 'Active until ${dateFormat.format(expiresAt.toLocal())} ($daysRemaining days remaining)',
                   );
                 } else if (activationStatus == null ||
                     activationStatus is ActivationStatusNotActivated) {
                   return const _StatusRow(
                     icon: Icons.lock,
                     color: Colors.red,
-                    title: 'Inactive',
-                    subtitle:
-                        'Needs activation. Missing payment or grace period expired.',
+                    title: 'Software Not Activated',
+                    subtitle: 'Activate your software to unlock all features.',
                   );
                 } else {
                   return const _StatusRow(
                     icon: Icons.warning_amber_rounded,
                     color: Colors.orange,
-                    title: 'Activation Pending',
-                    subtitle: 'Awaiting administrator approval.',
+                    title: 'Activation Request Pending',
+                    subtitle: 'Your activation request is awaiting admin approval.',
                   );
                 }
               },

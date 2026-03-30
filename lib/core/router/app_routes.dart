@@ -6,6 +6,9 @@ import 'package:tkd_saas/features/auth/presentation/screens/email_confirmed_scre
 import 'package:tkd_saas/features/auth/presentation/screens/login_screen.dart';
 import 'package:tkd_saas/features/auth/presentation/screens/password_reset_screen.dart';
 import 'package:tkd_saas/features/bracket/presentation/bloc/bracket_bloc.dart';
+import 'package:tkd_saas/features/bracket/presentation/bloc/bracket_theme_preset_bloc.dart';
+import 'package:tkd_saas/features/bracket/presentation/bloc/bracket_theme_preset_event.dart';
+import 'package:tkd_saas/features/bracket/presentation/bloc/bracket_theme_selection_bloc.dart';
 import 'package:tkd_saas/features/bracket/presentation/screens/bracket_viewer_screen.dart';
 import 'package:tkd_saas/features/dashboard/presentation/screens/dashboard_screen.dart';
 import 'package:tkd_saas/features/setup_bracket/presentation/bloc/setup_bracket_bloc.dart';
@@ -229,10 +232,22 @@ class BracketViewerRoute extends GoRouteData with $BracketViewerRoute {
           return _BracketNotFoundPage(tournamentId: tournamentId);
         }
 
-        return BlocProvider(
-          create: (_) =>
-              getIt<BracketBloc>()
-                ..add(BracketEvent.loadFromSnapshotRequested(snapshot)),
+        return MultiBlocProvider(
+          providers: [
+            BlocProvider(
+              create: (_) =>
+                  getIt<BracketBloc>()
+                    ..add(BracketEvent.loadFromSnapshotRequested(snapshot)),
+            ),
+            BlocProvider(
+              create: (_) =>
+                  getIt<BracketThemePresetBloc>()
+                    ..add(const BracketThemePresetEvent.loadRequested()),
+            ),
+            BlocProvider(
+              create: (_) => getIt<BracketThemeSelectionBloc>(),
+            ),
+          ],
           child: BracketViewerScreen(
             tournament: tournament,
             snapshot: snapshot,

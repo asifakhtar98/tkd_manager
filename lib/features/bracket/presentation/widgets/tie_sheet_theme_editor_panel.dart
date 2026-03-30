@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
 
+import '../../domain/entities/bracket_theme_preset_entity.dart';
+import '../bloc/bracket_theme_preset_bloc.dart';
+import '../bloc/bracket_theme_preset_event.dart';
+import '../bloc/bracket_theme_preset_state.dart';
 import 'tie_sheet_theme_config.dart';
 
 /// Converts a [Color] to an 8-character uppercase ARGB hex string.
@@ -32,10 +38,12 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
     super.key,
     required this.currentThemeConfig,
     required this.onThemeConfigChanged,
+    this.onCloudPresetApplied,
   });
 
   final TieSheetThemeConfig currentThemeConfig;
   final ValueChanged<TieSheetThemeConfig> onThemeConfigChanged;
+  final void Function(BracketThemePresetEntity)? onCloudPresetApplied;
 
   // ── Preset reset helpers ──────────────────────────────────────────────────
 
@@ -117,42 +125,49 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Container(
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerLow,
-        border: Border(left: BorderSide(color: theme.dividerColor)),
-      ),
-      child: Column(
-        children: [
-          // ── Header + preset buttons ──
-          _buildPanelHeader(context, theme),
-          const Divider(height: 1),
-          // ── Scrollable editor sections ──
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              children: [
-                _buildCanvasAndCardsSection(context),
-                _buildConnectorJunctionSection(context),
-                _buildTextSection(context),
-                _buildHeaderBannerSection(context),
-                _buildAccentsAndBadgesSection(context),
-                _buildSectionLabelsSection(context),
-                _buildMedalsSection(context),
-                _buildShapeRadiusSection(context),
-                _buildStrokeWidthsSection(context),
-                _buildSpacingSection(context),
-                _buildBadgePillSizingSection(context),
-                _buildShadowsSection(context),
-                _buildTypographySection(context),
-                _buildLayoutDimensionsSection(context),
-                _buildBannerAndLogoSection(context),
-                _buildAdditionalColorsAndOpacitySection(context),
-                const SizedBox(height: 24),
-              ],
+    return BlocListener<BracketThemePresetBloc, BracketThemePresetState>(
+      listenWhen: (previous, current) =>
+          current is BracketThemePresetError &&
+          previous is! BracketThemePresetError,
+      listener: _handlePresetBlocStateChange,
+      child: Container(
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surfaceContainerLow,
+          border: Border(left: BorderSide(color: theme.dividerColor)),
+        ),
+        child: Column(
+          children: [
+            // ── Header + preset buttons ──
+            _buildPanelHeader(context, theme),
+            const Divider(height: 1),
+            // ── Scrollable editor sections ──
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                children: [
+                  _buildSavedPresetsSection(context),
+                  _buildCanvasAndCardsSection(context),
+                  _buildConnectorJunctionSection(context),
+                  _buildTextSection(context),
+                  _buildHeaderBannerSection(context),
+                  _buildAccentsAndBadgesSection(context),
+                  _buildSectionLabelsSection(context),
+                  _buildMedalsSection(context),
+                  _buildShapeRadiusSection(context),
+                  _buildStrokeWidthsSection(context),
+                  _buildSpacingSection(context),
+                  _buildBadgePillSizingSection(context),
+                  _buildShadowsSection(context),
+                  _buildTypographySection(context),
+                  _buildLayoutDimensionsSection(context),
+                  _buildBannerAndLogoSection(context),
+                  _buildAdditionalColorsAndOpacitySection(context),
+                  const SizedBox(height: 24),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -214,9 +229,53 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
               ),
             ],
           ),
+          const SizedBox(height: 8),
+          BlocBuilder<BracketThemePresetBloc, BracketThemePresetState>(
+            builder: (context, presetState) {
+              final isSaving = presetState is BracketThemePresetLoading;
+              return FilledButton.tonalIcon(
+                onPressed: isSaving
+                    ? null
+                    : () {
+                        context.read<BracketThemePresetBloc>().add(
+                          BracketThemePresetEvent.saveRequested(
+                            themeConfiguration: currentThemeConfig,
+                          ),
+                        );
+                      },
+                icon: isSaving
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.cloud_upload, size: 16),
+                label: Text(isSaving ? 'Saving…' : 'Save as Cloud Preset'),
+              );
+            },
+          ),
         ],
       ),
     );
+  }
+
+  // ── BlocListener callback for error-only SnackBar feedback ────────────────
+
+  void _handlePresetBlocStateChange(
+    BuildContext context,
+    BracketThemePresetState state,
+  ) {
+    if (state is BracketThemePresetError) {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text(state.message),
+            backgroundColor: Theme.of(context).colorScheme.error,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+    }
   }
 
   // ── Colour-picker tile factory (DRY helper) ──────────────────────────────
@@ -246,6 +305,152 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
   // ══════════════════════════════════════════════════════════════════════════
   // CATEGORY SECTIONS
   // ══════════════════════════════════════════════════════════════════════════
+
+  // ── Saved Presets (Cloud) ──────────────────────────────────────────────────
+
+  Widget _buildSavedPresetsSection(BuildContext context) {
+    return BlocBuilder<BracketThemePresetBloc, BracketThemePresetState>(
+      builder: (context, state) {
+        return state.maybeWhen(
+          loading: () => const Padding(
+            padding: EdgeInsets.symmetric(vertical: 12),
+            child: Center(
+              child: SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ),
+          ),
+          error: (message, previousPresets) => _buildPresetsExpansionTile(
+            context,
+            previousPresets,
+            errorMessage: message,
+          ),
+          loaded: (presets) => _buildPresetsExpansionTile(context, presets),
+          orElse: () => const SizedBox.shrink(),
+        );
+      },
+    );
+  }
+
+  Widget _buildPresetsExpansionTile(
+    BuildContext context,
+    List<BracketThemePresetEntity> presets, {
+    String? errorMessage,
+  }) {
+    return ExpansionTile(
+      title: Row(
+        children: [
+          const Text(
+            'Saved Cloud Presets',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(width: 8),
+          if (presets.isNotEmpty)
+            Text(
+              '(${presets.length})',
+              style: TextStyle(
+                fontSize: 12,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+        ],
+      ),
+      initiallyExpanded: presets.isNotEmpty,
+      children: [
+        if (errorMessage != null)
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Text(
+              errorMessage,
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
+          ),
+        if (presets.isEmpty && errorMessage == null)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Text(
+              'No saved presets yet. Use the button above to save your current theme.',
+              style: TextStyle(
+                fontSize: 12,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+        if (presets.isNotEmpty)
+          ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: presets.length,
+            itemBuilder: (context, index) {
+              final preset = presets[index];
+              final formattedTimestampLabel = DateFormat(
+                'dd MMM yyyy, hh:mm a',
+              ).format(preset.createdAt.toLocal());
+              return ListTile(
+                title: Text(
+                  formattedTimestampLabel,
+                  style: const TextStyle(fontSize: 13),
+                ),
+                leading: const Icon(Icons.cloud_done, size: 16),
+                trailing: IconButton(
+                  icon: const Icon(Icons.delete_outline, size: 18),
+                  tooltip: 'Delete this preset',
+                  onPressed: () => _confirmAndDeletePreset(context, preset),
+                ),
+                onTap: () {
+                  if (onCloudPresetApplied != null) {
+                    onCloudPresetApplied!(preset);
+                  } else {
+                    onThemeConfigChanged(preset.themeConfiguration);
+                  }
+                },
+              );
+            },
+          ),
+      ],
+    );
+  }
+
+  /// Shows a confirmation dialog before deleting a preset.
+  void _confirmAndDeletePreset(
+    BuildContext context,
+    BracketThemePresetEntity preset,
+  ) {
+    final formattedTimestampLabel = DateFormat(
+      'dd MMM yyyy, hh:mm a',
+    ).format(preset.createdAt.toLocal());
+
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Delete Preset?'),
+        content: Text(
+          'Are you sure you want to delete the preset saved on '
+          '$formattedTimestampLabel? This cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
+            onPressed: () {
+              context.read<BracketThemePresetBloc>().add(
+                BracketThemePresetEvent.deleteRequested(presetId: preset.id),
+              );
+              Navigator.of(dialogContext).pop();
+            },
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+  }
 
   // ── Canvas & Cards ──────────────────────────────────────────────────────
 
@@ -307,7 +512,7 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
       children: [
         _buildColorPickerTile(
           context,
-          label: 'Connector',
+          label: 'Muted Connector',
           currentColor: currentThemeConfig.mutedColor,
           onColorSelected: (color) => onThemeConfigChanged(
             currentThemeConfig.copyWith(mutedColor: color),
@@ -315,26 +520,30 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
         ),
         _buildColorPickerTile(
           context,
-          label: 'Connector Won',
+          label: 'Won Connector',
           currentColor: currentThemeConfig.connectorWonColor,
           onColorSelected: (color) => onThemeConfigChanged(
             currentThemeConfig.copyWith(connectorWonColor: color),
           ),
         ),
-        _buildColorPickerTile(
-          context,
-          label: 'Border',
-          currentColor: currentThemeConfig.borderColor,
-          onColorSelected: (color) => onThemeConfigChanged(
-            currentThemeConfig.copyWith(borderColor: color),
+        _SliderTile(
+          label: 'Connector Stroke Width',
+          value: currentThemeConfig.connectorStrokeWidth,
+          min: 0.0,
+          max: 8.0,
+          divisions: 16,
+          onChanged: (value) => onThemeConfigChanged(
+            currentThemeConfig.copyWith(connectorStrokeWidth: value),
           ),
         ),
-        _buildColorPickerTile(
-          context,
-          label: 'Muted',
-          currentColor: currentThemeConfig.mutedColor,
-          onColorSelected: (color) => onThemeConfigChanged(
-            currentThemeConfig.copyWith(mutedColor: color),
+        _SliderTile(
+          label: 'Junction Corner Radius',
+          value: currentThemeConfig.junctionCornerRadius,
+          min: 0.0,
+          max: 30.0,
+          divisions: 30,
+          onChanged: (value) => onThemeConfigChanged(
+            currentThemeConfig.copyWith(junctionCornerRadius: value),
           ),
         ),
       ],
