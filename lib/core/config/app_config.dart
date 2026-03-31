@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 /// Application-wide feature flags and configuration constants.
 ///
 /// These are compile-time constants so tree-shaking removes dead code paths
@@ -16,7 +18,7 @@ abstract final class AppConfig {
   static const bool isAuthenticationEnabled = true;
 
   /// Enables special advanced features across the application.
-  static const bool isSpecialPowerEnabled = true;
+  static const bool isSpecialPowerEnabled = kDebugMode;
 
   /// Background image URL for auth screens.
   static const String authBackgroundImage =

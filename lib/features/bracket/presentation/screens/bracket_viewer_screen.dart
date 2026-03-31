@@ -1,6 +1,9 @@
+import 'dart:async';
+import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
+import 'package:extended_image/extended_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pdf/pdf.dart';
@@ -125,14 +128,57 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
     super.dispose();
   }
 
+  /// Asynchronously loads a single logo image.
+  Future<ui.Image?> _loadLogoAsync(String url) async {
+    if (url.isEmpty) return null;
+    
+    if (url.startsWith('data:')) {
+      try {
+        final commaIndex = url.indexOf(',');
+        if (commaIndex == -1) return null;
+        final base64String = url.substring(commaIndex + 1);
+        final bytes = base64Decode(base64String);
+        final completer = Completer<ui.Image>();
+        ui.decodeImageFromList(bytes, (image) => completer.complete(image));
+        return await completer.future;
+      } catch (_) {
+        return null;
+      }
+    } else {
+      try {
+        final completer = Completer<ui.Image?>();
+        final imageStream = ExtendedNetworkImageProvider(url, cache: true)
+            .resolve(ImageConfiguration.empty);
+        late ImageStreamListener listener;
+        listener = ImageStreamListener(
+          (imageInfo, _) {
+            if (!completer.isCompleted) completer.complete(imageInfo.image);
+            imageStream.removeListener(listener);
+          },
+          onError: (exception, stackTrace) {
+            if (!completer.isCompleted) completer.complete(null);
+            imageStream.removeListener(listener);
+          },
+        );
+        imageStream.addListener(listener);
+        return await completer.future;
+      } catch (_) {
+        return null; // Fallback
+      }
+    }
+  }
+
   /// Builds a [TieSheetPainter] from the current bloc state for PDF export.
   /// Returns `null` if no bracket data is loaded.
-  TieSheetPainter? _buildExportPainter() {
+  Future<TieSheetPainter?> _buildExportPainter() async {
     final blocState = context.read<BracketBloc>().state;
     if (blocState is! BracketLoadSuccess) return null;
 
     final bracketData = _extractBracketDataFromResult(blocState.result);
     final themeSelectionState = context.read<BracketThemeSelectionBloc>().state;
+
+    final ui.Image? leftLogoImage = await _loadLogoAsync(widget.tournament.leftLogoUrl);
+    final ui.Image? rightLogoImage = await _loadLogoAsync(widget.tournament.rightLogoUrl);
 
     return TieSheetPainter(
       tournament: widget.tournament,
@@ -145,6 +191,8 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
       isEditModeEnabled: false,
       themeConfig: _resolveThemeConfigFromSelection(themeSelectionState),
       classification: _classification,
+      leftLogoImage: leftLogoImage,
+      rightLogoImage: rightLogoImage,
     );
   }
 
@@ -153,7 +201,19 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
   /// user confirms, delegates to [_generateAndPrintPdf] to build and print
   /// the document.
   Future<void> _showPrintPreview() async {
-    final exportPainter = _buildExportPainter();
+    _updateExportProgress(0.0, 'Preparing print preview…');
+    await Future<void>.delayed(Duration.zero);
+    final exportPainter = await _buildExportPainter();
+    
+    // Clear the progress indicator directly since PrintPreviewDialog doesn't trigger its own clear until later.
+    _updateExportProgress(1.0, '');
+    if (mounted) {
+      setState(() {
+        _pdfExportProgress = null;
+        _pdfExportStatusMessage = '';
+      });
+    }
+
     if (exportPainter == null) return;
 
     final canvasSize = exportPainter.calculateCanvasSize();
@@ -179,10 +239,10 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
   /// approach with a dynamic page format that matches the canvas 1:1.
   /// Opens the native print dialog immediately — no preview UI.
   Future<void> _directExportPdf() async {
-    final exportPainter = _buildExportPainter();
-
     _updateExportProgress(0.0, 'Preparing bracket for export…');
     await Future<void>.delayed(Duration.zero);
+
+    final exportPainter = await _buildExportPainter();
 
     try {
       if (exportPainter == null) {
