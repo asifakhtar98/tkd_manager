@@ -13,6 +13,7 @@ List<RouteBase> get $appRoutes => [
   $activateRoute,
   $adminRoute,
   $profileRoute,
+  $invoiceRoute,
   $dashboardRoute,
 ];
 
@@ -145,6 +146,29 @@ mixin $ProfileRoute on GoRouteData {
 
   @override
   String get location => GoRouteData.$location('/profile');
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+RouteBase get $invoiceRoute =>
+    GoRouteData.$route(path: '/invoice', factory: $InvoiceRoute._fromState);
+
+mixin $InvoiceRoute on GoRouteData {
+  static InvoiceRoute _fromState(GoRouterState state) => const InvoiceRoute();
+
+  @override
+  String get location => GoRouteData.$location('/invoice');
 
   @override
   void go(BuildContext context) => context.go(location);

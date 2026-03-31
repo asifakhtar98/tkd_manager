@@ -20,6 +20,7 @@ import 'package:tkd_saas/features/tournament/presentation/screens/tournament_det
 import 'package:tkd_saas/features/activation/presentation/screens/activate_software_screen.dart';
 import 'package:tkd_saas/features/activation/presentation/screens/admin_activation_screen.dart';
 import 'package:tkd_saas/features/profile/presentation/screens/profile_screen.dart';
+import 'package:tkd_saas/features/invoice/presentation/screens/invoice_generator_screen.dart';
 
 export 'package:tkd_saas/features/bracket/domain/entities/bracket_format.dart';
 
@@ -73,6 +74,9 @@ abstract final class RoutePaths {
 
   /// Profile route path `/profile`
   static const String profile = '/profile';
+
+  /// Invoice generator route path `/invoice`
+  static const String invoice = '/invoice';
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -149,6 +153,16 @@ class ProfileRoute extends GoRouteData with $ProfileRoute {
   @override
   Widget build(BuildContext context, GoRouterState state) =>
       const ProfileScreen();
+}
+
+@TypedGoRoute<InvoiceRoute>(path: '/invoice')
+@immutable
+class InvoiceRoute extends GoRouteData with $InvoiceRoute {
+  const InvoiceRoute();
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      const InvoiceGeneratorScreen();
 }
 
 // ── Main app routes (nested hierarchy) ───────────────────────────────────────
