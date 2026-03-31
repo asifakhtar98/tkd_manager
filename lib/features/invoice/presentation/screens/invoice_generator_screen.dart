@@ -94,6 +94,8 @@ class _InvoiceGeneratorScreenState extends State<InvoiceGeneratorScreen> {
       TextEditingController();
   final TextEditingController _branchNameInputController =
       TextEditingController();
+  final TextEditingController _upiIdInputController =
+      TextEditingController();
   final TextEditingController _paymentModeInputController =
       TextEditingController(text: 'UPI');
   final TextEditingController _txRefIdInputController = TextEditingController();
@@ -111,6 +113,12 @@ class _InvoiceGeneratorScreenState extends State<InvoiceGeneratorScreen> {
   String _selectedCurrency = 'INR ';
   bool _isFullyPaid = false;
   bool _isRoundingEnabled = true;
+  final TextEditingController _taxLabelInputController =
+      TextEditingController(text: 'GST');
+  final TextEditingController _taxPercentageInputController =
+      TextEditingController(text: '0');
+  final TextEditingController _paymentInstructionsInputController =
+      TextEditingController();
 
   // Items & Terms
   final List<_InvoiceLineItemControllers> _lineItemControllersList = [];
@@ -155,6 +163,7 @@ class _InvoiceGeneratorScreenState extends State<InvoiceGeneratorScreen> {
     _branchNameInputController.dispose();
     _paymentModeInputController.dispose();
     _txRefIdInputController.dispose();
+    _upiIdInputController.dispose();
     _invoiceTitleInputController.dispose();
     _invoiceNumberInputController.dispose();
     _invoiceRefNoInputController.dispose();
@@ -241,8 +250,14 @@ class _InvoiceGeneratorScreenState extends State<InvoiceGeneratorScreen> {
                 itemRateAmount: double.tryParse(c.rateController.text) ?? 0.0,
               ))
           .toList(),
-      invoiceAppliedTaxes: [],
+      invoiceAppliedTaxes: [
+        InvoiceTaxEntity(
+          taxLabelName: _taxLabelInputController.text,
+          taxPercentageValue: double.tryParse(_taxPercentageInputController.text) ?? 0.0,
+        ),
+      ],
       invoiceTermsAndConditionsText: _termsAndNotesInputController.text,
+      invoicePaymentInstructionsText: _paymentInstructionsInputController.text,
       isFullyPaid: _isFullyPaid,
       includeSignaturePlaceholder: _includeSignatureBlocks,
       signatoryName: _signatoryNameInputController.text,
@@ -257,6 +272,7 @@ class _InvoiceGeneratorScreenState extends State<InvoiceGeneratorScreen> {
         accountNumber: _accNumberInputController.text,
         ifscCode: _ifscCodeInputController.text,
         branchName: _branchNameInputController.text,
+        upiId: _upiIdInputController.text,
       ),
       roundingAmount: _calculateRoundingAmount(),
     );
@@ -270,10 +286,8 @@ class _InvoiceGeneratorScreenState extends State<InvoiceGeneratorScreen> {
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: const Text('Professional SaaS Invoice Generator'),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black87,
-        elevation: 0.5,
+        title: const Text('My Invoice Generator'),
+    
       ),
       body: isDesktop
           ? Row(
@@ -400,6 +414,13 @@ class _InvoiceGeneratorScreenState extends State<InvoiceGeneratorScreen> {
               ),
             ],
           ),
+          const SizedBox(height: 12),
+          _StylizedInput(
+            controller: _clientContactEmailInputController,
+            label: 'Client Contact Email',
+            isEmail: true,
+            onChanged: (v) => setState(() {}),
+          ),
           const SizedBox(height: 32),
           _SectionTitle('Invoice & Payment Metadata'),
           Row(
@@ -417,6 +438,14 @@ class _InvoiceGeneratorScreenState extends State<InvoiceGeneratorScreen> {
                 child: _StylizedInput(
                   controller: _invoiceNumberInputController,
                   label: 'Invoice #',
+                  onChanged: (v) => setState(() {}),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _StylizedInput(
+                  controller: _invoiceRefNoInputController,
+                  label: 'Reference / PO #',
                   onChanged: (v) => setState(() {}),
                 ),
               ),
@@ -461,6 +490,12 @@ class _InvoiceGeneratorScreenState extends State<InvoiceGeneratorScreen> {
             onChanged: (v) => setState(() {}),
           ),
           const SizedBox(height: 12),
+          _StylizedInput(
+            controller: _branchNameInputController,
+            label: 'Bank Branch Name',
+            onChanged: (v) => setState(() {}),
+          ),
+          const SizedBox(height: 12),
           Row(
             children: [
               Expanded(
@@ -481,13 +516,20 @@ class _InvoiceGeneratorScreenState extends State<InvoiceGeneratorScreen> {
               ),
             ],
           ),
+          const SizedBox(height: 12),
+          _StylizedInput(
+            controller: _upiIdInputController,
+            label: 'UPI ID (e.g., yourname@bank)',
+            onChanged: (v) => setState(() {}),
+          ),
           const SizedBox(height: 32),
           _SectionTitle('Audit Tracking & Totals'),
-          SwitchListTile(
-            title: const Text('Fully Paid Status'),
-            subtitle: const Text('Marks invoice as PAID and adds audit details.'),
+          CheckboxListTile(
+            title: const Text('Mark as Fully Paid'),
+            subtitle: const Text('Adds a PAID badge to the PDF'),
             value: _isFullyPaid,
-            onChanged: (v) => setState(() => _isFullyPaid = v),
+            activeColor: Colors.green[700],
+            onChanged: (v) => setState(() => _isFullyPaid = v ?? false),
           ),
           if (_isFullyPaid) ...[
             const SizedBox(height: 12),
@@ -510,7 +552,45 @@ class _InvoiceGeneratorScreenState extends State<InvoiceGeneratorScreen> {
                 ),
               ],
             ),
+            const SizedBox(height: 12),
+            _DateInputField(
+              label: 'Payment Date',
+              date: _selectedPaymentDate,
+              onTap: () async {
+                final date = await showDatePicker(
+                  context: context,
+                  initialDate: DateTime.now(),
+                  firstDate: DateTime(2000),
+                  lastDate: DateTime(2100),
+                );
+                if (date != null) {
+                  setState(() => _selectedPaymentDate = date);
+                }
+              },
+            ),
           ],
+          const SizedBox(height: 12),
+          _SectionTitle('Tax Details'),
+          Row(
+            children: [
+              Expanded(
+                flex: 2,
+                child: _StylizedInput(
+                  controller: _taxLabelInputController,
+                  label: 'Tax Name (e.g., GST / VAT)',
+                  onChanged: (v) => setState(() {}),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _StylizedInput(
+                  controller: _taxPercentageInputController,
+                  label: 'Tax %',
+                  onChanged: (v) => setState(() {}),
+                ),
+              ),
+            ],
+          ),
           const SizedBox(height: 8),
           SwitchListTile(
             title: const Text('Auto-Round Grand Total'),
@@ -523,10 +603,15 @@ class _InvoiceGeneratorScreenState extends State<InvoiceGeneratorScreen> {
           Wrap(
             spacing: 8,
             runSpacing: 8,
-            children: _saasPlansAvailable.map((p) {
-              return ActionChip(
-                label: Text(p.title),
-                onPressed: () => _addNewLineItem(p),
+            children: _saasPlansAvailable.map((plan) {
+              return OutlinedButton.icon(
+                onPressed: () => _addNewLineItem(plan),
+                label: Text(plan.title, style: const TextStyle(color: Colors.black87)),
+                icon: const Icon(Icons.flash_on, size: 16, color: Colors.amber),
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: Colors.black12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                ),
               );
             }).toList(),
           ),
@@ -539,10 +624,30 @@ class _InvoiceGeneratorScreenState extends State<InvoiceGeneratorScreen> {
             );
           }),
           const SizedBox(height: 12),
-          TextButton.icon(
+          ElevatedButton.icon(
             onPressed: () => _addNewLineItem(),
-            icon: const Icon(Icons.add),
-            label: const Text('Add Custom Row'),
+            icon: const Icon(Icons.add, color: Colors.white),
+            label: const Text('Add Custom Item'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.black,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+          ),
+          const SizedBox(height: 32),
+          _SectionTitle('Notes & Terms'),
+          _StylizedInput(
+            controller: _termsAndNotesInputController,
+            label: 'Terms & Conditions / Notes',
+            maxLines: 3,
+            onChanged: (v) => setState(() {}),
+          ),
+          const SizedBox(height: 12),
+          _StylizedInput(
+            controller: _paymentInstructionsInputController,
+            label: 'Payment Instructions',
+            maxLines: 2,
+            onChanged: (v) => setState(() {}),
           ),
           const SizedBox(height: 32),
           _SectionTitle('Compliance & Signature'),
@@ -557,6 +662,17 @@ class _InvoiceGeneratorScreenState extends State<InvoiceGeneratorScreen> {
             controller: _signatoryNameInputController,
             label: 'Authorised Signatory Name',
             onChanged: (v) => setState(() {}),
+          ),
+          const SizedBox(height: 8),
+          SwitchListTile(
+            title: const Text('Include Signature Placeholder'),
+            value: _includeSignatureBlocks,
+            onChanged: (v) => setState(() => _includeSignatureBlocks = v),
+          ),
+          SwitchListTile(
+            title: const Text('Show Computer Generated Notice'),
+            value: _showComputerNotice,
+            onChanged: (v) => setState(() => _showComputerNotice = v),
           ),
           const SizedBox(height: 48),
         ],
@@ -579,6 +695,12 @@ class _InvoiceGeneratorScreenState extends State<InvoiceGeneratorScreen> {
   Future<Uint8List> _generatePdf(PdfPageFormat format, InvoiceDataEntity data) async {
     final pdf = pw.Document();
     final df = DateFormat('dd-MMM-yyyy');
+    final primaryColor = PdfColors.black;
+    final secondaryColor = PdfColors.grey700;
+    final accentColor = PdfColors.grey200;
+    final successColor = PdfColors.green700;
+    final errorColor = PdfColors.red700;
+
     final logo = data.companyDetails.companyLogoBytes != null
         ? pw.MemoryImage(data.companyDetails.companyLogoBytes!)
         : null;
@@ -586,41 +708,91 @@ class _InvoiceGeneratorScreenState extends State<InvoiceGeneratorScreen> {
     pdf.addPage(
       pw.MultiPage(
         pageFormat: format,
-        margin: const pw.EdgeInsets.all(32),
+        margin: const pw.EdgeInsets.all(40),
+        header: (context) => pw.Container(
+          height: 10,
+          color: primaryColor,
+          margin: const pw.EdgeInsets.only(bottom: 20),
+        ),
         build: (context) {
           return [
-            // Header: Logo and Invoice Metadata
+            // Top Header: Logo and Title/MetaData
             pw.Row(
               mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [
-                if (logo != null) pw.Image(logo, width: 100, height: 50) else pw.SizedBox(width: 100),
+                pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: [
+                    if (logo != null)
+                      pw.Container(
+                        padding: const pw.EdgeInsets.only(bottom: 10),
+                        child: pw.Image(logo, height: 60),
+                      ),
+                    pw.Text(
+                      data.companyDetails.companyName.toUpperCase(),
+                      style: pw.TextStyle(
+                        fontSize: 16,
+                        fontWeight: pw.FontWeight.bold,
+                        color: secondaryColor,
+                      ),
+                    ),
+                    pw.SizedBox(height: 4),
+                    pw.Text(data.companyDetails.companyAddressLine1, style: pw.TextStyle(fontSize: 9)),
+                    pw.Text(data.companyDetails.companyAddressLine2, style: pw.TextStyle(fontSize: 9)),
+                    if (data.companyDetails.companyTaxIdentificationNumber.isNotEmpty)
+                      pw.Text('PAN: ${data.companyDetails.companyTaxIdentificationNumber}', style: pw.TextStyle(fontSize: 9)),
+                    pw.Text('P: ${data.companyDetails.companyPhone}', style: pw.TextStyle(fontSize: 9)),
+                    pw.Text('E: ${data.companyDetails.companyEmail}', style: pw.TextStyle(fontSize: 9)),
+                  ],
+                ),
                 pw.Column(
                   crossAxisAlignment: pw.CrossAxisAlignment.end,
                   children: [
-                    pw.Text(data.invoiceTitle.toUpperCase(),
-                        style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold)),
+                    pw.Text(
+                      data.invoiceTitle.toUpperCase(),
+                      style: pw.TextStyle(
+                        fontSize: 32,
+                        fontWeight: pw.FontWeight.bold,
+                        color: primaryColor,
+                      ),
+                    ),
+                    pw.SizedBox(height: 10),
+                    _pdfMetadataRow('Invoice #', data.invoiceDocumentNumber, primaryColor),
+                    _pdfMetadataRow('Date', df.format(data.invoiceIssueDate), primaryColor),
+                    _pdfMetadataRow('Due Date', df.format(data.invoiceDueDate), primaryColor),
+                    if (data.invoiceReferenceNumber.isNotEmpty)
+                      _pdfMetadataRow('Ref #', data.invoiceReferenceNumber, primaryColor),
                     if (data.isFullyPaid)
                       pw.Container(
-                        margin: const pw.EdgeInsets.only(top: 4),
-                        padding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                        color: PdfColors.green100,
-                        child: pw.Text('PAID', style: pw.TextStyle(color: PdfColors.green800, fontWeight: pw.FontWeight.bold)),
+                        margin: const pw.EdgeInsets.only(top: 10),
+                        padding: pw.EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: pw.BoxDecoration(
+                          color: PdfColors.green50,
+                          borderRadius: pw.BorderRadius.all(pw.Radius.circular(4)),
+                          border: pw.Border.all(color: successColor, width: 0.5),
+                        ),
+                        child: pw.Text('COMPLETED / PAID', style: pw.TextStyle(color: successColor, fontWeight: pw.FontWeight.bold, fontSize: 10)),
                       ),
-                    pw.SizedBox(height: 10),
-                    _PdfTextRow('Invoice #:', data.invoiceDocumentNumber),
-                    _PdfTextRow('Date:', df.format(data.invoiceIssueDate)),
-                    if (data.invoiceReferenceNumber.isNotEmpty)
-                      _PdfTextRow('Ref/PO #:', data.invoiceReferenceNumber),
-                    if (data.isFullyPaid && data.paymentDate != null)
-                      _PdfTextRow('Payment Date:', df.format(data.paymentDate!)),
+                    if (!data.isFullyPaid && data.invoiceDueDate.isBefore(DateTime.now()))
+                       pw.Container(
+                        margin: const pw.EdgeInsets.only(top: 10),
+                        padding: pw.EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: pw.BoxDecoration(
+                          color: PdfColors.red50,
+                          borderRadius: pw.BorderRadius.all(pw.Radius.circular(4)),
+                          border: pw.Border.all(color: errorColor, width: 0.5),
+                        ),
+                        child: pw.Text('OVERDUE', style: pw.TextStyle(color: errorColor, fontWeight: pw.FontWeight.bold, fontSize: 10)),
+                      ),
                   ],
                 ),
               ],
             ),
-            pw.SizedBox(height: 30),
 
-            // Vendor & Client Info
+            pw.SizedBox(height: 40),
+
+            // Bill To Section
             pw.Row(
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [
@@ -628,139 +800,179 @@ class _InvoiceGeneratorScreenState extends State<InvoiceGeneratorScreen> {
                   child: pw.Column(
                     crossAxisAlignment: pw.CrossAxisAlignment.start,
                     children: [
-                      pw.Text('FROM', style: pw.TextStyle(fontSize: 9, color: PdfColors.grey700)),
-                      if (data.companyDetails.companyName.isNotEmpty)
-                        pw.Text(data.companyDetails.companyName, style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
-                      if (data.companyDetails.companyAddressLine1.isNotEmpty)
-                        pw.Text(data.companyDetails.companyAddressLine1, style: const pw.TextStyle(fontSize: 9)),
-                      if (data.companyDetails.companyAddressLine2.isNotEmpty)
-                        pw.Text(data.companyDetails.companyAddressLine2, style: const pw.TextStyle(fontSize: 9)),
-                      if (data.companyDetails.companyTaxIdentificationNumber.isNotEmpty)
-                        pw.Text('PAN: ${data.companyDetails.companyTaxIdentificationNumber}', style: const pw.TextStyle(fontSize: 9)),
-                      if (data.companyDetails.companyEmail.isNotEmpty)
-                        pw.Text('Email: ${data.companyDetails.companyEmail.toLowerCase()}', style: const pw.TextStyle(fontSize: 9)),
-                      if (data.companyDetails.companyPhone.isNotEmpty)
-                        pw.Text('Phone: ${data.companyDetails.companyPhone}', style: const pw.TextStyle(fontSize: 9)),
-                    ],
-                  ),
-                ),
-                pw.SizedBox(width: 20),
-                pw.Expanded(
-                  child: pw.Column(
-                    crossAxisAlignment: pw.CrossAxisAlignment.end,
-                    children: [
-                      pw.Text('BILL TO', style: pw.TextStyle(fontSize: 9, color: PdfColors.grey700)),
-                      if (data.clientDetails.clientOrganizationName.isNotEmpty)
-                        pw.Text(data.clientDetails.clientOrganizationName, style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
-                      if (data.clientDetails.clientAddressLine1.isNotEmpty)
-                        pw.Text(data.clientDetails.clientAddressLine1, style: const pw.TextStyle(fontSize: 9), textAlign: pw.TextAlign.right),
-                      if (data.clientDetails.clientAddressLine2.isNotEmpty)
-                        pw.Text(data.clientDetails.clientAddressLine2, style: const pw.TextStyle(fontSize: 9), textAlign: pw.TextAlign.right),
+                      pw.Text('BILL TO', style: pw.TextStyle(fontSize: 8, color: primaryColor, fontWeight: pw.FontWeight.bold)),
+                      pw.SizedBox(height: 4),
+                      pw.Text(
+                        data.clientDetails.clientOrganizationName,
+                        style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 12),
+                      ),
+                      pw.Text(data.clientDetails.clientAddressLine1, style: pw.TextStyle(fontSize: 9)),
+                      pw.Text(data.clientDetails.clientAddressLine2, style: pw.TextStyle(fontSize: 9)),
+                      pw.Text('E: ${data.clientDetails.clientContactEmail}', style: pw.TextStyle(fontSize: 9)),
                       if (data.clientDetails.clientTaxIdentificationNumber.isNotEmpty)
-                        pw.Text('GSTIN: ${data.clientDetails.clientTaxIdentificationNumber}', style: const pw.TextStyle(fontSize: 9)),
-                      if (data.clientDetails.clientContactPerson.isNotEmpty)
-                        pw.Text('Contact: ${data.clientDetails.clientContactPerson}', style: const pw.TextStyle(fontSize: 9)),
-                      if (data.clientDetails.clientContactEmail.isNotEmpty)
-                        pw.Text('Email: ${data.clientDetails.clientContactEmail.toLowerCase()}', style: const pw.TextStyle(fontSize: 9)),
+                        pw.Text('GSTIN: ${data.clientDetails.clientTaxIdentificationNumber}', style: pw.TextStyle(fontSize: 9)),
+                      pw.SizedBox(height: 4),
+                      pw.Text('Contact: ${data.clientDetails.clientContactPerson}', style: pw.TextStyle(fontSize: 9)),
                     ],
                   ),
                 ),
               ],
             ),
+
             pw.SizedBox(height: 30),
 
-            // Item Table
+            // Line Items Table
             pw.TableHelper.fromTextArray(
-              headers: ['Service/Plan', 'Qty', 'Rate', 'Amount'],
-              data: data.invoiceLineItems.map((i) => [
-                '${i.itemName}\n${i.itemDescription}',
-                i.itemQuantity.toString(),
-                '${data.invoiceCurrencySymbol}${i.itemRateAmount.toStringAsFixed(2)}',
-                '${data.invoiceCurrencySymbol}${i.calculateTotalItemAmount().toStringAsFixed(2)}'
-              ]).toList(),
+              headers: ['#', 'DESCRIPTION', 'QTY', 'RATE', 'AMOUNT'],
+              headerStyle: pw.TextStyle(color: PdfColors.white, fontWeight: pw.FontWeight.bold, fontSize: 9),
+              headerDecoration: pw.BoxDecoration(color: primaryColor),
+              cellPadding: pw.EdgeInsets.all(8),
+              columnWidths: {
+                0: pw.FixedColumnWidth(25),
+                1: pw.FlexColumnWidth(5),
+                2: pw.FixedColumnWidth(40),
+                3: pw.FixedColumnWidth(80),
+                4: pw.FixedColumnWidth(80),
+              },
+              data: List<List<dynamic>>.generate(data.invoiceLineItems.length, (index) {
+                final item = data.invoiceLineItems[index];
+                return [
+                  (index + 1).toString(),
+                  pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    children: [
+                      pw.Text(item.itemName, style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10)),
+                      pw.Text(item.itemDescription, style: pw.TextStyle(fontSize: 8, color: PdfColors.grey700)),
+                    ],
+                  ),
+                  item.itemQuantity.toString(),
+                  '${data.invoiceCurrencySymbol}${item.itemRateAmount.toStringAsFixed(2)}',
+                  '${data.invoiceCurrencySymbol}${item.calculateTotalItemAmount().toStringAsFixed(2)}',
+                ];
+              }),
               border: null,
-              headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold, color: PdfColors.white),
-              headerDecoration: const pw.BoxDecoration(color: PdfColors.grey900),
-              cellAlignments: {0: pw.Alignment.centerLeft, 1: pw.Alignment.center, 2: pw.Alignment.centerRight, 3: pw.Alignment.centerRight},
+              rowDecoration: pw.BoxDecoration(
+                border: pw.Border(bottom: pw.BorderSide(color: PdfColors.grey200, width: 0.5)),
+              ),
+              cellAlignments: {
+                0: pw.Alignment.centerLeft,
+                1: pw.Alignment.centerLeft,
+                2: pw.Alignment.center,
+                3: pw.Alignment.centerRight,
+                4: pw.Alignment.centerRight,
+              },
             ),
-            pw.Divider(color: PdfColors.grey300),
 
-            // Summary Bottom Section
+            pw.SizedBox(height: 20),
+
+            // Totals and Notes Section
             pw.Row(
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [
-                // Bank Details
                 pw.Expanded(
                   flex: 3,
-                  child: data.bankDetails.hasAnyInformationalDetails
-                      ? pw.Column(
-                          crossAxisAlignment: pw.CrossAxisAlignment.start,
-                          children: [
-                            pw.Text('PAYMENT DETAILS', style: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold)),
-                            pw.SizedBox(height: 4),
-                            _PdfBankLine('Bank:', data.bankDetails.bankName),
-                            _PdfBankLine('Acc Holder:', data.bankDetails.accountHolderName),
-                            _PdfBankLine('Acc No:', data.bankDetails.accountNumber),
-                            _PdfBankLine('IFSC Code:', data.bankDetails.ifscCode),
-                            if (data.bankDetails.branchName.isNotEmpty)
-                              _PdfBankLine('Branch:', data.bankDetails.branchName),
-                          ],
-                        )
-                      : pw.SizedBox(),
+                  child: pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    children: [
+                      if (data.bankDetails.hasAnyInformationalDetails) ...[
+                        pw.Text('PAYMENT INFORMATION', style: pw.TextStyle(fontSize: 8, color: primaryColor, fontWeight: pw.FontWeight.bold)),
+                        pw.SizedBox(height: 6),
+                        _pdfLabelValue('Bank Name', data.bankDetails.bankName),
+                        _pdfLabelValue('Account Name', data.bankDetails.accountHolderName),
+                        _pdfLabelValue('Account Number', data.bankDetails.accountNumber),
+                        _pdfLabelValue('IFSC Code', data.bankDetails.ifscCode),
+                        _pdfLabelValue('Branch', data.bankDetails.branchName),
+                        _pdfLabelValue('UPI ID', data.bankDetails.upiId),
+                        if (data.isFullyPaid) ...[
+                          if (data.paymentMode.isNotEmpty)
+                            _pdfLabelValue('Payment Mode', data.paymentMode),
+                          if (data.transactionReferenceId.isNotEmpty)
+                            _pdfLabelValue('Tx Ref ID', data.transactionReferenceId),
+                          if (data.paymentDate != null)
+                            _pdfLabelValue('Paid Date', df.format(data.paymentDate!)),
+                        ],
+                        pw.SizedBox(height: 10),
+                      ],
+                      if (data.invoicePaymentInstructionsText.isNotEmpty) ...[
+                        pw.Text('PAYMENT INSTRUCTIONS', style: pw.TextStyle(fontSize: 8, color: primaryColor, fontWeight: pw.FontWeight.bold)),
+                        pw.SizedBox(height: 4),
+                        pw.Text(data.invoicePaymentInstructionsText, style: pw.TextStyle(fontSize: 8)),
+                        pw.SizedBox(height: 10),
+                      ],
+                      if (data.invoiceTermsAndConditionsText.isNotEmpty) ...[
+                        pw.Text('NOTES', style: pw.TextStyle(fontSize: 8, color: primaryColor, fontWeight: pw.FontWeight.bold)),
+                        pw.SizedBox(height: 4),
+                        pw.Text(data.invoiceTermsAndConditionsText, style: pw.TextStyle(fontSize: 8)),
+                      ],
+                    ],
+                  ),
                 ),
                 pw.Expanded(
                   flex: 2,
                   child: pw.Column(
-                    crossAxisAlignment: pw.CrossAxisAlignment.end,
                     children: [
-                      _PdfTotalLine('Subtotal', '${data.invoiceCurrencySymbol}${data.calculateSubTotalAmount().toStringAsFixed(2)}'),
+                      _pdfSummaryRow('Subtotal', '${data.invoiceCurrencySymbol}${data.calculateSubTotalAmount().toStringAsFixed(2)}'),
+                      ...data.invoiceAppliedTaxes.map((tax) {
+                        final taxAmount = data.calculateSubTotalAmount() * (tax.taxPercentageValue / 100.0);
+                        if (taxAmount == 0) return pw.SizedBox();
+                        return _pdfSummaryRow('${tax.taxLabelName} (${tax.taxPercentageValue}%)', '${data.invoiceCurrencySymbol}${taxAmount.toStringAsFixed(2)}');
+                      }),
                       if (data.roundingAmount != 0)
-                        _PdfTotalLine('Round Off', '${data.roundingAmount > 0 ? "+" : ""}${data.roundingAmount.toStringAsFixed(2)}'),
-                      pw.Divider(color: PdfColors.grey400),
-                      _PdfTotalLine('Grand Total', '${data.invoiceCurrencySymbol}${data.calculateGrandTotalAmount().toStringAsFixed(2)}', isBold: true),
-                      if (data.isFullyPaid) ...[
-                        pw.SizedBox(height: 4),
-                        if (data.paymentMode.isNotEmpty)
-                          pw.Text('Mode: ${data.paymentMode}', style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey700)),
-                        if (data.transactionReferenceId.isNotEmpty)
-                          pw.Text('Ref: ${data.transactionReferenceId}', style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey700)),
-                      ],
-                      pw.SizedBox(height: 10),
-                      // Amount in words
+                        _pdfSummaryRow('Round Off', '${data.roundingAmount > 0 ? "+" : ""}${data.roundingAmount.toStringAsFixed(2)}'),
+                      pw.Divider(color: PdfColors.grey200),
                       pw.Container(
-                        padding: const pw.EdgeInsets.all(6),
-                        color: PdfColors.grey100,
-                        child: pw.Text(
-                          'In Words: ${_NumberToWordsConverter.convert(data.calculateGrandTotalAmount())}',
-                          style: pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold),
-                          textAlign: pw.TextAlign.right,
+                        padding: pw.EdgeInsets.all(6),
+                        decoration: pw.BoxDecoration(color: accentColor, borderRadius: pw.BorderRadius.all(pw.Radius.circular(4))),
+                        child: _pdfSummaryRow(
+                          'Grand Total',
+                          '${data.invoiceCurrencySymbol}${data.calculateGrandTotalAmount().toStringAsFixed(2)}',
+                          isBold: true,
+                          color: primaryColor,
                         ),
+                      ),
+                      pw.SizedBox(height: 10),
+                      // Amount in Words
+                      pw.Text(
+                        'Total In Words: ${_NumberToWordsConverter.convert(data.calculateGrandTotalAmount())}',
+                        style: pw.TextStyle(fontSize: 8, color: PdfColors.grey700, fontStyle: pw.FontStyle.italic),
+                        textAlign: pw.TextAlign.right,
                       ),
                     ],
                   ),
                 ),
               ],
             ),
+
             pw.Spacer(),
 
-            // Footer Compliance
+            // Compliance & Signature
             if (data.legalDeclarationText.isNotEmpty)
-              pw.Padding(
-                padding: const pw.EdgeInsets.symmetric(vertical: 20),
-                child: pw.Text(data.legalDeclarationText, style: pw.TextStyle(fontSize: 8, fontStyle: pw.FontStyle.italic)),
+              pw.Container(
+                margin: pw.EdgeInsets.only(top: 20),
+                padding: pw.EdgeInsets.all(8),
+                decoration: pw.BoxDecoration(border: pw.Border(left: pw.BorderSide(color: PdfColors.grey300, width: 2))),
+                child: pw.Text(data.legalDeclarationText, style: pw.TextStyle(fontSize: 7, color: PdfColors.grey700)),
               ),
+
+            pw.SizedBox(height: 20),
 
             pw.Row(
               mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: pw.CrossAxisAlignment.end,
               children: [
                 if (data.isComputerGeneratedNotice)
-                  pw.Text('Computer Generated Invoice', style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey500)),
+                  pw.Text('E. & O.E. | This is a computer generated document.',
+                      style: pw.TextStyle(fontSize: 7, color: PdfColors.grey500)),
                 if (data.includeSignaturePlaceholder)
                   pw.Column(
                     children: [
-                      pw.Text(data.signatoryName, style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold, fontStyle: pw.FontStyle.italic)),
-                      pw.Container(width: 120, height: 1, color: PdfColors.black),
-                      pw.Text('Authorised Signatory', style: const pw.TextStyle(fontSize: 8)),
+                      pw.Text('For ${data.companyDetails.companyName}',
+                          style: pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold)),
+                      pw.SizedBox(height: 30),
+                      pw.Text(data.signatoryName,
+                          style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold, fontStyle: pw.FontStyle.italic)),
+                      pw.Container(width: 120, height: 1, color: secondaryColor),
+                      pw.Text('Authorised Signatory', style: pw.TextStyle(fontSize: 7)),
                     ],
                   ),
               ],
@@ -793,7 +1005,7 @@ class _SectionTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
-      child: Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.indigo)),
+      child: Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black)),
     );
   }
 }
@@ -823,7 +1035,7 @@ class _StylizedInput extends StatelessWidget {
       controller: controller,
       maxLines: maxLines,
       onChanged: onChanged,
-      keyboardType: isNumeric ? const TextInputType.numberWithOptions(decimal: true) : (isEmail ? TextInputType.emailAddress : TextInputType.text),
+      keyboardType: isNumeric ? TextInputType.numberWithOptions(decimal: true) : (isEmail ? TextInputType.emailAddress : TextInputType.text),
       decoration: InputDecoration(
         labelText: label,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
@@ -843,9 +1055,9 @@ class _StylizedInput extends StatelessWidget {
 
 class _DateInputField extends StatelessWidget {
   final String label;
-  final DateTime date;
+  final DateTime? date;
   final VoidCallback onTap;
-  const _DateInputField({required this.label, required this.date, required this.onTap});
+  const _DateInputField({required this.label, this.date, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -853,7 +1065,7 @@ class _DateInputField extends StatelessWidget {
       onTap: onTap,
       child: InputDecorator(
         decoration: InputDecoration(labelText: label, border: OutlineInputBorder(borderRadius: BorderRadius.circular(8))),
-        child: Text(DateFormat.yMMMd().format(date)),
+        child: Text(date != null ? DateFormat.yMMMd().format(date!) : 'Select Date'),
       ),
     );
   }
@@ -867,7 +1079,7 @@ class _CurrencyPicker extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DropdownButtonFormField<String>(
-      value: value,
+      initialValue: value,
       items: const [
         DropdownMenuItem(value: 'INR ', child: Text('Indian Rupee (INR)')),
         DropdownMenuItem(value: 'USD ', child: Text('US Dollar (USD)')),
@@ -925,10 +1137,10 @@ class _LineItemRow extends StatelessWidget {
                 SizedBox(width: 60, child: _StylizedInput(controller: controllers.quantityController, label: 'Qty', isNumeric: true)),
                 const SizedBox(width: 8),
                 SizedBox(width: 100, child: _StylizedInput(controller: controllers.rateController, label: 'Rate', isNumeric: true)),
-                IconButton(onPressed: onRemove, icon: const Icon(Icons.delete, color: Colors.red)),
+                IconButton(onPressed: onRemove, icon: const Icon(Icons.delete_outline, color: Colors.red)),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
             _StylizedInput(controller: controllers.itemDescriptionController, label: 'Full Description (Audit Ready)'),
           ],
         ),
@@ -939,42 +1151,45 @@ class _LineItemRow extends StatelessWidget {
 
 // PDF Helpers (Private)
 
-pw.Widget _PdfTextRow(String label, String val) {
-  if (val.isEmpty) return pw.SizedBox();
+pw.Widget _pdfMetadataRow(String label, String value, PdfColor color) {
   return pw.Padding(
-    padding: const pw.EdgeInsets.only(bottom: 2),
+    padding: pw.EdgeInsets.only(bottom: 2),
     child: pw.Row(
-      mainAxisAlignment: pw.MainAxisAlignment.end,
+      mainAxisSize: pw.MainAxisSize.min,
       children: [
-        pw.Text(label, style: const pw.TextStyle(fontSize: 9)),
-        pw.SizedBox(width: 5),
-        pw.Text(val, style: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold)),
+        pw.Text('$label: ', style: pw.TextStyle(fontSize: 10, color: PdfColors.grey700)),
+        pw.Text(value, style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold)),
       ],
     ),
   );
 }
 
-pw.Widget _PdfBankLine(String label, String val) {
-  if (val.isEmpty) return pw.SizedBox();
+pw.Widget _pdfLabelValue(String label, String value) {
+  if (value.isEmpty) return pw.SizedBox();
   return pw.Padding(
-    padding: const pw.EdgeInsets.only(bottom: 1),
+    padding: pw.EdgeInsets.only(bottom: 2),
     child: pw.Row(
       children: [
-        pw.SizedBox(width: 60, child: pw.Text(label, style: const pw.TextStyle(fontSize: 8))),
-        pw.Text(val, style: pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold)),
+        pw.SizedBox(width: 80, child: pw.Text('$label:', style: pw.TextStyle(fontSize: 8, color: PdfColors.grey600))),
+        pw.Text(value, style: pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold)),
       ],
     ),
   );
 }
 
-pw.Widget _PdfTotalLine(String label, String val, {bool isBold = false}) {
+pw.Widget _pdfSummaryRow(String label, String value, {bool isBold = false, PdfColor? color}) {
   return pw.Padding(
-    padding: const pw.EdgeInsets.only(bottom: 2),
+    padding: pw.EdgeInsets.symmetric(vertical: 2),
     child: pw.Row(
       mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
       children: [
         pw.Text(label, style: pw.TextStyle(fontSize: 10, fontWeight: isBold ? pw.FontWeight.bold : pw.FontWeight.normal)),
-        pw.Text(val, style: pw.TextStyle(fontSize: 10, fontWeight: isBold ? pw.FontWeight.bold : pw.FontWeight.normal)),
+        pw.Text(value,
+            style: pw.TextStyle(
+              fontSize: 10,
+              fontWeight: isBold ? pw.FontWeight.bold : pw.FontWeight.normal,
+              color: color ?? PdfColors.black,
+            )),
       ],
     ),
   );

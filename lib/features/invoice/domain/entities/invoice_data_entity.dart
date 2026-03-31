@@ -67,6 +67,7 @@ class BankDetailsEntity {
   final String accountNumber;
   final String ifscCode;
   final String branchName;
+  final String upiId;
 
   const BankDetailsEntity({
     this.bankName = '',
@@ -74,13 +75,15 @@ class BankDetailsEntity {
     this.accountNumber = '',
     this.ifscCode = '',
     this.branchName = '',
+    this.upiId = '',
   });
 
   bool get hasAnyInformationalDetails =>
       bankName.isNotEmpty ||
       accountHolderName.isNotEmpty ||
       accountNumber.isNotEmpty ||
-      ifscCode.isNotEmpty;
+      ifscCode.isNotEmpty ||
+      upiId.isNotEmpty;
 }
 
 /// Represents a specific tax applied to the invoice subtotal.
