@@ -21,7 +21,6 @@ _TieSheetThemeConfig _$TieSheetThemeConfigFromJson(
   borderColor: const ColorJsonConverter().fromJson(
     (json['borderColor'] as num).toInt(),
   ),
-  shadowOpacityMultiplier: (json['shadowOpacityMultiplier'] as num).toDouble(),
   connectorStrokeWidth: (json['connectorStrokeWidth'] as num).toDouble(),
   isInteractivityDisabled: json['isInteractivityDisabled'] as bool,
   primaryTextColor: const ColorJsonConverter().fromJson(
@@ -107,12 +106,6 @@ _TieSheetThemeConfig _$TieSheetThemeConfigFromJson(
       .toDouble(),
   dashedLineDashWidth: (json['dashedLineDashWidth'] as num).toDouble(),
   dashedLineGapWidth: (json['dashedLineGapWidth'] as num).toDouble(),
-  shadowBlurRadius: (json['shadowBlurRadius'] as num).toDouble(),
-  shadowColor: const ColorJsonConverter().fromJson(
-    (json['shadowColor'] as num).toInt(),
-  ),
-  shadowOffsetX: (json['shadowOffsetX'] as num).toDouble(),
-  shadowOffsetY: (json['shadowOffsetY'] as num).toDouble(),
   fontFamily: json['fontFamily'] as String,
   headerLetterSpacing: (json['headerLetterSpacing'] as num).toDouble(),
   subHeaderLetterSpacing: (json['subHeaderLetterSpacing'] as num).toDouble(),
@@ -165,7 +158,6 @@ Map<String, dynamic> _$TieSheetThemeConfigToJson(
     instance.canvasBackgroundColor,
   ),
   'borderColor': const ColorJsonConverter().toJson(instance.borderColor),
-  'shadowOpacityMultiplier': instance.shadowOpacityMultiplier,
   'connectorStrokeWidth': instance.connectorStrokeWidth,
   'isInteractivityDisabled': instance.isInteractivityDisabled,
   'primaryTextColor': const ColorJsonConverter().toJson(
@@ -243,10 +235,6 @@ Map<String, dynamic> _$TieSheetThemeConfigToJson(
   'matchPillVerticalPadding': instance.matchPillVerticalPadding,
   'dashedLineDashWidth': instance.dashedLineDashWidth,
   'dashedLineGapWidth': instance.dashedLineGapWidth,
-  'shadowBlurRadius': instance.shadowBlurRadius,
-  'shadowColor': const ColorJsonConverter().toJson(instance.shadowColor),
-  'shadowOffsetX': instance.shadowOffsetX,
-  'shadowOffsetY': instance.shadowOffsetY,
   'fontFamily': instance.fontFamily,
   'headerLetterSpacing': instance.headerLetterSpacing,
   'subHeaderLetterSpacing': instance.subHeaderLetterSpacing,

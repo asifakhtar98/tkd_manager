@@ -1,35 +1,31 @@
-import 'dart:async';
-import 'dart:convert';
-import 'dart:math';
 import 'dart:typed_data';
-import 'dart:ui' as ui;
-import 'package:extended_image/extended_image.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pdf/pdf.dart';
-import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
+import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
+import 'package:tkd_saas/features/bracket/data/services/tie_sheet_syncfusion_pdf_renderer_service.dart';
 import 'package:tkd_saas/features/bracket/domain/entities/bracket_result.dart';
-import 'package:tkd_saas/features/bracket/data/services/bracket_pdf_generator_service.dart';
-import 'package:tkd_saas/features/bracket/presentation/models/print_export_settings.dart';
 import 'package:tkd_saas/features/bracket/domain/entities/match_entity.dart';
-import 'package:tkd_saas/core/router/app_routes.dart';
-import 'package:tkd_saas/core/config/app_config.dart';
+import 'package:tkd_saas/features/bracket/domain/layout/tie_sheet_layout_engine.dart';
+import 'package:tkd_saas/features/bracket/domain/layout/models/tie_sheet_layout_result.dart';
 import 'package:tkd_saas/features/bracket/domain/value_objects/bracket_theme_selection.dart';
+import 'package:tkd_saas/features/bracket/domain/value_objects/tie_sheet_theme_config.dart';
 import 'package:tkd_saas/features/bracket/presentation/bloc/bracket_bloc.dart';
 import 'package:tkd_saas/features/bracket/presentation/bloc/bracket_theme_preset_bloc.dart';
 import 'package:tkd_saas/features/bracket/presentation/bloc/bracket_theme_preset_state.dart';
 import 'package:tkd_saas/features/bracket/presentation/bloc/bracket_theme_selection_bloc.dart';
 import 'package:tkd_saas/features/bracket/presentation/bloc/bracket_theme_selection_event.dart';
 import 'package:tkd_saas/features/bracket/presentation/bloc/bracket_theme_selection_state.dart';
+import 'package:tkd_saas/features/bracket/presentation/models/print_export_settings.dart';
 import 'package:tkd_saas/features/bracket/presentation/widgets/bracket_history_drawer.dart';
-import 'package:tkd_saas/features/bracket/presentation/widgets/participant_edit_dialog.dart';
+import 'package:tkd_saas/features/bracket/presentation/widgets/bracket_match_list_panel.dart';
+import 'package:tkd_saas/features/bracket/presentation/widgets/bracket_participant_list_panel.dart';
 import 'package:tkd_saas/features/bracket/presentation/widgets/print_preview_dialog.dart';
-import 'package:tkd_saas/features/bracket/presentation/widgets/participant_slot_hit_area.dart';
 import 'package:tkd_saas/features/bracket/presentation/widgets/score_entry_dialog.dart';
-import 'package:tkd_saas/features/bracket/presentation/widgets/tie_sheet_canvas_widget.dart';
-import 'package:tkd_saas/features/bracket/domain/value_objects/tie_sheet_theme_config.dart';
 import 'package:tkd_saas/features/bracket/presentation/widgets/tie_sheet_theme_editor_panel.dart';
+import 'package:tkd_saas/core/router/app_routes.dart';
 import 'package:tkd_saas/features/setup_bracket/domain/entities/participant_entity.dart';
 import 'package:tkd_saas/features/tournament/domain/entities/bracket_classification.dart';
 import 'package:tkd_saas/features/tournament/domain/entities/bracket_snapshot.dart';
@@ -55,13 +51,26 @@ class BracketViewerScreen extends StatefulWidget {
 }
 
 class _BracketViewerScreenState extends State<BracketViewerScreen> {
-  final TransformationController _transformController =
-      TransformationController();
-  final GlobalKey _printKey = GlobalKey();
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
+  /// Cached PDF bytes for the on-screen viewer.
+  Uint8List? _cachedPdfBytes;
+
+  /// Cached layout result to avoid redundant recomputation during export.
+  TieSheetLayoutResult? _cachedLayoutResult;
+
+  /// Monotonically increasing counter to force [SfPdfViewer.memory] recreation
+  /// when PDF bytes change. Using byte length as a key is fragile since
+  /// two different PDFs can share the same length.
+  int _pdfGenerationCounter = 0;
+
+  /// Non-null when the most recent PDF generation attempt failed.
+  String? _pdfGenerationError;
+
+  /// Which side panel tab is active (0 = matches, 1 = participants).
+  int _activeSidePanelTab = 0;
+
   /// Non-null while a PDF export is in progress.
-  /// Value ranges from 0.0 (just started) to 1.0 (complete).
   double? _pdfExportProgress;
   String _pdfExportStatusMessage = '';
 
@@ -124,220 +133,110 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
 
   @override
   void dispose() {
-    _transformController.dispose();
     super.dispose();
   }
 
-  /// Asynchronously loads a single logo image.
-  Future<ui.Image?> _loadLogoAsync(String url) async {
-    if (url.isEmpty) return null;
-    
-    if (url.startsWith('data:')) {
-      try {
-        final commaIndex = url.indexOf(',');
-        if (commaIndex == -1) return null;
-        final base64String = url.substring(commaIndex + 1);
-        final bytes = base64Decode(base64String);
-        final completer = Completer<ui.Image>();
-        ui.decodeImageFromList(bytes, (image) => completer.complete(image));
-        return await completer.future;
-      } catch (_) {
-        return null;
-      }
-    } else {
-      try {
-        final completer = Completer<ui.Image?>();
-        final imageStream = ExtendedNetworkImageProvider(url, cache: true)
-            .resolve(ImageConfiguration.empty);
-        late ImageStreamListener listener;
-        listener = ImageStreamListener(
-          (imageInfo, _) {
-            if (!completer.isCompleted) completer.complete(imageInfo.image);
-            imageStream.removeListener(listener);
-          },
-          onError: (exception, stackTrace) {
-            if (!completer.isCompleted) completer.complete(null);
-            imageStream.removeListener(listener);
-          },
-        );
-        imageStream.addListener(listener);
-        return await completer.future;
-      } catch (_) {
-        return null; // Fallback
-      }
-    }
-  }
-
-  /// Builds a [TieSheetPainter] from the current bloc state for PDF export.
-  /// Returns `null` if no bracket data is loaded.
-  Future<TieSheetPainter?> _buildExportPainter() async {
-    final blocState = context.read<BracketBloc>().state;
-    if (blocState is! BracketLoadSuccess) return null;
-
-    final bracketData = _extractBracketDataFromResult(blocState.result);
-    final themeSelectionState = context.read<BracketThemeSelectionBloc>().state;
-
-    final ui.Image? leftLogoImage = await _loadLogoAsync(widget.tournament.leftLogoUrl);
-    final ui.Image? rightLogoImage = await _loadLogoAsync(widget.tournament.rightLogoUrl);
-
-    return TieSheetPainter(
+  /// Computes a [TieSheetLayoutResult] from the current bracket state.
+  TieSheetLayoutResult _computeBracketLayout({
+    required List<MatchEntity> matches,
+    required List<ParticipantEntity> participants,
+    required TieSheetThemeConfig themeConfig,
+    String? winnersBracketId,
+    String? losersBracketId,
+  }) {
+    final engine = TieSheetLayoutEngine();
+    return engine.computeLayout(
       tournament: widget.tournament,
-      matches: bracketData.allMatches,
-      participants: blocState.participants,
+      matches: matches,
+      participants: participants,
       bracketType: _bracketFormat.displayLabel,
       includeThirdPlaceMatch: _includeThirdPlaceMatch,
-      winnersBracketId: bracketData.winnersBracketId,
-      losersBracketId: bracketData.losersBracketId,
-      isEditModeEnabled: false,
-      themeConfig: _resolveThemeConfigFromSelection(themeSelectionState),
+      winnersBracketId: winnersBracketId,
+      losersBracketId: losersBracketId,
+      themeConfig: themeConfig,
       classification: _classification,
-      leftLogoImage: leftLogoImage,
-      rightLogoImage: rightLogoImage,
     );
   }
 
-  /// Opens the full-screen [PrintPreviewDialog] where the user configures
-  /// paper size, orientation, fit mode, scale, and tile overlap.  When the
-  /// user confirms, delegates to [_generateAndPrintPdf] to build and print
-  /// the document.
-  Future<void> _showPrintPreview() async {
-    _updateExportProgress(0.0, 'Preparing print preview…');
-    await Future<void>.delayed(Duration.zero);
-    final exportPainter = await _buildExportPainter();
-    
-    // Clear the progress indicator directly since PrintPreviewDialog doesn't trigger its own clear until later.
-    _updateExportProgress(1.0, '');
-    if (mounted) {
+  /// Generates vector PDF bytes and caches both the layout result and the
+  /// rendered PDF. Called only when bracket data or theme actually changes
+  /// (via [_regeneratePdfIfInputsChanged]), never from a build method.
+  void _regeneratePdfAndCacheResult({
+    required List<MatchEntity> matches,
+    required List<ParticipantEntity> participants,
+    required TieSheetThemeConfig themeConfig,
+    String? winnersBracketId,
+    String? losersBracketId,
+  }) {
+    try {
+      final layoutResult = _computeBracketLayout(
+        matches: matches,
+        participants: participants,
+        themeConfig: themeConfig,
+        winnersBracketId: winnersBracketId,
+        losersBracketId: losersBracketId,
+      );
+      final renderer = TieSheetSyncfusionPdfRendererService();
+      final bytes = renderer.renderSinglePagePdfBytes(
+        layoutResult: layoutResult,
+        themeConfig: themeConfig,
+      );
+
       setState(() {
-        _pdfExportProgress = null;
-        _pdfExportStatusMessage = '';
+        _cachedLayoutResult = layoutResult;
+        _cachedPdfBytes = Uint8List.fromList(bytes);
+        _pdfGenerationCounter++;
+        _pdfGenerationError = null;
+      });
+    } catch (error, stackTrace) {
+      debugPrint('PDF generation failed: $error\n$stackTrace');
+      setState(() {
+        _pdfGenerationError = 'Failed to generate bracket PDF: $error';
+        _cachedPdfBytes = null;
+        _cachedLayoutResult = null;
       });
     }
+  }
 
-    if (exportPainter == null) return;
+  /// Called from BlocListener callbacks when bracket data or theme changes.
+  /// Triggers a full PDF regeneration only when the underlying inputs
+  /// have actually changed.
+  void _regeneratePdfFromCurrentState() {
+    final bracketState = context.read<BracketBloc>().state;
+    if (bracketState is! BracketLoadSuccess) return;
 
-    final canvasSize = exportPainter.calculateCanvasSize();
+    final themeSelectionState = context.read<BracketThemeSelectionBloc>().state;
+    final themeConfig = _resolveThemeConfigFromSelection(themeSelectionState);
+    final bracketData = _extractBracketDataFromResult(bracketState.result);
 
-    if (!mounted) return;
-
-    final confirmedSettings = await PrintPreviewDialog.show(
-      context: context,
-      painter: exportPainter,
-      canvasSize: canvasSize,
-    );
-
-    if (confirmedSettings == null || !mounted) return;
-
-    await _generateAndPrintPdf(
-      painter: exportPainter,
-      canvasSize: canvasSize,
-      settings: confirmedSettings,
+    _regeneratePdfAndCacheResult(
+      matches: bracketData.allMatches,
+      participants: bracketState.participants,
+      themeConfig: themeConfig,
+      winnersBracketId: bracketData.winnersBracketId,
+      losersBracketId: bracketData.losersBracketId,
     );
   }
 
-  /// Quick single-page export using the original inline PictureRecorder
-  /// approach with a dynamic page format that matches the canvas 1:1.
-  /// Opens the native print dialog immediately — no preview UI.
+  /// Vector PDF export — reuses the cached PDF bytes and opens the
+  /// native print dialog. Falls back to fresh generation only if no
+  /// cache is available.
   Future<void> _directExportPdf() async {
-    _updateExportProgress(0.0, 'Preparing bracket for export…');
+    _updateExportProgress(0.0, 'Preparing PDF for export…');
     await Future<void>.delayed(Duration.zero);
 
-    final exportPainter = await _buildExportPainter();
-
     try {
-      if (exportPainter == null) {
+      final exportBytes = _cachedPdfBytes;
+      if (exportBytes == null) {
         _updateExportProgress(1.0, 'No bracket data available.');
         return;
       }
 
-      final Size canvasSize = exportPainter.calculateCanvasSize();
-
-      _updateExportProgress(0.15, 'Rendering bracket image…');
-      await Future<void>.delayed(Duration.zero);
-
-      // Render off-screen via PictureRecorder with safe GPU texture scaling.
-      // Modern browsers with CanvasKit/Skwasm reliably support 8192.
-      const double safeMaxTextureDimension = 8192.0;
-      final double scaleFactor = min(
-        1.0,
-        min(
-          safeMaxTextureDimension / canvasSize.width,
-          safeMaxTextureDimension / canvasSize.height,
-        ),
-      );
-
-      final int imageWidth = (canvasSize.width * scaleFactor).ceil();
-      final int imageHeight = (canvasSize.height * scaleFactor).ceil();
-
-      final recorder = ui.PictureRecorder();
-      final recordingCanvas = Canvas(
-        recorder,
-        Rect.fromLTWH(0, 0, imageWidth.toDouble(), imageHeight.toDouble()),
-      );
-
-      recordingCanvas.scale(scaleFactor);
-      exportPainter.paint(recordingCanvas, canvasSize);
-
-      final ui.Picture picture = recorder.endRecording();
-
-      _updateExportProgress(0.35, 'Converting to image…');
-      await Future<void>.delayed(Duration.zero);
-
-      Uint8List? capturedImageBytes;
-      try {
-        final ui.Image image = await picture.toImage(imageWidth, imageHeight);
-        final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
-        if (byteData != null) {
-          capturedImageBytes = byteData.buffer.asUint8List();
-        }
-        image.dispose();
-      } finally {
-        picture.dispose();
-      }
-
-      // Build PDF with dynamic page format matching canvas 1:1.
-      _updateExportProgress(0.55, 'Building PDF layout…');
-      await Future<void>.delayed(Duration.zero);
-
-      pw.ImageProvider? bracketImage;
-      if (capturedImageBytes != null) {
-        bracketImage = pw.MemoryImage(capturedImageBytes);
-      }
-
-      final dynamicPageFormat = _computePdfPageFormatFromCanvasSize(canvasSize);
-
-      final doc = pw.Document();
-      doc.addPage(
-        pw.Page(
-          pageFormat: dynamicPageFormat,
-          margin: const pw.EdgeInsets.all(24),
-          build: (pw.Context ctx) {
-            if (bracketImage != null) {
-              return pw.Center(
-                child: pw.Image(bracketImage, fit: pw.BoxFit.contain),
-              );
-            }
-            return pw.Center(
-              child: pw.Text(
-                'Bracket image could not be captured.\n'
-                'Please try again after the bracket has fully rendered.',
-                textAlign: pw.TextAlign.center,
-              ),
-            );
-          },
-        ),
-      );
-
-      _updateExportProgress(0.75, 'Generating PDF bytes…');
-      await Future<void>.delayed(Duration.zero);
-
-      final pdfBytes = await doc.save();
-
-      _updateExportProgress(0.9, 'Opening print dialog…');
+      _updateExportProgress(0.8, 'Opening print dialog…');
       await Future<void>.delayed(Duration.zero);
 
       await Printing.layoutPdf(
-        onLayout: (PdfPageFormat format) async => pdfBytes,
+        onLayout: (PdfPageFormat format) async => exportBytes,
       );
     } finally {
       if (mounted) {
@@ -349,41 +248,61 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
     }
   }
 
-  /// Computes a [PdfPageFormat] that fits the full bracket canvas on a single
-  /// page — dimensions match the canvas logical pixels 1:1 as PDF points.
-  PdfPageFormat _computePdfPageFormatFromCanvasSize(Size canvasSize) {
-    if (canvasSize == Size.zero ||
-        canvasSize.width <= 0 ||
-        canvasSize.height <= 0) {
-      return PdfPageFormat.a4.landscape;
-    }
-    return PdfPageFormat(canvasSize.width, canvasSize.height);
-  }
+  /// Opens the print preview dialog for configuring export settings,
+  /// then generates either a single-page or tiled PDF and sends it to
+  /// the native print dialog.
+  ///
+  /// Reuses cached layout result and PDF bytes to avoid redundant
+  /// recomputation.
+  Future<void> _showPrintPreviewAndExport() async {
+    final previewPdfBytes = _cachedPdfBytes;
+    final layoutResult = _cachedLayoutResult;
+    if (previewPdfBytes == null || layoutResult == null) return;
 
-  /// Generates a PDF from the [painter] using the confirmed [settings] and
-  /// opens the native print / share dialog.
-  Future<void> _generateAndPrintPdf({
-    required TieSheetPainter painter,
-    required Size canvasSize,
-    required PrintExportSettings settings,
-  }) async {
-    _updateExportProgress(0.0, 'Preparing export…');
+    final canvasSize = layoutResult.computedCanvasSize;
+    if (!mounted) return;
+
+    // Show print preview and collect confirmed settings.
+    final confirmedSettings = await PrintPreviewDialog.show(
+      context: context,
+      bracketPdfBytes: previewPdfBytes,
+      canvasSize: canvasSize,
+    );
+
+    if (confirmedSettings == null || !mounted) return;
+
+    // Generate the export PDF based on confirmed settings.
+    _updateExportProgress(0.0, 'Generating export PDF…');
     await Future<void>.delayed(Duration.zero);
 
     try {
-      const pdfService = BracketPdfGeneratorService();
-      final pdfBytes = await pdfService.generatePdf(
-        painter: painter,
-        canvasSize: canvasSize,
-        settings: settings,
-        onProgress: _updateExportProgress,
-      );
+      late final Uint8List exportPdfBytes;
 
-      _updateExportProgress(0.95, 'Opening print dialog…');
+      if (confirmedSettings.fitMode == PrintFitMode.fitToPage) {
+        // Single-page export — use the same bytes we already have.
+        exportPdfBytes = previewPdfBytes;
+      } else {
+        // Tiled export — generate multi-page PDF.
+        _updateExportProgress(0.4, 'Generating tiled PDF…');
+        await Future<void>.delayed(Duration.zero);
+
+        final themeSelectionState = context.read<BracketThemeSelectionBloc>().state;
+        final themeConfig = _resolveThemeConfigFromSelection(themeSelectionState);
+
+        final renderer = TieSheetSyncfusionPdfRendererService();
+        final tiledBytes = renderer.generateTiledBracketPdfBytes(
+          layoutResult: layoutResult,
+          themeConfig: themeConfig,
+          exportSettings: confirmedSettings,
+        );
+        exportPdfBytes = Uint8List.fromList(tiledBytes);
+      }
+
+      _updateExportProgress(0.8, 'Opening print dialog…');
       await Future<void>.delayed(Duration.zero);
 
       await Printing.layoutPdf(
-        onLayout: (PdfPageFormat format) async => pdfBytes,
+        onLayout: (PdfPageFormat format) async => exportPdfBytes,
       );
     } finally {
       if (mounted) {
@@ -427,7 +346,12 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
         // Fire when a save cycle completes (isSaving transitions false).
         final saveJustCompleted = prev.isSaving && !current.isSaving;
 
-        return hasNewErrorMessage || saveJustCompleted;
+        // Fire when bracket data changes (match results, undo/redo, etc.)
+        // so the PDF viewer updates to reflect the new state.
+        final hasBracketDataChanged = current.result != prev.result ||
+            current.participants != prev.participants;
+
+        return hasNewErrorMessage || saveJustCompleted || hasBracketDataChanged;
       },
       listener: (context, state) {
         if (state is! BracketLoadSuccess) return;
@@ -458,6 +382,9 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
             const BracketEvent.errorDismissed(),
           );
         }
+
+        // Regenerate PDF when bracket data changes.
+        _regeneratePdfFromCurrentState();
       },
       builder: (context, state) {
         return switch (state) {
@@ -559,10 +486,21 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
     );
 
     return BlocConsumer<BracketThemeSelectionBloc, BracketThemeSelectionState>(
-      listenWhen: (previous, current) =>
-          current.themeExpiredMessage != null &&
-          current.themeExpiredMessage != previous.themeExpiredMessage,
+      listenWhen: (previous, current) {
+        // Fire on theme expired message.
+        if (current.themeExpiredMessage != null &&
+            current.themeExpiredMessage != previous.themeExpiredMessage) {
+          return true;
+        }
+        // Fire on theme selection or live config change → triggers PDF regen.
+        if (current.activeThemeSelection != previous.activeThemeSelection ||
+            current.liveCustomThemeConfiguration != previous.liveCustomThemeConfiguration) {
+          return true;
+        }
+        return false;
+      },
       listener: (context, selectionState) {
+        // Handle theme expired snackbar.
         if (selectionState.themeExpiredMessage != null) {
           ScaffoldMessenger.of(context)
             ..hideCurrentSnackBar()
@@ -577,6 +515,9 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
             const BracketThemeSelectionEvent.themeExpiredMessageDismissed(),
           );
         }
+
+        // Regenerate PDF when theme changes.
+        _regeneratePdfFromCurrentState();
       },
       builder: (context, selectionState) {
         final TieSheetThemeMode activeSegment =
@@ -587,14 +528,19 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
           customModeSelected: () => TieSheetThemeMode.customMode,
         );
 
-        final bracketCanvasView = _buildBracketView(
-          bracketData.allMatches,
-          participants,
-          winnersBracketId: bracketData.winnersBracketId,
-          losersBracketId: bracketData.losersBracketId,
-          isEditModeEnabled: isEditModeEnabled,
-          themeConfig: _resolveThemeConfigFromSelection(selectionState),
-        );
+        // Clamp side panel tab index when theme tab is not available.
+        if (activeSegment != TieSheetThemeMode.customMode &&
+            _activeSidePanelTab == 2) {
+          _activeSidePanelTab = 0;
+        }
+
+        // Generate initial PDF on first build if cache is empty.
+        if (_cachedPdfBytes == null && _pdfGenerationError == null) {
+          // Schedule generation after frame to avoid setState-in-build.
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) _regeneratePdfFromCurrentState();
+          });
+        }
 
         return Scaffold(
           key: _scaffoldKey,
@@ -642,59 +588,38 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
 
           const SizedBox(width: 8),
 
-          // ── Export PDF ──
-          PopupMenuButton<String>(
-            enabled: !_isExportingPdf,
-            onSelected: (value) {
-              switch (value) {
-                case 'direct':
-                  _directExportPdf();
-                case 'advanced':
-                  _showPrintPreview();
-              }
-            },
-            itemBuilder: (_) => const [
-              PopupMenuItem(
-                value: 'direct',
-                child: ListTile(
-                  leading: Icon(Icons.print, size: 20),
-                  title: Text('Direct Print'),
-                  subtitle: Text('Single page, fit-to-page'),
-                  dense: true,
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ),
-              PopupMenuItem(
-                value: 'advanced',
-                child: ListTile(
-                  leading: Icon(Icons.dashboard_customize, size: 20),
-                  title: Text('Advanced Export'),
-                  subtitle: Text('Multi-page tiling, custom paper'),
-                  dense: true,
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ),
-            ],
-            child: TextButton(
-              style: actionButtonStyle,
-              onPressed: null,
-              child: _isExportingPdf
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text('Export PDF'),
-                        SizedBox(width: 4),
-                        Icon(Icons.arrow_drop_down, size: 18),
-                      ],
-                    ),
+          // ── Quick Export PDF ──
+          TextButton(
+            style: actionButtonStyle,
+            onPressed: _isExportingPdf ? null : _directExportPdf,
+            child: _isExportingPdf
+                ? const SizedBox(
+                    width: 16, height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                  )
+                : const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.print, size: 18),
+                      SizedBox(width: 4),
+                      Text('Quick Export'),
+                    ],
+                  ),
+          ),
+
+          const SizedBox(width: 4),
+
+          // ── Print Preview (with tiled export) ──
+          TextButton(
+            style: actionButtonStyle,
+            onPressed: _isExportingPdf ? null : _showPrintPreviewAndExport,
+            child: const Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.preview, size: 18),
+                SizedBox(width: 4),
+                Text('Print Preview'),
+              ],
             ),
           ),
         ],
@@ -874,31 +799,16 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
                     if (isEditModeEnabled)
                       Container(
                         width: double.infinity,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
-                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                         color: Colors.grey.shade300,
                         child: const Row(
                           children: [
-                            Icon(
-                              Icons.edit,
-                              size: 16,
-                              color: Color(0xFF92400E),
-                            ),
+                            Icon(Icons.edit, size: 16, color: Color(0xFF92400E)),
                             SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                AppConfig.isSpecialPowerEnabled
-                                    ? 'Edit Mode — Tap a participant to edit details, '
-                                      'or long-press and drag to swap positions.'
-                                    : 'Edit Mode — Tap a participant to edit details.',
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  color: Color(0xFF92400E),
-                                ),
-                              ),
-                            ),
+                            Expanded(child: Text(
+                              'Edit Mode — Use the Participants panel to edit details or swap positions.',
+                              style: TextStyle(fontSize: 12, color: Color(0xFF92400E)),
+                            )),
                           ],
                         ),
                       ),
@@ -908,35 +818,162 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
                         value: (historyPointer + 1) / actionHistory.length,
                         minHeight: 4,
                       ),
-                    // ── Bracket canvas ──
-                    Expanded(child: bracketCanvasView),
+                    // ── PDF Viewer ──
+                    Expanded(
+                      child: _pdfGenerationError != null
+                          ? Center(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.error_outline,
+                                      size: 48, color: Colors.red.shade300),
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    _pdfGenerationError!,
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                        color: Colors.red.shade300,
+                                        fontSize: 13),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  OutlinedButton.icon(
+                                    onPressed: _regeneratePdfFromCurrentState,
+                                    icon: const Icon(Icons.refresh),
+                                    label: const Text('Retry'),
+                                  ),
+                                ],
+                              ),
+                            )
+                          : _cachedPdfBytes != null && _cachedLayoutResult != null
+                              ? LayoutBuilder(
+                                  builder: (context, constraints) {
+                                    // Compute initial zoom to fit the entire
+                                    // bracket into the available viewport as
+                                    // one cohesive unit — mimics the old
+                                    // InteractiveViewer "fit all" behavior.
+                                    final canvasSize =
+                                        _cachedLayoutResult!.computedCanvasSize;
+                                    final viewportWidth = constraints.maxWidth;
+                                    final viewportHeight = constraints.maxHeight;
+
+                                    final fitZoomLevel = (viewportWidth > 0 &&
+                                            viewportHeight > 0 &&
+                                            canvasSize.width > 0 &&
+                                            canvasSize.height > 0)
+                                        ? (viewportWidth / canvasSize.width)
+                                            .clamp(0.05, 1.0)
+                                        : 0.5;
+
+                                    return SfPdfViewer.memory(
+                                      _cachedPdfBytes!,
+                                      key: ValueKey(_pdfGenerationCounter),
+                                      canShowScrollHead: false,
+                                      canShowPaginationDialog: false,
+                                      canShowScrollStatus: false,
+                                      enableDoubleTapZooming: true,
+                                      enableTextSelection: false,
+                                      pageLayoutMode: PdfPageLayoutMode.single,
+                                      scrollDirection:
+                                          PdfScrollDirection.horizontal,
+                                      interactionMode:
+                                          PdfInteractionMode.pan,
+                                      initialZoomLevel: fitZoomLevel,
+                                      maxZoomLevel: 3,
+                                    );
+                                  },
+                                )
+                              : const Center(
+                                  child: CircularProgressIndicator()),
+                    ),
                   ],
                 ),
               ),
-              // ── Custom theme editor side panel ──
-              if (activeSegment == TieSheetThemeMode.customMode)
-                SizedBox(
-                  width: 340,
-                  child: TieSheetThemeEditorPanel(
-                    currentThemeConfig: selectionState.liveCustomThemeConfiguration ??
-                        TieSheetThemeConfig.defaultPreset,
-                    onCloudPresetApplied: (preset) {
-                      context.read<BracketThemeSelectionBloc>().add(
-                        BracketThemeSelectionEvent.cloudPresetApplied(
-                          presetId: preset.id,
-                          resolvedThemeConfiguration: preset.themeConfiguration,
-                        ),
-                      );
-                    },
-                    onThemeConfigChanged: (newConfig) {
-                      context.read<BracketThemeSelectionBloc>().add(
-                        BracketThemeSelectionEvent.customThemeConfigurationUpdated(
-                          updatedThemeConfiguration: newConfig,
-                        ),
-                      );
-                    },
-                  ),
+              // ── Side panels (matches / participants / theme editor) ──
+              SizedBox(
+                width: 380,
+                child: Column(
+                  children: [
+                    // Tab bar for side panels
+                    Material(
+                      color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                      child: Row(
+                        children: [
+                          Expanded(child: _buildSidePanelTab(0, 'Matches', Icons.scoreboard)),
+                          Expanded(child: _buildSidePanelTab(1, 'Participants', Icons.people)),
+                          if (activeSegment == TieSheetThemeMode.customMode)
+                            Expanded(child: _buildSidePanelTab(2, 'Theme', Icons.tune)),
+                        ],
+                      ),
+                    ),
+                    Expanded(
+                      child: IndexedStack(
+                        index: _activeSidePanelTab,
+                        children: [
+                          // Tab 0: Match list
+                          BracketMatchListPanel(
+                            matches: bracketData.allMatches,
+                            participants: participants,
+                            winnersBracketId: bracketData.winnersBracketId,
+                            losersBracketId: bracketData.losersBracketId,
+                            onRecordMatchResult: (matchId, winnerId) {
+                              _handleMatchResultFromPanel(context, matchId, winnerId,
+                                  bracketData.allMatches, participants);
+                            },
+                          ),
+                          // Tab 1: Participant list
+                          BracketParticipantListPanel(
+                            matches: bracketData.allMatches,
+                            participants: participants,
+                            isEditModeEnabled: isEditModeEnabled,
+                            onSwapParticipants: (matchIdA, slotA, matchIdB, slotB) {
+                              context.read<BracketBloc>().add(
+                                BracketEvent.participantSlotSwapped(
+                                  sourceMatchId: matchIdA,
+                                  sourceSlotPosition: slotA,
+                                  targetMatchId: matchIdB,
+                                  targetSlotPosition: slotB,
+                                ),
+                              );
+                            },
+                            onUpdateParticipant: (updated) {
+                              context.read<BracketBloc>().add(
+                                BracketEvent.participantDetailsUpdated(
+                                  participantId: updated.id,
+                                  updatedFullName: updated.fullName,
+                                  updatedRegistrationId: updated.registrationId,
+                                ),
+                              );
+                            },
+                          ),
+                          // Tab 2: Theme editor (conditional)
+                          if (activeSegment == TieSheetThemeMode.customMode)
+                            TieSheetThemeEditorPanel(
+                              currentThemeConfig: selectionState.liveCustomThemeConfiguration ??
+                                  TieSheetThemeConfig.defaultPreset,
+                              onCloudPresetApplied: (preset) {
+                                context.read<BracketThemeSelectionBloc>().add(
+                                  BracketThemeSelectionEvent.cloudPresetApplied(
+                                    presetId: preset.id,
+                                    resolvedThemeConfiguration: preset.themeConfiguration,
+                                  ),
+                                );
+                              },
+                              onThemeConfigChanged: (newConfig) {
+                                context.read<BracketThemeSelectionBloc>().add(
+                                  BracketThemeSelectionEvent.customThemeConfigurationUpdated(
+                                    updatedThemeConfiguration: newConfig,
+                                  ),
+                                );
+                              },
+                            )
+                          else
+                            const SizedBox.shrink(),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
+              ),
             ],
           ),
           // ── PDF export loading overlay ──
@@ -957,20 +994,13 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
                           value: _pdfExportProgress ?? 0.0,
                           minHeight: 6,
                           backgroundColor: Colors.white24,
-                          valueColor: const AlwaysStoppedAnimation<Color>(
-                            Colors.white,
-                          ),
+                          valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
                         ),
                       ),
                       const SizedBox(height: 12),
-                      Text(
-                        _pdfExportStatusMessage,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
+                      Text(_pdfExportStatusMessage,
+                        style: const TextStyle(color: Colors.white, fontSize: 14),
+                        textAlign: TextAlign.center),
                     ],
                   ),
                 ),
@@ -983,75 +1013,45 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
     );
   }
 
-  Widget _buildBracketView(
-    List<MatchEntity> matches,
-    List<ParticipantEntity> participants, {
-    String? winnersBracketId,
-    String? losersBracketId,
-    bool isEditModeEnabled = false,
-    required TieSheetThemeConfig themeConfig,
-  }) {
-    return InteractiveViewer(
-      transformationController: _transformController,
-      constrained: false,
-      boundaryMargin: const EdgeInsets.all(500),
-      minScale: 0.1,
-      maxScale: 2.0,
-      child: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(40.0),
-          child: TieSheetCanvasWidget(
-            tournament: widget.tournament,
-            matches: matches,
-            participants: participants,
-            bracketType: _bracketFormat.displayLabel,
-            onMatchTap: (matchId) =>
-                _handleMatchTap(context, matchId, matches, participants),
-            printKey: _printKey,
-            includeThirdPlaceMatch: _includeThirdPlaceMatch,
-            winnersBracketId: winnersBracketId,
-            losersBracketId: losersBracketId,
-            isEditModeEnabled: isEditModeEnabled,
-            themeConfig: themeConfig,
-            classification: _classification,
-            onParticipantSlotSwapped: (source, target) {
-              _handleParticipantSwap(
-                context,
-                source,
-                target,
-                matches,
-                participants,
-              );
-            },
-            onParticipantSlotTapped: (slot) {
-              _handleParticipantSlotTap(context, slot, participants);
-            },
-          ),
+  Widget _buildSidePanelTab(int index, String label, IconData icon) {
+    final isActive = _activeSidePanelTab == index;
+    final theme = Theme.of(context);
+    return InkWell(
+      onTap: () => setState(() => _activeSidePanelTab = index),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        decoration: BoxDecoration(
+          border: Border(bottom: BorderSide(
+            color: isActive ? theme.colorScheme.primary : Colors.transparent,
+            width: 2,
+          )),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 16, color: isActive ? theme.colorScheme.primary : theme.colorScheme.outline),
+            const SizedBox(width: 4),
+            Text(label, style: TextStyle(
+              fontSize: 12, fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+              color: isActive ? theme.colorScheme.primary : theme.colorScheme.outline,
+            )),
+          ],
         ),
       ),
     );
   }
 
-  /// Opens the [ScoreEntryDialog] for the tapped match. If the user confirms
-  /// a result, dispatches [BracketMatchResultRecorded] to the BLoC.
-  void _handleMatchTap(
+  /// Handles match result recording from the side panel.
+  void _handleMatchResultFromPanel(
     BuildContext context,
     String matchId,
+    String winnerId,
     List<MatchEntity> allMatches,
     List<ParticipantEntity> participants,
   ) {
-    final match = allMatches
-        .where((matchEntity) => matchEntity.id == matchId)
-        .firstOrNull;
+    final match = allMatches.where((m) => m.id == matchId).firstOrNull;
+    if (match == null) return;
 
-    if (match == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Match "$matchId" not found.')));
-      return;
-    }
-
-    // Don't allow re-scoring a completed match.
     if (match.status == MatchStatus.completed) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('This match is already completed.')),
@@ -1059,21 +1059,9 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
       return;
     }
 
-    // Don't allow scoring cancelled or bye matches.
-    if (match.status == MatchStatus.cancelled ||
-        match.resultType == MatchResultType.bye) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('This match cannot be scored.')),
-      );
-      return;
-    }
-
-    // Both participants must be assigned before scoring.
     if (match.participantBlueId == null || match.participantRedId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Both participants must be assigned first.'),
-        ),
+        const SnackBar(content: Text('Both participants must be assigned first.')),
       );
       return;
     }
@@ -1107,54 +1095,6 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
             .firstOrNull
             ?.fullName ??
         'Unknown';
-  }
-
-  /// Handles a participant slot swap triggered by drag-and-drop.
-  void _handleParticipantSwap(
-    BuildContext context,
-    ParticipantSlotHitArea source,
-    ParticipantSlotHitArea target,
-    List<MatchEntity> allMatches,
-    List<ParticipantEntity> participants,
-  ) {
-    if (source.participantId == null || target.participantId == null) return;
-
-    context.read<BracketBloc>().add(
-      BracketEvent.participantSlotSwapped(
-        sourceMatchId: source.matchId,
-        sourceSlotPosition: source.slotPosition,
-        targetMatchId: target.matchId,
-        targetSlotPosition: target.slotPosition,
-      ),
-    );
-  }
-
-  /// Handles a participant slot tap in edit mode — opens the edit dialog.
-  void _handleParticipantSlotTap(
-    BuildContext context,
-    ParticipantSlotHitArea slot,
-    List<ParticipantEntity> participants,
-  ) {
-    if (slot.participantId == null) return;
-
-    final participant = participants
-        .where((p) => p.id == slot.participantId)
-        .firstOrNull;
-    if (participant == null) return;
-
-    ParticipantEditDialog.show(context: context, participant: participant).then(
-      (result) {
-        if (result != null && context.mounted) {
-          context.read<BracketBloc>().add(
-            BracketEvent.participantDetailsUpdated(
-              participantId: participant.id,
-              updatedFullName: result.updatedFullName,
-              updatedRegistrationId: result.updatedRegistrationId,
-            ),
-          );
-        }
-      },
-    );
   }
 
   // ── Save Status Indicator ──────────────────────────────────────────────────

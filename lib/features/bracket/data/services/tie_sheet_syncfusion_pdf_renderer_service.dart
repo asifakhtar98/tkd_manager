@@ -1,0 +1,525 @@
+import 'dart:math';
+import 'dart:ui' show Color, FontStyle, Offset, Rect, Size;
+
+import 'package:syncfusion_flutter_pdf/pdf.dart';
+import 'package:tkd_saas/features/bracket/data/services/pdf_color_converter.dart';
+import 'package:tkd_saas/features/bracket/data/services/syncfusion_tile_assembly_aid_renderer_service.dart';
+import 'package:tkd_saas/features/bracket/domain/layout/models/connector_layout_data.dart';
+import 'package:tkd_saas/features/bracket/domain/layout/models/header_layout_data.dart';
+import 'package:tkd_saas/features/bracket/domain/layout/models/match_layout_data.dart';
+import 'package:tkd_saas/features/bracket/domain/layout/models/medal_table_layout_data.dart';
+import 'package:tkd_saas/features/bracket/domain/layout/models/participant_row_layout_data.dart';
+import 'package:tkd_saas/features/bracket/domain/layout/models/positioned_text_layout_data.dart';
+import 'package:tkd_saas/features/bracket/domain/layout/models/section_label_layout_data.dart';
+import 'package:tkd_saas/features/bracket/domain/layout/models/tie_sheet_layout_result.dart';
+import 'package:tkd_saas/features/bracket/domain/value_objects/tie_sheet_theme_config.dart';
+import 'package:tkd_saas/features/bracket/presentation/models/print_export_settings.dart';
+
+/// Renders a [TieSheetLayoutResult] onto Syncfusion [PdfDocument] pages
+/// as vector graphics, producing identical output for both on-screen
+/// preview (via [SfPdfViewer.memory]) and print/export.
+///
+/// All drawing uses [PdfGraphics] vector APIs — no rasterization.
+/// Shadow rendering has been intentionally removed for a clean, flat
+/// vector aesthetic that reproduces crisply at any DPI.
+class TieSheetSyncfusionPdfRendererService {
+  /// Generates a single-page PDF document from the given layout result.
+  ///
+  /// Returns the raw PDF bytes ready for display or export.
+  List<int> renderSinglePagePdfBytes({
+    required TieSheetLayoutResult layoutResult,
+    required TieSheetThemeConfig themeConfig,
+  }) {
+    final document = PdfDocument();
+    final canvasWidth = layoutResult.computedCanvasSize.width;
+    final canvasHeight = layoutResult.computedCanvasSize.height;
+    document.pageSettings.size = Size(canvasWidth, canvasHeight);
+    document.pageSettings.margins.all = 0;
+    final page = document.pages.add();
+    final graphics = page.graphics;
+
+    _renderCanvasBackground(graphics, layoutResult, themeConfig);
+    _renderHeader(graphics, layoutResult.headerLayoutData, themeConfig);
+    _renderSectionLabels(graphics, layoutResult.sectionLabelLayoutDataList, themeConfig);
+    _renderParticipantRows(graphics, layoutResult.participantRowLayoutDataList, themeConfig);
+    _renderConnectors(graphics, layoutResult.connectorLayoutDataList, themeConfig);
+    _renderMatchJunctions(graphics, layoutResult.matchLayoutDataList, themeConfig);
+    if (layoutResult.medalTableLayoutData != null) {
+      _renderMedalTable(graphics, layoutResult.medalTableLayoutData!, themeConfig);
+    }
+
+    final bytes = document.saveSync();
+    document.dispose();
+    return bytes;
+  }
+
+  /// Generates a multi-page tiled PDF from the given layout result,
+  /// slicing the bracket into a grid of pages per the [exportSettings].
+  ///
+  /// Uses a [PdfTemplate] approach: the full bracket is rendered once into
+  /// a reusable template, then each tile page clips to its visible portion
+  /// and draws the template at the configured scale and offset. Because all
+  /// drawing is vector-based, each tile is resolution-independent.
+  ///
+  /// Optionally includes assembly aids (registration crosshairs, edge
+  /// neighbor labels, and an assembly index page) when
+  /// [exportSettings.showTileAssemblyHints] is `true`.
+  List<int> generateTiledBracketPdfBytes({
+    required TieSheetLayoutResult layoutResult,
+    required TieSheetThemeConfig themeConfig,
+    required PrintExportSettings exportSettings,
+  }) {
+    final canvasWidth = layoutResult.computedCanvasSize.width;
+    final canvasHeight = layoutResult.computedCanvasSize.height;
+
+    final tileGridDimensions = exportSettings.tileGridDimensions(
+      canvasWidth: canvasWidth,
+      canvasHeight: canvasHeight,
+    );
+    final totalTilePageCount = tileGridDimensions.columns * tileGridDimensions.rows;
+
+    final tileCoverageArea = exportSettings.tileCanvasCoverage();
+    final overlapCanvasPixels = exportSettings.tileOverlapCanvasPixels;
+    final effectiveStepWidth = tileCoverageArea.width - overlapCanvasPixels;
+    final effectiveStepHeight = tileCoverageArea.height - overlapCanvasPixels;
+
+    final scaleFactor = exportSettings.scaleFactor;
+    final printableArea = exportSettings.printableAreaPoints;
+    final pageWidth = exportSettings.pageSize.width;
+    final pageHeight = exportSettings.pageSize.height;
+
+    final document = PdfDocument();
+    const assemblyAidRenderer = SyncfusionTileAssemblyAidRendererService();
+
+    // Render the full bracket once into a reusable PdfTemplate.
+    // Each tile page draws this template at scaled size with an offset.
+    final bracketTemplate = PdfTemplate(canvasWidth, canvasHeight);
+    final templateGraphics = bracketTemplate.graphics!;
+    _renderCanvasBackground(templateGraphics, layoutResult, themeConfig);
+    _renderHeader(templateGraphics, layoutResult.headerLayoutData, themeConfig);
+    _renderSectionLabels(templateGraphics, layoutResult.sectionLabelLayoutDataList, themeConfig);
+    _renderParticipantRows(templateGraphics, layoutResult.participantRowLayoutDataList, themeConfig);
+    _renderConnectors(templateGraphics, layoutResult.connectorLayoutDataList, themeConfig);
+    _renderMatchJunctions(templateGraphics, layoutResult.matchLayoutDataList, themeConfig);
+    if (layoutResult.medalTableLayoutData != null) {
+      _renderMedalTable(templateGraphics, layoutResult.medalTableLayoutData!, themeConfig);
+    }
+
+    // Scaled full-bracket dimensions in PDF points.
+    final scaledBracketWidth = canvasWidth * scaleFactor;
+    final scaledBracketHeight = canvasHeight * scaleFactor;
+
+    int tileIndex = 0;
+    for (int row = 0; row < tileGridDimensions.rows; row++) {
+      for (int col = 0; col < tileGridDimensions.columns; col++) {
+        tileIndex++;
+
+        final regionOffsetX = col * effectiveStepWidth;
+        final regionOffsetY = row * effectiveStepHeight;
+
+        // Clamp region to canvas bounds
+        final regionWidth = min(tileCoverageArea.width, canvasWidth - regionOffsetX);
+        final regionHeight = min(tileCoverageArea.height, canvasHeight - regionOffsetY);
+
+        if (regionWidth <= 0 || regionHeight <= 0) continue;
+
+        document.pageSettings.size = Size(pageWidth, pageHeight);
+        document.pageSettings.margins.all = exportSettings.marginPoints;
+
+        final page = document.pages.add();
+        final graphics = page.graphics;
+
+        // Save state, clip to printable area, then draw the bracket
+        // template offset and scaled so only this tile's portion is visible.
+        final graphicsState = graphics.save();
+
+        // Clip to the printable area
+        graphics.setClip(
+          bounds: Rect.fromLTWH(0, 0, printableArea.width, printableArea.height),
+        );
+
+        // Translate so the tile's region aligns with origin, then draw
+        // the full bracket template at its scaled size. The clipping
+        // ensures only the visible portion is rendered.
+        final tileTranslateX = -regionOffsetX * scaleFactor;
+        final tileTranslateY = -regionOffsetY * scaleFactor;
+        graphics.translateTransform(tileTranslateX, tileTranslateY);
+
+        // Draw the full bracket template at scaled size.
+        // PdfGraphics will clip to the printable area automatically.
+        graphics.drawPdfTemplate(
+          bracketTemplate,
+          Offset.zero,
+          Size(scaledBracketWidth, scaledBracketHeight),
+        );
+
+        graphics.restore(graphicsState);
+
+        // Assembly aids (drawn in page coordinate space, not bracket space)
+        if (exportSettings.showTileAssemblyHints) {
+          assemblyAidRenderer.renderRegistrationMarks(
+            tilePageGraphics: graphics,
+            tileRow: row,
+            tileColumn: col,
+            totalColumnCount: tileGridDimensions.columns,
+            totalRowCount: tileGridDimensions.rows,
+            exportSettings: exportSettings,
+          );
+          assemblyAidRenderer.renderEdgeNeighborLabels(
+            tilePageGraphics: graphics,
+            tileRow: row,
+            tileColumn: col,
+            totalColumnCount: tileGridDimensions.columns,
+            totalRowCount: tileGridDimensions.rows,
+            exportSettings: exportSettings,
+          );
+        }
+
+        // Page label for assembly reference
+        final pageLabelFont = PdfStandardFont(PdfFontFamily.helvetica, 8);
+        final pageLabelText =
+            'Page $tileIndex of $totalTilePageCount  (R${row + 1} C${col + 1})';
+        final pageLabelSize = pageLabelFont.measureString(pageLabelText);
+        graphics.drawString(
+          pageLabelText,
+          pageLabelFont,
+          bounds: Rect.fromLTWH(
+            printableArea.width - pageLabelSize.width - 4,
+            printableArea.height - pageLabelSize.height - 4,
+            pageLabelSize.width + 4,
+            pageLabelSize.height + 2,
+          ),
+          brush: PdfSolidBrush(const Color(0xFF999999).toPdfColor()),
+        );
+      }
+    }
+
+    // Assembly index page (if hints enabled and grid > 1×1)
+    if (exportSettings.showTileAssemblyHints && totalTilePageCount > 1) {
+      assemblyAidRenderer.renderAssemblyIndexPage(
+        document: document,
+        exportSettings: exportSettings,
+        canvasWidth: canvasWidth,
+        canvasHeight: canvasHeight,
+      );
+    }
+
+    final bytes = document.saveSync();
+    document.dispose();
+    return bytes;
+  }
+
+  // ── Canvas Background ──────────────────────────────────────────────────
+
+  void _renderCanvasBackground(PdfGraphics graphics, TieSheetLayoutResult layoutResult, TieSheetThemeConfig themeConfig) {
+    graphics.drawRectangle(
+      bounds: Rect.fromLTWH(0, 0, layoutResult.computedCanvasSize.width, layoutResult.computedCanvasSize.height),
+      brush: PdfSolidBrush(themeConfig.canvasBackgroundColor.toPdfColor()),
+    );
+  }
+
+  // ── Header ─────────────────────────────────────────────────────────────
+
+  void _renderHeader(PdfGraphics graphics, HeaderLayoutData headerData, TieSheetThemeConfig themeConfig) {
+    // Banner background
+    graphics.drawRectangle(
+      bounds: headerData.headerBannerBoundingRect,
+      brush: PdfSolidBrush(themeConfig.headerBannerBackgroundColor.toPdfColor()),
+      pen: PdfPen(themeConfig.borderColor.toPdfColor(), width: themeConfig.borderStrokeWidth),
+    );
+
+    _drawPositionedText(graphics, headerData.tournamentTitleTextLayout, themeConfig);
+    if (headerData.tournamentSubtitleTextLayout != null) {
+      _drawPositionedText(graphics, headerData.tournamentSubtitleTextLayout!, themeConfig);
+    }
+    if (headerData.tournamentOrganizerTextLayout != null) {
+      _drawPositionedText(graphics, headerData.tournamentOrganizerTextLayout!, themeConfig);
+    }
+
+    // Info row
+    graphics.drawRectangle(
+      bounds: headerData.classificationInfoRowBoundingRect,
+      brush: PdfSolidBrush(themeConfig.headerFillColor.toPdfColor()),
+      pen: PdfPen(themeConfig.borderColor.toPdfColor(), width: themeConfig.borderStrokeWidth),
+    );
+
+    for (final divider in headerData.classificationInfoRowDividerLines) {
+      graphics.drawLine(
+        PdfPen(themeConfig.borderColor.toPdfColor(), width: themeConfig.subtleStrokeWidth),
+        Offset(divider.startOffset.dx, divider.startOffset.dy),
+        Offset(divider.endOffset.dx, divider.endOffset.dy),
+      );
+    }
+    for (final cellText in headerData.classificationCellTextLayoutList) {
+      _drawPositionedText(graphics, cellText, themeConfig);
+    }
+  }
+
+  // ── Section Labels ─────────────────────────────────────────────────────
+
+  void _renderSectionLabels(PdfGraphics graphics, List<SectionLabelLayoutData> labels, TieSheetThemeConfig themeConfig) {
+    for (final label in labels) {
+      final labelColor = label.sectionLabelType == SectionLabelType.winnersBracket
+          ? themeConfig.winnersLabelColor : themeConfig.losersLabelColor;
+      graphics.drawRectangle(
+        bounds: label.boundingRect,
+        brush: PdfSolidBrush(labelColor.withValues(alpha: themeConfig.sectionLabelBackgroundOpacity).toPdfColor()),
+        pen: PdfPen(labelColor.toPdfColor(), width: themeConfig.borderStrokeWidth),
+      );
+      _drawPositionedText(graphics, label.labelTextLayout, themeConfig, overrideColor: labelColor);
+    }
+  }
+
+  // ── Participant Rows ───────────────────────────────────────────────────
+
+  void _renderParticipantRows(PdfGraphics graphics, List<ParticipantRowLayoutData> rows, TieSheetThemeConfig themeConfig) {
+    for (final row in rows) {
+      // Card (no shadow — flat vector aesthetic)
+      final fillColor = row.isPlaceholderRow ? themeConfig.tbdFillColor : themeConfig.rowFillColor;
+      graphics.drawRectangle(
+        bounds: row.cardBoundingRect,
+        brush: PdfSolidBrush(fillColor.toPdfColor()),
+        pen: PdfPen(themeConfig.borderColor.toPdfColor(), width: themeConfig.subtleStrokeWidth),
+      );
+      // Accent strip
+      graphics.drawRectangle(
+        bounds: row.accentStripBoundingRect,
+        brush: PdfSolidBrush(themeConfig.participantAccentStripColor.toPdfColor()),
+      );
+      // Dividers
+      for (final divider in row.columnDividerLines) {
+        graphics.drawLine(
+          PdfPen(themeConfig.borderColor.toPdfColor(), width: themeConfig.subtleStrokeWidth),
+          Offset(divider.startOffset.dx, divider.startOffset.dy),
+          Offset(divider.endOffset.dx, divider.endOffset.dy),
+        );
+      }
+      // Text
+      _drawPositionedText(graphics, row.serialNumberTextLayout, themeConfig);
+      _drawPositionedText(graphics, row.participantNameTextLayout, themeConfig);
+      if (row.registrationIdTextLayout != null) {
+        _drawPositionedText(graphics, row.registrationIdTextLayout!, themeConfig);
+      }
+    }
+  }
+
+  // ── Connectors ─────────────────────────────────────────────────────────
+
+  void _renderConnectors(PdfGraphics graphics, List<ConnectorLayoutData> connectors, TieSheetThemeConfig themeConfig) {
+    for (final connector in connectors) {
+      final pen = _buildConnectorPen(connector.connectorVisualType, themeConfig);
+      if (connector.straightLineSegments != null) {
+        for (final segment in connector.straightLineSegments!) {
+          graphics.drawLine(
+            pen,
+            Offset(segment.startOffset.dx, segment.startOffset.dy),
+            Offset(segment.endOffset.dx, segment.endOffset.dy),
+          );
+        }
+      }
+      if (connector.arcPathData != null) {
+        final arcPath = connector.arcPathData!;
+        // Horizontal segment before arc
+        graphics.drawLine(
+          pen,
+          Offset(arcPath.moveToOffset.dx, arcPath.moveToOffset.dy),
+          Offset(arcPath.lineToBeforeArcOffset.dx, arcPath.lineToBeforeArcOffset.dy),
+        );
+        // Vertical segment after arc
+        graphics.drawLine(
+          pen,
+          Offset(arcPath.arcEndOffset.dx, arcPath.arcEndOffset.dy),
+          Offset(arcPath.lineToAfterArcOffset.dx, arcPath.lineToAfterArcOffset.dy),
+        );
+        // Approximate the 90° arc as a diagonal line.
+        // TODO(arc): Replace with PdfPath bezier curve for smooth arcs.
+        graphics.drawLine(
+          pen,
+          Offset(arcPath.lineToBeforeArcOffset.dx, arcPath.lineToBeforeArcOffset.dy),
+          Offset(arcPath.arcEndOffset.dx, arcPath.arcEndOffset.dy),
+        );
+      }
+    }
+  }
+
+  PdfPen _buildConnectorPen(ConnectorVisualType visualType, TieSheetThemeConfig themeConfig) {
+    final uniformStrokeWidth = themeConfig.connectorStrokeWidth;
+    switch (visualType) {
+      case ConnectorVisualType.wonAdvancement:
+        return PdfPen(themeConfig.connectorWonColor.toPdfColor(),
+            width: uniformStrokeWidth > 0 ? uniformStrokeWidth : themeConfig.wonConnectorStrokeWidth);
+      case ConnectorVisualType.pendingAdvancement:
+        return PdfPen(themeConfig.borderColor.toPdfColor(),
+            width: uniformStrokeWidth > 0 ? uniformStrokeWidth : themeConfig.borderStrokeWidth);
+      case ConnectorVisualType.byeAdvancement:
+        final pen = PdfPen(themeConfig.mutedColor.toPdfColor(),
+            width: uniformStrokeWidth > 0 ? uniformStrokeWidth : themeConfig.subtleStrokeWidth);
+        pen.dashStyle = PdfDashStyle.dash;
+        return pen;
+      case ConnectorVisualType.genericTrunk:
+        return PdfPen(themeConfig.mutedColor.toPdfColor(),
+            width: uniformStrokeWidth > 0 ? uniformStrokeWidth : themeConfig.borderStrokeWidth);
+      case ConnectorVisualType.grandFinalOutputArm:
+        return PdfPen(themeConfig.connectorWonColor.toPdfColor(),
+            width: uniformStrokeWidth > 0 ? uniformStrokeWidth : themeConfig.wonConnectorStrokeWidth);
+      case ConnectorVisualType.thickBorder:
+        return PdfPen(themeConfig.borderColor.toPdfColor(),
+            width: uniformStrokeWidth > 0 ? uniformStrokeWidth : themeConfig.wonConnectorStrokeWidth);
+    }
+  }
+
+  // ── Match Junctions ────────────────────────────────────────────────────
+
+  void _renderMatchJunctions(PdfGraphics graphics, List<MatchLayoutData> matches, TieSheetThemeConfig themeConfig) {
+    for (final matchLayout in matches) {
+      if (matchLayout.isByeMatch) continue;
+      // Blue badge
+      if (matchLayout.blueCornerBadgeLayout != null) {
+        _drawCornerBadge(graphics, matchLayout.blueCornerBadgeLayout!, themeConfig);
+      }
+      // Red badge
+      if (matchLayout.redCornerBadgeLayout != null) {
+        _drawCornerBadge(graphics, matchLayout.redCornerBadgeLayout!, themeConfig);
+      }
+      // Match pill
+      if (matchLayout.matchNumberPillLayout != null) {
+        _drawMatchPill(graphics, matchLayout.matchNumberPillLayout!, themeConfig);
+      }
+      // Winner text
+      if (matchLayout.winnerNameTextLayout != null) {
+        _drawPositionedText(graphics, matchLayout.winnerNameTextLayout!, themeConfig);
+      }
+      // Missing input labels
+      if (matchLayout.missingTopInputLabelLayout != null) {
+        _drawPositionedText(graphics, matchLayout.missingTopInputLabelLayout!, themeConfig);
+      }
+      if (matchLayout.missingBottomInputLabelLayout != null) {
+        _drawPositionedText(graphics, matchLayout.missingBottomInputLabelLayout!, themeConfig);
+      }
+      // 3rd place title
+      if (matchLayout.thirdPlaceTitleTextLayout != null) {
+        _drawPositionedText(graphics, matchLayout.thirdPlaceTitleTextLayout!, themeConfig);
+      }
+      // Grand final label
+      if (matchLayout.grandFinalLabelTextLayout != null) {
+        _drawPositionedText(graphics, matchLayout.grandFinalLabelTextLayout!, themeConfig);
+      }
+    }
+  }
+
+  void _drawCornerBadge(PdfGraphics graphics, CornerBadgeLayoutData badgeData, TieSheetThemeConfig themeConfig) {
+    final badgeColor = badgeData.badgeColorType == CornerBadgeColorType.blue
+        ? themeConfig.blueCornerColor : themeConfig.redCornerColor;
+    final centerX = badgeData.centerOffset.dx;
+    final centerY = badgeData.centerOffset.dy;
+    final badgeRadius = badgeData.computedBadgeRadius;
+    // Draw circle as ellipse
+    graphics.drawEllipse(
+      Rect.fromLTWH(centerX - badgeRadius, centerY - badgeRadius, badgeRadius * 2, badgeRadius * 2),
+      brush: PdfSolidBrush(badgeColor.toPdfColor()),
+      pen: PdfPen(badgeColor.withValues(alpha: themeConfig.badgeOutlineOpacity).toPdfColor(), width: themeConfig.subtleStrokeWidth),
+    );
+    // Badge text
+    final badgeFont = PdfStandardFont(PdfFontFamily.helvetica, badgeData.computedBadgeRadius * 0.9,
+        style: PdfFontStyle.bold);
+    final badgeTextSize = badgeFont.measureString(badgeData.badgeText);
+    graphics.drawString(badgeData.badgeText, badgeFont,
+        bounds: Rect.fromLTWH(centerX - badgeTextSize.width / 2, centerY - badgeTextSize.height / 2,
+            badgeTextSize.width, badgeTextSize.height),
+        brush: PdfSolidBrush(themeConfig.badgeTextColor.toPdfColor()));
+  }
+
+  void _drawMatchPill(PdfGraphics graphics, MatchNumberPillLayoutData pillData, TieSheetThemeConfig themeConfig) {
+    // Pill background (no shadow — flat vector aesthetic)
+    graphics.drawRectangle(
+      bounds: pillData.pillBoundingRect,
+      brush: PdfSolidBrush(themeConfig.matchPillFillColor.toPdfColor()),
+      pen: PdfPen(themeConfig.borderColor.toPdfColor(), width: themeConfig.subtleStrokeWidth),
+    );
+    // Text
+    final fontSizeDelta = themeConfig.fontSizeDelta;
+    final pillFont = PdfStandardFont(PdfFontFamily.helvetica, 10 + fontSizeDelta, style: PdfFontStyle.bold);
+    final pillTextSize = pillFont.measureString(pillData.matchNumberText);
+    graphics.drawString(pillData.matchNumberText, pillFont,
+        bounds: Rect.fromLTWH(
+            pillData.centerOffset.dx - pillTextSize.width / 2,
+            pillData.centerOffset.dy - pillTextSize.height / 2,
+            pillTextSize.width, pillTextSize.height),
+        brush: PdfSolidBrush(themeConfig.primaryTextColor.toPdfColor()));
+  }
+
+  // ── Medal Table ────────────────────────────────────────────────────────
+
+  void _renderMedalTable(PdfGraphics graphics, MedalTableLayoutData medalTableData, TieSheetThemeConfig themeConfig) {
+    for (final medalRow in medalTableData.medalRowLayoutDataList) {
+      Color fillColor, accentColor;
+      switch (medalRow.medalType) {
+        case MedalType.gold:
+          fillColor = themeConfig.medalGoldFillColor; accentColor = themeConfig.medalGoldAccentColor;
+        case MedalType.silver:
+          fillColor = themeConfig.medalSilverFillColor; accentColor = themeConfig.medalSilverAccentColor;
+        case MedalType.bronze:
+          fillColor = themeConfig.medalBronzeFillColor; accentColor = themeConfig.medalBronzeAccentColor;
+      }
+      // Card (no shadow — flat vector aesthetic)
+      graphics.drawRectangle(bounds: medalRow.fullCardBoundingRect,
+          brush: PdfSolidBrush(fillColor.toPdfColor()),
+          pen: PdfPen(themeConfig.borderColor.toPdfColor(), width: themeConfig.subtleStrokeWidth));
+      // Accent
+      graphics.drawRectangle(bounds: medalRow.accentStripBoundingRect,
+          brush: PdfSolidBrush(accentColor.toPdfColor()));
+      // Divider
+      final dividerLine = medalRow.columnDividerLine;
+      graphics.drawLine(PdfPen(themeConfig.borderColor.toPdfColor(), width: themeConfig.subtleStrokeWidth),
+          Offset(dividerLine.startOffset.dx, dividerLine.startOffset.dy),
+          Offset(dividerLine.endOffset.dx, dividerLine.endOffset.dy));
+      // Medal label
+      _drawPositionedText(graphics, medalRow.medalLabelTextLayout, themeConfig);
+      // Winner name
+      if (medalRow.winnerNameTextLayout != null) {
+        _drawPositionedText(graphics, medalRow.winnerNameTextLayout!, themeConfig);
+      }
+    }
+  }
+
+  // ── Text Drawing ───────────────────────────────────────────────────────
+
+  void _drawPositionedText(PdfGraphics graphics, PositionedTextLayoutData textData,
+      TieSheetThemeConfig themeConfig, {Color? overrideColor}) {
+    final resolvedTextColor = overrideColor ?? _resolveTextColor(textData.textColorType, themeConfig);
+    PdfFontStyle pdfFontStyle = PdfFontStyle.regular;
+    if (textData.fontWeight.index >= 6) pdfFontStyle = PdfFontStyle.bold; // w700+
+    if (textData.fontStyle == FontStyle.italic) {
+      pdfFontStyle = PdfFontStyle.italic;
+    }
+    final font = PdfStandardFont(PdfFontFamily.helvetica, textData.fontSize, style: pdfFontStyle);
+    final measuredTextSize = font.measureString(textData.textContent);
+    double computedX = textData.renderPosition.dx;
+    if (textData.isCenterAligned) {
+      computedX -= measuredTextSize.width / 2;
+    } else if (textData.isRightAligned) {
+      computedX -= measuredTextSize.width;
+    }
+    graphics.drawString(textData.textContent, font,
+        bounds: Rect.fromLTWH(computedX, textData.renderPosition.dy, measuredTextSize.width + 4, measuredTextSize.height + 2),
+        brush: PdfSolidBrush(resolvedTextColor.toPdfColor()));
+  }
+
+  Color _resolveTextColor(TextColorType colorType, TieSheetThemeConfig themeConfig) {
+    switch (colorType) {
+      case TextColorType.primary: return themeConfig.primaryTextColor;
+      case TextColorType.secondary: return themeConfig.secondaryTextColor;
+      case TextColorType.muted: return themeConfig.mutedColor;
+      case TextColorType.headerBannerPrimary: return themeConfig.headerBannerTextColor;
+      case TextColorType.headerBannerSecondary:
+        return themeConfig.headerBannerTextColor.withValues(alpha: themeConfig.headerSecondaryTextOpacity);
+      case TextColorType.badgeText: return themeConfig.badgeTextColor;
+      case TextColorType.blueCorner: return themeConfig.blueCornerColor;
+      case TextColorType.redCorner: return themeConfig.redCornerColor;
+      case TextColorType.sectionLabel: return const Color(0xFFFFFFFF);
+      case TextColorType.medalGold: return themeConfig.medalGoldTextColor;
+      case TextColorType.medalSilver: return themeConfig.medalSilverTextColor;
+      case TextColorType.medalBronze: return themeConfig.medalBronzeTextColor;
+    }
+  }
+}

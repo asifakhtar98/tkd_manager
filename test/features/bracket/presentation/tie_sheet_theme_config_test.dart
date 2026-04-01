@@ -36,9 +36,6 @@ void main() {
         expect(config.canvasBackgroundColor, const Color(0xFFFFFEFC));
       });
 
-      test('shadowOpacityMultiplier is full', () {
-        expect(config.shadowOpacityMultiplier, 1.0);
-      });
       test('connectorStrokeWidth is zero (varied widths)', () {
         expect(config.connectorStrokeWidth, 0.0);
       });
@@ -189,13 +186,6 @@ void main() {
         expect(config.dashedLineGapWidth, 4.0);
       });
 
-      // ── Shadow tokens ──
-      test('shadowBlurRadius is 6', () {
-        expect(config.shadowBlurRadius, 6.0);
-      });
-      test('shadowColor is translucent black', () {
-        expect(config.shadowColor, const Color(0x1A000000));
-      });
 
       // ── Typography tokens ──
       test('fontFamily is Roboto', () {
@@ -226,9 +216,6 @@ void main() {
       });
       test('borderColor is black', () {
         expect(config.borderColor, const Color(0xFF000000));
-      });
-      test('shadowOpacityMultiplier is zero (no shadows)', () {
-        expect(config.shadowOpacityMultiplier, 0.0);
       });
       test('connectorStrokeWidth is uniform 3.0', () {
         expect(config.connectorStrokeWidth, 3.0);
@@ -385,7 +372,6 @@ void main() {
           connectorWonColor: Color(0xFF334155),
           canvasBackgroundColor: Color(0xFFFFFEFC),
           borderColor: Color(0xFF94A3B8),
-          shadowOpacityMultiplier: 1.0,
           connectorStrokeWidth: 0.0,
           isInteractivityDisabled: false,
           primaryTextColor: Color(0xFF1E293B),
@@ -432,11 +418,6 @@ void main() {
           // Dashed line
           dashedLineDashWidth: 6.0,
           dashedLineGapWidth: 4.0,
-          // Shadow
-          shadowBlurRadius: 6.0,
-          shadowColor: Color(0x1A000000),
-          shadowOffsetX: 1.0,
-          shadowOffsetY: 2.0,
           // Typography
           fontFamily: 'Roboto',
           headerLetterSpacing: 1.2,
@@ -522,12 +503,10 @@ void main() {
         const newColor = Color(0xFF00FF00);
         final copied = baseConfig.copyWith(
           canvasBackgroundColor: newColor,
-          shadowOpacityMultiplier: 0.0,
           isInteractivityDisabled: true,
           fontFamily: 'Montserrat',
         );
         expect(copied.canvasBackgroundColor, newColor);
-        expect(copied.shadowOpacityMultiplier, 0.0);
         expect(copied.isInteractivityDisabled, isTrue);
         expect(copied.fontFamily, 'Montserrat');
         // Untouched fields.
@@ -579,7 +558,6 @@ void main() {
           connectorWonColor: c2,
           canvasBackgroundColor: c5,
           borderColor: c6,
-          shadowOpacityMultiplier: 0.42,
           connectorStrokeWidth: 7.7,
           isInteractivityDisabled: true,
           primaryTextColor: c7,
@@ -621,10 +599,6 @@ void main() {
           matchPillVerticalPadding: 82.0,
           dashedLineDashWidth: 81.0,
           dashedLineGapWidth: 80.0,
-          shadowBlurRadius: 79.0,
-          shadowColor: c1,
-          shadowOffsetX: 78.0,
-          shadowOffsetY: 77.5,
           fontFamily: 'TestFont',
           headerLetterSpacing: 77.0,
           subHeaderLetterSpacing: 76.0,
@@ -691,7 +665,6 @@ void main() {
         expect(overridden.badgeTextColor, c29);
 
         // Verify every scalar field
-        expect(overridden.shadowOpacityMultiplier, 0.42);
         expect(overridden.connectorStrokeWidth, 7.7);
         expect(overridden.isInteractivityDisabled, isTrue);
         expect(overridden.isTextForceBold, isTrue);
@@ -712,10 +685,6 @@ void main() {
         expect(overridden.matchPillVerticalPadding, 82.0);
         expect(overridden.dashedLineDashWidth, 81.0);
         expect(overridden.dashedLineGapWidth, 80.0);
-        expect(overridden.shadowBlurRadius, 79.0);
-        expect(overridden.shadowColor, c1);
-        expect(overridden.shadowOffsetX, 78.0);
-        expect(overridden.shadowOffsetY, 77.5);
         expect(overridden.fontFamily, 'TestFont');
         expect(overridden.headerLetterSpacing, 77.0);
         expect(overridden.subHeaderLetterSpacing, 76.0);

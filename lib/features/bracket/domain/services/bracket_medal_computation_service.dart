@@ -4,9 +4,8 @@ import 'package:tkd_saas/features/bracket/domain/entities/match_entity.dart';
 /// Computes runtime medal placements (Gold, Silver, Bronze) from a bracket's
 /// current match state.
 ///
-/// This service encapsulates the logic that was previously inlined inside
-/// [TieSheetPainter._paintMedalTable], making it testable and reusable across
-/// both the canvas UI and PDF export paths.
+/// This service encapsulates the medal placement logic, making it testable
+/// and reusable across the layout engine and PDF export paths.
 ///
 /// Two strategies are supported:
 /// - **Single Elimination**: Gold/Silver from the final match; Bronze from the

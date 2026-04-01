@@ -31,7 +31,7 @@ enum TieSheetThemeMode {
 // ══════════════════════════════════════════════════════════════════════════════
 
 /// Immutable set of **all** colour / style / geometry tokens consumed by
-/// [TieSheetPainter].
+/// [TieSheetLayoutEngine] and [TieSheetSyncfusionPdfRendererService].
 ///
 /// Use the static preset factories ([defaultPreset], [printPreset]) to pick
 /// a preset, or supply custom values via [copyWith].
@@ -57,9 +57,6 @@ abstract class TieSheetThemeConfig with _$TieSheetThemeConfig {
     /// Unified border stroke colour for cards, TBD outlines, and pending
     /// dashed connectors.
     @ColorJsonConverter() required Color borderColor,
-
-    /// Shadow paint opacity multiplier (0.0 = no shadow, 1.0 = full shadow).
-    required double shadowOpacityMultiplier,
 
     /// Uniform stroke width for all connector / junction lines.
     /// In default mode each pen chooses its own width.
@@ -193,20 +190,6 @@ abstract class TieSheetThemeConfig with _$TieSheetThemeConfig {
     /// Gap between dash segments in dashed connector lines.
     required double dashedLineGapWidth,
 
-    // ── Shadow tokens ───────────────────────────────────────────────────────
-
-    /// Default blur radius for card elevation shadows.
-    required double shadowBlurRadius,
-
-    /// Base colour for card elevation shadows (before opacity scaling).
-    @ColorJsonConverter() required Color shadowColor,
-
-    /// Horizontal offset for card elevation shadows (px).
-    required double shadowOffsetX,
-
-    /// Vertical offset for card elevation shadows (px).
-    required double shadowOffsetY,
-
     // ── Typography tokens ───────────────────────────────────────────────────
 
     /// Font family applied to all text rendered on the canvas.
@@ -335,7 +318,6 @@ abstract class TieSheetThemeConfig with _$TieSheetThemeConfig {
     // Canvas & card
     canvasBackgroundColor: Color(0xFFFFFEFC),
     borderColor: Color(0xFF94A3B8),
-    shadowOpacityMultiplier: 1.0,
     connectorStrokeWidth: 0.0,
     isInteractivityDisabled: false,
     // Text
@@ -388,11 +370,6 @@ abstract class TieSheetThemeConfig with _$TieSheetThemeConfig {
     // Dashed line
     dashedLineDashWidth: 6.0,
     dashedLineGapWidth: 4.0,
-    // Shadow
-    shadowBlurRadius: 6.0,
-    shadowColor: Color(0x1A000000),
-    shadowOffsetX: 1.0,
-    shadowOffsetY: 2.0,
     // Typography
     fontFamily: 'Roboto',
     headerLetterSpacing: 1.2,
@@ -443,7 +420,6 @@ abstract class TieSheetThemeConfig with _$TieSheetThemeConfig {
     // Canvas & card
     canvasBackgroundColor: Color(0xFFFFFFFF),
     borderColor: Color(0xFF000000),
-    shadowOpacityMultiplier: 0.0,
     connectorStrokeWidth: 3.0,
     isInteractivityDisabled: true,
     // Text
@@ -496,11 +472,6 @@ abstract class TieSheetThemeConfig with _$TieSheetThemeConfig {
     // Dashed line
     dashedLineDashWidth: 6.0,
     dashedLineGapWidth: 4.0,
-    // Shadow
-    shadowBlurRadius: 6.0,
-    shadowColor: Color(0x1A000000),
-    shadowOffsetX: 1.0,
-    shadowOffsetY: 2.0,
     // Typography
     fontFamily: 'Roboto',
     headerLetterSpacing: 1.2,

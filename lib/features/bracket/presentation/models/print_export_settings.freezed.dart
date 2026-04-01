@@ -20,8 +20,7 @@ mixin _$PrintExportSettings {
  double get scaleFactor;/// Overlap between adjacent tiles in millimeters (0–30).
 /// Converted to PDF points internally (1 mm ≈ 2.835 pt).
  double get tileOverlapMillimeters;/// Margin around each page in PDF points.
- double get marginPoints;/// The rasterisation quality / max GPU texture dimension.
- PrintResolutionQuality get resolutionQuality;/// Whether to show assembly aid hints (registration marks and edge
+ double get marginPoints;/// Whether to show assembly aid hints (registration marks and edge
 /// neighbor labels) on each tile page. Only used in tile mode.
  bool get showTileAssemblyHints;
 /// Create a copy of PrintExportSettings
@@ -34,16 +33,16 @@ $PrintExportSettingsCopyWith<PrintExportSettings> get copyWith => _$PrintExportS
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PrintExportSettings&&(identical(other.paperSize, paperSize) || other.paperSize == paperSize)&&(identical(other.orientation, orientation) || other.orientation == orientation)&&(identical(other.fitMode, fitMode) || other.fitMode == fitMode)&&(identical(other.scaleFactor, scaleFactor) || other.scaleFactor == scaleFactor)&&(identical(other.tileOverlapMillimeters, tileOverlapMillimeters) || other.tileOverlapMillimeters == tileOverlapMillimeters)&&(identical(other.marginPoints, marginPoints) || other.marginPoints == marginPoints)&&(identical(other.resolutionQuality, resolutionQuality) || other.resolutionQuality == resolutionQuality)&&(identical(other.showTileAssemblyHints, showTileAssemblyHints) || other.showTileAssemblyHints == showTileAssemblyHints));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PrintExportSettings&&(identical(other.paperSize, paperSize) || other.paperSize == paperSize)&&(identical(other.orientation, orientation) || other.orientation == orientation)&&(identical(other.fitMode, fitMode) || other.fitMode == fitMode)&&(identical(other.scaleFactor, scaleFactor) || other.scaleFactor == scaleFactor)&&(identical(other.tileOverlapMillimeters, tileOverlapMillimeters) || other.tileOverlapMillimeters == tileOverlapMillimeters)&&(identical(other.marginPoints, marginPoints) || other.marginPoints == marginPoints)&&(identical(other.showTileAssemblyHints, showTileAssemblyHints) || other.showTileAssemblyHints == showTileAssemblyHints));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,paperSize,orientation,fitMode,scaleFactor,tileOverlapMillimeters,marginPoints,resolutionQuality,showTileAssemblyHints);
+int get hashCode => Object.hash(runtimeType,paperSize,orientation,fitMode,scaleFactor,tileOverlapMillimeters,marginPoints,showTileAssemblyHints);
 
 @override
 String toString() {
-  return 'PrintExportSettings(paperSize: $paperSize, orientation: $orientation, fitMode: $fitMode, scaleFactor: $scaleFactor, tileOverlapMillimeters: $tileOverlapMillimeters, marginPoints: $marginPoints, resolutionQuality: $resolutionQuality, showTileAssemblyHints: $showTileAssemblyHints)';
+  return 'PrintExportSettings(paperSize: $paperSize, orientation: $orientation, fitMode: $fitMode, scaleFactor: $scaleFactor, tileOverlapMillimeters: $tileOverlapMillimeters, marginPoints: $marginPoints, showTileAssemblyHints: $showTileAssemblyHints)';
 }
 
 
@@ -54,7 +53,7 @@ abstract mixin class $PrintExportSettingsCopyWith<$Res>  {
   factory $PrintExportSettingsCopyWith(PrintExportSettings value, $Res Function(PrintExportSettings) _then) = _$PrintExportSettingsCopyWithImpl;
 @useResult
 $Res call({
- PaperSize paperSize, PageOrientation orientation, PrintFitMode fitMode, double scaleFactor, double tileOverlapMillimeters, double marginPoints, PrintResolutionQuality resolutionQuality, bool showTileAssemblyHints
+ PaperSize paperSize, PageOrientation orientation, PrintFitMode fitMode, double scaleFactor, double tileOverlapMillimeters, double marginPoints, bool showTileAssemblyHints
 });
 
 
@@ -71,7 +70,7 @@ class _$PrintExportSettingsCopyWithImpl<$Res>
 
 /// Create a copy of PrintExportSettings
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? paperSize = null,Object? orientation = null,Object? fitMode = null,Object? scaleFactor = null,Object? tileOverlapMillimeters = null,Object? marginPoints = null,Object? resolutionQuality = null,Object? showTileAssemblyHints = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? paperSize = null,Object? orientation = null,Object? fitMode = null,Object? scaleFactor = null,Object? tileOverlapMillimeters = null,Object? marginPoints = null,Object? showTileAssemblyHints = null,}) {
   return _then(_self.copyWith(
 paperSize: null == paperSize ? _self.paperSize : paperSize // ignore: cast_nullable_to_non_nullable
 as PaperSize,orientation: null == orientation ? _self.orientation : orientation // ignore: cast_nullable_to_non_nullable
@@ -79,8 +78,7 @@ as PageOrientation,fitMode: null == fitMode ? _self.fitMode : fitMode // ignore:
 as PrintFitMode,scaleFactor: null == scaleFactor ? _self.scaleFactor : scaleFactor // ignore: cast_nullable_to_non_nullable
 as double,tileOverlapMillimeters: null == tileOverlapMillimeters ? _self.tileOverlapMillimeters : tileOverlapMillimeters // ignore: cast_nullable_to_non_nullable
 as double,marginPoints: null == marginPoints ? _self.marginPoints : marginPoints // ignore: cast_nullable_to_non_nullable
-as double,resolutionQuality: null == resolutionQuality ? _self.resolutionQuality : resolutionQuality // ignore: cast_nullable_to_non_nullable
-as PrintResolutionQuality,showTileAssemblyHints: null == showTileAssemblyHints ? _self.showTileAssemblyHints : showTileAssemblyHints // ignore: cast_nullable_to_non_nullable
+as double,showTileAssemblyHints: null == showTileAssemblyHints ? _self.showTileAssemblyHints : showTileAssemblyHints // ignore: cast_nullable_to_non_nullable
 as bool,
   ));
 }
@@ -166,10 +164,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( PaperSize paperSize,  PageOrientation orientation,  PrintFitMode fitMode,  double scaleFactor,  double tileOverlapMillimeters,  double marginPoints,  PrintResolutionQuality resolutionQuality,  bool showTileAssemblyHints)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( PaperSize paperSize,  PageOrientation orientation,  PrintFitMode fitMode,  double scaleFactor,  double tileOverlapMillimeters,  double marginPoints,  bool showTileAssemblyHints)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _PrintExportSettings() when $default != null:
-return $default(_that.paperSize,_that.orientation,_that.fitMode,_that.scaleFactor,_that.tileOverlapMillimeters,_that.marginPoints,_that.resolutionQuality,_that.showTileAssemblyHints);case _:
+return $default(_that.paperSize,_that.orientation,_that.fitMode,_that.scaleFactor,_that.tileOverlapMillimeters,_that.marginPoints,_that.showTileAssemblyHints);case _:
   return orElse();
 
 }
@@ -187,10 +185,10 @@ return $default(_that.paperSize,_that.orientation,_that.fitMode,_that.scaleFacto
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( PaperSize paperSize,  PageOrientation orientation,  PrintFitMode fitMode,  double scaleFactor,  double tileOverlapMillimeters,  double marginPoints,  PrintResolutionQuality resolutionQuality,  bool showTileAssemblyHints)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( PaperSize paperSize,  PageOrientation orientation,  PrintFitMode fitMode,  double scaleFactor,  double tileOverlapMillimeters,  double marginPoints,  bool showTileAssemblyHints)  $default,) {final _that = this;
 switch (_that) {
 case _PrintExportSettings():
-return $default(_that.paperSize,_that.orientation,_that.fitMode,_that.scaleFactor,_that.tileOverlapMillimeters,_that.marginPoints,_that.resolutionQuality,_that.showTileAssemblyHints);case _:
+return $default(_that.paperSize,_that.orientation,_that.fitMode,_that.scaleFactor,_that.tileOverlapMillimeters,_that.marginPoints,_that.showTileAssemblyHints);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -207,10 +205,10 @@ return $default(_that.paperSize,_that.orientation,_that.fitMode,_that.scaleFacto
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( PaperSize paperSize,  PageOrientation orientation,  PrintFitMode fitMode,  double scaleFactor,  double tileOverlapMillimeters,  double marginPoints,  PrintResolutionQuality resolutionQuality,  bool showTileAssemblyHints)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( PaperSize paperSize,  PageOrientation orientation,  PrintFitMode fitMode,  double scaleFactor,  double tileOverlapMillimeters,  double marginPoints,  bool showTileAssemblyHints)?  $default,) {final _that = this;
 switch (_that) {
 case _PrintExportSettings() when $default != null:
-return $default(_that.paperSize,_that.orientation,_that.fitMode,_that.scaleFactor,_that.tileOverlapMillimeters,_that.marginPoints,_that.resolutionQuality,_that.showTileAssemblyHints);case _:
+return $default(_that.paperSize,_that.orientation,_that.fitMode,_that.scaleFactor,_that.tileOverlapMillimeters,_that.marginPoints,_that.showTileAssemblyHints);case _:
   return null;
 
 }
@@ -222,7 +220,7 @@ return $default(_that.paperSize,_that.orientation,_that.fitMode,_that.scaleFacto
 
 
 class _PrintExportSettings extends PrintExportSettings {
-  const _PrintExportSettings({this.paperSize = PaperSize.a4, this.orientation = PageOrientation.landscape, this.fitMode = PrintFitMode.fitToPage, this.scaleFactor = 1.0, this.tileOverlapMillimeters = 10.0, this.marginPoints = 24.0, this.resolutionQuality = PrintResolutionQuality.standard, this.showTileAssemblyHints = true}): super._();
+  const _PrintExportSettings({this.paperSize = PaperSize.a4, this.orientation = PageOrientation.landscape, this.fitMode = PrintFitMode.fitToPage, this.scaleFactor = 1.0, this.tileOverlapMillimeters = 10.0, this.marginPoints = 24.0, this.showTileAssemblyHints = true}): super._();
   
 
 @override@JsonKey() final  PaperSize paperSize;
@@ -237,8 +235,6 @@ class _PrintExportSettings extends PrintExportSettings {
 @override@JsonKey() final  double tileOverlapMillimeters;
 /// Margin around each page in PDF points.
 @override@JsonKey() final  double marginPoints;
-/// The rasterisation quality / max GPU texture dimension.
-@override@JsonKey() final  PrintResolutionQuality resolutionQuality;
 /// Whether to show assembly aid hints (registration marks and edge
 /// neighbor labels) on each tile page. Only used in tile mode.
 @override@JsonKey() final  bool showTileAssemblyHints;
@@ -253,16 +249,16 @@ _$PrintExportSettingsCopyWith<_PrintExportSettings> get copyWith => __$PrintExpo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PrintExportSettings&&(identical(other.paperSize, paperSize) || other.paperSize == paperSize)&&(identical(other.orientation, orientation) || other.orientation == orientation)&&(identical(other.fitMode, fitMode) || other.fitMode == fitMode)&&(identical(other.scaleFactor, scaleFactor) || other.scaleFactor == scaleFactor)&&(identical(other.tileOverlapMillimeters, tileOverlapMillimeters) || other.tileOverlapMillimeters == tileOverlapMillimeters)&&(identical(other.marginPoints, marginPoints) || other.marginPoints == marginPoints)&&(identical(other.resolutionQuality, resolutionQuality) || other.resolutionQuality == resolutionQuality)&&(identical(other.showTileAssemblyHints, showTileAssemblyHints) || other.showTileAssemblyHints == showTileAssemblyHints));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PrintExportSettings&&(identical(other.paperSize, paperSize) || other.paperSize == paperSize)&&(identical(other.orientation, orientation) || other.orientation == orientation)&&(identical(other.fitMode, fitMode) || other.fitMode == fitMode)&&(identical(other.scaleFactor, scaleFactor) || other.scaleFactor == scaleFactor)&&(identical(other.tileOverlapMillimeters, tileOverlapMillimeters) || other.tileOverlapMillimeters == tileOverlapMillimeters)&&(identical(other.marginPoints, marginPoints) || other.marginPoints == marginPoints)&&(identical(other.showTileAssemblyHints, showTileAssemblyHints) || other.showTileAssemblyHints == showTileAssemblyHints));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,paperSize,orientation,fitMode,scaleFactor,tileOverlapMillimeters,marginPoints,resolutionQuality,showTileAssemblyHints);
+int get hashCode => Object.hash(runtimeType,paperSize,orientation,fitMode,scaleFactor,tileOverlapMillimeters,marginPoints,showTileAssemblyHints);
 
 @override
 String toString() {
-  return 'PrintExportSettings(paperSize: $paperSize, orientation: $orientation, fitMode: $fitMode, scaleFactor: $scaleFactor, tileOverlapMillimeters: $tileOverlapMillimeters, marginPoints: $marginPoints, resolutionQuality: $resolutionQuality, showTileAssemblyHints: $showTileAssemblyHints)';
+  return 'PrintExportSettings(paperSize: $paperSize, orientation: $orientation, fitMode: $fitMode, scaleFactor: $scaleFactor, tileOverlapMillimeters: $tileOverlapMillimeters, marginPoints: $marginPoints, showTileAssemblyHints: $showTileAssemblyHints)';
 }
 
 
@@ -273,7 +269,7 @@ abstract mixin class _$PrintExportSettingsCopyWith<$Res> implements $PrintExport
   factory _$PrintExportSettingsCopyWith(_PrintExportSettings value, $Res Function(_PrintExportSettings) _then) = __$PrintExportSettingsCopyWithImpl;
 @override @useResult
 $Res call({
- PaperSize paperSize, PageOrientation orientation, PrintFitMode fitMode, double scaleFactor, double tileOverlapMillimeters, double marginPoints, PrintResolutionQuality resolutionQuality, bool showTileAssemblyHints
+ PaperSize paperSize, PageOrientation orientation, PrintFitMode fitMode, double scaleFactor, double tileOverlapMillimeters, double marginPoints, bool showTileAssemblyHints
 });
 
 
@@ -290,7 +286,7 @@ class __$PrintExportSettingsCopyWithImpl<$Res>
 
 /// Create a copy of PrintExportSettings
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? paperSize = null,Object? orientation = null,Object? fitMode = null,Object? scaleFactor = null,Object? tileOverlapMillimeters = null,Object? marginPoints = null,Object? resolutionQuality = null,Object? showTileAssemblyHints = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? paperSize = null,Object? orientation = null,Object? fitMode = null,Object? scaleFactor = null,Object? tileOverlapMillimeters = null,Object? marginPoints = null,Object? showTileAssemblyHints = null,}) {
   return _then(_PrintExportSettings(
 paperSize: null == paperSize ? _self.paperSize : paperSize // ignore: cast_nullable_to_non_nullable
 as PaperSize,orientation: null == orientation ? _self.orientation : orientation // ignore: cast_nullable_to_non_nullable
@@ -298,8 +294,7 @@ as PageOrientation,fitMode: null == fitMode ? _self.fitMode : fitMode // ignore:
 as PrintFitMode,scaleFactor: null == scaleFactor ? _self.scaleFactor : scaleFactor // ignore: cast_nullable_to_non_nullable
 as double,tileOverlapMillimeters: null == tileOverlapMillimeters ? _self.tileOverlapMillimeters : tileOverlapMillimeters // ignore: cast_nullable_to_non_nullable
 as double,marginPoints: null == marginPoints ? _self.marginPoints : marginPoints // ignore: cast_nullable_to_non_nullable
-as double,resolutionQuality: null == resolutionQuality ? _self.resolutionQuality : resolutionQuality // ignore: cast_nullable_to_non_nullable
-as PrintResolutionQuality,showTileAssemblyHints: null == showTileAssemblyHints ? _self.showTileAssemblyHints : showTileAssemblyHints // ignore: cast_nullable_to_non_nullable
+as double,showTileAssemblyHints: null == showTileAssemblyHints ? _self.showTileAssemblyHints : showTileAssemblyHints // ignore: cast_nullable_to_non_nullable
 as bool,
   ));
 }

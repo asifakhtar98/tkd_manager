@@ -1,7 +1,6 @@
 import 'dart:math';
 
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:pdf/pdf.dart';
 
 part 'print_export_settings.freezed.dart';
 
@@ -52,27 +51,6 @@ enum PrintFitMode {
   final String label;
 }
 
-// ── Resolution Quality ──────────────────────────────────────────────────────
-
-/// Maximum GPU texture dimension used when rasterising the bracket for PDF.
-///
-/// Higher values produce sharper prints but require more GPU memory.
-enum PrintResolutionQuality {
-  /// 4 000 px — faster, lower memory, sufficient for most screens.
-  standard('Standard', 4000.0),
-
-  /// 8 192 px — maximum sharpness for high-DPI / large-format prints.
-  high('High', 8192.0);
-
-  const PrintResolutionQuality(this.label, this.maxTextureDimension);
-
-  /// Human-readable label for the UI toggle.
-  final String label;
-
-  /// The maximum pixel dimension passed to the rasteriser.
-  final double maxTextureDimension;
-}
-
 // ── Print Export Settings ───────────────────────────────────────────────────
 
 /// Immutable configuration for bracket PDF export.
@@ -100,10 +78,6 @@ abstract class PrintExportSettings with _$PrintExportSettings {
 
     /// Margin around each page in PDF points.
     @Default(24.0) double marginPoints,
-
-    /// The rasterisation quality / max GPU texture dimension.
-    @Default(PrintResolutionQuality.standard)
-    PrintResolutionQuality resolutionQuality,
 
     /// Whether to show assembly aid hints (registration marks and edge
     /// neighbor labels) on each tile page. Only used in tile mode.
@@ -135,12 +109,6 @@ abstract class PrintExportSettings with _$PrintExportSettings {
       width: page.width - marginPoints * 2,
       height: page.height - marginPoints * 2,
     );
-  }
-
-  /// The [PdfPageFormat] for use with the `pdf` package.
-  PdfPageFormat get pdfPageFormat {
-    final page = pageSize;
-    return PdfPageFormat(page.width, page.height, marginAll: marginPoints);
   }
 
   // ── Tiling calculations ──

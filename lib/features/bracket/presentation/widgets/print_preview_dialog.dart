@@ -1,26 +1,27 @@
 import 'dart:math';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 import 'package:tkd_saas/features/bracket/presentation/models/print_export_settings.dart';
-import 'package:tkd_saas/features/bracket/presentation/widgets/tie_sheet_canvas_widget.dart';
 
 /// A full-screen dialog that provides a print preview with configurable
 /// settings (paper size, orientation, fit mode, scale, tile overlap).
 ///
-/// The right panel renders a live bracket miniature via [TieSheetPainter]
+/// The right panel renders a live bracket preview via [SfPdfViewer.memory]
 /// with an overlay grid showing how pages will tile across the bracket.
 ///
 /// Returns the confirmed [PrintExportSettings] if the user proceeds, or
 /// `null` if cancelled.
 class PrintPreviewDialog extends StatefulWidget {
   const PrintPreviewDialog({
-    required this.painter,
+    required this.bracketPdfBytes,
     required this.canvasSize,
     super.key,
   });
 
-  /// The painter that renders the bracket — used for the live preview.
-  final TieSheetPainter painter;
+  /// The single-page PDF bytes that render the bracket — used for the live preview.
+  final Uint8List bracketPdfBytes;
 
   /// The logical canvas size of the bracket.
   final Size canvasSize;
@@ -28,14 +29,16 @@ class PrintPreviewDialog extends StatefulWidget {
   /// Shows the dialog and returns the confirmed settings, or null if cancelled.
   static Future<PrintExportSettings?> show({
     required BuildContext context,
-    required TieSheetPainter painter,
+    required Uint8List bracketPdfBytes,
     required Size canvasSize,
   }) {
     return showDialog<PrintExportSettings>(
       context: context,
       barrierDismissible: false,
-      builder: (_) =>
-          PrintPreviewDialog(painter: painter, canvasSize: canvasSize),
+      builder: (_) => PrintPreviewDialog(
+        bracketPdfBytes: bracketPdfBytes,
+        canvasSize: canvasSize,
+      ),
     );
   }
 
@@ -213,16 +216,6 @@ class _PrintPreviewDialogState extends State<PrintPreviewDialog> {
             secondChild: const SizedBox.shrink(),
           ),
 
-          // Resolution Quality
-          _buildSettingLabel(
-            Icons.high_quality,
-            'Resolution Quality',
-            colorScheme,
-          ),
-          const SizedBox(height: 8),
-          _buildResolutionQualityToggle(colorScheme),
-          const SizedBox(height: 20),
-
           // Page grid info
           _buildPageGridInfo(colorScheme),
         ],
@@ -337,35 +330,6 @@ class _PrintPreviewDialogState extends State<PrintPreviewDialog> {
                 colorScheme: colorScheme,
                 onTap: () => setState(
                   () => _settings = _settings.copyWith(fitMode: mode),
-                ),
-              ),
-            ),
-          ),
-      ],
-    );
-  }
-
-  Widget _buildResolutionQualityToggle(ColorScheme colorScheme) {
-    return Row(
-      children: [
-        for (final quality in PrintResolutionQuality.values)
-          Expanded(
-            child: Padding(
-              padding: EdgeInsets.only(
-                right: quality == PrintResolutionQuality.standard ? 4 : 0,
-                left: quality == PrintResolutionQuality.high ? 4 : 0,
-              ),
-              child: _ToggleChip(
-                label: quality.label,
-                icon: quality == PrintResolutionQuality.standard
-                    ? Icons.sd
-                    : Icons.hd,
-                isSelected: _settings.resolutionQuality == quality,
-                colorScheme: colorScheme,
-                onTap: () => setState(
-                  () => _settings = _settings.copyWith(
-                    resolutionQuality: quality,
-                  ),
                 ),
               ),
             ),
@@ -559,13 +523,6 @@ class _PrintPreviewDialogState extends State<PrintPreviewDialog> {
             '$_totalPages ${_totalPages == 1 ? 'page' : 'pages'}',
             colorScheme,
           ),
-          const SizedBox(height: 4),
-          _infoRow(
-            'Resolution',
-            '${_settings.resolutionQuality.label}'
-                ' (${_settings.resolutionQuality.maxTextureDimension.round()} px)',
-            colorScheme,
-          ),
         ],
       ),
     );
@@ -610,7 +567,7 @@ class _PrintPreviewDialogState extends State<PrintPreviewDialog> {
             child: Padding(
               padding: const EdgeInsets.all(40),
               child: _BracketPreviewWithTileGrid(
-                painter: widget.painter,
+                bracketPdfBytes: widget.bracketPdfBytes,
                 canvasSize: widget.canvasSize,
                 settings: _settings,
                 maxPreviewWidth: constraints.maxWidth - 80,
@@ -692,14 +649,14 @@ class _ToggleChip extends StatelessWidget {
 
 class _BracketPreviewWithTileGrid extends StatelessWidget {
   const _BracketPreviewWithTileGrid({
-    required this.painter,
+    required this.bracketPdfBytes,
     required this.canvasSize,
     required this.settings,
     required this.maxPreviewWidth,
     required this.maxPreviewHeight,
   });
 
-  final TieSheetPainter painter;
+  final Uint8List bracketPdfBytes;
   final Size canvasSize;
   final PrintExportSettings settings;
   final double maxPreviewWidth;
@@ -721,25 +678,30 @@ class _BracketPreviewWithTileGrid extends StatelessWidget {
       height: previewHeight,
       child: Stack(
         children: [
-          // The bracket miniature.
+          // The bracket miniature rendered from PDF bytes.
           Positioned.fill(
             child: ClipRRect(
               borderRadius: BorderRadius.circular(4),
-              child: CustomPaint(
-                size: Size(previewWidth, previewHeight),
-                painter: _ScaledBracketPreviewPainter(
-                  painter: painter,
-                  canvasSize: canvasSize,
-                ),
+              child: SfPdfViewer.memory(
+                bracketPdfBytes,
+                canShowScrollHead: false,
+                canShowScrollStatus: false,
+                canShowPaginationDialog: false,
+                enableDoubleTapZooming: false,
+                enableTextSelection: false,
+                pageLayoutMode: PdfPageLayoutMode.single,
+                interactionMode: PdfInteractionMode.pan,
               ),
             ),
           ),
           // Tile grid overlay.
           Positioned.fill(
-            child: CustomPaint(
-              painter: _TileGridOverlayPainter(
-                canvasSize: canvasSize,
-                settings: settings,
+            child: IgnorePointer(
+              child: CustomPaint(
+                painter: _TileGridOverlayPainter(
+                  canvasSize: canvasSize,
+                  settings: settings,
+                ),
               ),
             ),
           ),
@@ -747,34 +709,6 @@ class _BracketPreviewWithTileGrid extends StatelessWidget {
       ),
     );
   }
-}
-
-/// Paints the bracket at a scaled size for the preview.
-class _ScaledBracketPreviewPainter extends CustomPainter {
-  _ScaledBracketPreviewPainter({
-    required this.painter,
-    required this.canvasSize,
-  });
-
-  final TieSheetPainter painter;
-  final Size canvasSize;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final scaleX = size.width / canvasSize.width;
-    final scaleY = size.height / canvasSize.height;
-    final scale = min(scaleX, scaleY);
-
-    canvas.save();
-    canvas.scale(scale);
-    painter.paint(canvas, canvasSize);
-    canvas.restore();
-  }
-
-  @override
-  bool shouldRepaint(covariant _ScaledBracketPreviewPainter oldDelegate) =>
-      !identical(painter, oldDelegate.painter) ||
-      canvasSize != oldDelegate.canvasSize;
 }
 
 /// Paints a semi-transparent grid overlay showing page tile boundaries

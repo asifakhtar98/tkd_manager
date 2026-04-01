@@ -157,7 +157,6 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
                   _buildStrokeWidthsSection(context),
                   _buildSpacingSection(context),
                   _buildBadgePillSizingSection(context),
-                  _buildShadowsSection(context),
                   _buildTypographySection(context),
                   _buildLayoutDimensionsSection(context),
                   _buildBannerAndLogoSection(context),
@@ -997,64 +996,6 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
     );
   }
 
-  // ── Shadows ───────────────────────────────────────────────────────────────
-
-  Widget _buildShadowsSection(BuildContext context) {
-    return _ThemeEditorExpansionSection(
-      title: 'Shadows',
-      icon: Icons.layers_outlined,
-      children: [
-        _SliderTile(
-          label: 'Opacity Multiplier',
-          value: currentThemeConfig.shadowOpacityMultiplier,
-          min: 0,
-          max: 1,
-          divisions: 20,
-          onChanged: (value) => onThemeConfigChanged(
-            currentThemeConfig.copyWith(shadowOpacityMultiplier: value),
-          ),
-        ),
-        _SliderTile(
-          label: 'Blur Radius',
-          value: currentThemeConfig.shadowBlurRadius,
-          min: 0,
-          max: 40,
-          divisions: 80,
-          onChanged: (value) => onThemeConfigChanged(
-            currentThemeConfig.copyWith(shadowBlurRadius: value),
-          ),
-        ),
-        _buildColorPickerTile(
-          context,
-          label: 'Shadow Colour',
-          currentColor: currentThemeConfig.shadowColor,
-          onColorSelected: (color) => onThemeConfigChanged(
-            currentThemeConfig.copyWith(shadowColor: color),
-          ),
-        ),
-        _SliderTile(
-          label: 'Offset X',
-          value: currentThemeConfig.shadowOffsetX,
-          min: 0,
-          max: 20,
-          divisions: 40,
-          onChanged: (value) => onThemeConfigChanged(
-            currentThemeConfig.copyWith(shadowOffsetX: value),
-          ),
-        ),
-        _SliderTile(
-          label: 'Offset Y',
-          value: currentThemeConfig.shadowOffsetY,
-          min: 0,
-          max: 20,
-          divisions: 40,
-          onChanged: (value) => onThemeConfigChanged(
-            currentThemeConfig.copyWith(shadowOffsetY: value),
-          ),
-        ),
-      ],
-    );
-  }
 
   // ── Typography ────────────────────────────────────────────────────────────
 
