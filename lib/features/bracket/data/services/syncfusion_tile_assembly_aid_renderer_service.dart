@@ -56,7 +56,8 @@ class SyncfusionTileAssemblyAidRendererService {
       canvasWidth: canvasWidth,
       canvasHeight: canvasHeight,
     );
-    final totalTilePageCount = tileGridDimensions.columns * tileGridDimensions.rows;
+    final totalTilePageCount =
+        tileGridDimensions.columns * tileGridDimensions.rows;
 
     final pageWidth = exportSettings.pageSize.width;
     final pageHeight = exportSettings.pageSize.height;
@@ -70,7 +71,11 @@ class SyncfusionTileAssemblyAidRendererService {
     final printableHeight = exportSettings.printableAreaPoints.height;
 
     // ── Title ──
-    final titleFont = PdfStandardFont(PdfFontFamily.helvetica, 14, style: PdfFontStyle.bold);
+    final titleFont = PdfStandardFont(
+      PdfFontFamily.helvetica,
+      14,
+      style: PdfFontStyle.bold,
+    );
     graphics.drawString(
       'ASSEMBLY GUIDE',
       titleFont,
@@ -79,7 +84,8 @@ class SyncfusionTileAssemblyAidRendererService {
     );
 
     final subtitleFont = PdfStandardFont(PdfFontFamily.helvetica, 9);
-    final subtitleText = '${tileGridDimensions.columns} × ${tileGridDimensions.rows} grid  ·  '
+    final subtitleText =
+        '${tileGridDimensions.columns} × ${tileGridDimensions.rows} grid  ·  '
         '$totalTilePageCount pages  ·  '
         '${exportSettings.paperSize.label} ${exportSettings.orientation.label}';
     graphics.drawString(
@@ -103,11 +109,17 @@ class SyncfusionTileAssemblyAidRendererService {
 
     // Center the miniature
     final displayOriginX = (availableWidth - displayWidth) / 2;
-    final displayOriginY = _indexPageHeaderHeight + (availableHeight - displayHeight) / 2;
+    final displayOriginY =
+        _indexPageHeaderHeight + (availableHeight - displayHeight) / 2;
 
     // Draw bracket outline
     graphics.drawRectangle(
-      bounds: Rect.fromLTWH(displayOriginX, displayOriginY, displayWidth, displayHeight),
+      bounds: Rect.fromLTWH(
+        displayOriginX,
+        displayOriginY,
+        displayWidth,
+        displayHeight,
+      ),
       pen: PdfPen(const Color(0xFFCCCCCC).toPdfColor(), width: 0.5),
       brush: PdfSolidBrush(const Color(0xFFF8F8F8).toPdfColor()),
     );
@@ -148,8 +160,13 @@ class SyncfusionTileAssemblyAidRendererService {
     final scaleToDisplayX = displayWidth / canvasWidth;
     final scaleToDisplayY = displayHeight / canvasHeight;
 
-    final gridPen = PdfPen(_indexPageGridColor.toPdfColor(), width: _indexPageGridStrokeWidth);
-    final evenFillBrush = PdfSolidBrush(_indexPageGridFillEvenColor.toPdfColor());
+    final gridPen = PdfPen(
+      _indexPageGridColor.toPdfColor(),
+      width: _indexPageGridStrokeWidth,
+    );
+    final evenFillBrush = PdfSolidBrush(
+      _indexPageGridFillEvenColor.toPdfColor(),
+    );
 
     int pageNumber = 0;
     for (int row = 0; row < tileGridDimensions.rows; row++) {
@@ -226,6 +243,17 @@ class SyncfusionTileAssemblyAidRendererService {
     final overlapPoints = exportSettings.tileOverlapPoints;
     if (overlapPoints <= 0) return;
 
+    // Guard: ensure overlap boundary is within printable area
+    // If overlap exceeds printable area, skip registration marks
+    final canShowLeftMark =
+        overlapPoints > 0 && overlapPoints < printableArea.width;
+    final canShowRightMark =
+        overlapPoints > 0 && overlapPoints < printableArea.width;
+    final canShowTopMark =
+        overlapPoints > 0 && overlapPoints < printableArea.height;
+    final canShowBottomMark =
+        overlapPoints > 0 && overlapPoints < printableArea.height;
+
     final markPen = PdfPen(
       _registrationMarkColor.toPdfColor(),
       width: _registrationMarkStrokeWidth,
@@ -239,42 +267,98 @@ class SyncfusionTileAssemblyAidRendererService {
     final bool hasBottomNeighbor = tileRow < totalRowCount - 1;
 
     // Right overlap boundary
-    if (hasRightNeighbor) {
+    if (hasRightNeighbor && canShowRightMark) {
       final double markX = printableArea.width - overlapPoints;
-      _drawCrosshairMark(tilePageGraphics, markX, inset, armLength, markPen);
-      _drawCrosshairMark(tilePageGraphics, markX, printableArea.height - inset, armLength, markPen);
-      if (printableArea.height > 200) {
-        _drawCrosshairMark(tilePageGraphics, markX, printableArea.height / 2, armLength, markPen);
+      if (markX > 0 && markX < printableArea.width) {
+        _drawCrosshairMark(tilePageGraphics, markX, inset, armLength, markPen);
+        _drawCrosshairMark(
+          tilePageGraphics,
+          markX,
+          printableArea.height - inset,
+          armLength,
+          markPen,
+        );
+        if (printableArea.height > 200) {
+          _drawCrosshairMark(
+            tilePageGraphics,
+            markX,
+            printableArea.height / 2,
+            armLength,
+            markPen,
+          );
+        }
       }
     }
 
     // Left overlap boundary
-    if (hasLeftNeighbor) {
+    if (hasLeftNeighbor && canShowLeftMark) {
       final double markX = overlapPoints;
-      _drawCrosshairMark(tilePageGraphics, markX, inset, armLength, markPen);
-      _drawCrosshairMark(tilePageGraphics, markX, printableArea.height - inset, armLength, markPen);
-      if (printableArea.height > 200) {
-        _drawCrosshairMark(tilePageGraphics, markX, printableArea.height / 2, armLength, markPen);
+      if (markX > 0 && markX < printableArea.width) {
+        _drawCrosshairMark(tilePageGraphics, markX, inset, armLength, markPen);
+        _drawCrosshairMark(
+          tilePageGraphics,
+          markX,
+          printableArea.height - inset,
+          armLength,
+          markPen,
+        );
+        if (printableArea.height > 200) {
+          _drawCrosshairMark(
+            tilePageGraphics,
+            markX,
+            printableArea.height / 2,
+            armLength,
+            markPen,
+          );
+        }
       }
     }
 
     // Bottom overlap boundary
-    if (hasBottomNeighbor) {
+    if (hasBottomNeighbor && canShowBottomMark) {
       final double markY = printableArea.height - overlapPoints;
-      _drawCrosshairMark(tilePageGraphics, inset, markY, armLength, markPen);
-      _drawCrosshairMark(tilePageGraphics, printableArea.width - inset, markY, armLength, markPen);
-      if (printableArea.width > 200) {
-        _drawCrosshairMark(tilePageGraphics, printableArea.width / 2, markY, armLength, markPen);
+      if (markY > 0 && markY < printableArea.height) {
+        _drawCrosshairMark(tilePageGraphics, inset, markY, armLength, markPen);
+        _drawCrosshairMark(
+          tilePageGraphics,
+          printableArea.width - inset,
+          markY,
+          armLength,
+          markPen,
+        );
+        if (printableArea.width > 200) {
+          _drawCrosshairMark(
+            tilePageGraphics,
+            printableArea.width / 2,
+            markY,
+            armLength,
+            markPen,
+          );
+        }
       }
     }
 
     // Top overlap boundary
-    if (hasTopNeighbor) {
+    if (hasTopNeighbor && canShowTopMark) {
       final double markY = overlapPoints;
-      _drawCrosshairMark(tilePageGraphics, inset, markY, armLength, markPen);
-      _drawCrosshairMark(tilePageGraphics, printableArea.width - inset, markY, armLength, markPen);
-      if (printableArea.width > 200) {
-        _drawCrosshairMark(tilePageGraphics, printableArea.width / 2, markY, armLength, markPen);
+      if (markY > 0 && markY < printableArea.height) {
+        _drawCrosshairMark(tilePageGraphics, inset, markY, armLength, markPen);
+        _drawCrosshairMark(
+          tilePageGraphics,
+          printableArea.width - inset,
+          markY,
+          armLength,
+          markPen,
+        );
+        if (printableArea.width > 200) {
+          _drawCrosshairMark(
+            tilePageGraphics,
+            printableArea.width / 2,
+            markY,
+            armLength,
+            markPen,
+          );
+        }
       }
     }
   }
@@ -316,7 +400,10 @@ class SyncfusionTileAssemblyAidRendererService {
     if (totalColumnCount <= 1 && totalRowCount <= 1) return;
 
     final printableArea = exportSettings.printableAreaPoints;
-    final labelFont = PdfStandardFont(PdfFontFamily.helvetica, _neighborLabelFontSize);
+    final labelFont = PdfStandardFont(
+      PdfFontFamily.helvetica,
+      _neighborLabelFontSize,
+    );
     final labelBrush = PdfSolidBrush(_neighborLabelColor.toPdfColor());
 
     int pageNumberOf(int neighborRow, int neighborCol) =>
@@ -394,5 +481,4 @@ class SyncfusionTileAssemblyAidRendererService {
       );
     }
   }
-
 }

@@ -138,21 +138,27 @@ abstract class PrintExportSettings with _$PrintExportSettings {
     final tileCoverage = tileCanvasCoverage();
     final overlapCanvas = tileOverlapCanvasPixels;
 
-    // The first tile covers `tileCoverage.width`.
-    // Each subsequent tile covers `tileCoverage.width - overlapCanvas` of NEW area.
-    final effectiveStepWidth = tileCoverage.width - overlapCanvas;
-    final effectiveStepHeight = tileCoverage.height - overlapCanvas;
+    // If overlap exceeds tile coverage, clamp overlap to prevent negative steps.
+    // This ensures at least 1 tile covers the canvas.
+    final safeOverlapWidth = overlapCanvas >= tileCoverage.width
+        ? tileCoverage.width * 0.5
+        : overlapCanvas;
+    final safeOverlapHeight = overlapCanvas >= tileCoverage.height
+        ? tileCoverage.height * 0.5
+        : overlapCanvas;
+    final safeStepWidth = tileCoverage.width - safeOverlapWidth;
+    final safeStepHeight = tileCoverage.height - safeOverlapHeight;
 
     int columns = 1;
-    if (canvasWidth > tileCoverage.width && effectiveStepWidth > 0) {
+    if (canvasWidth > tileCoverage.width && safeStepWidth > 0) {
       final remainingWidth = canvasWidth - tileCoverage.width;
-      columns = 1 + (remainingWidth / effectiveStepWidth).ceil();
+      columns = 1 + (remainingWidth / safeStepWidth).ceil();
     }
 
     int rows = 1;
-    if (canvasHeight > tileCoverage.height && effectiveStepHeight > 0) {
+    if (canvasHeight > tileCoverage.height && safeStepHeight > 0) {
       final remainingHeight = canvasHeight - tileCoverage.height;
-      rows = 1 + (remainingHeight / effectiveStepHeight).ceil();
+      rows = 1 + (remainingHeight / safeStepHeight).ceil();
     }
 
     return (columns: columns, rows: rows);

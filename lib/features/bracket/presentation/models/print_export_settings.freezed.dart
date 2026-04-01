@@ -220,7 +220,7 @@ return $default(_that.paperSize,_that.orientation,_that.fitMode,_that.scaleFacto
 
 
 class _PrintExportSettings extends PrintExportSettings {
-  const _PrintExportSettings({this.paperSize = PaperSize.a4, this.orientation = PageOrientation.landscape, this.fitMode = PrintFitMode.fitToPage, this.scaleFactor = 1.0, this.tileOverlapMillimeters = 10.0, this.marginPoints = 24.0, this.showTileAssemblyHints = true}): super._();
+  const _PrintExportSettings({this.paperSize = PaperSize.a4, this.orientation = PageOrientation.landscape, this.fitMode = PrintFitMode.tileAcrossPages, this.scaleFactor = 1.0, this.tileOverlapMillimeters = 10.0, this.marginPoints = 24.0, this.showTileAssemblyHints = true}): super._();
   
 
 @override@JsonKey() final  PaperSize paperSize;

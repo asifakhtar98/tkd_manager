@@ -188,11 +188,7 @@ class _PrintPreviewDialogState extends State<PrintPreviewDialog> {
               const SizedBox(height: 8),
               _buildScaleSlider(colorScheme),
               const SizedBox(height: 20),
-              _buildSettingLabel(
-                Icons.space_bar,
-                'Tile Overlap',
-                colorScheme,
-              ),
+              _buildSettingLabel(Icons.space_bar, 'Tile Overlap', colorScheme),
               const SizedBox(height: 8),
               _buildOverlapSlider(colorScheme),
               const SizedBox(height: 16),
@@ -684,6 +680,23 @@ class _TileGridOverlayPainter extends CustomPainter {
       canvasHeight: canvasSize.height,
     );
 
+    // Handle fit-to-page mode: single page, regardless of grid calculation
+    if (settings.fitMode == PrintFitMode.fitToPage) {
+      final borderPaint = Paint()
+        ..color = Colors.tealAccent.withAlpha(100)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2;
+      canvas.drawRect(Offset.zero & size, borderPaint);
+      _drawPageLabel(
+        canvas,
+        size,
+        '1 page',
+        Offset(size.width / 2, size.height / 2),
+      );
+      return;
+    }
+
+    // For tile mode, only show grid overlay if actually multiple tiles
     if (grid.columns <= 1 && grid.rows <= 1) {
       // Single page — draw a subtle border around the entire preview.
       final borderPaint = Paint()

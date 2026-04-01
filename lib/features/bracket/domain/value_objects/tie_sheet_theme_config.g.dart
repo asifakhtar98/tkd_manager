@@ -129,6 +129,14 @@ _TieSheetThemeConfig _$TieSheetThemeConfigFromJson(
   centerFinalMinimumSpan: (json['centerFinalMinimumSpan'] as num).toDouble(),
   grandFinalOutputArmLength: (json['grandFinalOutputArmLength'] as num)
       .toDouble(),
+  badgeHorizontalOffset: (json['badgeHorizontalOffset'] as num).toDouble(),
+  badgeBlueVerticalOffset: (json['badgeBlueVerticalOffset'] as num).toDouble(),
+  badgeRedVerticalOffset: (json['badgeRedVerticalOffset'] as num).toDouble(),
+  missingInputVerticalOffset: (json['missingInputVerticalOffset'] as num)
+      .toDouble(),
+  thirdPlaceToMedalGap: (json['thirdPlaceToMedalGap'] as num).toDouble(),
+  matchPillHorizontalOffset: (json['matchPillHorizontalOffset'] as num)
+      .toDouble(),
   headerBannerHeight: (json['headerBannerHeight'] as num).toDouble(),
   logoMaxHeight: (json['logoMaxHeight'] as num).toDouble(),
   logoPadding: (json['logoPadding'] as num).toDouble(),
@@ -256,6 +264,12 @@ Map<String, dynamic> _$TieSheetThemeConfigToJson(
   'medalRowGap': instance.medalRowGap,
   'centerFinalMinimumSpan': instance.centerFinalMinimumSpan,
   'grandFinalOutputArmLength': instance.grandFinalOutputArmLength,
+  'badgeHorizontalOffset': instance.badgeHorizontalOffset,
+  'badgeBlueVerticalOffset': instance.badgeBlueVerticalOffset,
+  'badgeRedVerticalOffset': instance.badgeRedVerticalOffset,
+  'missingInputVerticalOffset': instance.missingInputVerticalOffset,
+  'thirdPlaceToMedalGap': instance.thirdPlaceToMedalGap,
+  'matchPillHorizontalOffset': instance.matchPillHorizontalOffset,
   'headerBannerHeight': instance.headerBannerHeight,
   'logoMaxHeight': instance.logoMaxHeight,
   'logoPadding': instance.logoPadding,

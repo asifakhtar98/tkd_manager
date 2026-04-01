@@ -314,10 +314,14 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
     );
   }
 
-  /// Vector PDF export — fits everything on a single standard page dynamically
-  /// natively scaling the bracket onto a target printing page format.
-  Future<void> _directExportPdf() async {
-    _updateExportProgress(0.0, 'Preparing PDF for export…');
+  // ════════════════════════════════════════════════════════════════════════
+  // EXPORT METHODS
+  // ════════════════════════════════════════════════════════════════════════
+
+  /// Single-page PDF export — fits everything on one page, scaled to fit.
+  /// Ideal for quick printing on a standard page format (A4).
+  Future<void> _exportSinglePagePdf() async {
+    _updateExportProgress(0.0, 'Preparing single-page export…');
     await Future<void>.delayed(Duration.zero);
 
     try {
@@ -341,19 +345,25 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
           _cachedLayoutResult!.computedCanvasSize.height;
 
       await Printing.layoutPdf(
-        name: 'Bracket_Export',
+        name: 'Bracket_SinglePage',
         format: isLandscape
             ? PdfPageFormat.a4.landscape
             : PdfPageFormat.a4.portrait,
         onLayout: (PdfPageFormat format) async {
-          _updateExportProgress(0.8, 'Generating fit-to-page PDF…');
+          _updateExportProgress(0.8, 'Generating single-page PDF…');
+
+          const double printerMarginPoints = 72.0;
+          final double printableWidth =
+              format.width - (printerMarginPoints * 2);
+          final double printableHeight =
+              format.height - (printerMarginPoints * 2);
 
           final renderer = TieSheetSyncfusionPdfRendererService();
           final bytes = renderer.generateScaledSinglePagePdfBytes(
             layoutResult: _cachedLayoutResult!,
             themeConfig: themeConfig,
-            pageWidth: format.availableWidth,
-            pageHeight: format.availableHeight,
+            pageWidth: printableWidth,
+            pageHeight: printableHeight,
             leftLogoImageBytes: _leftLogoImageBytes,
             rightLogoImageBytes: _rightLogoImageBytes,
           );
@@ -435,6 +445,59 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
       await Future<void>.delayed(Duration.zero);
 
       await Printing.layoutPdf(
+        onLayout: (PdfPageFormat format) async => exportPdfBytes,
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _pdfExportProgress = null;
+          _pdfExportStatusMessage = '';
+        });
+      }
+    }
+  }
+
+  /// Tiled multi-page PDF export — breaks the bracket into multiple pages
+  /// for assembling into a larger poster/flyer format.
+  Future<void> _exportTiledPdf() async {
+    _updateExportProgress(0.0, 'Preparing tiled export…');
+    await Future<void>.delayed(Duration.zero);
+
+    try {
+      if (_cachedLayoutResult == null) {
+        _updateExportProgress(1.0, 'No bracket data available.');
+        return;
+      }
+
+      if (!mounted) return;
+
+      // Read theme state before the async gap
+      final themeSelectionState = context
+          .read<BracketThemeSelectionBloc>()
+          .state;
+      final themeConfig = _resolveThemeConfigFromSelection(themeSelectionState);
+
+      // Use default tiled export settings (A4 landscape, 1x1 scale, 10mm overlap)
+      const defaultSettings = PrintExportSettings();
+
+      _updateExportProgress(0.5, 'Generating tiled PDF…');
+      await Future<void>.delayed(Duration.zero);
+
+      final renderer = TieSheetSyncfusionPdfRendererService();
+      final tiledBytes = renderer.generateTiledBracketPdfBytes(
+        layoutResult: _cachedLayoutResult!,
+        themeConfig: themeConfig,
+        exportSettings: defaultSettings,
+        leftLogoImageBytes: _leftLogoImageBytes,
+        rightLogoImageBytes: _rightLogoImageBytes,
+      );
+      final exportPdfBytes = Uint8List.fromList(tiledBytes);
+
+      _updateExportProgress(0.8, 'Opening print dialog…');
+      await Future<void>.delayed(Duration.zero);
+
+      await Printing.layoutPdf(
+        name: 'Bracket_Tiled',
         onLayout: (PdfPageFormat format) async => exportPdfBytes,
       );
     } finally {
@@ -659,7 +722,6 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
         _regeneratePdfFromCurrentState();
       },
       builder: (context, selectionState) {
-
         // Removed clamping of side panel tab index since Theme tab is always available now.
 
         // Generate initial PDF on first build if cache is empty.
@@ -686,10 +748,10 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
               onPressed: _navigateBackToTournamentDetail,
             ),
             actions: [
-              // ── Quick Export PDF ──
+              // ── Single Page Export ──
               TextButton(
                 style: actionButtonStyle,
-                onPressed: _isExportingPdf ? null : _directExportPdf,
+                onPressed: _isExportingPdf ? null : _exportSinglePagePdf,
                 child: _isExportingPdf
                     ? const SizedBox(
                         width: 16,
@@ -702,9 +764,9 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
                     : const Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.print, size: 18),
+                          Icon(Icons.article_outlined, size: 18),
                           SizedBox(width: 4),
-                          Text('Quick Export'),
+                          Text('Single Export'),
                         ],
                       ),
               ),
@@ -1001,7 +1063,7 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
                               ),
                             );
                           },
-                        )
+                        ),
                       ],
                     ),
                   ),

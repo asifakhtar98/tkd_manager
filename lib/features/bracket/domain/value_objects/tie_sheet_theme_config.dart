@@ -261,6 +261,24 @@ abstract class TieSheetThemeConfig with _$TieSheetThemeConfig {
     /// Horizontal arm length for grand-final output connector (px).
     required double grandFinalOutputArmLength,
 
+    /// Horizontal offset for corner badges relative to junction center (px).
+    required double badgeHorizontalOffset,
+
+    /// Vertical offset for blue corner badge from junction arm (px).
+    required double badgeBlueVerticalOffset,
+
+    /// Vertical offset for red corner badge from junction arm (px).
+    required double badgeRedVerticalOffset,
+
+    /// Vertical offset for missing input placeholder from junction center (px).
+    required double missingInputVerticalOffset,
+
+    /// Vertical gap between 3rd place match and medal table (px).
+    required double thirdPlaceToMedalGap,
+
+    /// Horizontal offset for match number pill relative to junction center (px).
+    required double matchPillHorizontalOffset,
+
     // ── Banner & logo layout tokens ─────────────────────────────────────────
 
     /// Base height of the dark header banner (before fontSizeDelta scaling, px).
@@ -395,6 +413,12 @@ abstract class TieSheetThemeConfig with _$TieSheetThemeConfig {
     // Junction geometry
     centerFinalMinimumSpan: 60.0,
     grandFinalOutputArmLength: 40.0,
+    badgeHorizontalOffset: 16.0,
+    badgeBlueVerticalOffset: -6.0,
+    badgeRedVerticalOffset: 14.0,
+    missingInputVerticalOffset: 40.0,
+    thirdPlaceToMedalGap: 60.0,
+    matchPillHorizontalOffset: 0.0,
     // Banner & logo
     headerBannerHeight: 64.0,
     logoMaxHeight: 60.0,
@@ -497,17 +521,23 @@ abstract class TieSheetThemeConfig with _$TieSheetThemeConfig {
     // Junction geometry
     centerFinalMinimumSpan: 60.0,
     grandFinalOutputArmLength: 40.0,
+    badgeHorizontalOffset: 16.0,
+    badgeBlueVerticalOffset: -6.0,
+    badgeRedVerticalOffset: 14.0,
+    missingInputVerticalOffset: 40.0,
+    thirdPlaceToMedalGap: 60.0,
+    matchPillHorizontalOffset: 0.0,
     // Banner & logo
     headerBannerHeight: 64.0,
     logoMaxHeight: 60.0,
     logoPadding: 12.0,
     // Additional colours
     matchPillFillColor: Color(0xFFFFFFFF),
-    badgeTextColor: Color(0xFFFFFFFF),
+    badgeTextColor: Color(0xFF000000),
     // Opacity
-    sectionLabelBackgroundOpacity: 0.1,
-    headerSecondaryTextOpacity: 0.65,
-    badgeOutlineOpacity: 0.3,
+    sectionLabelBackgroundOpacity: 0.0,
+    headerSecondaryTextOpacity: 0.8,
+    badgeOutlineOpacity: 1.0,
     // Canvas constraints
     canvasMinimumWidth: 700.0,
     canvasMinimumHeight: 500.0,
