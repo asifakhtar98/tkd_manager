@@ -36,8 +36,16 @@ class TieSheetSyncfusionPdfRendererService {
     final document = PdfDocument();
     final canvasWidth = layoutResult.computedCanvasSize.width;
     final canvasHeight = layoutResult.computedCanvasSize.height;
+    
+    // Explicitly set orientation based on aspect ratio so Syncfusion does not clip
+    // documents where width > height in portrait mode.
+    document.pageSettings.orientation = canvasWidth > canvasHeight
+        ? PdfPageOrientation.landscape
+        : PdfPageOrientation.portrait;
+        
     document.pageSettings.size = Size(canvasWidth, canvasHeight);
     document.pageSettings.margins.all = 0;
+    
     final page = document.pages.add();
     final graphics = page.graphics;
 
@@ -213,6 +221,56 @@ class TieSheetSyncfusionPdfRendererService {
       );
     }
 
+    final bytes = document.saveSync();
+    document.dispose();
+    return bytes;
+  }
+
+  /// Generates a single-page PDF document scaled to fit a specific page dimension,
+  /// preserving aspect ratio. Ideal for printing the entire bracket on an A4/Letter page.
+  List<int> generateScaledSinglePagePdfBytes({
+    required TieSheetLayoutResult layoutResult,
+    required TieSheetThemeConfig themeConfig,
+    required double pageWidth,
+    required double pageHeight,
+    Uint8List? leftLogoImageBytes,
+    Uint8List? rightLogoImageBytes,
+  }) {
+    final document = PdfDocument();
+    document.pageSettings.size = Size(pageWidth, pageHeight);
+    document.pageSettings.margins.all = 0;
+    
+    final page = document.pages.add();
+    final graphics = page.graphics;
+
+    final canvasWidth = layoutResult.computedCanvasSize.width;
+    final canvasHeight = layoutResult.computedCanvasSize.height;
+
+    final bracketTemplate = PdfTemplate(canvasWidth, canvasHeight);
+    final templateGraphics = bracketTemplate.graphics!;
+    
+    _renderCanvasBackground(templateGraphics, layoutResult, themeConfig);
+    _renderHeader(templateGraphics, layoutResult.headerLayoutData, themeConfig, leftLogoImageBytes: leftLogoImageBytes, rightLogoImageBytes: rightLogoImageBytes);
+    _renderSectionLabels(templateGraphics, layoutResult.sectionLabelLayoutDataList, themeConfig);
+    _renderParticipantRows(templateGraphics, layoutResult.participantRowLayoutDataList, themeConfig);
+    _renderConnectors(templateGraphics, layoutResult.connectorLayoutDataList, themeConfig);
+    _renderMatchJunctions(templateGraphics, layoutResult.matchLayoutDataList, themeConfig);
+    if (layoutResult.medalTableLayoutData != null) {
+      _renderMedalTable(templateGraphics, layoutResult.medalTableLayoutData!, themeConfig);
+    }
+    
+    final scaleX = pageWidth / canvasWidth;
+    final scaleY = pageHeight / canvasHeight;
+    final scaleToFit = min(scaleX, scaleY);
+    
+    final scaledWidth = canvasWidth * scaleToFit;
+    final scaledHeight = canvasHeight * scaleToFit;
+    
+    final dx = (pageWidth - scaledWidth) / 2;
+    final dy = (pageHeight - scaledHeight) / 2;
+    
+    graphics.drawPdfTemplate(bracketTemplate, Offset(dx, dy), Size(scaledWidth, scaledHeight));
+    
     final bytes = document.saveSync();
     document.dispose();
     return bytes;

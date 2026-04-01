@@ -54,8 +54,6 @@ class _PrintPreviewDialogState extends State<PrintPreviewDialog> {
     canvasHeight: widget.canvasSize.height,
   );
 
-  bool get _isTileMode => _settings.fitMode == PrintFitMode.tileAcrossPages;
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -174,46 +172,33 @@ class _PrintPreviewDialogState extends State<PrintPreviewDialog> {
           _buildOrientationToggle(colorScheme),
           const SizedBox(height: 20),
 
-          // Fit Mode
-          _buildSettingLabel(Icons.dashboard, 'Fit Mode', colorScheme),
-          const SizedBox(height: 8),
-          _buildFitModeSelector(colorScheme),
-          const SizedBox(height: 20),
-
-          // Scale (tile mode only)
-          AnimatedCrossFade(
-            duration: const Duration(milliseconds: 200),
-            crossFadeState: _isTileMode
-                ? CrossFadeState.showFirst
-                : CrossFadeState.showSecond,
-            firstChild: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildSettingLabel(
-                  Icons.auto_fix_high,
-                  'Page Target',
-                  colorScheme,
-                ),
-                const SizedBox(height: 8),
-                _buildPageTargetPresets(colorScheme),
-                const SizedBox(height: 20),
-                _buildSettingLabel(Icons.zoom_in, 'Scale', colorScheme),
-                const SizedBox(height: 8),
-                _buildScaleSlider(colorScheme),
-                const SizedBox(height: 20),
-                _buildSettingLabel(
-                  Icons.space_bar,
-                  'Tile Overlap',
-                  colorScheme,
-                ),
-                const SizedBox(height: 8),
-                _buildOverlapSlider(colorScheme),
-                const SizedBox(height: 16),
-                _buildAssemblyHintsToggle(colorScheme),
-                const SizedBox(height: 20),
-              ],
-            ),
-            secondChild: const SizedBox.shrink(),
+          // Scale
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildSettingLabel(
+                Icons.auto_fix_high,
+                'Page Target',
+                colorScheme,
+              ),
+              const SizedBox(height: 8),
+              _buildPageTargetPresets(colorScheme),
+              const SizedBox(height: 20),
+              _buildSettingLabel(Icons.zoom_in, 'Scale', colorScheme),
+              const SizedBox(height: 8),
+              _buildScaleSlider(colorScheme),
+              const SizedBox(height: 20),
+              _buildSettingLabel(
+                Icons.space_bar,
+                'Tile Overlap',
+                colorScheme,
+              ),
+              const SizedBox(height: 8),
+              _buildOverlapSlider(colorScheme),
+              const SizedBox(height: 16),
+              _buildAssemblyHintsToggle(colorScheme),
+              const SizedBox(height: 20),
+            ],
           ),
 
           // Page grid info
@@ -303,33 +288,6 @@ class _PrintPreviewDialogState extends State<PrintPreviewDialog> {
                 onTap: () => setState(
                   () =>
                       _settings = _settings.copyWith(orientation: orientation),
-                ),
-              ),
-            ),
-          ),
-      ],
-    );
-  }
-
-  Widget _buildFitModeSelector(ColorScheme colorScheme) {
-    return Row(
-      children: [
-        for (final mode in PrintFitMode.values)
-          Expanded(
-            child: Padding(
-              padding: EdgeInsets.only(
-                right: mode == PrintFitMode.fitToPage ? 4 : 0,
-                left: mode == PrintFitMode.tileAcrossPages ? 4 : 0,
-              ),
-              child: _ToggleChip(
-                label: mode == PrintFitMode.fitToPage ? 'Single' : 'Tiled',
-                icon: mode == PrintFitMode.fitToPage
-                    ? Icons.fullscreen
-                    : Icons.grid_view,
-                isSelected: _settings.fitMode == mode,
-                colorScheme: colorScheme,
-                onTap: () => setState(
-                  () => _settings = _settings.copyWith(fitMode: mode),
                 ),
               ),
             ),

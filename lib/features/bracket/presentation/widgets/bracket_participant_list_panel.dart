@@ -67,7 +67,7 @@ class _BracketParticipantListPanelState extends State<BracketParticipantListPane
           child: ListView.separated(
             padding: const EdgeInsets.all(16),
             itemCount: slots.length,
-            separatorBuilder: (_, _2) => const Divider(height: 1),
+            separatorBuilder: (context, index) => const Divider(height: 1),
             itemBuilder: (context, index) => _buildSlotTile(context, slots[index]),
           ),
         ),

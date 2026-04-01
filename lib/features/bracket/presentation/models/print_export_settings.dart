@@ -65,7 +65,7 @@ abstract class PrintExportSettings with _$PrintExportSettings {
   const factory PrintExportSettings({
     @Default(PaperSize.a4) PaperSize paperSize,
     @Default(PageOrientation.landscape) PageOrientation orientation,
-    @Default(PrintFitMode.fitToPage) PrintFitMode fitMode,
+    @Default(PrintFitMode.tileAcrossPages) PrintFitMode fitMode,
 
     /// Scale applied to the bracket when tiling ([minScaleFactor]–[maxScaleFactor]).
     /// 1.0 = 1 logical pixel → 1 PDF point.
