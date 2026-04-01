@@ -430,7 +430,6 @@ class TieSheetSyncfusionPdfRendererService {
           Offset(arcPath.lineToAfterArcOffset.dx, arcPath.lineToAfterArcOffset.dy),
         );
         // Approximate the 90° arc as a diagonal line.
-        // TODO(arc): Replace with PdfPath bezier curve for smooth arcs.
         graphics.drawLine(
           pen,
           Offset(arcPath.lineToBeforeArcOffset.dx, arcPath.lineToBeforeArcOffset.dy),

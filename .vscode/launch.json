@@ -29,6 +29,7 @@
             "cwd": "${workspaceFolder}",
             "request": "launch",
             "type": "dart",
+            "noDebug": true,
             "program": "lib/main.dart",
             "args": [
                 "-d", "ipad"

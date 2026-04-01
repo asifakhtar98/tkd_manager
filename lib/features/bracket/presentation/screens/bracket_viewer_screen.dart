@@ -659,20 +659,8 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
         _regeneratePdfFromCurrentState();
       },
       builder: (context, selectionState) {
-        final TieSheetThemeMode activeSegment = selectionState
-            .activeThemeSelection
-            .when(
-              defaultModeSelected: () => TieSheetThemeMode.defaultMode,
-              printModeSelected: () => TieSheetThemeMode.printMode,
-              cloudPresetSelected: (_) => TieSheetThemeMode.customMode,
-              customModeSelected: () => TieSheetThemeMode.customMode,
-            );
 
-        // Clamp side panel tab index when theme tab is not available.
-        if (activeSegment != TieSheetThemeMode.customMode &&
-            _activeSidePanelTab == 2) {
-          _activeSidePanelTab = 0;
-        }
+        // Removed clamping of side panel tab index since Theme tab is always available now.
 
         // Generate initial PDF on first build if cache is empty.
         if (_cachedPdfBytes == null && _pdfGenerationError == null) {
@@ -698,43 +686,6 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
               onPressed: _navigateBackToTournamentDetail,
             ),
             actions: [
-              // ── Canvas Theme Toggle ──
-              SegmentedButton<TieSheetThemeMode>(
-                segments: TieSheetThemeMode.values
-                    .map(
-                      (mode) => ButtonSegment<TieSheetThemeMode>(
-                        value: mode,
-                        icon: Icon(switch (mode) {
-                          TieSheetThemeMode.defaultMode => Icons.visibility,
-                          TieSheetThemeMode.printMode => Icons.print,
-                          TieSheetThemeMode.customMode => Icons.tune,
-                        }, size: 16),
-                        label: Text(
-                          mode.label,
-                          style: const TextStyle(fontSize: 12),
-                        ),
-                      ),
-                    )
-                    .toList(),
-                selected: {activeSegment},
-                onSelectionChanged: (selected) {
-                  context.read<BracketThemeSelectionBloc>().add(
-                    BracketThemeSelectionEvent.themeModeToggled(
-                      selectedMode: selected.first,
-                    ),
-                  );
-                },
-                style: const ButtonStyle(
-                  visualDensity: VisualDensity.compact,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  padding: WidgetStatePropertyAll(
-                    EdgeInsets.symmetric(horizontal: 8),
-                  ),
-                ),
-              ),
-
-              const SizedBox(width: 8),
-
               // ── Quick Export PDF ──
               TextButton(
                 style: actionButtonStyle,
@@ -977,10 +928,9 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
                             Icons.people,
                           ),
                         ),
-                        if (activeSegment == TieSheetThemeMode.customMode)
-                          Expanded(
-                            child: _buildSidePanelTab(2, 'Theme', Icons.tune),
-                          ),
+                        Expanded(
+                          child: _buildSidePanelTab(2, 'Theme', Icons.tune),
+                        ),
                       ],
                     ),
                   ),
@@ -1030,31 +980,28 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
                             );
                           },
                         ),
-                        // Tab 2: Theme editor (conditional)
-                        if (activeSegment == TieSheetThemeMode.customMode)
-                          TieSheetThemeEditorPanel(
-                            currentThemeConfig:
-                                selectionState.liveCustomThemeConfiguration ??
-                                TieSheetThemeConfig.defaultPreset,
-                            onCloudPresetApplied: (preset) {
-                              context.read<BracketThemeSelectionBloc>().add(
-                                BracketThemeSelectionEvent.cloudPresetApplied(
-                                  presetId: preset.id,
-                                  resolvedThemeConfiguration:
-                                      preset.themeConfiguration,
-                                ),
-                              );
-                            },
-                            onThemeConfigChanged: (newConfig) {
-                              context.read<BracketThemeSelectionBloc>().add(
-                                BracketThemeSelectionEvent.customThemeConfigurationUpdated(
-                                  updatedThemeConfiguration: newConfig,
-                                ),
-                              );
-                            },
-                          )
-                        else
-                          const SizedBox.shrink(),
+                        // Tab 2: Theme editor
+                        TieSheetThemeEditorPanel(
+                          currentThemeConfig:
+                              selectionState.liveCustomThemeConfiguration ??
+                              TieSheetThemeConfig.defaultPreset,
+                          onCloudPresetApplied: (preset) {
+                            context.read<BracketThemeSelectionBloc>().add(
+                              BracketThemeSelectionEvent.cloudPresetApplied(
+                                presetId: preset.id,
+                                resolvedThemeConfiguration:
+                                    preset.themeConfiguration,
+                              ),
+                            );
+                          },
+                          onThemeConfigChanged: (newConfig) {
+                            context.read<BracketThemeSelectionBloc>().add(
+                              BracketThemeSelectionEvent.customThemeConfigurationUpdated(
+                                updatedThemeConfiguration: newConfig,
+                              ),
+                            );
+                          },
+                        )
                       ],
                     ),
                   ),
@@ -1234,7 +1181,16 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
     final isActive = _activeSidePanelTab == index;
     final theme = Theme.of(context);
     return InkWell(
-      onTap: () => setState(() => _activeSidePanelTab = index),
+      onTap: () {
+        setState(() => _activeSidePanelTab = index);
+        if (index == 2) {
+          context.read<BracketThemeSelectionBloc>().add(
+            const BracketThemeSelectionEvent.themeModeToggled(
+              selectedMode: TieSheetThemeMode.customMode,
+            ),
+          );
+        }
+      },
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 10),
         decoration: BoxDecoration(
