@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'dart:typed_data';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -189,7 +189,7 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
   /// Downloads an image from [url] and returns both the raw bytes and
   /// the decoded aspect ratio. Returns `null` on any failure.
   Future<({Uint8List imageBytes, double aspectRatio})?>
-      _loadImageBytesAndAspectRatioFromUrl(String url) async {
+  _loadImageBytesAndAspectRatioFromUrl(String url) async {
     if (url.isEmpty) return null;
     try {
       final ByteData data = await NetworkAssetBundle(Uri.parse(url)).load('');
@@ -197,7 +197,9 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
 
       // Decode image to get dimensions for aspect ratio.
       final completer = Completer<ImageInfo>();
-      final imageStream = MemoryImage(imageBytes).resolve(ImageConfiguration.empty);
+      final imageStream = MemoryImage(
+        imageBytes,
+      ).resolve(ImageConfiguration.empty);
       late ImageStreamListener listener;
       listener = ImageStreamListener(
         (info, _) {
@@ -312,25 +314,52 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
     );
   }
 
-  /// Vector PDF export — reuses the cached PDF bytes and opens the
-  /// native print dialog. Falls back to fresh generation only if no
-  /// cache is available.
+  /// Vector PDF export — fits everything on a single standard page dynamically
+  /// natively scaling the bracket onto a target printing page format.
   Future<void> _directExportPdf() async {
     _updateExportProgress(0.0, 'Preparing PDF for export…');
     await Future<void>.delayed(Duration.zero);
 
     try {
-      final exportBytes = _cachedPdfBytes;
-      if (exportBytes == null) {
+      if (_cachedLayoutResult == null) {
         _updateExportProgress(1.0, 'No bracket data available.');
         return;
       }
 
-      _updateExportProgress(0.8, 'Opening print dialog…');
+      if (!mounted) return;
+
+      final themeSelectionState = context
+          .read<BracketThemeSelectionBloc>()
+          .state;
+      final themeConfig = _resolveThemeConfigFromSelection(themeSelectionState);
+
+      _updateExportProgress(0.5, 'Opening print dialog…');
       await Future<void>.delayed(Duration.zero);
 
+      final isLandscape =
+          _cachedLayoutResult!.computedCanvasSize.width >
+          _cachedLayoutResult!.computedCanvasSize.height;
+
       await Printing.layoutPdf(
-        onLayout: (PdfPageFormat format) async => exportBytes,
+        name: 'Bracket_Export',
+        format: isLandscape
+            ? PdfPageFormat.a4.landscape
+            : PdfPageFormat.a4.portrait,
+        onLayout: (PdfPageFormat format) async {
+          _updateExportProgress(0.8, 'Generating fit-to-page PDF…');
+
+          final renderer = TieSheetSyncfusionPdfRendererService();
+          final bytes = renderer.generateScaledSinglePagePdfBytes(
+            layoutResult: _cachedLayoutResult!,
+            themeConfig: themeConfig,
+            pageWidth: format.availableWidth,
+            pageHeight: format.availableHeight,
+            leftLogoImageBytes: _leftLogoImageBytes,
+            rightLogoImageBytes: _rightLogoImageBytes,
+          );
+
+          return Uint8List.fromList(bytes);
+        },
       );
     } finally {
       if (mounted) {
@@ -372,6 +401,8 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
     try {
       late final Uint8List exportPdfBytes;
 
+      if (!mounted) return;
+
       if (confirmedSettings.fitMode == PrintFitMode.fitToPage) {
         // Single-page export — use the same bytes we already have.
         exportPdfBytes = previewPdfBytes;
@@ -379,8 +410,12 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
         // Tiled export — generate multi-page PDF.
         // Read theme state before the async gap to avoid
         // using BuildContext across awaits.
-        final themeSelectionState = context.read<BracketThemeSelectionBloc>().state;
-        final themeConfig = _resolveThemeConfigFromSelection(themeSelectionState);
+        final themeSelectionState = context
+            .read<BracketThemeSelectionBloc>()
+            .state;
+        final themeConfig = _resolveThemeConfigFromSelection(
+          themeSelectionState,
+        );
 
         _updateExportProgress(0.4, 'Generating tiled PDF…');
         await Future<void>.delayed(Duration.zero);
@@ -422,133 +457,138 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
   Widget build(BuildContext context) {
     return BlocListener<BracketThemePresetBloc, BracketThemePresetState>(
       listenWhen: (prev, current) =>
-          prev is! BracketThemePresetLoaded && current is BracketThemePresetLoaded,
+          prev is! BracketThemePresetLoaded &&
+          current is BracketThemePresetLoaded,
       listener: (context, presetState) {
         if (presetState is BracketThemePresetLoaded) {
           context.read<BracketThemeSelectionBloc>().add(
-                BracketThemeSelectionEvent.hydratedSelectionResolved(
-                  availableCloudPresets: presetState.presets,
-                ),
-              );
+            BracketThemeSelectionEvent.hydratedSelectionResolved(
+              availableCloudPresets: presetState.presets,
+            ),
+          );
         }
       },
       child: BlocConsumer<BracketBloc, BracketState>(
-      listenWhen: (prev, current) {
-        if (current is! BracketLoadSuccess) return false;
-        if (prev is! BracketLoadSuccess) return true;
+        listenWhen: (prev, current) {
+          if (current is! BracketLoadSuccess) return false;
+          if (prev is! BracketLoadSuccess) return true;
 
-        // Fire when an error message appears.
-        final hasNewErrorMessage = current.errorMessage != null &&
-            current.errorMessage != prev.errorMessage;
+          // Fire when an error message appears.
+          final hasNewErrorMessage =
+              current.errorMessage != null &&
+              current.errorMessage != prev.errorMessage;
 
-        // Fire when a save cycle completes (isSaving transitions false).
-        final saveJustCompleted = prev.isSaving && !current.isSaving;
+          // Fire when a save cycle completes (isSaving transitions false).
+          final saveJustCompleted = prev.isSaving && !current.isSaving;
 
-        // Fire when bracket data changes (match results, undo/redo, etc.)
-        // so the PDF viewer updates to reflect the new state.
-        final hasBracketDataChanged = current.result != prev.result ||
-            current.participants != prev.participants;
+          // Fire when bracket data changes (match results, undo/redo, etc.)
+          // so the PDF viewer updates to reflect the new state.
+          final hasBracketDataChanged =
+              current.result != prev.result ||
+              current.participants != prev.participants;
 
-        return hasNewErrorMessage || saveJustCompleted || hasBracketDataChanged;
-      },
-      listener: (context, state) {
-        if (state is! BracketLoadSuccess) return;
+          return hasNewErrorMessage ||
+              saveJustCompleted ||
+              hasBracketDataChanged;
+        },
+        listener: (context, state) {
+          if (state is! BracketLoadSuccess) return;
 
-        // Handle save completion feedback.
-        if (!state.isSaving && state.lastSaveTimestamp != null) {
-          if (state.saveError != null) {
+          // Handle save completion feedback.
+          if (!state.isSaving && state.lastSaveTimestamp != null) {
+            if (state.saveError != null) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(state.saveError!),
+                  backgroundColor: Colors.red.shade800,
+                  duration: const Duration(seconds: 4),
+                ),
+              );
+            }
+            // Successful save is silent (auto-saves shouldn't spam the user).
+          }
+
+          // Handle bracket operation errors.
+          if (state.errorMessage != null) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(state.saveError!),
-                backgroundColor: Colors.red.shade800,
-                duration: const Duration(seconds: 4),
+                content: Text(state.errorMessage!),
+                backgroundColor: Colors.grey.shade800,
               ),
             );
+            context.read<BracketBloc>().add(
+              const BracketEvent.errorDismissed(),
+            );
           }
-          // Successful save is silent (auto-saves shouldn't spam the user).
-        }
 
-        // Handle bracket operation errors.
-        if (state.errorMessage != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.errorMessage!),
-              backgroundColor: Colors.grey.shade800,
+          // Regenerate PDF when bracket data changes.
+          _regeneratePdfFromCurrentState();
+        },
+        builder: (context, state) {
+          return switch (state) {
+            BracketInitial() || BracketGenerating() => Scaffold(
+              appBar: AppBar(
+                title: Text(
+                  '${_bracketFormat.displayLabel} — ${widget.snapshot.participantCount} Players',
+                ),
+              ),
+              body: const Center(child: CircularProgressIndicator()),
             ),
-          );
-          context.read<BracketBloc>().add(
-            const BracketEvent.errorDismissed(),
-          );
-        }
-
-        // Regenerate PDF when bracket data changes.
-        _regeneratePdfFromCurrentState();
-      },
-      builder: (context, state) {
-        return switch (state) {
-          BracketInitial() || BracketGenerating() => Scaffold(
-            appBar: AppBar(
-              title: Text(
-                '${_bracketFormat.displayLabel} — ${widget.snapshot.participantCount} Players',
+            BracketFailure(:final message) => Scaffold(
+              appBar: AppBar(
+                title: const Text('Error'),
+                leading: IconButton(
+                  icon: const Icon(Icons.arrow_back),
+                  onPressed: _navigateBackToTournamentDetail,
+                ),
+              ),
+              body: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.error_outline,
+                      size: 48,
+                      color: Colors.grey.shade800,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(message, textAlign: TextAlign.center),
+                  ],
+                ),
               ),
             ),
-            body: const Center(child: CircularProgressIndicator()),
-          ),
-          BracketFailure(:final message) => Scaffold(
-            appBar: AppBar(
-              title: const Text('Error'),
-              leading: IconButton(
-                icon: const Icon(Icons.arrow_back),
-                onPressed: _navigateBackToTournamentDetail,
+            BracketLoadSuccess(
+              :final result,
+              :final participants,
+              :final format,
+              :final includeThirdPlaceMatch,
+              :final actionHistory,
+              :final historyPointer,
+              :final isReplayInProgress,
+              :final isEditModeEnabled,
+              :final isSaving,
+              :final hasUnsavedChanges,
+              :final lastSaveTimestamp,
+              :final saveError,
+            ) =>
+              _buildViewer(
+                context: context,
+                result: result,
+                participants: participants,
+                format: format,
+                includeThirdPlaceMatch: includeThirdPlaceMatch,
+                actionHistory: actionHistory,
+                historyPointer: historyPointer,
+                isReplayInProgress: isReplayInProgress,
+                isEditModeEnabled: isEditModeEnabled,
+                isSaving: isSaving,
+                hasUnsavedChanges: hasUnsavedChanges,
+                lastSaveTimestamp: lastSaveTimestamp,
+                saveError: saveError,
               ),
-            ),
-            body: Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.error_outline,
-                    size: 48,
-                    color: Colors.grey.shade800,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(message, textAlign: TextAlign.center),
-                ],
-              ),
-            ),
-          ),
-          BracketLoadSuccess(
-            :final result,
-            :final participants,
-            :final format,
-            :final includeThirdPlaceMatch,
-            :final actionHistory,
-            :final historyPointer,
-            :final isReplayInProgress,
-            :final isEditModeEnabled,
-            :final isSaving,
-            :final hasUnsavedChanges,
-            :final lastSaveTimestamp,
-            :final saveError,
-          ) =>
-            _buildViewer(
-              context: context,
-              result: result,
-              participants: participants,
-              format: format,
-              includeThirdPlaceMatch: includeThirdPlaceMatch,
-              actionHistory: actionHistory,
-              historyPointer: historyPointer,
-              isReplayInProgress: isReplayInProgress,
-              isEditModeEnabled: isEditModeEnabled,
-              isSaving: isSaving,
-              hasUnsavedChanges: hasUnsavedChanges,
-              lastSaveTimestamp: lastSaveTimestamp,
-              saveError: saveError,
-            ),
-        };
-      },
-    ),
+          };
+        },
+      ),
     );
   }
 
@@ -592,7 +632,8 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
         }
         // Fire on theme selection or live config change → triggers PDF regen.
         if (current.activeThemeSelection != previous.activeThemeSelection ||
-            current.liveCustomThemeConfiguration != previous.liveCustomThemeConfiguration) {
+            current.liveCustomThemeConfiguration !=
+                previous.liveCustomThemeConfiguration) {
           return true;
         }
         return false;
@@ -618,13 +659,14 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
         _regeneratePdfFromCurrentState();
       },
       builder: (context, selectionState) {
-        final TieSheetThemeMode activeSegment =
-            selectionState.activeThemeSelection.when(
-          defaultModeSelected: () => TieSheetThemeMode.defaultMode,
-          printModeSelected: () => TieSheetThemeMode.printMode,
-          cloudPresetSelected: (_) => TieSheetThemeMode.customMode,
-          customModeSelected: () => TieSheetThemeMode.customMode,
-        );
+        final TieSheetThemeMode activeSegment = selectionState
+            .activeThemeSelection
+            .when(
+              defaultModeSelected: () => TieSheetThemeMode.defaultMode,
+              printModeSelected: () => TieSheetThemeMode.printMode,
+              cloudPresetSelected: (_) => TieSheetThemeMode.customMode,
+              customModeSelected: () => TieSheetThemeMode.customMode,
+            );
 
         // Clamp side panel tab index when theme tab is not available.
         if (activeSegment != TieSheetThemeMode.customMode &&
@@ -648,7 +690,9 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
         return Scaffold(
           key: _scaffoldKey,
           appBar: AppBar(
-            title: Text('${format.displayLabel} — ${participants.length} Players'),
+            title: Text(
+              '${format.displayLabel} — ${participants.length} Players',
+            ),
             leading: IconButton(
               icon: const Icon(Icons.arrow_back),
               onPressed: _navigateBackToTournamentDetail,
@@ -689,265 +733,410 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
                 ),
               ),
 
-          const SizedBox(width: 8),
+              const SizedBox(width: 8),
 
-          // ── Quick Export PDF ──
-          TextButton(
-            style: actionButtonStyle,
-            onPressed: _isExportingPdf ? null : _directExportPdf,
-            child: _isExportingPdf
-                ? const SizedBox(
-                    width: 16, height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                  )
-                : const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.print, size: 18),
-                      SizedBox(width: 4),
-                      Text('Quick Export'),
-                    ],
-                  ),
-          ),
-
-          const SizedBox(width: 4),
-
-          // ── Print Preview (with tiled export) ──
-          TextButton(
-            style: actionButtonStyle,
-            onPressed: _isExportingPdf ? null : _showPrintPreviewAndExport,
-            child: const Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.preview, size: 18),
-                SizedBox(width: 4),
-                Text('Print Preview'),
-              ],
-            ),
-          ),
-        ],
-      ),
-      bottomNavigationBar: BottomAppBar(
-        height: 48,
-        color: Theme.of(context).primaryColor,
-        child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          reverse: true,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // ── Undo ──
+              // ── Quick Export PDF ──
               TextButton(
                 style: actionButtonStyle,
-                onPressed: canUndo
-                    ? () => context.read<BracketBloc>().add(
-                        const BracketEvent.undoRequested(),
+                onPressed: _isExportingPdf ? null : _directExportPdf,
+                child: _isExportingPdf
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
                       )
-                    : null,
-                child: const Text('Undo'),
+                    : const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.print, size: 18),
+                          SizedBox(width: 4),
+                          Text('Quick Export'),
+                        ],
+                      ),
               ),
 
-              // ── Redo ──
+              const SizedBox(width: 4),
+
+              // ── Print Preview (with tiled export) ──
               TextButton(
                 style: actionButtonStyle,
-                onPressed: canRedo
-                    ? () => context.read<BracketBloc>().add(
-                        const BracketEvent.redoRequested(),
-                      )
-                    : null,
-                child: const Text('Redo'),
-              ),
-
-              // ── Replay / Stop ──
-              if (isReplayInProgress)
-                TextButton(
-                  style: actionButtonStyle,
-                  onPressed: () => context.read<BracketBloc>().add(
-                    const BracketEvent.replayCancelled(),
-                  ),
-                  child: const Text('Stop Replay'),
-                )
-              else
-                TextButton(
-                  style: actionButtonStyle,
-                  onPressed: hasHistory
-                      ? () => context.read<BracketBloc>().add(
-                          const BracketEvent.replayRequested(),
-                        )
-                      : null,
-                  child: const Text('Replay All'),
+                onPressed: _isExportingPdf ? null : _showPrintPreviewAndExport,
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.preview, size: 18),
+                    SizedBox(width: 4),
+                    Text('Print Preview'),
+                  ],
                 ),
-
-              // ── History Drawer ──
-              TextButton(
-                style: actionButtonStyle,
-                onPressed: hasHistory
-                    ? () => _scaffoldKey.currentState?.openEndDrawer()
-                    : null,
-                child: const Text('History'),
               ),
 
               const SizedBox(width: 8),
 
-              // ── Edit Mode Toggle ──
-              TextButton(
-                style: TextButton.styleFrom(
-                  foregroundColor: isEditModeEnabled
-                      ? Colors.grey.shade400
-                      : Colors.white,
-                  disabledForegroundColor: Colors.grey,
-                ),
-                onPressed: isReplayInProgress
-                    ? null
-                    : () => context.read<BracketBloc>().add(
-                        const BracketEvent.editModeToggled(),
-                      ),
-                child: Text(isEditModeEnabled ? 'Exit Edit' : 'Edit Mode'),
-              ),
-
-              const SizedBox(width: 8),
-
-              // ── Regenerate ──
-              TextButton(
-                style: actionButtonStyle,
-                onPressed: () async {
-                  final confirm = await showDialog<bool>(
-                    context: context,
-                    builder: (c) => AlertDialog(
-                      title: const Text('Regenerate Bracket?'),
-                      content: const Text(
-                        'Current match scores and progress will be lost.',
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(c, false),
-                          child: const Text('Cancel'),
-                        ),
-                        ElevatedButton(
-                          onPressed: () => Navigator.pop(c, true),
-                          child: const Text('Regenerate'),
-                        ),
-                      ],
-                    ),
-                  );
-                  if (confirm == true && context.mounted) {
-                    context.read<BracketBloc>().add(
-                      const BracketRegenerateRequested(),
-                    );
-                  }
-                },
-                child: const Text('Regenerate & Shuffle'),
-              ),
-              const SizedBox(
-                height: 24,
-                child: VerticalDivider(width: 16, color: Colors.white24),
-              ),
-              // ── Save Status Indicator ──
-              _buildSaveStatusIndicator(
-                isSaving: isSaving,
-                hasUnsavedChanges: hasUnsavedChanges,
-                lastSaveTimestamp: lastSaveTimestamp,
-                saveError: saveError,
-              ),
-              // ── Save Bracket ──
-              Tooltip(
-                message: 'Save explicitly to persist the current bracket state',
-                child: TextButton.icon(
-                  style: TextButton.styleFrom(
-                    foregroundColor: hasUnsavedChanges
-                        ? Colors.blueAccent
-                        : Colors.white,
-                    disabledForegroundColor: Colors.grey,
-                  ),
-                  onPressed: isSaving || !hasUnsavedChanges
-                      ? null
-                      : () {
-                          context.read<BracketBloc>().add(
-                            const BracketSaveRequested(),
-                          );
-                        },
-                  icon: isSaving
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.save),
-                  label: const Text('Save Bracket'),
-                ),
+              // ── Open Side Panel ──
+              IconButton(
+                icon: const Icon(Icons.menu_open),
+                tooltip: 'Open Side Panel',
+                onPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
               ),
             ],
           ),
-        ),
-      ),
-      endDrawer: BracketHistoryDrawer(
-        actionHistory: actionHistory,
-        historyPointer: historyPointer,
-        onJumpToHistoryIndex: (targetIndex) {
-          context.read<BracketBloc>().add(
-            BracketEvent.historyJumpRequested(targetHistoryIndex: targetIndex),
-          );
-          // Close the drawer after jumping.
-          _scaffoldKey.currentState?.closeEndDrawer();
-        },
-      ),
-      body: Stack(
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  children: [
-                    // ── Edit mode info banner ──
-                    if (isEditModeEnabled)
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        color: Colors.grey.shade300,
-                        child: const Row(
-                          children: [
-                            Icon(Icons.edit, size: 16, color: Color(0xFF92400E)),
-                            SizedBox(width: 8),
-                            Expanded(child: Text(
-                              'Edit Mode — Use the Participants panel to edit details or swap positions.',
-                              style: TextStyle(fontSize: 12, color: Color(0xFF92400E)),
-                            )),
+          bottomNavigationBar: BottomAppBar(
+            height: 48,
+            color: Theme.of(context).primaryColor,
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              reverse: true,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // ── Undo ──
+                  TextButton(
+                    style: actionButtonStyle,
+                    onPressed: canUndo
+                        ? () => context.read<BracketBloc>().add(
+                            const BracketEvent.undoRequested(),
+                          )
+                        : null,
+                    child: const Text('Undo'),
+                  ),
+
+                  // ── Redo ──
+                  TextButton(
+                    style: actionButtonStyle,
+                    onPressed: canRedo
+                        ? () => context.read<BracketBloc>().add(
+                            const BracketEvent.redoRequested(),
+                          )
+                        : null,
+                    child: const Text('Redo'),
+                  ),
+
+                  // ── Replay / Stop ──
+                  if (isReplayInProgress)
+                    TextButton(
+                      style: actionButtonStyle,
+                      onPressed: () => context.read<BracketBloc>().add(
+                        const BracketEvent.replayCancelled(),
+                      ),
+                      child: const Text('Stop Replay'),
+                    )
+                  else
+                    TextButton(
+                      style: actionButtonStyle,
+                      onPressed: hasHistory
+                          ? () => context.read<BracketBloc>().add(
+                              const BracketEvent.replayRequested(),
+                            )
+                          : null,
+                      child: const Text('Replay All'),
+                    ),
+
+                  // ── History Drawer ──
+                  TextButton(
+                    style: actionButtonStyle,
+                    onPressed: hasHistory
+                        ? () => _scaffoldKey.currentState?.openDrawer()
+                        : null,
+                    child: const Text('History'),
+                  ),
+
+                  const SizedBox(width: 8),
+
+                  // ── Edit Mode Toggle ──
+                  TextButton(
+                    style: TextButton.styleFrom(
+                      foregroundColor: isEditModeEnabled
+                          ? Colors.grey.shade400
+                          : Colors.white,
+                      disabledForegroundColor: Colors.grey,
+                    ),
+                    onPressed: isReplayInProgress
+                        ? null
+                        : () => context.read<BracketBloc>().add(
+                            const BracketEvent.editModeToggled(),
+                          ),
+                    child: Text(isEditModeEnabled ? 'Exit Edit' : 'Edit Mode'),
+                  ),
+
+                  const SizedBox(width: 8),
+
+                  // ── Regenerate ──
+                  TextButton(
+                    style: actionButtonStyle,
+                    onPressed: () async {
+                      final confirm = await showDialog<bool>(
+                        context: context,
+                        builder: (c) => AlertDialog(
+                          title: const Text('Regenerate Bracket?'),
+                          content: const Text(
+                            'Current match scores and progress will be lost.',
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(c, false),
+                              child: const Text('Cancel'),
+                            ),
+                            ElevatedButton(
+                              onPressed: () => Navigator.pop(c, true),
+                              child: const Text('Regenerate'),
+                            ),
                           ],
                         ),
+                      );
+                      if (confirm == true && context.mounted) {
+                        context.read<BracketBloc>().add(
+                          const BracketRegenerateRequested(),
+                        );
+                      }
+                    },
+                    child: const Text('Regenerate & Shuffle'),
+                  ),
+                  const SizedBox(
+                    height: 24,
+                    child: VerticalDivider(width: 16, color: Colors.white24),
+                  ),
+                  // ── Save Status Indicator ──
+                  _buildSaveStatusIndicator(
+                    isSaving: isSaving,
+                    hasUnsavedChanges: hasUnsavedChanges,
+                    lastSaveTimestamp: lastSaveTimestamp,
+                    saveError: saveError,
+                  ),
+                  // ── Save Bracket ──
+                  Tooltip(
+                    message:
+                        'Save explicitly to persist the current bracket state',
+                    child: TextButton.icon(
+                      style: TextButton.styleFrom(
+                        foregroundColor: hasUnsavedChanges
+                            ? Colors.blueAccent
+                            : Colors.white,
+                        disabledForegroundColor: Colors.grey,
                       ),
-                    // ── Replay progress indicator ──
-                    if (isReplayInProgress && actionHistory.isNotEmpty)
-                      LinearProgressIndicator(
-                        value: (historyPointer + 1) / actionHistory.length,
-                        minHeight: 4,
-                      ),
-                    // ── PDF Viewer ──
-                    Expanded(
-                      child: _pdfGenerationError != null
-                          ? Center(
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(Icons.error_outline,
-                                      size: 48, color: Colors.red.shade300),
-                                  const SizedBox(height: 12),
-                                  Text(
-                                    _pdfGenerationError!,
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                        color: Colors.red.shade300,
-                                        fontSize: 13),
-                                  ),
-                                  const SizedBox(height: 16),
-                                  OutlinedButton.icon(
-                                    onPressed: _regeneratePdfFromCurrentState,
-                                    icon: const Icon(Icons.refresh),
-                                    label: const Text('Retry'),
-                                  ),
-                                ],
-                              ),
+                      onPressed: isSaving || !hasUnsavedChanges
+                          ? null
+                          : () {
+                              context.read<BracketBloc>().add(
+                                const BracketSaveRequested(),
+                              );
+                            },
+                      icon: isSaving
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2),
                             )
-                          : _cachedPdfBytes != null && _cachedLayoutResult != null
+                          : const Icon(Icons.save),
+                      label: const Text('Save Bracket'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          drawer: BracketHistoryDrawer(
+            actionHistory: actionHistory,
+            historyPointer: historyPointer,
+            onJumpToHistoryIndex: (targetIndex) {
+              context.read<BracketBloc>().add(
+                BracketEvent.historyJumpRequested(
+                  targetHistoryIndex: targetIndex,
+                ),
+              );
+              // Close the drawer after jumping.
+              _scaffoldKey.currentState?.closeDrawer();
+            },
+          ),
+          endDrawer: Drawer(
+            width: 380,
+            child: SafeArea(
+              child: Column(
+                children: [
+                  // Tab bar for side panels
+                  Material(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.surfaceContainerHighest,
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: _buildSidePanelTab(
+                            0,
+                            'Matches',
+                            Icons.scoreboard,
+                          ),
+                        ),
+                        Expanded(
+                          child: _buildSidePanelTab(
+                            1,
+                            'Participants',
+                            Icons.people,
+                          ),
+                        ),
+                        if (activeSegment == TieSheetThemeMode.customMode)
+                          Expanded(
+                            child: _buildSidePanelTab(2, 'Theme', Icons.tune),
+                          ),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: IndexedStack(
+                      index: _activeSidePanelTab,
+                      children: [
+                        // Tab 0: Match list
+                        BracketMatchListPanel(
+                          matches: bracketData.allMatches,
+                          participants: participants,
+                          winnersBracketId: bracketData.winnersBracketId,
+                          losersBracketId: bracketData.losersBracketId,
+                          onRecordMatchResult: (matchId, winnerId) {
+                            _handleMatchResultFromPanel(
+                              context,
+                              matchId,
+                              winnerId,
+                              bracketData.allMatches,
+                              participants,
+                            );
+                          },
+                        ),
+                        // Tab 1: Participant list
+                        BracketParticipantListPanel(
+                          matches: bracketData.allMatches,
+                          participants: participants,
+                          isEditModeEnabled: isEditModeEnabled,
+                          onSwapParticipants:
+                              (matchIdA, slotA, matchIdB, slotB) {
+                                context.read<BracketBloc>().add(
+                                  BracketEvent.participantSlotSwapped(
+                                    sourceMatchId: matchIdA,
+                                    sourceSlotPosition: slotA,
+                                    targetMatchId: matchIdB,
+                                    targetSlotPosition: slotB,
+                                  ),
+                                );
+                              },
+                          onUpdateParticipant: (updated) {
+                            context.read<BracketBloc>().add(
+                              BracketEvent.participantDetailsUpdated(
+                                participantId: updated.id,
+                                updatedFullName: updated.fullName,
+                                updatedRegistrationId: updated.registrationId,
+                              ),
+                            );
+                          },
+                        ),
+                        // Tab 2: Theme editor (conditional)
+                        if (activeSegment == TieSheetThemeMode.customMode)
+                          TieSheetThemeEditorPanel(
+                            currentThemeConfig:
+                                selectionState.liveCustomThemeConfiguration ??
+                                TieSheetThemeConfig.defaultPreset,
+                            onCloudPresetApplied: (preset) {
+                              context.read<BracketThemeSelectionBloc>().add(
+                                BracketThemeSelectionEvent.cloudPresetApplied(
+                                  presetId: preset.id,
+                                  resolvedThemeConfiguration:
+                                      preset.themeConfiguration,
+                                ),
+                              );
+                            },
+                            onThemeConfigChanged: (newConfig) {
+                              context.read<BracketThemeSelectionBloc>().add(
+                                BracketThemeSelectionEvent.customThemeConfigurationUpdated(
+                                  updatedThemeConfiguration: newConfig,
+                                ),
+                              );
+                            },
+                          )
+                        else
+                          const SizedBox.shrink(),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          body: Stack(
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      children: [
+                        // ── Edit mode info banner ──
+                        if (isEditModeEnabled)
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
+                            color: Colors.grey.shade300,
+                            child: const Row(
+                              children: [
+                                Icon(
+                                  Icons.edit,
+                                  size: 16,
+                                  color: Color(0xFF92400E),
+                                ),
+                                SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    'Edit Mode — Use the Participants panel to edit details or swap positions.',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Color(0xFF92400E),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        // ── Replay progress indicator ──
+                        if (isReplayInProgress && actionHistory.isNotEmpty)
+                          LinearProgressIndicator(
+                            value: (historyPointer + 1) / actionHistory.length,
+                            minHeight: 4,
+                          ),
+                        // ── PDF Viewer ──
+                        Expanded(
+                          child: _pdfGenerationError != null
+                              ? Center(
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.error_outline,
+                                        size: 48,
+                                        color: Colors.red.shade300,
+                                      ),
+                                      const SizedBox(height: 12),
+                                      Text(
+                                        _pdfGenerationError!,
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          color: Colors.red.shade300,
+                                          fontSize: 13,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 16),
+                                      OutlinedButton.icon(
+                                        onPressed:
+                                            _regeneratePdfFromCurrentState,
+                                        icon: const Icon(Icons.refresh),
+                                        label: const Text('Retry'),
+                                      ),
+                                    ],
+                                  ),
+                                )
+                              : _cachedPdfBytes != null &&
+                                    _cachedLayoutResult != null
                               ? LayoutBuilder(
                                   builder: (context, constraints) {
                                     // Compute initial zoom to fit the entire
@@ -957,14 +1146,18 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
                                     final canvasSize =
                                         _cachedLayoutResult!.computedCanvasSize;
                                     final viewportWidth = constraints.maxWidth;
-                                    final viewportHeight = constraints.maxHeight;
+                                    final viewportHeight =
+                                        constraints.maxHeight;
 
-                                    final fitZoomLevel = (viewportWidth > 0 &&
+                                    final fitZoomLevel =
+                                        (viewportWidth > 0 &&
                                             viewportHeight > 0 &&
                                             canvasSize.width > 0 &&
                                             canvasSize.height > 0)
-                                        ? (viewportWidth / canvasSize.width)
-                                            .clamp(0.05, 1.0)
+                                        ? min(
+                                            viewportWidth / canvasSize.width,
+                                            viewportHeight / canvasSize.height,
+                                          ).clamp(0.01, 5.0)
                                         : 0.5;
 
                                     return SfPdfViewer.memory(
@@ -978,140 +1171,61 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
                                       pageLayoutMode: PdfPageLayoutMode.single,
                                       scrollDirection:
                                           PdfScrollDirection.horizontal,
-                                      interactionMode:
-                                          PdfInteractionMode.pan,
+                                      interactionMode: PdfInteractionMode.pan,
                                       initialZoomLevel: fitZoomLevel,
-                                      maxZoomLevel: 3,
+                                      maxZoomLevel: 5,
                                     );
                                   },
                                 )
                               : const Center(
-                                  child: CircularProgressIndicator()),
-                    ),
-                  ],
-                ),
-              ),
-              // ── Side panels (matches / participants / theme editor) ──
-              SizedBox(
-                width: 380,
-                child: Column(
-                  children: [
-                    // Tab bar for side panels
-                    Material(
-                      color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                      child: Row(
-                        children: [
-                          Expanded(child: _buildSidePanelTab(0, 'Matches', Icons.scoreboard)),
-                          Expanded(child: _buildSidePanelTab(1, 'Participants', Icons.people)),
-                          if (activeSegment == TieSheetThemeMode.customMode)
-                            Expanded(child: _buildSidePanelTab(2, 'Theme', Icons.tune)),
-                        ],
-                      ),
-                    ),
-                    Expanded(
-                      child: IndexedStack(
-                        index: _activeSidePanelTab,
-                        children: [
-                          // Tab 0: Match list
-                          BracketMatchListPanel(
-                            matches: bracketData.allMatches,
-                            participants: participants,
-                            winnersBracketId: bracketData.winnersBracketId,
-                            losersBracketId: bracketData.losersBracketId,
-                            onRecordMatchResult: (matchId, winnerId) {
-                              _handleMatchResultFromPanel(context, matchId, winnerId,
-                                  bracketData.allMatches, participants);
-                            },
-                          ),
-                          // Tab 1: Participant list
-                          BracketParticipantListPanel(
-                            matches: bracketData.allMatches,
-                            participants: participants,
-                            isEditModeEnabled: isEditModeEnabled,
-                            onSwapParticipants: (matchIdA, slotA, matchIdB, slotB) {
-                              context.read<BracketBloc>().add(
-                                BracketEvent.participantSlotSwapped(
-                                  sourceMatchId: matchIdA,
-                                  sourceSlotPosition: slotA,
-                                  targetMatchId: matchIdB,
-                                  targetSlotPosition: slotB,
+                                  child: CircularProgressIndicator(),
                                 ),
-                              );
-                            },
-                            onUpdateParticipant: (updated) {
-                              context.read<BracketBloc>().add(
-                                BracketEvent.participantDetailsUpdated(
-                                  participantId: updated.id,
-                                  updatedFullName: updated.fullName,
-                                  updatedRegistrationId: updated.registrationId,
-                                ),
-                              );
-                            },
-                          ),
-                          // Tab 2: Theme editor (conditional)
-                          if (activeSegment == TieSheetThemeMode.customMode)
-                            TieSheetThemeEditorPanel(
-                              currentThemeConfig: selectionState.liveCustomThemeConfiguration ??
-                                  TieSheetThemeConfig.defaultPreset,
-                              onCloudPresetApplied: (preset) {
-                                context.read<BracketThemeSelectionBloc>().add(
-                                  BracketThemeSelectionEvent.cloudPresetApplied(
-                                    presetId: preset.id,
-                                    resolvedThemeConfiguration: preset.themeConfiguration,
-                                  ),
-                                );
-                              },
-                              onThemeConfigChanged: (newConfig) {
-                                context.read<BracketThemeSelectionBloc>().add(
-                                  BracketThemeSelectionEvent.customThemeConfigurationUpdated(
-                                    updatedThemeConfiguration: newConfig,
-                                  ),
-                                );
-                              },
-                            )
-                          else
-                            const SizedBox.shrink(),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          // ── PDF export loading overlay ──
-          if (_isExportingPdf)
-            Container(
-              color: Colors.black54,
-              child: Center(
-                child: SizedBox(
-                  width: 280,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const CircularProgressIndicator(color: Colors.white),
-                      const SizedBox(height: 20),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(4),
-                        child: LinearProgressIndicator(
-                          value: _pdfExportProgress ?? 0.0,
-                          minHeight: 6,
-                          backgroundColor: Colors.white24,
-                          valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
                         ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              // ── PDF export loading overlay ──
+              if (_isExportingPdf)
+                Container(
+                  color: Colors.black54,
+                  child: Center(
+                    child: SizedBox(
+                      width: 280,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const CircularProgressIndicator(color: Colors.white),
+                          const SizedBox(height: 20),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(4),
+                            child: LinearProgressIndicator(
+                              value: _pdfExportProgress ?? 0.0,
+                              minHeight: 6,
+                              backgroundColor: Colors.white24,
+                              valueColor: const AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            _pdfExportStatusMessage,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 12),
-                      Text(_pdfExportStatusMessage,
-                        style: const TextStyle(color: Colors.white, fontSize: 14),
-                        textAlign: TextAlign.center),
-                    ],
+                    ),
                   ),
                 ),
-              ),
-            ),
-        ],
-      ),
-    );
+            ],
+          ),
+        );
       },
     );
   }
@@ -1124,20 +1238,34 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 10),
         decoration: BoxDecoration(
-          border: Border(bottom: BorderSide(
-            color: isActive ? theme.colorScheme.primary : Colors.transparent,
-            width: 2,
-          )),
+          border: Border(
+            bottom: BorderSide(
+              color: isActive ? theme.colorScheme.primary : Colors.transparent,
+              width: 2,
+            ),
+          ),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 16, color: isActive ? theme.colorScheme.primary : theme.colorScheme.outline),
+            Icon(
+              icon,
+              size: 16,
+              color: isActive
+                  ? theme.colorScheme.primary
+                  : theme.colorScheme.outline,
+            ),
             const SizedBox(width: 4),
-            Text(label, style: TextStyle(
-              fontSize: 12, fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
-              color: isActive ? theme.colorScheme.primary : theme.colorScheme.outline,
-            )),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+                color: isActive
+                    ? theme.colorScheme.primary
+                    : theme.colorScheme.outline,
+              ),
+            ),
           ],
         ),
       ),
@@ -1164,7 +1292,9 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
 
     if (match.participantBlueId == null || match.participantRedId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Both participants must be assigned first.')),
+        const SnackBar(
+          content: Text('Both participants must be assigned first.'),
+        ),
       );
       return;
     }
@@ -1256,7 +1386,11 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
       return Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.cloud_done_outlined, color: Colors.white38, size: 14),
+          const Icon(
+            Icons.cloud_done_outlined,
+            color: Colors.white38,
+            size: 14,
+          ),
           const SizedBox(width: 4),
           Text(
             'Saved ${_formatRelativeTimestamp(lastSaveTimestamp)}',
