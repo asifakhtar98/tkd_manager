@@ -281,16 +281,23 @@ class TieSheetSyncfusionPdfRendererService {
 
   /// Generates a single-page PDF document scaled to fit a specific page dimension,
   /// preserving aspect ratio. Ideal for printing the entire bracket on an A4/Letter page.
+  ///
+  /// The [fullPageWidth] and [fullPageHeight] define the actual PDF page size
+  /// (e.g., A4). The [printableAreaWidth] and [printableAreaHeight] define the
+  /// safe drawing area within those margins. The bracket is scaled to fit the
+  /// printable area and centered on the full page.
   List<int> generateScaledSinglePagePdfBytes({
     required TieSheetLayoutResult layoutResult,
     required TieSheetThemeConfig themeConfig,
-    required double pageWidth,
-    required double pageHeight,
+    required double fullPageWidth,
+    required double fullPageHeight,
+    required double printableAreaWidth,
+    required double printableAreaHeight,
     Uint8List? leftLogoImageBytes,
     Uint8List? rightLogoImageBytes,
   }) {
     final document = PdfDocument();
-    document.pageSettings.size = Size(pageWidth, pageHeight);
+    document.pageSettings.size = Size(fullPageWidth, fullPageHeight);
     document.pageSettings.margins.all = 0;
 
     final page = document.pages.add();
@@ -338,19 +345,19 @@ class TieSheetSyncfusionPdfRendererService {
       );
     }
 
-    final scaleX = pageWidth / canvasWidth;
-    final scaleY = pageHeight / canvasHeight;
+    final scaleX = printableAreaWidth / canvasWidth;
+    final scaleY = printableAreaHeight / canvasHeight;
     final scaleToFit = min(scaleX, scaleY);
 
     final scaledWidth = canvasWidth * scaleToFit;
     final scaledHeight = canvasHeight * scaleToFit;
 
-    final dx = (pageWidth - scaledWidth) / 2;
-    final dy = (pageHeight - scaledHeight) / 2;
+    final offsetX = (fullPageWidth - scaledWidth) / 2;
+    final offsetY = (fullPageHeight - scaledHeight) / 2;
 
     graphics.drawPdfTemplate(
       bracketTemplate,
-      Offset(dx, dy),
+      Offset(offsetX, offsetY),
       Size(scaledWidth, scaledHeight),
     );
 

@@ -362,8 +362,10 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
           final bytes = renderer.generateScaledSinglePagePdfBytes(
             layoutResult: _cachedLayoutResult!,
             themeConfig: themeConfig,
-            pageWidth: printableWidth,
-            pageHeight: printableHeight,
+            fullPageWidth: format.width,
+            fullPageHeight: format.height,
+            printableAreaWidth: printableWidth,
+            printableAreaHeight: printableHeight,
             leftLogoImageBytes: _leftLogoImageBytes,
             rightLogoImageBytes: _rightLogoImageBytes,
           );
