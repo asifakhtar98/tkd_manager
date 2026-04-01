@@ -387,7 +387,7 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
   ///
   /// Reuses cached layout result and PDF bytes to avoid redundant
   /// recomputation.
-  Future<void> _showPrintPreviewAndExport() async {
+  Future<void> _showTiledExportPreview() async {
     final previewPdfBytes = _cachedPdfBytes;
     final layoutResult = _cachedLayoutResult;
     if (previewPdfBytes == null || layoutResult == null) return;
@@ -773,16 +773,16 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
 
               const SizedBox(width: 4),
 
-              // ── Print Preview (with tiled export) ──
+              // ── Tiled Export Preview ──
               TextButton(
                 style: actionButtonStyle,
-                onPressed: _isExportingPdf ? null : _showPrintPreviewAndExport,
+                onPressed: _isExportingPdf ? null : _showTiledExportPreview,
                 child: const Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(Icons.preview, size: 18),
                     SizedBox(width: 4),
-                    Text('Print Preview'),
+                    Text('Tiled Export Preview'),
                   ],
                 ),
               ),
