@@ -325,7 +325,7 @@ class SyncfusionTileAssemblyAidRendererService {
     // Right edge → neighbor at (row, col+1)
     if (tileColumn < totalColumnCount - 1) {
       final neighborPageNumber = pageNumberOf(tileRow, tileColumn + 1);
-      final labelText = 'P$neighborPageNumber →';
+      final labelText = 'P$neighborPageNumber >>';
       final measuredSize = labelFont.measureString(labelText);
       tilePageGraphics.drawString(
         labelText,
@@ -343,7 +343,7 @@ class SyncfusionTileAssemblyAidRendererService {
     // Left edge ← neighbor at (row, col-1)
     if (tileColumn > 0) {
       final neighborPageNumber = pageNumberOf(tileRow, tileColumn - 1);
-      final labelText = '← P$neighborPageNumber';
+      final labelText = '<< P$neighborPageNumber';
       final measuredSize = labelFont.measureString(labelText);
       tilePageGraphics.drawString(
         labelText,

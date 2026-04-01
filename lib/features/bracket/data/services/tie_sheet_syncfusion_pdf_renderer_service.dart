@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'dart:typed_data';
 import 'dart:ui' show Color, FontStyle, Offset, Rect, Size;
 
 import 'package:syncfusion_flutter_pdf/pdf.dart';
@@ -29,6 +30,8 @@ class TieSheetSyncfusionPdfRendererService {
   List<int> renderSinglePagePdfBytes({
     required TieSheetLayoutResult layoutResult,
     required TieSheetThemeConfig themeConfig,
+    Uint8List? leftLogoImageBytes,
+    Uint8List? rightLogoImageBytes,
   }) {
     final document = PdfDocument();
     final canvasWidth = layoutResult.computedCanvasSize.width;
@@ -39,7 +42,9 @@ class TieSheetSyncfusionPdfRendererService {
     final graphics = page.graphics;
 
     _renderCanvasBackground(graphics, layoutResult, themeConfig);
-    _renderHeader(graphics, layoutResult.headerLayoutData, themeConfig);
+    _renderHeader(graphics, layoutResult.headerLayoutData, themeConfig,
+        leftLogoImageBytes: leftLogoImageBytes,
+        rightLogoImageBytes: rightLogoImageBytes);
     _renderSectionLabels(graphics, layoutResult.sectionLabelLayoutDataList, themeConfig);
     _renderParticipantRows(graphics, layoutResult.participantRowLayoutDataList, themeConfig);
     _renderConnectors(graphics, layoutResult.connectorLayoutDataList, themeConfig);
@@ -68,6 +73,8 @@ class TieSheetSyncfusionPdfRendererService {
     required TieSheetLayoutResult layoutResult,
     required TieSheetThemeConfig themeConfig,
     required PrintExportSettings exportSettings,
+    Uint8List? leftLogoImageBytes,
+    Uint8List? rightLogoImageBytes,
   }) {
     final canvasWidth = layoutResult.computedCanvasSize.width;
     final canvasHeight = layoutResult.computedCanvasSize.height;
@@ -96,7 +103,9 @@ class TieSheetSyncfusionPdfRendererService {
     final bracketTemplate = PdfTemplate(canvasWidth, canvasHeight);
     final templateGraphics = bracketTemplate.graphics!;
     _renderCanvasBackground(templateGraphics, layoutResult, themeConfig);
-    _renderHeader(templateGraphics, layoutResult.headerLayoutData, themeConfig);
+    _renderHeader(templateGraphics, layoutResult.headerLayoutData, themeConfig,
+        leftLogoImageBytes: leftLogoImageBytes,
+        rightLogoImageBytes: rightLogoImageBytes);
     _renderSectionLabels(templateGraphics, layoutResult.sectionLabelLayoutDataList, themeConfig);
     _renderParticipantRows(templateGraphics, layoutResult.participantRowLayoutDataList, themeConfig);
     _renderConnectors(templateGraphics, layoutResult.connectorLayoutDataList, themeConfig);
@@ -220,7 +229,17 @@ class TieSheetSyncfusionPdfRendererService {
 
   // ── Header ─────────────────────────────────────────────────────────────
 
-  void _renderHeader(PdfGraphics graphics, HeaderLayoutData headerData, TieSheetThemeConfig themeConfig) {
+  void _renderHeader(
+    PdfGraphics graphics,
+    HeaderLayoutData headerData,
+    TieSheetThemeConfig themeConfig, {
+    Uint8List? leftLogoImageBytes,
+    Uint8List? rightLogoImageBytes,
+  }) {
+    // Logo images (drawn before banner so they appear in the logo row above it)
+    _renderLogoImage(graphics, headerData.leftLogoBoundingRect, leftLogoImageBytes);
+    _renderLogoImage(graphics, headerData.rightLogoBoundingRect, rightLogoImageBytes);
+
     // Banner background
     graphics.drawRectangle(
       bounds: headerData.headerBannerBoundingRect,
@@ -252,6 +271,27 @@ class TieSheetSyncfusionPdfRendererService {
     }
     for (final cellText in headerData.classificationCellTextLayoutList) {
       _drawPositionedText(graphics, cellText, themeConfig);
+    }
+  }
+
+  /// Draws a logo image into the specified bounding rectangle.
+  ///
+  /// Silently no-ops when either the bounding rect or image bytes are null
+  /// (tournament has no logo configured, or the image failed to load).
+  void _renderLogoImage(
+    PdfGraphics graphics,
+    Rect? boundingRect,
+    Uint8List? imageBytes,
+  ) {
+    if (boundingRect == null || imageBytes == null) return;
+    try {
+      final pdfBitmap = PdfBitmap(imageBytes);
+      graphics.drawImage(
+        pdfBitmap,
+        boundingRect,
+      );
+    } catch (_) {
+      // Silently skip — a missing logo should never crash PDF generation.
     }
   }
 
@@ -493,17 +533,55 @@ class TieSheetSyncfusionPdfRendererService {
       pdfFontStyle = PdfFontStyle.italic;
     }
     final font = PdfStandardFont(PdfFontFamily.helvetica, textData.fontSize, style: pdfFontStyle);
-    final measuredTextSize = font.measureString(textData.textContent);
+
+    // PdfStandardFont (Helvetica) only supports Latin-1 characters.
+    // Replace common Unicode symbols used in bracket labels with ASCII
+    // equivalents to prevent rendering crashes.
+    final sanitizedTextContent = _sanitizeTextForStandardFont(textData.textContent);
+
+    final measuredTextSize = font.measureString(sanitizedTextContent);
     double computedX = textData.renderPosition.dx;
     if (textData.isCenterAligned) {
       computedX -= measuredTextSize.width / 2;
     } else if (textData.isRightAligned) {
       computedX -= measuredTextSize.width;
     }
-    graphics.drawString(textData.textContent, font,
+    graphics.drawString(sanitizedTextContent, font,
         bounds: Rect.fromLTWH(computedX, textData.renderPosition.dy, measuredTextSize.width + 4, measuredTextSize.height + 2),
         brush: PdfSolidBrush(resolvedTextColor.toPdfColor()));
   }
+
+  /// Replaces Unicode characters unsupported by [PdfStandardFont] with
+  /// ASCII equivalents.
+  ///
+  /// PdfStandardFont uses the Helvetica/Times/Courier character set which
+  /// is limited to Latin-1 (ISO 8859-1). Characters outside this range
+  /// will throw [ArgumentError] during measureString/drawString.
+  static String _sanitizeTextForStandardFont(String text) {
+    return text.replaceAllMapped(
+      RegExp(r'[^\x00-\xFF]'),
+      (match) => _unicodeToAsciiReplacements[match.group(0)!] ?? '?',
+    );
+  }
+
+  /// Mapping of commonly used Unicode characters in bracket labels to
+  /// their ASCII visual equivalents.
+  static const _unicodeToAsciiReplacements = <String, String>{
+    '\u2713': 'v',    // ✓ checkmark → v
+    '\u2714': 'v',    // ✔ heavy checkmark → v
+    '\u2191': '^',    // ↑ up arrow → ^
+    '\u2193': 'v',    // ↓ down arrow → v
+    '\u2190': '<',    // ← left arrow → <
+    '\u2192': '>',    // → right arrow → >
+    '\u2022': '*',    // • bullet → *
+    '\u2013': '-',    // – en dash → -
+    '\u2014': '--',   // — em dash → --
+    '\u2018': "'",    // ' left single quote → '
+    '\u2019': "'",    // ' right single quote → '
+    '\u201C': '"',    // " left double quote → "
+    '\u201D': '"',    // " right double quote → "
+    '\u2026': '...',  // … ellipsis → ...
+  };
 
   Color _resolveTextColor(TextColorType colorType, TieSheetThemeConfig themeConfig) {
     switch (colorType) {

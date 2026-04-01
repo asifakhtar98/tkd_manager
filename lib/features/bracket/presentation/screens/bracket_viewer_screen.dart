@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pdf/pdf.dart';
 import 'package:printing/printing.dart';
@@ -66,6 +68,24 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
 
   /// Non-null when the most recent PDF generation attempt failed.
   String? _pdfGenerationError;
+
+  // ── Tournament Logo State ────────────────────────────────────────────────
+
+  /// Cached raw image bytes for the left tournament logo (PNG/JPEG).
+  /// Null when the logo URL is empty or loading failed.
+  Uint8List? _leftLogoImageBytes;
+
+  /// Cached raw image bytes for the right tournament logo.
+  Uint8List? _rightLogoImageBytes;
+
+  /// Aspect ratio (width / height) of the left logo, defaults to 1.0.
+  double _leftLogoAspectRatio = 1.0;
+
+  /// Aspect ratio (width / height) of the right logo, defaults to 1.0.
+  double _rightLogoAspectRatio = 1.0;
+
+  /// Whether logo loading has completed (regardless of success/failure).
+  bool _logosLoadingComplete = false;
 
   /// Which side panel tab is active (0 = matches, 1 = participants).
   int _activeSidePanelTab = 0;
@@ -136,6 +156,74 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
     super.dispose();
   }
 
+  // ── Logo Loading ─────────────────────────────────────────────────────────
+
+  /// Loads tournament logo images from their URLs, decodes them to extract
+  /// aspect ratios, and caches raw bytes for PDF rendering.
+  ///
+  /// Called once on first build. Triggers a PDF regeneration when both logos
+  /// have been resolved (even if they fail — missing logos are acceptable).
+  Future<void> _loadTournamentLogoImages() async {
+    final results = await Future.wait([
+      _loadImageBytesAndAspectRatioFromUrl(widget.tournament.leftLogoUrl),
+      _loadImageBytesAndAspectRatioFromUrl(widget.tournament.rightLogoUrl),
+    ]);
+
+    if (!mounted) return;
+
+    final leftResult = results[0];
+    final rightResult = results[1];
+
+    setState(() {
+      _leftLogoImageBytes = leftResult?.imageBytes;
+      _leftLogoAspectRatio = leftResult?.aspectRatio ?? 1.0;
+      _rightLogoImageBytes = rightResult?.imageBytes;
+      _rightLogoAspectRatio = rightResult?.aspectRatio ?? 1.0;
+      _logosLoadingComplete = true;
+    });
+
+    // Regenerate PDF now that logos are available.
+    _regeneratePdfFromCurrentState();
+  }
+
+  /// Downloads an image from [url] and returns both the raw bytes and
+  /// the decoded aspect ratio. Returns `null` on any failure.
+  Future<({Uint8List imageBytes, double aspectRatio})?>
+      _loadImageBytesAndAspectRatioFromUrl(String url) async {
+    if (url.isEmpty) return null;
+    try {
+      final ByteData data = await NetworkAssetBundle(Uri.parse(url)).load('');
+      final Uint8List imageBytes = data.buffer.asUint8List();
+
+      // Decode image to get dimensions for aspect ratio.
+      final completer = Completer<ImageInfo>();
+      final imageStream = MemoryImage(imageBytes).resolve(ImageConfiguration.empty);
+      late ImageStreamListener listener;
+      listener = ImageStreamListener(
+        (info, _) {
+          completer.complete(info);
+          imageStream.removeListener(listener);
+        },
+        onError: (error, _) {
+          if (!completer.isCompleted) {
+            completer.completeError(error);
+          }
+          imageStream.removeListener(listener);
+        },
+      );
+      imageStream.addListener(listener);
+
+      final imageInfo = await completer.future;
+      final double aspectRatio = imageInfo.image.width / imageInfo.image.height;
+      imageInfo.dispose();
+
+      return (imageBytes: imageBytes, aspectRatio: aspectRatio);
+    } catch (error) {
+      debugPrint('Failed to load logo image from $url: $error');
+      return null;
+    }
+  }
+
   /// Computes a [TieSheetLayoutResult] from the current bracket state.
   TieSheetLayoutResult _computeBracketLayout({
     required List<MatchEntity> matches,
@@ -155,6 +243,10 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
       losersBracketId: losersBracketId,
       themeConfig: themeConfig,
       classification: _classification,
+      hasLeftLogo: _leftLogoImageBytes != null,
+      hasRightLogo: _rightLogoImageBytes != null,
+      leftLogoAspectRatio: _leftLogoAspectRatio,
+      rightLogoAspectRatio: _rightLogoAspectRatio,
     );
   }
 
@@ -180,6 +272,8 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
       final bytes = renderer.renderSinglePagePdfBytes(
         layoutResult: layoutResult,
         themeConfig: themeConfig,
+        leftLogoImageBytes: _leftLogoImageBytes,
+        rightLogoImageBytes: _rightLogoImageBytes,
       );
 
       setState(() {
@@ -283,17 +377,21 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
         exportPdfBytes = previewPdfBytes;
       } else {
         // Tiled export — generate multi-page PDF.
-        _updateExportProgress(0.4, 'Generating tiled PDF…');
-        await Future<void>.delayed(Duration.zero);
-
+        // Read theme state before the async gap to avoid
+        // using BuildContext across awaits.
         final themeSelectionState = context.read<BracketThemeSelectionBloc>().state;
         final themeConfig = _resolveThemeConfigFromSelection(themeSelectionState);
+
+        _updateExportProgress(0.4, 'Generating tiled PDF…');
+        await Future<void>.delayed(Duration.zero);
 
         final renderer = TieSheetSyncfusionPdfRendererService();
         final tiledBytes = renderer.generateTiledBracketPdfBytes(
           layoutResult: layoutResult,
           themeConfig: themeConfig,
           exportSettings: confirmedSettings,
+          leftLogoImageBytes: _leftLogoImageBytes,
+          rightLogoImageBytes: _rightLogoImageBytes,
         );
         exportPdfBytes = Uint8List.fromList(tiledBytes);
       }
@@ -538,7 +636,12 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
         if (_cachedPdfBytes == null && _pdfGenerationError == null) {
           // Schedule generation after frame to avoid setState-in-build.
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted) _regeneratePdfFromCurrentState();
+            if (mounted) {
+              _regeneratePdfFromCurrentState();
+              if (!_logosLoadingComplete) {
+                _loadTournamentLogoImages();
+              }
+            }
           });
         }
 

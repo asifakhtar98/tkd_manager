@@ -312,12 +312,12 @@ mixin TieSheetLayoutHelperMixin {
       effectiveTop = topIn;
       effectiveBot = Offset(junctionX - (isMirrored ? -30 : 30), topIn.dy + 40);
       final p = findParticipantById(match.participantRedId, participants);
-      missingBotLabel = p != null ? '↑ ${participantDisplayName(p)}' : '↑ from WB';
+      missingBotLabel = p != null ? '^ ${participantDisplayName(p)}' : '^ from WB';
     } else if (botIn != null) {
       effectiveBot = botIn;
       effectiveTop = Offset(junctionX - (isMirrored ? -30 : 30), botIn.dy - 40);
       final p = findParticipantById(match.participantBlueId, participants);
-      missingTopLabel = p != null ? '↓ ${participantDisplayName(p)}' : '↓ from WB';
+      missingTopLabel = p != null ? 'v ${participantDisplayName(p)}' : 'v from WB';
     } else {
       final estY = 100.0 + (match.matchNumberInRound * 2 - 1) *
           (dims.participantRowHeight + dims.interMatchGapHeight / 2);
@@ -378,7 +378,7 @@ mixin TieSheetLayoutHelperMixin {
     if (winner != null) {
       final winnerX = junctionX + (isMirrored ? -18 : 18);
       winnerText = PositionedTextLayoutData(
-        textContent: '✓ ${participantDisplayName(winner)}',
+        textContent: 'W: ${participantDisplayName(winner)}',
         renderPosition: Offset(winnerX, midY - 14),
         fontSize: computeFontSize(9, delta), fontWeight: FontWeight.bold,
         isRightAligned: isMirrored, textColorType: TextColorType.primary,
