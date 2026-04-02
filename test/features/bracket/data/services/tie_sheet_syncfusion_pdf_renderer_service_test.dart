@@ -75,18 +75,15 @@ void main() {
         fullName: participantNames[index % participantNames.length][0],
         schoolOrDojangName:
             participantNames[index % participantNames.length][1],
-        registrationId:
-            participantNames[index % participantNames.length][2],
+        registrationId: participantNames[index % participantNames.length][2],
         seedNumber: index + 1,
       ),
     );
   }
 
   /// Computes layout and renders single-page PDF for a SE bracket.
-  ({
-    TieSheetLayoutResult layoutResult,
-    Uint8List pdfBytes,
-  }) renderSingleEliminationBracketPdf({
+  ({TieSheetLayoutResult layoutResult, Uint8List pdfBytes})
+  renderSingleEliminationBracketPdf({
     required int playerCount,
     TieSheetThemeConfig themeConfig = TieSheetThemeConfig.defaultPreset,
     bool includeThirdPlaceMatch = false,
@@ -95,7 +92,9 @@ void main() {
     final participants = createTestParticipants(playerCount);
     final generateResult = singleEliminationGenerator.generate(
       genderId: 'div1',
-      participantIds: participants.map((participantEntity) => participantEntity.id).toList(),
+      participantIds: participants
+          .map((participantEntity) => participantEntity.id)
+          .toList(),
       bracketId: uuid.v4(),
       includeThirdPlaceMatch: includeThirdPlaceMatch,
     );
@@ -120,8 +119,10 @@ void main() {
     );
 
     final pdfByteList = rendererService.renderSinglePagePdfBytes(
-      layoutResult: layoutResult,
-      themeConfig: themeConfig,
+      params: PdfRenderParams(
+        layoutResult: layoutResult,
+        themeConfig: themeConfig,
+      ),
     );
 
     return (
@@ -131,17 +132,17 @@ void main() {
   }
 
   /// Computes layout and renders single-page PDF for a DE bracket.
-  ({
-    TieSheetLayoutResult layoutResult,
-    Uint8List pdfBytes,
-  }) renderDoubleEliminationBracketPdf({
+  ({TieSheetLayoutResult layoutResult, Uint8List pdfBytes})
+  renderDoubleEliminationBracketPdf({
     required int playerCount,
     TieSheetThemeConfig themeConfig = TieSheetThemeConfig.defaultPreset,
   }) {
     final participants = createTestParticipants(playerCount);
     final generateResult = doubleEliminationGenerator.generate(
       genderId: 'div1',
-      participantIds: participants.map((participantEntity) => participantEntity.id).toList(),
+      participantIds: participants
+          .map((participantEntity) => participantEntity.id)
+          .toList(),
       winnersBracketId: 'wb-test',
       losersBracketId: 'lb-test',
     );
@@ -159,8 +160,10 @@ void main() {
     );
 
     final pdfByteList = rendererService.renderSinglePagePdfBytes(
-      layoutResult: layoutResult,
-      themeConfig: themeConfig,
+      params: PdfRenderParams(
+        layoutResult: layoutResult,
+        themeConfig: themeConfig,
+      ),
     );
 
     return (
@@ -176,18 +179,27 @@ void main() {
     TieSheetLayoutResult layoutResult,
   ) {
     expect(pdfBytes, isNotEmpty, reason: 'PDF bytes should not be empty');
-    expect(pdfBytes.length, greaterThan(100),
-        reason: 'PDF should have meaningful content');
+    expect(
+      pdfBytes.length,
+      greaterThan(100),
+      reason: 'PDF should have meaningful content',
+    );
 
     // Verify PDF starts with the standard header marker.
     final headerString = String.fromCharCodes(pdfBytes.take(5));
-    expect(headerString, equals('%PDF-'),
-        reason: 'PDF should start with %PDF- header');
+    expect(
+      headerString,
+      equals('%PDF-'),
+      reason: 'PDF should start with %PDF- header',
+    );
 
     // Parse the PDF and verify structure.
     final document = PdfDocument(inputBytes: pdfBytes);
-    expect(document.pages.count, equals(1),
-        reason: 'Single-page render should produce exactly 1 page');
+    expect(
+      document.pages.count,
+      equals(1),
+      reason: 'Single-page render should produce exactly 1 page',
+    );
 
     final page = document.pages[0];
     // Page dimensions should be non-trivial (> 100pt in each direction).
@@ -195,10 +207,16 @@ void main() {
     // dimensions that differ from the exact values set during creation
     // due to internal coordinate transformations; an exact match is not
     // reliable across Syncfusion versions.
-    expect(page.size.width, greaterThan(100),
-        reason: 'Page width should be non-trivial');
-    expect(page.size.height, greaterThan(100),
-        reason: 'Page height should be non-trivial');
+    expect(
+      page.size.width,
+      greaterThan(100),
+      reason: 'Page width should be non-trivial',
+    );
+    expect(
+      page.size.height,
+      greaterThan(100),
+      reason: 'Page height should be non-trivial',
+    );
 
     document.dispose();
   }
@@ -209,13 +227,15 @@ void main() {
 
   group('TieSheetSyncfusionPdfRendererService — Single Elimination', () {
     for (final playerCount in [2, 3, 4, 5, 8, 14, 16]) {
-      test('renders valid single-page PDF for $playerCount-player SE bracket',
-          () {
-        final result = renderSingleEliminationBracketPdf(
-          playerCount: playerCount,
-        );
-        assertValidSinglePagePdf(result.pdfBytes, result.layoutResult);
-      });
+      test(
+        'renders valid single-page PDF for $playerCount-player SE bracket',
+        () {
+          final result = renderSingleEliminationBracketPdf(
+            playerCount: playerCount,
+          );
+          assertValidSinglePagePdf(result.pdfBytes, result.layoutResult);
+        },
+      );
     }
 
     test('renders valid PDF for 14-player SE bracket with 3rd place', () {
@@ -233,13 +253,15 @@ void main() {
 
   group('TieSheetSyncfusionPdfRendererService — Double Elimination', () {
     for (final playerCount in [2, 4, 5, 8]) {
-      test('renders valid single-page PDF for $playerCount-player DE bracket',
-          () {
-        final result = renderDoubleEliminationBracketPdf(
-          playerCount: playerCount,
-        );
-        assertValidSinglePagePdf(result.pdfBytes, result.layoutResult);
-      });
+      test(
+        'renders valid single-page PDF for $playerCount-player DE bracket',
+        () {
+          final result = renderDoubleEliminationBracketPdf(
+            playerCount: playerCount,
+          );
+          assertValidSinglePagePdf(result.pdfBytes, result.layoutResult);
+        },
+      );
     }
   });
 
@@ -256,14 +278,16 @@ void main() {
       assertValidSinglePagePdf(result.pdfBytes, result.layoutResult);
     });
 
-    test('renders valid PDF for 8-player bracket with full tournament results',
-        () {
-      final result = renderSingleEliminationBracketPdf(
-        playerCount: 8,
-        roundsToResolveWithBlueWinners: [1, 2, 3],
-      );
-      assertValidSinglePagePdf(result.pdfBytes, result.layoutResult);
-    });
+    test(
+      'renders valid PDF for 8-player bracket with full tournament results',
+      () {
+        final result = renderSingleEliminationBracketPdf(
+          playerCount: 8,
+          roundsToResolveWithBlueWinners: [1, 2, 3],
+        );
+        assertValidSinglePagePdf(result.pdfBytes, result.layoutResult);
+      },
+    );
 
     test('renders valid PDF for 14-player bracket with R1 results', () {
       final result = renderSingleEliminationBracketPdf(
@@ -306,8 +330,10 @@ void main() {
       );
 
       final tiledPdfBytes = rendererService.generateTiledBracketPdfBytes(
-        layoutResult: singlePageResult.layoutResult,
-        themeConfig: TieSheetThemeConfig.defaultPreset,
+        params: PdfRenderParams(
+          layoutResult: singlePageResult.layoutResult,
+          themeConfig: TieSheetThemeConfig.defaultPreset,
+        ),
         exportSettings: exportSettings,
       );
 
@@ -332,14 +358,17 @@ void main() {
           exportSettings.showTileAssemblyHints &&
           (tileGrid.rows * tileGrid.columns) > 1;
 
-      final expectedTotalPages = expectedPageCount +
-          (hasAssemblyIndexPage ? 1 : 0);
+      final expectedTotalPages =
+          expectedPageCount + (hasAssemblyIndexPage ? 1 : 0);
 
-      expect(document.pages.count, equals(expectedTotalPages),
-          reason:
-              'Tiled PDF should have $expectedTotalPages pages '
-              '($expectedPageCount tile pages'
-              '${hasAssemblyIndexPage ? " + 1 assembly index" : ""})');
+      expect(
+        document.pages.count,
+        equals(expectedTotalPages),
+        reason:
+            'Tiled PDF should have $expectedTotalPages pages '
+            '($expectedPageCount tile pages'
+            '${hasAssemblyIndexPage ? " + 1 assembly index" : ""})',
+      );
 
       document.dispose();
     });
@@ -405,16 +434,21 @@ void main() {
   // ════════════════════════════════════════════════════════════════════════════
 
   group('TieSheetSyncfusionPdfRendererService — Layout Structure', () {
-    test('layout contains expected number of participant rows for 8-player SE',
-        () {
-      final result = renderSingleEliminationBracketPdf(playerCount: 8);
-      final participantRowCount =
-          result.layoutResult.participantRowLayoutDataList.length;
-      // 8-player SE: 8 R1 slots + 4 R2 slots + 2 Final slots = 14 rows
-      // (but layout also includes TBD/BYE rows for connected slots)
-      expect(participantRowCount, greaterThanOrEqualTo(8),
-          reason: 'Should have at least 8 participant rows for R1');
-    });
+    test(
+      'layout contains expected number of participant rows for 8-player SE',
+      () {
+        final result = renderSingleEliminationBracketPdf(playerCount: 8);
+        final participantRowCount =
+            result.layoutResult.participantRowLayoutDataList.length;
+        // 8-player SE: 8 R1 slots + 4 R2 slots + 2 Final slots = 14 rows
+        // (but layout also includes TBD/BYE rows for connected slots)
+        expect(
+          participantRowCount,
+          greaterThanOrEqualTo(8),
+          reason: 'Should have at least 8 participant rows for R1',
+        );
+      },
+    );
 
     test('layout contains header data with tournament name', () {
       final result = renderSingleEliminationBracketPdf(playerCount: 4);
@@ -426,15 +460,16 @@ void main() {
     });
 
     test(
-        'layout contains connectors between rounds for multi-round brackets',
-        () {
-      final result = renderSingleEliminationBracketPdf(playerCount: 8);
-      expect(
-        result.layoutResult.connectorLayoutDataList,
-        isNotEmpty,
-        reason: 'Multi-round brackets should have connector lines',
-      );
-    });
+      'layout contains connectors between rounds for multi-round brackets',
+      () {
+        final result = renderSingleEliminationBracketPdf(playerCount: 8);
+        expect(
+          result.layoutResult.connectorLayoutDataList,
+          isNotEmpty,
+          reason: 'Multi-round brackets should have connector lines',
+        );
+      },
+    );
 
     test('layout contains match junction data', () {
       final result = renderSingleEliminationBracketPdf(playerCount: 8);
@@ -484,18 +519,24 @@ void main() {
       );
 
       // Logo bounding rects should be present in header layout.
-      expect(layoutResult.headerLayoutData.leftLogoBoundingRect, isNotNull,
-          reason: 'Left logo bounding rect should exist when hasLeftLogo=true');
-      expect(layoutResult.headerLayoutData.rightLogoBoundingRect, isNotNull,
-          reason: 'Right logo bounding rect should exist when hasRightLogo=true');
+      expect(
+        layoutResult.headerLayoutData.leftLogoBoundingRect,
+        isNotNull,
+        reason: 'Left logo bounding rect should exist when hasLeftLogo=true',
+      );
+      expect(
+        layoutResult.headerLayoutData.rightLogoBoundingRect,
+        isNotNull,
+        reason: 'Right logo bounding rect should exist when hasRightLogo=true',
+      );
 
       // Rendering should succeed even without actual image bytes
       // (logos are silently skipped).
       final pdfBytes = rendererService.renderSinglePagePdfBytes(
-        layoutResult: layoutResult,
-        themeConfig: TieSheetThemeConfig.defaultPreset,
-        leftLogoImageBytes: null,
-        rightLogoImageBytes: null,
+        params: PdfRenderParams(
+          layoutResult: layoutResult,
+          themeConfig: TieSheetThemeConfig.defaultPreset,
+        ),
       );
 
       expect(pdfBytes, isNotEmpty);
@@ -507,7 +548,9 @@ void main() {
       // No logos by default.
       expect(result.layoutResult.headerLayoutData.leftLogoBoundingRect, isNull);
       expect(
-          result.layoutResult.headerLayoutData.rightLogoBoundingRect, isNull);
+        result.layoutResult.headerLayoutData.rightLogoBoundingRect,
+        isNull,
+      );
 
       assertValidSinglePagePdf(result.pdfBytes, result.layoutResult);
     });
@@ -576,24 +619,32 @@ void main() {
       );
 
       final firstRenderBytes = rendererService.renderSinglePagePdfBytes(
-        layoutResult: layoutResult,
-        themeConfig: TieSheetThemeConfig.defaultPreset,
+        params: PdfRenderParams(
+          layoutResult: layoutResult,
+          themeConfig: TieSheetThemeConfig.defaultPreset,
+        ),
       );
 
       final secondRenderBytes = rendererService.renderSinglePagePdfBytes(
-        layoutResult: layoutResult,
-        themeConfig: TieSheetThemeConfig.defaultPreset,
+        params: PdfRenderParams(
+          layoutResult: layoutResult,
+          themeConfig: TieSheetThemeConfig.defaultPreset,
+        ),
       );
 
       // Syncfusion PDFs may embed internal metadata (e.g. creation
       // timestamps) that differ by a few bytes between runs. Verify that
       // the output sizes are within a tight tolerance band.
-      final sizeDifference = (firstRenderBytes.length - secondRenderBytes.length).abs();
-      expect(sizeDifference, lessThanOrEqualTo(firstRenderBytes.length * 0.01),
-          reason:
-              'Same inputs should produce near-identical PDFs '
-              '(got ${firstRenderBytes.length} vs ${secondRenderBytes.length}, '
-              'diff=$sizeDifference)');
+      final sizeDifference =
+          (firstRenderBytes.length - secondRenderBytes.length).abs();
+      expect(
+        sizeDifference,
+        lessThanOrEqualTo(firstRenderBytes.length * 0.01),
+        reason:
+            'Same inputs should produce near-identical PDFs '
+            '(got ${firstRenderBytes.length} vs ${secondRenderBytes.length}, '
+            'diff=$sizeDifference)',
+      );
     });
   });
 }

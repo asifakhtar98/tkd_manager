@@ -271,12 +271,13 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
         losersBracketId: losersBracketId,
       );
       final renderer = TieSheetSyncfusionPdfRendererService();
-      final bytes = renderer.renderSinglePagePdfBytes(
+      final renderParams = PdfRenderParams(
         layoutResult: layoutResult,
         themeConfig: themeConfig,
         leftLogoImageBytes: _leftLogoImageBytes,
         rightLogoImageBytes: _rightLogoImageBytes,
       );
+      final bytes = renderer.renderSinglePagePdfBytes(params: renderParams);
 
       setState(() {
         _cachedLayoutResult = layoutResult;
@@ -359,15 +360,18 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
               format.height - (printerMarginPoints * 2);
 
           final renderer = TieSheetSyncfusionPdfRendererService();
-          final bytes = renderer.generateScaledSinglePagePdfBytes(
+          final renderParams = PdfRenderParams(
             layoutResult: _cachedLayoutResult!,
             themeConfig: themeConfig,
+            leftLogoImageBytes: _leftLogoImageBytes,
+            rightLogoImageBytes: _rightLogoImageBytes,
+          );
+          final bytes = renderer.generateScaledSinglePagePdfBytes(
+            params: renderParams,
             fullPageWidth: format.width,
             fullPageHeight: format.height,
             printableAreaWidth: printableWidth,
             printableAreaHeight: printableHeight,
-            leftLogoImageBytes: _leftLogoImageBytes,
-            rightLogoImageBytes: _rightLogoImageBytes,
           );
 
           return Uint8List.fromList(bytes);
@@ -433,12 +437,15 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
         await Future<void>.delayed(Duration.zero);
 
         final renderer = TieSheetSyncfusionPdfRendererService();
-        final tiledBytes = renderer.generateTiledBracketPdfBytes(
+        final renderParams = PdfRenderParams(
           layoutResult: layoutResult,
           themeConfig: themeConfig,
-          exportSettings: confirmedSettings,
           leftLogoImageBytes: _leftLogoImageBytes,
           rightLogoImageBytes: _rightLogoImageBytes,
+        );
+        final tiledBytes = renderer.generateTiledBracketPdfBytes(
+          params: renderParams,
+          exportSettings: confirmedSettings,
         );
         exportPdfBytes = Uint8List.fromList(tiledBytes);
       }
@@ -486,12 +493,15 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
       await Future<void>.delayed(Duration.zero);
 
       final renderer = TieSheetSyncfusionPdfRendererService();
-      final tiledBytes = renderer.generateTiledBracketPdfBytes(
+      final renderParams = PdfRenderParams(
         layoutResult: _cachedLayoutResult!,
         themeConfig: themeConfig,
-        exportSettings: defaultSettings,
         leftLogoImageBytes: _leftLogoImageBytes,
         rightLogoImageBytes: _rightLogoImageBytes,
+      );
+      final tiledBytes = renderer.generateTiledBracketPdfBytes(
+        params: renderParams,
+        exportSettings: defaultSettings,
       );
       final exportPdfBytes = Uint8List.fromList(tiledBytes);
 

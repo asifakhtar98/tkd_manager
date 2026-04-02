@@ -16,6 +16,38 @@ import 'package:tkd_saas/features/bracket/domain/layout/models/tie_sheet_layout_
 import 'package:tkd_saas/features/bracket/domain/value_objects/tie_sheet_theme_config.dart';
 import 'package:tkd_saas/features/bracket/presentation/models/print_export_settings.dart';
 
+// ══════════════════════════════════════════════════════════════════════════════
+// PDF RENDER PARAMS
+// ══════════════════════════════════════════════════════════════════════════════
+
+/// Groups the common parameters shared across all PDF generation methods
+/// on [TieSheetSyncfusionPdfRendererService].
+///
+/// Eliminates the need to pass [layoutResult], [themeConfig], and optional
+/// logo bytes separately to every public renderer method.
+class PdfRenderParams {
+  const PdfRenderParams({
+    required this.layoutResult,
+    required this.themeConfig,
+    this.leftLogoImageBytes,
+    this.rightLogoImageBytes,
+  });
+
+  /// The computed layout geometry to render.
+  final TieSheetLayoutResult layoutResult;
+
+  /// The theme tokens controlling colours, strokes, and typography.
+  final TieSheetThemeConfig themeConfig;
+
+  /// Raw bytes for the left tournament logo image (PNG/JPEG).
+  /// `null` when no left logo is configured.
+  final Uint8List? leftLogoImageBytes;
+
+  /// Raw bytes for the right tournament logo image (PNG/JPEG).
+  /// `null` when no right logo is configured.
+  final Uint8List? rightLogoImageBytes;
+}
+
 /// Renders a [TieSheetLayoutResult] onto Syncfusion [PdfDocument] pages
 /// as vector graphics, producing identical output for both on-screen
 /// preview (via [SfPdfViewer.memory]) and print/export.
@@ -23,19 +55,30 @@ import 'package:tkd_saas/features/bracket/presentation/models/print_export_setti
 /// All drawing uses [PdfGraphics] vector APIs — no rasterization.
 /// Shadow rendering has been intentionally removed for a clean, flat
 /// vector aesthetic that reproduces crisply at any DPI.
+///
+/// ## Architecture
+///
+/// The renderer consumes a [TieSheetLayoutResult] (computed by
+/// [TieSheetLayoutEngine]) and a [PdfRenderParams] bundle. Three public
+/// entry points produce different PDF shapes:
+///
+/// - [renderSinglePagePdfBytes] — 1:1 canvas-sized page (screen preview).
+/// - [generateScaledSinglePagePdfBytes] — scaled to fit A4/Letter.
+/// - [generateTiledBracketPdfBytes] — multi-page tile grid.
+///
+/// All three delegate to the private [_renderFullBracket] helper for the
+/// actual drawing, eliminating pipeline duplication.
 class TieSheetSyncfusionPdfRendererService {
+  // ── Public API ─────────────────────────────────────────────────────────────
+
   /// Generates a single-page PDF document from the given layout result.
   ///
+  /// The page size matches the bracket canvas exactly (1:1 mapping).
   /// Returns the raw PDF bytes ready for display or export.
-  List<int> renderSinglePagePdfBytes({
-    required TieSheetLayoutResult layoutResult,
-    required TieSheetThemeConfig themeConfig,
-    Uint8List? leftLogoImageBytes,
-    Uint8List? rightLogoImageBytes,
-  }) {
+  List<int> renderSinglePagePdfBytes({required PdfRenderParams params}) {
     final document = PdfDocument();
-    final canvasWidth = layoutResult.computedCanvasSize.width;
-    final canvasHeight = layoutResult.computedCanvasSize.height;
+    final canvasWidth = params.layoutResult.computedCanvasSize.width;
+    final canvasHeight = params.layoutResult.computedCanvasSize.height;
 
     // Explicitly set orientation based on aspect ratio so Syncfusion does not clip
     // documents where width > height in portrait mode.
@@ -47,43 +90,7 @@ class TieSheetSyncfusionPdfRendererService {
     document.pageSettings.margins.all = 0;
 
     final page = document.pages.add();
-    final graphics = page.graphics;
-
-    _renderCanvasBackground(graphics, layoutResult, themeConfig);
-    _renderHeader(
-      graphics,
-      layoutResult.headerLayoutData,
-      themeConfig,
-      leftLogoImageBytes: leftLogoImageBytes,
-      rightLogoImageBytes: rightLogoImageBytes,
-    );
-    _renderSectionLabels(
-      graphics,
-      layoutResult.sectionLabelLayoutDataList,
-      themeConfig,
-    );
-    _renderParticipantRows(
-      graphics,
-      layoutResult.participantRowLayoutDataList,
-      themeConfig,
-    );
-    _renderConnectors(
-      graphics,
-      layoutResult.connectorLayoutDataList,
-      themeConfig,
-    );
-    _renderMatchJunctions(
-      graphics,
-      layoutResult.matchLayoutDataList,
-      themeConfig,
-    );
-    if (layoutResult.medalTableLayoutData != null) {
-      _renderMedalTable(
-        graphics,
-        layoutResult.medalTableLayoutData!,
-        themeConfig,
-      );
-    }
+    _renderFullBracket(page.graphics, params);
 
     final bytes = document.saveSync();
     document.dispose();
@@ -102,12 +109,10 @@ class TieSheetSyncfusionPdfRendererService {
   /// neighbor labels, and an assembly index page) when
   /// [exportSettings.showTileAssemblyHints] is `true`.
   List<int> generateTiledBracketPdfBytes({
-    required TieSheetLayoutResult layoutResult,
-    required TieSheetThemeConfig themeConfig,
+    required PdfRenderParams params,
     required PrintExportSettings exportSettings,
-    Uint8List? leftLogoImageBytes,
-    Uint8List? rightLogoImageBytes,
   }) {
+    final layoutResult = params.layoutResult;
     final canvasWidth = layoutResult.computedCanvasSize.width;
     final canvasHeight = layoutResult.computedCanvasSize.height;
 
@@ -134,42 +139,7 @@ class TieSheetSyncfusionPdfRendererService {
     // Render the full bracket once into a reusable PdfTemplate.
     // Each tile page draws this template at scaled size with an offset.
     final bracketTemplate = PdfTemplate(canvasWidth, canvasHeight);
-    final templateGraphics = bracketTemplate.graphics!;
-    _renderCanvasBackground(templateGraphics, layoutResult, themeConfig);
-    _renderHeader(
-      templateGraphics,
-      layoutResult.headerLayoutData,
-      themeConfig,
-      leftLogoImageBytes: leftLogoImageBytes,
-      rightLogoImageBytes: rightLogoImageBytes,
-    );
-    _renderSectionLabels(
-      templateGraphics,
-      layoutResult.sectionLabelLayoutDataList,
-      themeConfig,
-    );
-    _renderParticipantRows(
-      templateGraphics,
-      layoutResult.participantRowLayoutDataList,
-      themeConfig,
-    );
-    _renderConnectors(
-      templateGraphics,
-      layoutResult.connectorLayoutDataList,
-      themeConfig,
-    );
-    _renderMatchJunctions(
-      templateGraphics,
-      layoutResult.matchLayoutDataList,
-      themeConfig,
-    );
-    if (layoutResult.medalTableLayoutData != null) {
-      _renderMedalTable(
-        templateGraphics,
-        layoutResult.medalTableLayoutData!,
-        themeConfig,
-      );
-    }
+    _renderFullBracket(bracketTemplate.graphics!, params);
 
     // Scaled full-bracket dimensions in PDF points.
     final scaledBracketWidth = canvasWidth * scaleFactor;
@@ -287,14 +257,11 @@ class TieSheetSyncfusionPdfRendererService {
   /// safe drawing area within those margins. The bracket is scaled to fit the
   /// printable area and centered on the full page.
   List<int> generateScaledSinglePagePdfBytes({
-    required TieSheetLayoutResult layoutResult,
-    required TieSheetThemeConfig themeConfig,
+    required PdfRenderParams params,
     required double fullPageWidth,
     required double fullPageHeight,
     required double printableAreaWidth,
     required double printableAreaHeight,
-    Uint8List? leftLogoImageBytes,
-    Uint8List? rightLogoImageBytes,
   }) {
     final document = PdfDocument();
     document.pageSettings.size = Size(fullPageWidth, fullPageHeight);
@@ -303,47 +270,11 @@ class TieSheetSyncfusionPdfRendererService {
     final page = document.pages.add();
     final graphics = page.graphics;
 
-    final canvasWidth = layoutResult.computedCanvasSize.width;
-    final canvasHeight = layoutResult.computedCanvasSize.height;
+    final canvasWidth = params.layoutResult.computedCanvasSize.width;
+    final canvasHeight = params.layoutResult.computedCanvasSize.height;
 
     final bracketTemplate = PdfTemplate(canvasWidth, canvasHeight);
-    final templateGraphics = bracketTemplate.graphics!;
-
-    _renderCanvasBackground(templateGraphics, layoutResult, themeConfig);
-    _renderHeader(
-      templateGraphics,
-      layoutResult.headerLayoutData,
-      themeConfig,
-      leftLogoImageBytes: leftLogoImageBytes,
-      rightLogoImageBytes: rightLogoImageBytes,
-    );
-    _renderSectionLabels(
-      templateGraphics,
-      layoutResult.sectionLabelLayoutDataList,
-      themeConfig,
-    );
-    _renderParticipantRows(
-      templateGraphics,
-      layoutResult.participantRowLayoutDataList,
-      themeConfig,
-    );
-    _renderConnectors(
-      templateGraphics,
-      layoutResult.connectorLayoutDataList,
-      themeConfig,
-    );
-    _renderMatchJunctions(
-      templateGraphics,
-      layoutResult.matchLayoutDataList,
-      themeConfig,
-    );
-    if (layoutResult.medalTableLayoutData != null) {
-      _renderMedalTable(
-        templateGraphics,
-        layoutResult.medalTableLayoutData!,
-        themeConfig,
-      );
-    }
+    _renderFullBracket(bracketTemplate.graphics!, params);
 
     final scaleX = printableAreaWidth / canvasWidth;
     final scaleY = printableAreaHeight / canvasHeight;
@@ -364,6 +295,54 @@ class TieSheetSyncfusionPdfRendererService {
     final bytes = document.saveSync();
     document.dispose();
     return bytes;
+  }
+
+  // ── Private Rendering Pipeline ─────────────────────────────────────────────
+
+  /// Renders the complete bracket onto the given [graphics] surface.
+  ///
+  /// This is the single source of truth for the drawing pipeline. All three
+  /// public methods delegate to this helper, guaranteeing identical output
+  /// regardless of page configuration.
+  void _renderFullBracket(PdfGraphics graphics, PdfRenderParams params) {
+    final layoutResult = params.layoutResult;
+    final themeConfig = params.themeConfig;
+
+    _renderCanvasBackground(graphics, layoutResult, themeConfig);
+    _renderHeader(
+      graphics,
+      layoutResult.headerLayoutData,
+      themeConfig,
+      leftLogoImageBytes: params.leftLogoImageBytes,
+      rightLogoImageBytes: params.rightLogoImageBytes,
+    );
+    _renderSectionLabels(
+      graphics,
+      layoutResult.sectionLabelLayoutDataList,
+      themeConfig,
+    );
+    _renderParticipantRows(
+      graphics,
+      layoutResult.participantRowLayoutDataList,
+      themeConfig,
+    );
+    _renderConnectors(
+      graphics,
+      layoutResult.connectorLayoutDataList,
+      themeConfig,
+    );
+    _renderMatchJunctions(
+      graphics,
+      layoutResult.matchLayoutDataList,
+      themeConfig,
+    );
+    if (layoutResult.medalTableLayoutData != null) {
+      _renderMedalTable(
+        graphics,
+        layoutResult.medalTableLayoutData!,
+        themeConfig,
+      );
+    }
   }
 
   // ── Canvas Background ──────────────────────────────────────────────────
