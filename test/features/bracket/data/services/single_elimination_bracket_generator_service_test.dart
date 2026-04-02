@@ -15,9 +15,6 @@ void main() {
   List<String> makeIds(int n) => List.generate(n, (i) => 'p${i + 1}');
 
   group('SingleEliminationBracketGeneratorService', () {
-    // ─────────────────────────────────────────────────────────────
-    // Argument validation
-    // ─────────────────────────────────────────────────────────────
     test('throws ArgumentError when fewer than 2 participants', () {
       expect(
         () => service.generate(
@@ -40,9 +37,6 @@ void main() {
       );
     });
 
-    // ─────────────────────────────────────────────────────────────
-    // 2 players — direct final, no byes
-    // ─────────────────────────────────────────────────────────────
     group('2 players', () {
       test('generates exactly 1 match', () {
         final result = service.generate(
@@ -98,9 +92,6 @@ void main() {
       });
     });
 
-    // ─────────────────────────────────────────────────────────────
-    // 3 players — 1 bye
-    // ─────────────────────────────────────────────────────────────
     group('3 players', () {
       test('pads to 4, generates 3 matches (bracketSize - 1)', () {
         final result = service.generate(
@@ -189,9 +180,6 @@ void main() {
       });
     });
 
-    // ─────────────────────────────────────────────────────────────
-    // 4 players — perfect bracket, no byes
-    // ─────────────────────────────────────────────────────────────
     group('4 players', () {
       test('generates exactly 3 matches', () {
         final result = service.generate(
@@ -268,8 +256,6 @@ void main() {
       });
     });
 
-    // ─────────────────────────────────────────────────────────────
-    // 5 players — 3 byes
     // ─────────────────────────────────────────────────────────────
     group('5 players', () {
       test('pads to 8, generates 7 matches', () {
@@ -353,8 +339,6 @@ void main() {
     });
 
     // ─────────────────────────────────────────────────────────────
-    // 7 players — 1 bye
-    // ─────────────────────────────────────────────────────────────
     group('7 players', () {
       test('pads to 8, generates 7 matches', () {
         final result = service.generate(
@@ -390,8 +374,6 @@ void main() {
       });
     });
 
-    // ─────────────────────────────────────────────────────────────
-    // 8 players — perfect bracket, no byes
     // ─────────────────────────────────────────────────────────────
     group('8 players', () {
       test('generates exactly 7 matches', () {
@@ -522,8 +504,6 @@ void main() {
     });
 
     // ─────────────────────────────────────────────────────────────
-    // 16 players — large bracket
-    // ─────────────────────────────────────────────────────────────
     group('16 players', () {
       test('generates exactly 15 matches', () {
         final result = service.generate(
@@ -592,8 +572,6 @@ void main() {
       });
     });
 
-    // ─────────────────────────────────────────────────────────────
-    // Routing table completeness
     // ─────────────────────────────────────────────────────────────
     group('routing table', () {
       test('every non-final match has winnerAdvancesToMatchId', () {

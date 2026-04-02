@@ -3,8 +3,7 @@ import 'package:tkd_saas/features/bracket/presentation/models/print_export_setti
 
 void main() {
   group('PrintExportSettings', () {
-    // ── Default values ──────────────────────────────────────────────────
-
+    // Default values
     test('default settings use A4 landscape fitToPage', () {
       const settings = PrintExportSettings();
 
@@ -15,8 +14,6 @@ void main() {
       expect(settings.tileOverlapMillimeters, 10.0);
       expect(settings.marginPoints, 24.0);
     });
-
-    // ── Page size calculations ───────────────────────────────────────────
 
     group('pageSize', () {
       test('A4 portrait returns portrait dimensions', () {
@@ -53,8 +50,6 @@ void main() {
       });
     });
 
-    // ── Printable area ──────────────────────────────────────────────────
-
     group('printableAreaPoints', () {
       test('subtracts margins from page size', () {
         const settings = PrintExportSettings(
@@ -83,8 +78,6 @@ void main() {
       });
     });
 
-    // ── Millimeter to points conversion ─────────────────────────────────
-
     test('mmToPoints converts 25.4mm to 72pt', () {
       // 1 inch = 25.4mm = 72pt
       expect(PrintExportSettings.mmToPoints(25.4), closeTo(72.0, 0.01));
@@ -95,8 +88,6 @@ void main() {
       // 10mm ≈ 28.35pt
       expect(settings.tileOverlapPoints, closeTo(28.35, 0.1));
     });
-
-    // ── Tile grid dimensions ────────────────────────────────────────────
 
     group('tileGridDimensions', () {
       test('fitToPage always returns 1×1 regardless of canvas size', () {
@@ -210,8 +201,6 @@ void main() {
       });
     });
 
-    // ── Total page count ────────────────────────────────────────────────
-
     group('totalPageCount', () {
       test('equals columns × rows', () {
         const settings = PrintExportSettings(
@@ -241,8 +230,6 @@ void main() {
       });
     });
 
-    // ── Copy-with ───────────────────────────────────────────────────────
-
     group('copyWith', () {
       test('copies with changed paper size', () {
         const original = PrintExportSettings(paperSize: PaperSize.a4);
@@ -268,8 +255,6 @@ void main() {
         expect(copied.scaleFactor, 1.5);
       });
     });
-
-    // ── Equality ────────────────────────────────────────────────────────
 
     group('equality', () {
       test('identical settings are equal', () {
@@ -306,8 +291,6 @@ void main() {
       });
     });
 
-    // ── 64-player bracket scenario ──────────────────────────────────────
-
     test('64-player bracket canvas produces multiple tiles at scale 1.0', () {
       // A 64-player SE bracket has approximate canvas size of ~2960 × 4284
       const settings = PrintExportSettings(
@@ -327,8 +310,6 @@ void main() {
       expect(total, greaterThan(1));
     });
 
-    // ── Scale factor range constants ────────────────────────────────────
-
     test('minScaleFactor is 0.1 and maxScaleFactor is 2.0', () {
       expect(PrintExportSettings.minScaleFactor, 0.1);
       expect(PrintExportSettings.maxScaleFactor, 2.0);
@@ -337,8 +318,6 @@ void main() {
     test('pageTargetPresets contains expected values', () {
       expect(PrintExportSettings.pageTargetPresets, [1, 2, 4, 6, 9]);
     });
-
-    // ── computeScaleFactorForTargetPageCount ─────────────────────────────
 
     group('computeScaleFactorForTargetPageCount', () {
       test('small canvas already fits in 1 page returns high scale', () {

@@ -4,10 +4,6 @@ import 'package:flutter/material.dart';
 ///
 /// Light theme only — use [AppTheme.light] everywhere.
 abstract final class AppTheme {
-  // ─────────────────────────────────────────
-  // Brand Colors
-  // ─────────────────────────────────────────
-
   /// Core brand color used as the primary seed.
   static const Color _brandPrimaryBlack = Color(0xFF000000);
 
@@ -20,10 +16,6 @@ abstract final class AppTheme {
   /// Neutral divider grey.
   static const Color _dividerGrey = Color(0xFFE0E0E0);
 
-  // ─────────────────────────────────────────
-  // Theme Data
-  // ─────────────────────────────────────────
-
   static ThemeData get light {
     final colorScheme = ColorScheme.fromSeed(
       seedColor: _brandPrimaryBlack,
@@ -33,7 +25,7 @@ abstract final class AppTheme {
       onPrimary: Colors.white,
       onSecondary: Colors.white,
       onSurface: _brandPrimaryBlack,
-      error: const Color(0xFF424242), // Dark grey for errors instead of red
+      error: const Color(0xFF424242),
       brightness: Brightness.light,
     );
 
@@ -42,7 +34,6 @@ abstract final class AppTheme {
       scaffoldBackgroundColor: const Color(0xFFF7F7F7),
       colorScheme: colorScheme,
 
-      // ── Core Text & Icon Themes ──
       iconTheme: const IconThemeData(color: _brandPrimaryBlack, size: 24),
       primaryIconTheme: const IconThemeData(color: Colors.white),
       textSelectionTheme: const TextSelectionThemeData(
@@ -51,7 +42,6 @@ abstract final class AppTheme {
         selectionHandleColor: _brandPrimaryBlack,
       ),
 
-      // ── App Bar & Navigation ──
       appBarTheme: const AppBarTheme(
         backgroundColor: _brandPrimaryBlack,
         foregroundColor: Colors.white,
@@ -89,7 +79,6 @@ abstract final class AppTheme {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero),
       ),
 
-      // ── Buttons & FAB ──
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: _brandPrimaryBlack,
@@ -165,7 +154,6 @@ abstract final class AppTheme {
         ),
       ),
 
-      // ── Cards, Dialogs & Surfaces ──
       cardTheme: const CardThemeData(
         elevation: 1,
         color: Colors.white,
@@ -213,7 +201,6 @@ abstract final class AppTheme {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       ),
 
-      // ── Inputs, Selection & Data ──
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: WidgetStateColor.resolveWith((states) {
@@ -292,7 +279,7 @@ abstract final class AppTheme {
         activeTrackColor: _brandPrimaryBlack,
         inactiveTrackColor: _chipBackgroundGrey,
         thumbColor: _brandPrimaryBlack,
-        overlayColor: Color(0x1A000000), // Very light black transparent overlay
+        overlayColor: Color(0x1A000000),
         valueIndicatorColor: _brandPrimaryBlack,
         valueIndicatorTextStyle: TextStyle(color: Colors.white),
       ),
@@ -307,7 +294,6 @@ abstract final class AppTheme {
         dataTextStyle: TextStyle(color: Color(0xFF424242)),
       ),
 
-      // ── Indicators, Bars & Misc ──
       progressIndicatorTheme: const ProgressIndicatorThemeData(
         color: _brandPrimaryBlack,
         linearTrackColor: _chipBackgroundGrey,

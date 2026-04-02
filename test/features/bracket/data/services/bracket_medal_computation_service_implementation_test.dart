@@ -9,8 +9,6 @@ void main() {
     serviceUnderTest = const BracketMedalComputationServiceImplementation();
   });
 
-  // ── Helpers ──────────────────────────────────────────────────────────────
-
   /// Creates a minimal match with the fields needed for medal computation.
   MatchEntity _createMatch({
     required String id,
@@ -43,10 +41,6 @@ void main() {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  // EDGE CASES
-  // ═══════════════════════════════════════════════════════════════════════════
-
   group('Edge cases', () {
     test('returns empty list when matches list is empty', () {
       final placements = serviceUnderTest.computeRuntimeMedalPlacements(
@@ -57,10 +51,6 @@ void main() {
       expect(placements, isEmpty);
     });
   });
-
-  // ═══════════════════════════════════════════════════════════════════════════
-  // SINGLE ELIMINATION
-  // ═══════════════════════════════════════════════════════════════════════════
 
   group('Single Elimination', () {
     // 4-player bracket layout:
@@ -174,44 +164,41 @@ void main() {
       expect(placements[1].displayPlacementLabel, equals('Silver'));
     });
 
-    test(
-      'assigns Bronze positions from 3rd-place match winner and loser',
-      () {
-        final matches = _buildCompleteSingleEliminationBracket(
-          finalWinnerId: alice,
-          finalLoserId: carol,
-          thirdPlaceWinnerId: bob,
-          thirdPlaceLoserId: dave,
-          includeThirdPlaceMatch: true,
-        );
+    test('assigns Bronze positions from 3rd-place match winner and loser', () {
+      final matches = _buildCompleteSingleEliminationBracket(
+        finalWinnerId: alice,
+        finalLoserId: carol,
+        thirdPlaceWinnerId: bob,
+        thirdPlaceLoserId: dave,
+        includeThirdPlaceMatch: true,
+      );
 
-        final placements = serviceUnderTest.computeRuntimeMedalPlacements(
-          matches: matches,
-          isDoubleElimination: false,
-          includeThirdPlaceMatch: true,
-        );
+      final placements = serviceUnderTest.computeRuntimeMedalPlacements(
+        matches: matches,
+        isDoubleElimination: false,
+        includeThirdPlaceMatch: true,
+      );
 
-        expect(placements, hasLength(4));
+      expect(placements, hasLength(4));
 
-        // Gold
-        expect(placements[0].participantId, equals(alice));
-        expect(placements[0].rankStatus, equals(1));
+      // Gold
+      expect(placements[0].participantId, equals(alice));
+      expect(placements[0].rankStatus, equals(1));
 
-        // Silver
-        expect(placements[1].participantId, equals(carol));
-        expect(placements[1].rankStatus, equals(2));
+      // Silver
+      expect(placements[1].participantId, equals(carol));
+      expect(placements[1].rankStatus, equals(2));
 
-        // 1st Bronze
-        expect(placements[2].participantId, equals(bob));
-        expect(placements[2].rankStatus, equals(3));
-        expect(placements[2].displayPlacementLabel, equals('1st Bronze'));
+      // 1st Bronze
+      expect(placements[2].participantId, equals(bob));
+      expect(placements[2].rankStatus, equals(3));
+      expect(placements[2].displayPlacementLabel, equals('1st Bronze'));
 
-        // 2nd Bronze
-        expect(placements[3].participantId, equals(dave));
-        expect(placements[3].rankStatus, equals(4));
-        expect(placements[3].displayPlacementLabel, equals('2nd Bronze'));
-      },
-    );
+      // 2nd Bronze
+      expect(placements[3].participantId, equals(dave));
+      expect(placements[3].rankStatus, equals(4));
+      expect(placements[3].displayPlacementLabel, equals('2nd Bronze'));
+    });
 
     test('returns no bronze when includeThirdPlaceMatch is false', () {
       final matches = _buildCompleteSingleEliminationBracket(
@@ -279,10 +266,6 @@ void main() {
       expect(placements, isEmpty);
     });
   });
-
-  // ═══════════════════════════════════════════════════════════════════════════
-  // DOUBLE ELIMINATION
-  // ═══════════════════════════════════════════════════════════════════════════
 
   group('Double Elimination', () {
     // 4-player DE layout:
@@ -413,8 +396,7 @@ void main() {
             status: resetWinnerId != null
                 ? MatchStatus.completed
                 : MatchStatus.pending,
-            resultType:
-                resetWinnerId != null ? MatchResultType.points : null,
+            resultType: resetWinnerId != null ? MatchResultType.points : null,
           ),
         );
       }

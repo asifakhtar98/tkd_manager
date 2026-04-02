@@ -8,12 +8,6 @@ import '../../tournament/domain/entities/tournament_entity.dart';
 class DemoData {
   DemoData._();
 
-  // ── Tournament ─────────────────────────────────────────────────────────
-
-  /// Returns a single, reusable demo [TournamentEntity].
-  ///
-  /// Seeded into [TournamentBloc] at startup so the demo tournament
-  /// appears in the tournament list like any user-created tournament.
   static TournamentEntity get demoTournament => TournamentEntity(
     id: 'demo-tournament-1',
     userId: 'demo-user-1',

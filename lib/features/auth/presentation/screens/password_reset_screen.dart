@@ -31,10 +31,6 @@ class _PasswordResetScreenState extends State<PasswordResetScreen> {
     super.dispose();
   }
 
-  // ───────────────────────────────────────────────────────────────────────────
-  // Actions
-  // ───────────────────────────────────────────────────────────────────────────
-
   void _submitNewPassword() {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
@@ -44,10 +40,6 @@ class _PasswordResetScreenState extends State<PasswordResetScreen> {
       ),
     );
   }
-
-  // ───────────────────────────────────────────────────────────────────────────
-  // Build
-  // ───────────────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
@@ -75,14 +67,12 @@ class _PasswordResetScreenState extends State<PasswordResetScreen> {
                   return Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // ── Branding ──
                       const AuthBrandingHeader(
                         icon: Icons.lock_reset,
                         title: 'Reset Your Password',
                       ),
                       const SizedBox(height: 40),
 
-                      // ── Card with form ──
                       Card(
                         elevation: 4,
                         shape: RoundedRectangleBorder(
@@ -118,7 +108,6 @@ class _PasswordResetScreenState extends State<PasswordResetScreen> {
                                   ),
                                   const SizedBox(height: 32),
 
-                                  // ── New Password ──
                                   PasswordTextFormField(
                                     controller: _passwordController,
                                     labelText: 'New Password',
@@ -131,7 +120,6 @@ class _PasswordResetScreenState extends State<PasswordResetScreen> {
                                   ),
                                   const SizedBox(height: 20),
 
-                                  // ── Confirm Password ──
                                   PasswordTextFormField(
                                     controller: _confirmPasswordController,
                                     labelText: 'Confirm Password',
@@ -146,7 +134,6 @@ class _PasswordResetScreenState extends State<PasswordResetScreen> {
                                   ),
                                   const SizedBox(height: 28),
 
-                                  // ── Submit button ──
                                   AuthSubmitButton(
                                     label: 'Update Password',
                                     isLoading: isLoading,
@@ -168,10 +155,6 @@ class _PasswordResetScreenState extends State<PasswordResetScreen> {
       ),
     );
   }
-
-  // ───────────────────────────────────────────────────────────────────────────
-  // Listener
-  // ───────────────────────────────────────────────────────────────────────────
 
   void _authStateListener(BuildContext context, AuthenticationState state) {
     handleAuthenticationStateForSnackbar(context, state);

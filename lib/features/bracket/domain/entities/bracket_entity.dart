@@ -5,8 +5,6 @@ import 'bracket_medal_placement_entity.dart';
 part 'bracket_entity.freezed.dart';
 part 'bracket_entity.g.dart';
 
-/// Classifies the role of a bracket within an elimination tournament.
-@JsonEnum(valueField: 'value')
 enum BracketType {
   /// The main (upper) bracket in single or double elimination.
   winners('winners'),

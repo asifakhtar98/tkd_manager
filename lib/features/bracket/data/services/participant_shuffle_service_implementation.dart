@@ -12,9 +12,6 @@ import 'package:tkd_saas/features/setup_bracket/domain/entities/participant_enti
 @LazySingleton(as: ParticipantShuffleService)
 class ParticipantShuffleServiceImplementation
     implements ParticipantShuffleService {
-  /// Creates the service with a default [Random] instance.
-  ///
-  /// Injectable uses this zero-arg constructor automatically.
   @factoryMethod
   ParticipantShuffleServiceImplementation() : _random = Random();
 
@@ -31,11 +28,9 @@ class ParticipantShuffleServiceImplementation
   }) {
     if (participants.length <= 1) return List.of(participants);
 
-    // Step 1: Fisher-Yates shuffle for uniform random draw.
     final shuffledParticipants = List<ParticipantEntity>.of(participants);
     _fisherYatesShuffle(shuffledParticipants);
 
-    // Step 2: If dojang separation is requested, apply constraint repair.
     if (dojangSeparation) {
       _applyDojangSeparationConstraintRepair(shuffledParticipants);
     }
@@ -43,7 +38,6 @@ class ParticipantShuffleServiceImplementation
     return shuffledParticipants;
   }
 
-  /// In-place Fisher-Yates shuffle for uniform randomisation.
   void _fisherYatesShuffle(List<ParticipantEntity> participants) {
     for (var index = participants.length - 1; index > 0; index--) {
       final swapIndex = _random.nextInt(index + 1);
@@ -69,27 +63,23 @@ class ParticipantShuffleServiceImplementation
   ) {
     final totalParticipantCount = participants.length;
     final halfBoundary = totalParticipantCount ~/ 2;
-    if (halfBoundary == 0) return; // Only 1 participant — nothing to separate.
+    if (halfBoundary == 0) return;
 
-    // Guard against infinite loops — the maximum number of swaps is bounded by
-    // the participant count (each swap fixes at least one conflict).
     var remainingIterations = totalParticipantCount;
 
     while (remainingIterations > 0) {
       remainingIterations--;
 
-      // Rebuild the dojang-to-indices map from CURRENT list state.
       final dojangToIndicesMap = _buildDojangToIndicesMap(
         participants,
         totalParticipantCount,
       );
 
-      // Find the most imbalanced dojang group (largest first).
       final imbalancedEntry = _findMostImbalancedDojangGroup(
         dojangToIndicesMap,
         halfBoundary,
       );
-      if (imbalancedEntry == null) break; // All groups are balanced.
+      if (imbalancedEntry == null) break;
 
       final dojangKey = imbalancedEntry.key;
       final indicesForDojang = imbalancedEntry.value;
@@ -104,7 +94,6 @@ class ParticipantShuffleServiceImplementation
 
       bool swapPerformed = false;
 
-      // Try to fix top-half overflow first.
       if (indicesInTopHalf.length > maximumAllowedPerHalf) {
         swapPerformed = _swapOneExcessParticipant(
           participants: participants,
@@ -114,9 +103,7 @@ class ParticipantShuffleServiceImplementation
           maximumAllowedPerHalf: maximumAllowedPerHalf,
           dojangKey: dojangKey,
         );
-      }
-      // Then try to fix bottom-half overflow.
-      else if (indicesInBottomHalf.length > maximumAllowedPerHalf) {
+      } else if (indicesInBottomHalf.length > maximumAllowedPerHalf) {
         swapPerformed = _swapOneExcessParticipant(
           participants: participants,
           excessIndices: indicesInBottomHalf,
@@ -127,8 +114,6 @@ class ParticipantShuffleServiceImplementation
         );
       }
 
-      // If no swap was possible, this group can't be further improved.
-      // Break to avoid infinite looping.
       if (!swapPerformed) break;
     }
   }
@@ -150,8 +135,6 @@ class ParticipantShuffleServiceImplementation
     return dojangToIndicesMap;
   }
 
-  /// Finds the dojang group with the largest half-imbalance.
-  /// Returns `null` if all groups are balanced.
   MapEntry<String, List<int>>? _findMostImbalancedDojangGroup(
     Map<String, List<int>> dojangToIndicesMap,
     int halfBoundary,
@@ -160,7 +143,7 @@ class ParticipantShuffleServiceImplementation
     int worstImbalance = 0;
 
     for (final entry in dojangToIndicesMap.entries) {
-      if (entry.value.length <= 1) continue; // No separation needed.
+      if (entry.value.length <= 1) continue;
 
       final maximumAllowedPerHalf = (entry.value.length + 1) ~/ 2;
       final inTopHalf = entry.value
@@ -185,9 +168,6 @@ class ParticipantShuffleServiceImplementation
     return worstEntry;
   }
 
-  /// Swaps exactly ONE excess participant from [excessIndices] into the
-  /// target half. Returns `true` if a swap was performed, `false` if no
-  /// safe swap partner exists.
   bool _swapOneExcessParticipant({
     required List<ParticipantEntity> participants,
     required List<int> excessIndices,
@@ -198,11 +178,8 @@ class ParticipantShuffleServiceImplementation
   }) {
     if (excessIndices.length <= maximumAllowedPerHalf) return false;
 
-    // Pick the first excess participant to move.
     final sourceIndex = excessIndices[maximumAllowedPerHalf];
 
-    // Find a safe swap target in the other half: someone whose dojang
-    // doesn't match the one we're trying to separate.
     for (
       var candidateIndex = targetHalfStartIndex;
       candidateIndex < targetHalfEndIndex;
@@ -216,7 +193,6 @@ class ParticipantShuffleServiceImplementation
           : null;
 
       if (candidateDojangKey != dojangKey) {
-        // Swap.
         final temporary = participants[sourceIndex];
         participants[sourceIndex] = participants[candidateIndex];
         participants[candidateIndex] = temporary;

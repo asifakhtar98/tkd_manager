@@ -79,7 +79,6 @@ class _ParticipantEditDialogState extends State<ParticipantEditDialog> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // ── Current info summary ──
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(12),
@@ -110,7 +109,6 @@ class _ParticipantEditDialogState extends State<ParticipantEditDialog> {
               ),
               const SizedBox(height: 20),
 
-              // ── Full Name field ──
               TextFormField(
                 controller: _fullNameController,
                 decoration: const InputDecoration(
@@ -129,7 +127,6 @@ class _ParticipantEditDialogState extends State<ParticipantEditDialog> {
               ),
               const SizedBox(height: 16),
 
-              // ── Registration ID field ──
               TextFormField(
                 controller: _registrationIdController,
                 decoration: const InputDecoration(

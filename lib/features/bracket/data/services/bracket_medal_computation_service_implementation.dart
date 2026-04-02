@@ -4,10 +4,6 @@ import 'package:tkd_saas/features/bracket/domain/entities/bracket_medal_placemen
 import 'package:tkd_saas/features/bracket/domain/entities/match_entity.dart';
 import 'package:tkd_saas/features/bracket/domain/services/bracket_medal_computation_service.dart';
 
-/// Implementation of [BracketMedalComputationService].
-///
-/// This is a stateless, pure-logic class that can be instantiated directly
-/// anywhere — no DI registration needed since it holds no dependencies.
 class BracketMedalComputationServiceImplementation
     implements BracketMedalComputationService {
   const BracketMedalComputationServiceImplementation();
@@ -36,8 +32,6 @@ class BracketMedalComputationServiceImplementation
     );
   }
 
-  // ── Single Elimination ──────────────────────────────────────────────────────
-
   /// Gold/Silver come from the championship final (max round, match #1).
   /// Bronze positions come from the optional 3rd-place match (max round, match #2).
   List<BracketMedalPlacementEntity> _computeSingleEliminationMedalPlacements({
@@ -46,10 +40,10 @@ class BracketMedalComputationServiceImplementation
   }) {
     final placements = <BracketMedalPlacementEntity>[];
 
-    final maximumRoundNumber =
-        matches.map((matchEntity) => matchEntity.roundNumber).reduce(max);
+    final maximumRoundNumber = matches
+        .map((matchEntity) => matchEntity.roundNumber)
+        .reduce(max);
 
-    // ── Gold & Silver from the final match ──
     final championshipFinalMatch = matches
         .where(
           (matchEntity) =>
@@ -63,7 +57,6 @@ class BracketMedalComputationServiceImplementation
       return placements;
     }
 
-    // Gold = winner of the final
     placements.add(
       BracketMedalPlacementEntity(
         participantId: championshipFinalMatch.winnerId!,
@@ -72,7 +65,6 @@ class BracketMedalComputationServiceImplementation
       ),
     );
 
-    // Silver = loser of the final
     final silverMedalistParticipantId = _determineLoserParticipantId(
       championshipFinalMatch,
     );
@@ -86,7 +78,6 @@ class BracketMedalComputationServiceImplementation
       );
     }
 
-    // ── Bronze from the 3rd-place match ──
     if (!includeThirdPlaceMatch) return placements;
 
     final thirdPlaceMatch = matches
@@ -99,7 +90,6 @@ class BracketMedalComputationServiceImplementation
 
     if (thirdPlaceMatch == null) return placements;
 
-    // 1st Bronze = 3rd-place match winner
     if (thirdPlaceMatch.winnerId != null) {
       placements.add(
         BracketMedalPlacementEntity(
@@ -110,7 +100,6 @@ class BracketMedalComputationServiceImplementation
       );
     }
 
-    // 2nd Bronze = 3rd-place match loser
     final secondBronzeMedalistParticipantId = _determineLoserParticipantId(
       thirdPlaceMatch,
     );
@@ -127,8 +116,6 @@ class BracketMedalComputationServiceImplementation
     return placements;
   }
 
-  // ── Double Elimination ──────────────────────────────────────────────────────
-
   /// Gold/Silver come from the last completed Grand Final match.
   /// In DE, GF matches have a `bracketId` that is neither [winnersBracketId]
   /// nor [losersBracketId]. If a reset match (GF2) was played, medals come
@@ -143,30 +130,26 @@ class BracketMedalComputationServiceImplementation
   }) {
     final placements = <BracketMedalPlacementEntity>[];
 
-    // Identify Grand Finals matches (bracketId ≠ WB and ≠ LB).
-    final grandFinalsMatches = matches
-        .where(
-          (matchEntity) =>
-              matchEntity.bracketId != winnersBracketId &&
-              matchEntity.bracketId != losersBracketId,
-        )
-        .toList()
-      ..sort(
-        (a, b) => b.roundNumber.compareTo(a.roundNumber),
-      ); // Descending by round — GF2 first, then GF1.
+    final grandFinalsMatches =
+        matches
+            .where(
+              (matchEntity) =>
+                  matchEntity.bracketId != winnersBracketId &&
+                  matchEntity.bracketId != losersBracketId,
+            )
+            .toList()
+          ..sort(
+            (a, b) => b.roundNumber.compareTo(a.roundNumber),
+          ); // Descending by round — GF2 first, then GF1.
 
     if (grandFinalsMatches.isEmpty) return placements;
 
-    // Find the last completed GF match (GF2 if played, else GF1).
     final decidingGrandFinalMatch = grandFinalsMatches
-        .where(
-          (matchEntity) => matchEntity.winnerId != null,
-        )
+        .where((matchEntity) => matchEntity.winnerId != null)
         .firstOrNull;
 
     if (decidingGrandFinalMatch == null) return placements;
 
-    // ── Gold = GF winner ──
     placements.add(
       BracketMedalPlacementEntity(
         participantId: decidingGrandFinalMatch.winnerId!,
@@ -175,7 +158,6 @@ class BracketMedalComputationServiceImplementation
       ),
     );
 
-    // ── Silver = GF loser ──
     final silverMedalistParticipantId = _determineLoserParticipantId(
       decidingGrandFinalMatch,
     );
@@ -189,7 +171,6 @@ class BracketMedalComputationServiceImplementation
       );
     }
 
-    // ── Bronze = LB final loser ──
     if (losersBracketId == null) return placements;
 
     final losersBracketMatches = matches
@@ -232,8 +213,6 @@ class BracketMedalComputationServiceImplementation
 
     return placements;
   }
-
-  // ── Helpers ─────────────────────────────────────────────────────────────────
 
   /// Determines the loser of a completed [matchEntity] given its [winnerId].
   /// Returns `null` when the loser cannot be determined (e.g., a BYE match

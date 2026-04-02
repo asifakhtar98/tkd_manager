@@ -78,7 +78,6 @@ class TournamentDetailScreen extends StatelessWidget {
                 child: _TournamentHeader(tournament: tournament),
               ),
 
-              // ── Saved bracket snapshots ──
               if (snapshots.isNotEmpty)
                 SliverPadding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
@@ -98,7 +97,6 @@ class TournamentDetailScreen extends StatelessWidget {
                   ),
                 ),
 
-              // ── Empty state ──
               if (snapshots.isEmpty)
                 const SliverFillRemaining(
                   child: Center(
@@ -179,10 +177,6 @@ class TournamentDetailScreen extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Tournament header card
-// ─────────────────────────────────────────────────────────────────────────────
-
 class _TournamentHeader extends StatelessWidget {
   const _TournamentHeader({required this.tournament});
 
@@ -246,10 +240,6 @@ class _InfoRow extends StatelessWidget {
     );
   }
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Bracket snapshot card
-// ─────────────────────────────────────────────────────────────────────────────
 
 class _BracketSnapshotCard extends StatelessWidget {
   const _BracketSnapshotCard({

@@ -18,10 +18,6 @@ class AuthenticationRepositoryImplementation
 
   final SupabaseClient _supabaseClient;
 
-  // ───────────────────────────────────────────────────────────────────────────
-  // Sign In
-  // ───────────────────────────────────────────────────────────────────────────
-
   @override
   Future<Either<Failure, User>> signInWithEmailAndPassword({
     required String email,
@@ -45,10 +41,6 @@ class AuthenticationRepositoryImplementation
       return Left(AuthenticationFailure(exception.toString()));
     }
   }
-
-  // ───────────────────────────────────────────────────────────────────────────
-  // Sign Up
-  // ───────────────────────────────────────────────────────────────────────────
 
   @override
   Future<Either<Failure, SignUpResult>> signUpWithEmailAndPassword({
@@ -95,10 +87,6 @@ class AuthenticationRepositoryImplementation
     }
   }
 
-  // ───────────────────────────────────────────────────────────────────────────
-  // Password Reset
-  // ───────────────────────────────────────────────────────────────────────────
-
   @override
   Future<Either<Failure, Unit>> resetPasswordForEmail({
     required String email,
@@ -136,10 +124,6 @@ class AuthenticationRepositoryImplementation
       return Left(AuthenticationFailure(exception.toString()));
     }
   }
-
-  // ───────────────────────────────────────────────────────────────────────────
-  // Profile Update
-  // ───────────────────────────────────────────────────────────────────────────
 
   @override
   Future<Either<Failure, User>> updateProfileDetails({
@@ -181,10 +165,6 @@ class AuthenticationRepositoryImplementation
     }
   }
 
-  // ───────────────────────────────────────────────────────────────────────────
-  // Sign Out
-  // ───────────────────────────────────────────────────────────────────────────
-
   @override
   Future<void> signOut() async {
     try {
@@ -196,20 +176,12 @@ class AuthenticationRepositoryImplementation
     }
   }
 
-  // ───────────────────────────────────────────────────────────────────────────
-  // Session Accessors
-  // ───────────────────────────────────────────────────────────────────────────
-
   @override
   User? get currentUser => _supabaseClient.auth.currentUser;
 
   @override
   Stream<AuthState> get authStateChanges =>
       _supabaseClient.auth.onAuthStateChange;
-
-  // ───────────────────────────────────────────────────────────────────────────
-  // Helpers
-  // ───────────────────────────────────────────────────────────────────────────
 
   /// On Flutter web, uses the current origin so Supabase email links redirect
   /// back to the running application. Returns `null` on non-web platforms
@@ -258,7 +230,6 @@ class AuthenticationRepositoryImplementation
       return 'New account registration is currently disabled.';
     }
 
-    // Fallback: use the original message.
     return authException.message;
   }
 }

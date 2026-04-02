@@ -180,7 +180,6 @@ class _CreateTournamentDialogState extends State<CreateTournamentDialog> {
                   onSubmitted: (_) => _submitTournamentForm(),
                 ),
                 const SizedBox(height: 20),
-                // ── Tournament Logos Section ──
                 _buildTournamentLogosSection(),
               ],
             ),
@@ -301,7 +300,6 @@ class _LogoPickerCard extends StatelessWidget {
   /// Builds the appropriate image widget for a URL or data URI.
   Widget _buildPreviewImage(String url) {
     if (TournamentLogoDefaults.isDataUri(url)) {
-      // Decode base64 data URI → Uint8List → MemoryImage.
       final commaIndex = url.indexOf(',');
       if (commaIndex == -1) return _buildBrokenIcon();
       final base64String = url.substring(commaIndex + 1);
@@ -316,7 +314,6 @@ class _LogoPickerCard extends StatelessWidget {
         return _buildBrokenIcon();
       }
     }
-    // Regular network URL.
     return Image.network(
       url,
       fit: BoxFit.contain,
@@ -353,7 +350,6 @@ class _LogoPickerCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          // ── Clickable Preview ──
           InkWell(
             borderRadius: BorderRadius.circular(6),
             onTap: onPickImage,
@@ -378,13 +374,11 @@ class _LogoPickerCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          // ── Label ──
           Text(
             label,
             style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 6),
-          // ── Action Buttons ──
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [

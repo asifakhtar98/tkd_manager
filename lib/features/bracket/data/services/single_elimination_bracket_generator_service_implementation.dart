@@ -8,16 +8,10 @@ import 'package:tkd_saas/features/bracket/domain/services/match_numbering_utilit
 import 'package:tkd_saas/features/bracket/domain/services/single_elimination_bracket_generator_service.dart';
 import 'package:uuid/uuid.dart';
 
-/// Minimum number of participants required for a valid bracket.
 const int _minimumParticipantCount = 2;
 
-/// Returns `2^exponent` as an integer.
 int _powerOfTwo(int exponent) => pow(2, exponent).toInt();
 
-/// Implementation of [SingleEliminationBracketGeneratorService].
-///
-/// Generates a complete single-elimination bracket with proper seeding,
-/// BYE handling, and optional 3rd-place match support.
 @LazySingleton(as: SingleEliminationBracketGeneratorService)
 class SingleEliminationBracketGeneratorServiceImplementation
     implements SingleEliminationBracketGeneratorService {
@@ -44,12 +38,10 @@ class SingleEliminationBracketGeneratorServiceImplementation
     final bracketSize = _powerOfTwo(numberOfRounds);
     final now = DateTime.now();
 
-    // Total matches: bracketSize - 1 (standard) + optional 3rd place
     final standardMatchCount = bracketSize - 1;
     final hasThirdPlaceMatch = includeThirdPlaceMatch && numberOfRounds >= 2;
     final totalMatchCount = standardMatchCount + (hasThirdPlaceMatch ? 1 : 0);
 
-    // Pre-generate all match IDs upfront for deterministic linking.
     final matchIds = List.generate(totalMatchCount, (_) => _uuid.v4());
 
     final bracket = BracketEntity(
@@ -66,7 +58,6 @@ class SingleEliminationBracketGeneratorServiceImplementation
       },
     );
 
-    // 1. Create all match slots, indexed by round and position.
     final matchesByRoundAndPosition = _createMatchSlots(
       bracketId,
       numberOfRounds,
@@ -75,10 +66,8 @@ class SingleEliminationBracketGeneratorServiceImplementation
       now,
     );
 
-    // 2. Link winner-advancement paths between rounds.
     _linkMatchAdvancements(matchesByRoundAndPosition, numberOfRounds);
 
-    // 3. Assign participants to Round 1 using standard WT seeding.
     _assignParticipantsToFirstRound(
       matchesByRoundAndPosition: matchesByRoundAndPosition,
       participantIds: participantIds,
@@ -87,7 +76,6 @@ class SingleEliminationBracketGeneratorServiceImplementation
       now: now,
     );
 
-    // 4. Create and link 3rd-place match if requested.
     MatchEntity? thirdPlaceMatch;
     if (hasThirdPlaceMatch) {
       thirdPlaceMatch = _createThirdPlaceMatch(
@@ -99,19 +87,16 @@ class SingleEliminationBracketGeneratorServiceImplementation
       );
     }
 
-    // 5. Advance BYE winners into Round 2.
     if (numberOfRounds >= 2) {
       _advanceByeWinnersToNextRound(matchesByRoundAndPosition);
     }
 
-    // Flatten into a single list.
     final rawMatches = <MatchEntity>[
       for (final roundMatches in matchesByRoundAndPosition.values)
         ...roundMatches.values,
       ?thirdPlaceMatch,
     ];
 
-    // Assign global display numbers.
     final allMatches = MatchNumberingUtility.assignGlobalMatchNumbers(
       matches: rawMatches,
       isDoubleElimination: false,
@@ -120,12 +105,6 @@ class SingleEliminationBracketGeneratorServiceImplementation
     return BracketGenerationResult(bracket: bracket, matches: allMatches);
   }
 
-  // ─────────────────────────────────────────
-  // Private Helpers
-  // ─────────────────────────────────────────
-
-  /// Creates all match slots for every round, returning a map of
-  /// `round → { matchPosition → MatchEntity }`.
   Map<int, Map<int, MatchEntity>> _createMatchSlots(
     String bracketId,
     int numberOfRounds,
@@ -160,7 +139,6 @@ class SingleEliminationBracketGeneratorServiceImplementation
     return matchesByRoundAndPosition;
   }
 
-  /// Links each match's winner to the next round's corresponding match slot.
   void _linkMatchAdvancements(
     Map<int, Map<int, MatchEntity>> matchesByRoundAndPosition,
     int numberOfRounds,
@@ -215,7 +193,6 @@ class SingleEliminationBracketGeneratorServiceImplementation
         participantRedId: redParticipantId,
       );
 
-      // Auto-complete BYE matches.
       if (blueParticipantId != null && redParticipantId == null) {
         currentMatch = currentMatch.copyWith(
           status: MatchStatus.completed,
@@ -242,7 +219,7 @@ class SingleEliminationBracketGeneratorServiceImplementation
   List<int> _generateSeedingOrder(int roundCount) {
     if (roundCount == 1) return [1, 2];
     final previousSeeding = _generateSeedingOrder(roundCount - 1);
-    final totalPositions = 1 << roundCount; // 2^roundCount
+    final totalPositions = 1 << roundCount;
     final complementSum = totalPositions + 1;
     final seedingOrder = <int>[];
     for (final seedPosition in previousSeeding) {
@@ -252,7 +229,6 @@ class SingleEliminationBracketGeneratorServiceImplementation
     return seedingOrder;
   }
 
-  /// Creates the 3rd-place match and links semi-final losers to it.
   MatchEntity _createThirdPlaceMatch({
     required Map<int, Map<int, MatchEntity>> matchesByRoundAndPosition,
     required String matchId,
@@ -264,13 +240,12 @@ class SingleEliminationBracketGeneratorServiceImplementation
       id: matchId,
       bracketId: bracketId,
       roundNumber: numberOfRounds,
-      matchNumberInRound: 2, // Final is position 1
+      matchNumberInRound: 2,
       createdAtTimestamp: now,
       updatedAtTimestamp: now,
       status: MatchStatus.pending,
     );
 
-    // Link semi-final losers to the 3rd-place match.
     final semiFinalsRoundNumber = numberOfRounds - 1;
     final semiFinalsMatches = matchesByRoundAndPosition[semiFinalsRoundNumber]!;
 
@@ -284,7 +259,6 @@ class SingleEliminationBracketGeneratorServiceImplementation
     return thirdPlaceMatch;
   }
 
-  /// Advances BYE winners from Round 1 into their Round 2 slots.
   void _advanceByeWinnersToNextRound(
     Map<int, Map<int, MatchEntity>> matchesByRoundAndPosition,
   ) {

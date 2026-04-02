@@ -135,19 +135,14 @@ class _PrintPreviewDialogState extends State<PrintPreviewDialog> {
         ),
         body: Row(
           children: [
-            // ── Settings Sidebar ──
             _buildSettingsSidebar(theme),
-            // ── Vertical divider ──
             VerticalDivider(width: 1, thickness: 1, color: theme.dividerColor),
-            // ── Preview Area ──
             Expanded(child: _buildPreviewArea(colorScheme)),
           ],
         ),
       ),
     );
   }
-
-  // ── Settings Sidebar ────────────────────────────────────────────────────
 
   Widget _buildSettingsSidebar(ThemeData theme) {
     final colorScheme = theme.colorScheme;
@@ -160,44 +155,31 @@ class _PrintPreviewDialogState extends State<PrintPreviewDialog> {
           _buildSidebarHeader('Print Settings', colorScheme),
           const SizedBox(height: 24),
 
-          // Paper Size
           _buildSettingLabel(Icons.crop_portrait, 'Paper Size', colorScheme),
           const SizedBox(height: 8),
           _buildPaperSizeDropdown(colorScheme),
           const SizedBox(height: 20),
 
-          // Orientation
           _buildSettingLabel(Icons.screen_rotation, 'Orientation', colorScheme),
           const SizedBox(height: 8),
           _buildOrientationToggle(colorScheme),
           const SizedBox(height: 20),
 
-          // Scale
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildSettingLabel(
-                Icons.auto_fix_high,
-                'Page Target',
-                colorScheme,
-              ),
-              const SizedBox(height: 8),
-              _buildPageTargetPresets(colorScheme),
-              const SizedBox(height: 20),
-              _buildSettingLabel(Icons.zoom_in, 'Scale', colorScheme),
-              const SizedBox(height: 8),
-              _buildScaleSlider(colorScheme),
-              const SizedBox(height: 20),
-              _buildSettingLabel(Icons.space_bar, 'Tile Overlap', colorScheme),
-              const SizedBox(height: 8),
-              _buildOverlapSlider(colorScheme),
-              const SizedBox(height: 16),
-              _buildAssemblyHintsToggle(colorScheme),
-              const SizedBox(height: 20),
-            ],
-          ),
+          _buildSettingLabel(Icons.auto_fix_high, 'Page Target', colorScheme),
+          const SizedBox(height: 8),
+          _buildPageTargetPresets(colorScheme),
+          const SizedBox(height: 20),
+          _buildSettingLabel(Icons.zoom_in, 'Scale', colorScheme),
+          const SizedBox(height: 8),
+          _buildScaleSlider(colorScheme),
+          const SizedBox(height: 20),
+          _buildSettingLabel(Icons.space_bar, 'Tile Overlap', colorScheme),
+          const SizedBox(height: 8),
+          _buildOverlapSlider(colorScheme),
+          const SizedBox(height: 16),
+          _buildAssemblyHintsToggle(colorScheme),
+          const SizedBox(height: 20),
 
-          // Page grid info
           _buildPageGridInfo(colorScheme),
         ],
       ),
@@ -505,8 +487,6 @@ class _PrintPreviewDialogState extends State<PrintPreviewDialog> {
     );
   }
 
-  // ── Preview Area ────────────────────────────────────────────────────────
-
   Widget _buildPreviewArea(ColorScheme colorScheme) {
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -534,8 +514,6 @@ class _PrintPreviewDialogState extends State<PrintPreviewDialog> {
     );
   }
 }
-
-// ── Toggle Chip ───────────────────────────────────────────────────────────
 
 class _ToggleChip extends StatelessWidget {
   const _ToggleChip({
@@ -599,8 +577,6 @@ class _ToggleChip extends StatelessWidget {
   }
 }
 
-// ── Bracket Preview with Tile Grid Overlay ────────────────────────────────
-
 class _BracketPreviewWithTileGrid extends StatelessWidget {
   const _BracketPreviewWithTileGrid({
     required this.bracketPdfBytes,
@@ -618,7 +594,6 @@ class _BracketPreviewWithTileGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Scale the preview down to fit within the available space.
     final double previewScale = min(
       maxPreviewWidth / canvasSize.width,
       maxPreviewHeight / canvasSize.height,
@@ -632,7 +607,6 @@ class _BracketPreviewWithTileGrid extends StatelessWidget {
       height: previewHeight,
       child: Stack(
         children: [
-          // The bracket miniature rendered from PDF bytes.
           Positioned.fill(
             child: ClipRRect(
               borderRadius: BorderRadius.circular(4),
@@ -648,7 +622,6 @@ class _BracketPreviewWithTileGrid extends StatelessWidget {
               ),
             ),
           ),
-          // Tile grid overlay.
           Positioned.fill(
             child: IgnorePointer(
               child: CustomPaint(
@@ -698,7 +671,6 @@ class _TileGridOverlayPainter extends CustomPainter {
 
     // For tile mode, only show grid overlay if actually multiple tiles
     if (grid.columns <= 1 && grid.rows <= 1) {
-      // Single page — draw a subtle border around the entire preview.
       final borderPaint = Paint()
         ..color = Colors.tealAccent.withAlpha(100)
         ..style = PaintingStyle.stroke
@@ -713,7 +685,6 @@ class _TileGridOverlayPainter extends CustomPainter {
       return;
     }
 
-    // Calculate tile dimensions in preview-space.
     final tileCoverage = settings.tileCanvasCoverage();
     final overlapCanvas = settings.tileOverlapCanvasPixels;
     final effectiveStepWidth = tileCoverage.width - overlapCanvas;
@@ -746,13 +717,11 @@ class _TileGridOverlayPainter extends CustomPainter {
           canvasH * scaleToPreviewY,
         );
 
-        // Alternating fill for visual distinction.
         if ((row + col) % 2 == 0) {
           canvas.drawRect(rect, fillPaint);
         }
         canvas.drawRect(rect, gridPaint);
 
-        // Page label.
         _drawPageLabel(canvas, size, 'Page $pageNum', rect.center);
       }
     }
@@ -771,7 +740,6 @@ class _TileGridOverlayPainter extends CustomPainter {
       textDirection: TextDirection.ltr,
     )..layout();
 
-    // Background pill.
     final pillRect = RRect.fromRectAndRadius(
       Rect.fromCenter(
         center: center,
@@ -796,11 +764,6 @@ class _TileGridOverlayPainter extends CustomPainter {
       settings != oldDelegate.settings;
 }
 
-// ── Page Target Chip ──────────────────────────────────────────────────────
-
-/// A compact chip that auto-computes the optimal scale to fit a bracket
-/// within a target page count. Highlights when the current layout already
-/// matches or beats the target.
 class _PageTargetChip extends StatelessWidget {
   const _PageTargetChip({
     required this.targetPageCount,

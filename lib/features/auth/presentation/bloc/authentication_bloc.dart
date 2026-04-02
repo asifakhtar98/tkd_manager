@@ -64,15 +64,10 @@ class AuthenticationBloc
   /// within the same app session.
   bool _emailConfirmationCodeConsumed = false;
 
-  // ───────────────────────────────────────────────────────────────────────────
-  // Subscription to Supabase auth state stream
-  // ───────────────────────────────────────────────────────────────────────────
-
   Future<void> _onSubscriptionRequested(
     AuthenticationSubscriptionRequested event,
     Emitter<AuthenticationState> emit,
   ) async {
-    // Cancel any previous subscription defensively.
     await _authStateSubscription?.cancel();
 
     _authStateSubscription = _authenticationRepository.authStateChanges.listen((
@@ -82,10 +77,6 @@ class AuthenticationBloc
         case AuthChangeEvent.initialSession:
         case AuthChangeEvent.signedIn:
         case AuthChangeEvent.tokenRefreshed:
-          // On web, detect if this sign-in was triggered by an email
-          // confirmation PKCE redirect (URL contains `?code=`). If so,
-          // route to the interstitial confirmation screen instead of the
-          // dashboard.
           if (_isEmailConfirmationRedirect) {
             _emailConfirmationCodeConsumed = true;
             add(const AuthenticationEvent.emailConfirmationDetected());
@@ -96,8 +87,6 @@ class AuthenticationBloc
           add(const AuthenticationEvent.statusChanged(user: null));
         case AuthChangeEvent.passwordRecovery:
           add(const AuthenticationEvent.passwordRecoveryDetected());
-        // Events we acknowledge but take no auth-routing action for.
-        // `userDeleted` is deprecated but must be matched since it's an enum.
         case AuthChangeEvent.userUpdated:
           if (data.session?.user != null) {
             add(AuthenticationEvent.statusChanged(user: data.session!.user));
@@ -119,17 +108,11 @@ class AuthenticationBloc
     if (!kIsWeb) return false;
 
     final bool isCorrectPath = Uri.base.path == '/email-confirmed';
-    // Validate it's an actual PKCE redirect via URL parameters
     final bool hasCodeAndType = Uri.base.queryParameters.containsKey('code');
-    // Mobile links might return parameters in the fragment, but we only target Web here: `#access_token=...`
     final bool hasFragment = Uri.base.fragment.contains('access_token=');
 
     return isCorrectPath && (hasCodeAndType || hasFragment);
   }
-
-  // ───────────────────────────────────────────────────────────────────────────
-  // Sign In
-  // ───────────────────────────────────────────────────────────────────────────
 
   Future<void> _onSignInRequested(
     AuthenticationSignInRequested event,
@@ -146,14 +129,9 @@ class AuthenticationBloc
       (failure) => emit(
         AuthenticationState.authenticationFailure(message: failure.message),
       ),
-      // Success: the auth-state stream listener will emit `authenticated`.
       (_) {},
     );
   }
-
-  // ───────────────────────────────────────────────────────────────────────────
-  // Sign Up
-  // ───────────────────────────────────────────────────────────────────────────
 
   Future<void> _onSignUpRequested(
     AuthenticationSignUpRequested event,
@@ -172,17 +150,13 @@ class AuthenticationBloc
         AuthenticationState.authenticationFailure(message: failure.message),
       ),
       (signUpResult) => switch (signUpResult) {
-        SignUpAuthenticated() => (), // Stream will fire `signedIn`.
+        SignUpAuthenticated() => (),
         SignUpConfirmationRequired() => emit(
           const AuthenticationState.emailConfirmationSent(),
         ),
       },
     );
   }
-
-  // ───────────────────────────────────────────────────────────────────────────
-  // Password Reset
-  // ───────────────────────────────────────────────────────────────────────────
 
   Future<void> _onPasswordResetRequested(
     AuthenticationPasswordResetRequested event,
@@ -216,22 +190,16 @@ class AuthenticationBloc
       (failure) => emit(
         AuthenticationState.authenticationFailure(message: failure.message),
       ),
-      // Password updated — repo guarantees `currentUser` exists if this succeeds.
       (_) {
         final User? currentUser = _authenticationRepository.currentUser;
         if (currentUser != null) {
           emit(AuthenticationState.authenticated(user: currentUser));
         } else {
-          // Fallback, though shouldn't be reached due to repo checks.
           emit(const AuthenticationState.unauthenticated());
         }
       },
     );
   }
-
-  // ───────────────────────────────────────────────────────────────────────────
-  // Sign Out
-  // ───────────────────────────────────────────────────────────────────────────
 
   Future<void> _onSignOutRequested(
     AuthenticationSignOutRequested event,
@@ -244,10 +212,6 @@ class AuthenticationBloc
     // prevents a redundant emission if the stream also fires signedOut.
     emit(const AuthenticationState.unauthenticated());
   }
-
-  // ───────────────────────────────────────────────────────────────────────────
-  // Internal: status changed from stream
-  // ───────────────────────────────────────────────────────────────────────────
 
   void _onStatusChanged(
     AuthenticationStatusChanged event,
@@ -267,22 +231,13 @@ class AuthenticationBloc
     emit(const AuthenticationState.passwordRecoveryInProgress());
   }
 
-  // ───────────────────────────────────────────────────────────────────────────
-  // Internal: email confirmation detected from PKCE redirect
-  // ───────────────────────────────────────────────────────────────────────────
-
   Future<void> _onEmailConfirmationDetected(
     AuthenticationEmailConfirmationDetected event,
     Emitter<AuthenticationState> emit,
   ) async {
-    // Destroy the auto-created session so the user must log in explicitly.
     await _authenticationRepository.signOut();
     emit(const AuthenticationState.emailJustConfirmed());
   }
-
-  // ───────────────────────────────────────────────────────────────────────────
-  // Cleanup
-  // ───────────────────────────────────────────────────────────────────────────
 
   @override
   Future<void> close() async {

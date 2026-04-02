@@ -69,28 +69,12 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
   /// Non-null when the most recent PDF generation attempt failed.
   String? _pdfGenerationError;
 
-  // ── Tournament Logo State ────────────────────────────────────────────────
-
-  /// Cached raw image bytes for the left tournament logo (PNG/JPEG).
-  /// Null when the logo URL is empty or loading failed.
   Uint8List? _leftLogoImageBytes;
-
-  /// Cached raw image bytes for the right tournament logo.
   Uint8List? _rightLogoImageBytes;
-
-  /// Aspect ratio (width / height) of the left logo, defaults to 1.0.
   double _leftLogoAspectRatio = 1.0;
-
-  /// Aspect ratio (width / height) of the right logo, defaults to 1.0.
   double _rightLogoAspectRatio = 1.0;
-
-  /// Whether logo loading has completed (regardless of success/failure).
   bool _logosLoadingComplete = false;
-
-  /// Which side panel tab is active (0 = matches, 1 = participants).
   int _activeSidePanelTab = 0;
-
-  /// Non-null while a PDF export is in progress.
   double? _pdfExportProgress;
   String _pdfExportStatusMessage = '';
 
@@ -111,7 +95,6 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
     );
   }
 
-  // ── Convenience accessors from snapshot ─────────────────────────────────────
   BracketFormat get _bracketFormat => widget.snapshot.format;
   bool get _includeThirdPlaceMatch => widget.snapshot.includeThirdPlaceMatch;
   BracketClassification get _classification => widget.snapshot.classification;
@@ -156,8 +139,6 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
     super.dispose();
   }
 
-  // ── Logo Loading ─────────────────────────────────────────────────────────
-
   /// Loads tournament logo images from their URLs, decodes them to extract
   /// aspect ratios, and caches raw bytes for PDF rendering.
   ///
@@ -186,8 +167,6 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
     _regeneratePdfFromCurrentState();
   }
 
-  /// Downloads an image from [url] and returns both the raw bytes and
-  /// the decoded aspect ratio. Returns `null` on any failure.
   Future<({Uint8List imageBytes, double aspectRatio})?>
   _loadImageBytesAndAspectRatioFromUrl(String url) async {
     if (url.isEmpty) return null;
@@ -195,7 +174,6 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
       final ByteData data = await NetworkAssetBundle(Uri.parse(url)).load('');
       final Uint8List imageBytes = data.buffer.asUint8List();
 
-      // Decode image to get dimensions for aspect ratio.
       final completer = Completer<ImageInfo>();
       final imageStream = MemoryImage(
         imageBytes,
@@ -315,12 +293,6 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
     );
   }
 
-  // ════════════════════════════════════════════════════════════════════════
-  // EXPORT METHODS
-  // ════════════════════════════════════════════════════════════════════════
-
-  /// Single-page PDF export — fits everything on one page, scaled to fit.
-  /// Ideal for quick printing on a standard page format (A4).
   Future<void> _exportSinglePagePdf() async {
     _updateExportProgress(0.0, 'Preparing single-page export…');
     await Future<void>.delayed(Duration.zero);
@@ -410,7 +382,6 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
 
     if (confirmedSettings == null || !mounted) return;
 
-    // Generate the export PDF based on confirmed settings.
     _updateExportProgress(0.0, 'Generating export PDF…');
     await Future<void>.delayed(Duration.zero);
 
@@ -420,12 +391,8 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
       if (!mounted) return;
 
       if (confirmedSettings.fitMode == PrintFitMode.fitToPage) {
-        // Single-page export — use the same bytes we already have.
         exportPdfBytes = previewPdfBytes;
       } else {
-        // Tiled export — generate multi-page PDF.
-        // Read theme state before the async gap to avoid
-        // using BuildContext across awaits.
         final themeSelectionState = context
             .read<BracketThemeSelectionBloc>()
             .state;
@@ -480,13 +447,11 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
 
       if (!mounted) return;
 
-      // Read theme state before the async gap
       final themeSelectionState = context
           .read<BracketThemeSelectionBloc>()
           .state;
       final themeConfig = _resolveThemeConfigFromSelection(themeSelectionState);
 
-      // Use default tiled export settings (A4 landscape, 1x1 scale, 10mm overlap)
       const defaultSettings = PrintExportSettings();
 
       _updateExportProgress(0.5, 'Generating tiled PDF…');
@@ -548,16 +513,12 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
           if (current is! BracketLoadSuccess) return false;
           if (prev is! BracketLoadSuccess) return true;
 
-          // Fire when an error message appears.
           final hasNewErrorMessage =
               current.errorMessage != null &&
               current.errorMessage != prev.errorMessage;
 
-          // Fire when a save cycle completes (isSaving transitions false).
           final saveJustCompleted = prev.isSaving && !current.isSaving;
 
-          // Fire when bracket data changes (match results, undo/redo, etc.)
-          // so the PDF viewer updates to reflect the new state.
           final hasBracketDataChanged =
               current.result != prev.result ||
               current.participants != prev.participants;
@@ -569,7 +530,6 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
         listener: (context, state) {
           if (state is! BracketLoadSuccess) return;
 
-          // Handle save completion feedback.
           if (!state.isSaving && state.lastSaveTimestamp != null) {
             if (state.saveError != null) {
               ScaffoldMessenger.of(context).showSnackBar(
@@ -580,10 +540,8 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
                 ),
               );
             }
-            // Successful save is silent (auto-saves shouldn't spam the user).
           }
 
-          // Handle bracket operation errors.
           if (state.errorMessage != null) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -596,7 +554,6 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
             );
           }
 
-          // Regenerate PDF when bracket data changes.
           _regeneratePdfFromCurrentState();
         },
         builder: (context, state) {
@@ -714,7 +671,6 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
         return false;
       },
       listener: (context, selectionState) {
-        // Handle theme expired snackbar.
         if (selectionState.themeExpiredMessage != null) {
           ScaffoldMessenger.of(context)
             ..hideCurrentSnackBar()
@@ -730,13 +686,9 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
           );
         }
 
-        // Regenerate PDF when theme changes.
         _regeneratePdfFromCurrentState();
       },
       builder: (context, selectionState) {
-        // Removed clamping of side panel tab index since Theme tab is always available now.
-
-        // Generate initial PDF on first build if cache is empty.
         if (_cachedPdfBytes == null && _pdfGenerationError == null) {
           // Schedule generation after frame to avoid setState-in-build.
           WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -760,7 +712,6 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
               onPressed: _navigateBackToTournamentDetail,
             ),
             actions: [
-              // ── Single Page Export ──
               TextButton(
                 style: actionButtonStyle,
                 onPressed: _isExportingPdf ? null : _exportSinglePagePdf,
@@ -785,7 +736,6 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
 
               const SizedBox(width: 4),
 
-              // ── Tiled Export Preview ──
               TextButton(
                 style: actionButtonStyle,
                 onPressed: _isExportingPdf ? null : _showTiledExportPreview,
@@ -801,7 +751,6 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
 
               const SizedBox(width: 8),
 
-              // ── Open Side Panel ──
               IconButton(
                 icon: const Icon(Icons.menu_open),
                 tooltip: 'Open Side Panel',
@@ -818,7 +767,6 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // ── Undo ──
                   TextButton(
                     style: actionButtonStyle,
                     onPressed: canUndo
@@ -829,7 +777,6 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
                     child: const Text('Undo'),
                   ),
 
-                  // ── Redo ──
                   TextButton(
                     style: actionButtonStyle,
                     onPressed: canRedo
@@ -840,7 +787,6 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
                     child: const Text('Redo'),
                   ),
 
-                  // ── Replay / Stop ──
                   if (isReplayInProgress)
                     TextButton(
                       style: actionButtonStyle,
@@ -860,7 +806,6 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
                       child: const Text('Replay All'),
                     ),
 
-                  // ── History Drawer ──
                   TextButton(
                     style: actionButtonStyle,
                     onPressed: hasHistory
@@ -871,7 +816,6 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
 
                   const SizedBox(width: 8),
 
-                  // ── Edit Mode Toggle ──
                   TextButton(
                     style: TextButton.styleFrom(
                       foregroundColor: isEditModeEnabled
@@ -889,7 +833,6 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
 
                   const SizedBox(width: 8),
 
-                  // ── Regenerate ──
                   TextButton(
                     style: actionButtonStyle,
                     onPressed: () async {
@@ -924,14 +867,12 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
                     height: 24,
                     child: VerticalDivider(width: 16, color: Colors.white24),
                   ),
-                  // ── Save Status Indicator ──
                   _buildSaveStatusIndicator(
                     isSaving: isSaving,
                     hasUnsavedChanges: hasUnsavedChanges,
                     lastSaveTimestamp: lastSaveTimestamp,
                     saveError: saveError,
                   ),
-                  // ── Save Bracket ──
                   Tooltip(
                     message:
                         'Save explicitly to persist the current bracket state',
@@ -972,7 +913,6 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
                   targetHistoryIndex: targetIndex,
                 ),
               );
-              // Close the drawer after jumping.
               _scaffoldKey.currentState?.closeDrawer();
             },
           ),
@@ -1090,7 +1030,6 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
                   Expanded(
                     child: Column(
                       children: [
-                        // ── Edit mode info banner ──
                         if (isEditModeEnabled)
                           Container(
                             width: double.infinity,
@@ -1119,13 +1058,12 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
                               ],
                             ),
                           ),
-                        // ── Replay progress indicator ──
                         if (isReplayInProgress && actionHistory.isNotEmpty)
                           LinearProgressIndicator(
                             value: (historyPointer + 1) / actionHistory.length,
                             minHeight: 4,
                           ),
-                        // ── PDF Viewer ──
+
                         Expanded(
                           child: _pdfGenerationError != null
                               ? Center(
@@ -1207,7 +1145,6 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
                   ),
                 ],
               ),
-              // ── PDF export loading overlay ──
               if (_isExportingPdf)
                 Container(
                   color: Colors.black54,
@@ -1360,15 +1297,6 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
         'Unknown';
   }
 
-  // ── Save Status Indicator ──────────────────────────────────────────────────
-
-  /// Builds a compact save status widget for the bottom bar.
-  ///
-  /// Shows:
-  /// - "Saving…" with spinner during active save
-  /// - "Save failed" with error icon on save error
-  /// - "Saved ✓" with relative timestamp on last successful save
-  /// - Nothing when there's no save history and no unsaved changes
   Widget _buildSaveStatusIndicator({
     required bool isSaving,
     required bool hasUnsavedChanges,

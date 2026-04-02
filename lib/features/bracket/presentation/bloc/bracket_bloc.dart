@@ -57,25 +57,19 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
   final Uuid _uuid;
   final BracketSnapshotRepository _bracketSnapshotRepository;
 
-  /// The currently loaded bracket snapshot.
-  /// Required for save operations so we do not overwrite non-editable fields (label, classification).
   BracketSnapshot? _currentSnapshot;
 
   /// Caches the last generation request so [BracketRegenerateRequested] can
   /// replay it without the UI re-supplying all parameters.
   BracketGenerateRequested? _cachedGenerationRequest;
 
-  /// Timer driving animated replay playback.
   Timer? _replayTimer;
 
   /// The history pointer position saved before replay started, so we can
   /// restore it if replay is cancelled.
   int _preReplayHistoryPointer = -1;
 
-  /// Interval between replay steps.
   static const _replayStepDuration = Duration(milliseconds: 800);
-
-  // ── Generation ──────────────────────────────────────────────────────────────
 
   Future<void> _handleBracketGenerationRequested(
     BracketGenerateRequested event,
@@ -93,7 +87,6 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
     if (cachedRequest == null) return;
     _cancelReplayTimer();
 
-    // Shuffle participants for a fresh draw, respecting dojang separation.
     final shuffledParticipants = _participantShuffleService
         .shuffleParticipantsForBracketGeneration(
           participants: cachedRequest.participants,
@@ -106,21 +99,18 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
     await _executeBracketGeneration(shuffledRequest, emit);
   }
 
-  // ── Match result recording (with history push) ─────────────────────────────
-
   Future<void> _handleMatchResultRecorded(
     BracketMatchResultRecorded event,
     Emitter<BracketState> emit,
   ) async {
     final currentState = state;
     if (currentState is! BracketLoadSuccess) return;
-    if (currentState.isReplayInProgress) return; // Block during replay.
-    if (currentState.isEditModeEnabled) return; // Block during edit mode.
+    if (currentState.isReplayInProgress) return;
+    if (currentState.isEditModeEnabled) return;
 
     try {
       final updatedResult = _applyMatchResult(currentState.result, event);
 
-      // Build human-readable display label.
       final displayLabel = _buildActionDisplayLabel(
         event,
         currentState.result,
@@ -143,7 +133,6 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
         participantsSnapshot: currentState.participants,
       );
 
-      // Truncate any redo entries beyond the current pointer, then push.
       final truncatedHistory = currentState.historyPointer >= 0
           ? currentState.actionHistory.sublist(
               0,
@@ -164,7 +153,6 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
         ),
       );
 
-      // Auto-save after match result recording.
       await _triggerAutoSave(emit);
     } on ArgumentError catch (e) {
       emit(currentState.copyWith(errorMessage: e.message.toString()));
@@ -173,8 +161,6 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
     }
   }
 
-  // ── Undo ───────────────────────────────────────────────────────────────────
-
   void _handleUndoRequested(
     BracketUndoRequested event,
     Emitter<BracketState> emit,
@@ -182,7 +168,7 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
     final currentState = state;
     if (currentState is! BracketLoadSuccess) return;
     if (currentState.isReplayInProgress) return;
-    if (currentState.historyPointer < 0) return; // Already at initial state.
+    if (currentState.historyPointer < 0) return;
 
     final newPointer = currentState.historyPointer - 1;
     assert(
@@ -207,8 +193,6 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
     );
   }
 
-  // ── Redo ───────────────────────────────────────────────────────────────────
-
   void _handleRedoRequested(
     BracketRedoRequested event,
     Emitter<BracketState> emit,
@@ -217,7 +201,7 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
     if (currentState is! BracketLoadSuccess) return;
     if (currentState.isReplayInProgress) return;
     if (currentState.historyPointer >= currentState.actionHistory.length - 1) {
-      return; // Already at latest action.
+      return;
     }
 
     final newPointer = currentState.historyPointer + 1;
@@ -234,8 +218,6 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
     );
   }
 
-  // ── Replay ─────────────────────────────────────────────────────────────────
-
   void _handleReplayRequested(
     BracketReplayRequested event,
     Emitter<BracketState> emit,
@@ -247,7 +229,6 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
 
     _preReplayHistoryPointer = currentState.historyPointer;
 
-    // Reset to initial state and mark replay in progress.
     emit(
       currentState.copyWith(
         result: currentState.initialResult!,
@@ -260,7 +241,6 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
       ),
     );
 
-    // Start stepping through the history.
     _replayTimer = Timer.periodic(_replayStepDuration, (_) {
       add(const BracketEvent.replayStepAdvanced());
     });
@@ -279,7 +259,6 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
 
     final nextPointer = currentState.historyPointer + 1;
     if (nextPointer >= currentState.actionHistory.length) {
-      // Replay finished — stop at the last action.
       _cancelReplayTimer();
       emit(currentState.copyWith(isReplayInProgress: false));
       return;
@@ -305,7 +284,6 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
 
     _cancelReplayTimer();
 
-    // Restore to the position before replay started.
     final restoredPointer = _preReplayHistoryPointer;
     final restoredResult = restoredPointer >= 0
         ? currentState.actionHistory[restoredPointer].resultSnapshot
@@ -324,8 +302,6 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
       ),
     );
   }
-
-  // ── History jump ───────────────────────────────────────────────────────────
 
   void _handleHistoryJumpRequested(
     BracketHistoryJumpRequested event,
@@ -357,8 +333,6 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
     );
   }
 
-  // ── Edit mode toggle ──────────────────────────────────────────────────────
-
   void _handleEditModeToggled(
     BracketEditModeToggled event,
     Emitter<BracketState> emit,
@@ -369,7 +343,6 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
 
     final enabling = !currentState.isEditModeEnabled;
 
-    // When enabling edit mode, check if match results exist.
     if (enabling && _hasCompletedMatches(currentState)) {
       emit(
         currentState.copyWith(
@@ -384,8 +357,6 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
     emit(currentState.copyWith(isEditModeEnabled: enabling));
   }
 
-  // ── Participant slot swap ─────────────────────────────────────────────────
-
   Future<void> _handleParticipantSlotSwapped(
     BracketParticipantSlotSwapped event,
     Emitter<BracketState> emit,
@@ -395,13 +366,11 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
     if (!currentState.isEditModeEnabled) return;
     if (currentState.isReplayInProgress) return;
 
-    // Bug 4: Reject no-op self-swaps (same match + same slot).
     if (event.sourceMatchId == event.targetMatchId &&
         event.sourceSlotPosition == event.targetSlotPosition) {
       return;
     }
 
-    // Bug 4: Reject swaps where both slots reference the same participant.
     final sourceParticipantIdForGuard = _getParticipantIdForSlot(
       currentState.result,
       event.sourceMatchId,
@@ -417,7 +386,6 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
       return;
     }
 
-    // Block swaps when match results exist.
     if (_hasCompletedMatches(currentState)) {
       emit(
         currentState.copyWith(
@@ -437,7 +405,6 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
         targetSlotPosition: event.targetSlotPosition,
       );
 
-      // Build display label for history.
       final sourceParticipantId = _getParticipantIdForSlot(
         currentState.result,
         event.sourceMatchId,
@@ -492,7 +459,6 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
         ),
       );
 
-      // Auto-save after participant slot swap.
       await _triggerAutoSave(emit);
     } on ArgumentError catch (e) {
       emit(currentState.copyWith(errorMessage: e.message.toString()));
@@ -500,8 +466,6 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
       emit(currentState.copyWith(errorMessage: e.toString()));
     }
   }
-
-  // ── Participant details update ────────────────────────────────────────────
 
   Future<void> _handleParticipantDetailsUpdated(
     BracketParticipantDetailsUpdated event,
@@ -578,8 +542,6 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
     await _triggerAutoSave(emit);
   }
 
-  // ── Error dismiss ──────────────────────────────────────────────────────────
-
   void _handleErrorDismissed(
     BracketErrorDismissed event,
     Emitter<BracketState> emit,
@@ -588,8 +550,6 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
     if (currentState is! BracketLoadSuccess) return;
     emit(currentState.copyWith(errorMessage: null));
   }
-
-  // ── Generation execution ───────────────────────────────────────────────────
 
   Future<void> _executeBracketGeneration(
     BracketGenerateRequested req,
@@ -705,8 +665,6 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
       ),
     );
   }
-
-  // ── Helpers ────────────────────────────────────────────────────────────────
 
   /// Applies a match result to the given [BracketResult] and returns a new one.
   BracketResult _applyMatchResult(
@@ -898,8 +856,6 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
     return super.close();
   }
 
-  // ── Save Requested ──────────────────────────────────────────────────────────
-
   Future<void> _handleBracketSaveRequested(
     BracketSaveRequested event,
     Emitter<BracketState> emit,
@@ -907,8 +863,6 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
     if (state is! BracketLoadSuccess) return;
     await _executeSave(emit);
   }
-
-  // ── Consolidated Save Execution ────────────────────────────────────────────
 
   /// Performs the actual snapshot update to the database.
   ///
@@ -961,10 +915,7 @@ class BracketBloc extends Bloc<BracketEvent, BracketState> {
       (failure) {
         log('BracketBloc: Save failed — ${failure.message}');
         emit(
-          postAwaitState.copyWith(
-            isSaving: false,
-            saveError: failure.message,
-          ),
+          postAwaitState.copyWith(isSaving: false, saveError: failure.message),
         );
       },
       (persistedSnapshot) {

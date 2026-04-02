@@ -6,10 +6,6 @@ import 'package:tkd_saas/features/bracket/domain/entities/bracket_result.dart';
 
 part 'bracket_state.freezed.dart';
 
-// ─────────────────────────────────────────
-// State classes
-// ─────────────────────────────────────────
-
 @freezed
 sealed class BracketState with _$BracketState {
   const factory BracketState.initial() = BracketInitial;

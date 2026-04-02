@@ -13,8 +13,6 @@ import 'package:tkd_saas/features/setup_bracket/domain/entities/participant_enti
 /// Shared helper methods for building participant rows, junctions,
 /// connectors, and resolving feeder offsets. Used by [TieSheetLayoutEngine].
 mixin TieSheetLayoutHelperMixin {
-  // ── Participant helpers ────────────────────────────────────────────────
-
   ParticipantEntity? findParticipantById(
     String? id,
     List<ParticipantEntity> participants,
@@ -30,8 +28,6 @@ mixin TieSheetLayoutHelperMixin {
     double containerHeight,
     double fontSize,
   ) => containerY + (containerHeight - fontSize) / 2;
-
-  // ── Participant Row Layout ─────────────────────────────────────────────
 
   /// Computes layout data for a single participant row card.
   ParticipantRowLayoutData computeParticipantRowLayout({
@@ -279,8 +275,6 @@ mixin TieSheetLayoutHelperMixin {
     return idx;
   }
 
-  // ── Feeder Resolution ──────────────────────────────────────────────────
-
   Offset? resolveInputOffset({
     required MatchEntity match,
     required bool isTopSlot,
@@ -346,8 +340,6 @@ mixin TieSheetLayoutHelperMixin {
     }
     return null;
   }
-
-  // ── Junction Layout ────────────────────────────────────────────────────
 
   void computeJunctionLayout({
     required MatchEntity match,

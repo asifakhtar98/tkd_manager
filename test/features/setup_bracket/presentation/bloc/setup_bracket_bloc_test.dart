@@ -6,11 +6,7 @@ import 'package:tkd_saas/features/setup_bracket/domain/entities/participant_enti
 import 'package:tkd_saas/features/setup_bracket/presentation/bloc/setup_bracket_bloc.dart';
 import 'package:uuid/uuid.dart';
 
-// ── Fakes ─────────────────────────────────────────────────────────────────────
-
 class _MockStorage extends Mock implements Storage {}
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
 
 const _testTournamentId = 'test-tournament-id-001';
 
@@ -32,23 +28,19 @@ ParticipantEntity _buildParticipant({
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-
 void main() {
   late _MockStorage mockHydratedStorage;
 
   setUpAll(() {
     mockHydratedStorage = _MockStorage();
-    when(() => mockHydratedStorage.write(any(), any())).thenAnswer(
-      (_) async {},
-    );
+    when(
+      () => mockHydratedStorage.write(any(), any()),
+    ).thenAnswer((_) async {});
     when(() => mockHydratedStorage.read(any())).thenReturn(null);
     when(() => mockHydratedStorage.delete(any())).thenAnswer((_) async {});
     when(() => mockHydratedStorage.clear()).thenAnswer((_) async {});
     HydratedBloc.storage = mockHydratedStorage;
   });
-
-  // ── Initial state ──────────────────────────────────────────────────────────
 
   group('SetupBracketBloc — initial state', () {
     test('emits correct default values for a new tournament', () {
@@ -74,20 +66,16 @@ void main() {
     });
   });
 
-  // ── Storage key ────────────────────────────────────────────────────────────
-
   group('SetupBracketBloc — storage key', () {
-    test('id is scoped to tournamentId so different tournaments are isolated', () {
-      final setupBracketBloc = _createTestBloc();
-      expect(
-        setupBracketBloc.id,
-        equals('setup_bracket_$_testTournamentId'),
-      );
-      addTearDown(setupBracketBloc.close);
-    });
+    test(
+      'id is scoped to tournamentId so different tournaments are isolated',
+      () {
+        final setupBracketBloc = _createTestBloc();
+        expect(setupBracketBloc.id, equals('setup_bracket_$_testTournamentId'));
+        addTearDown(setupBracketBloc.close);
+      },
+    );
   });
-
-  // ── Participant added ──────────────────────────────────────────────────────
 
   group('SetupBracketParticipantAdded', () {
     test('appends participant to empty roster with seed 1', () {
@@ -111,29 +99,32 @@ void main() {
       addTearDown(setupBracketBloc.close);
     });
 
-    test('seed numbers increment sequentially for each added participant', () async {
-      final setupBracketBloc = _createTestBloc();
+    test(
+      'seed numbers increment sequentially for each added participant',
+      () async {
+        final setupBracketBloc = _createTestBloc();
 
-      setupBracketBloc.add(
-        const SetupBracketEvent.participantAdded(fullName: 'Alice'),
-      );
-      setupBracketBloc.add(
-        const SetupBracketEvent.participantAdded(fullName: 'Bob'),
-      );
-      setupBracketBloc.add(
-        const SetupBracketEvent.participantAdded(fullName: 'Charlie'),
-      );
+        setupBracketBloc.add(
+          const SetupBracketEvent.participantAdded(fullName: 'Alice'),
+        );
+        setupBracketBloc.add(
+          const SetupBracketEvent.participantAdded(fullName: 'Bob'),
+        );
+        setupBracketBloc.add(
+          const SetupBracketEvent.participantAdded(fullName: 'Charlie'),
+        );
 
-      await Future<void>.delayed(Duration.zero);
+        await Future<void>.delayed(Duration.zero);
 
-      final participants = setupBracketBloc.state.participants;
-      expect(participants.length, equals(3));
-      expect(participants[0].seedNumber, equals(1));
-      expect(participants[1].seedNumber, equals(2));
-      expect(participants[2].seedNumber, equals(3));
+        final participants = setupBracketBloc.state.participants;
+        expect(participants.length, equals(3));
+        expect(participants[0].seedNumber, equals(1));
+        expect(participants[1].seedNumber, equals(2));
+        expect(participants[2].seedNumber, equals(3));
 
-      addTearDown(setupBracketBloc.close);
-    });
+        addTearDown(setupBracketBloc.close);
+      },
+    );
 
     test('trims whitespace from full name', () async {
       final setupBracketBloc = _createTestBloc();
@@ -171,15 +162,14 @@ void main() {
     });
   });
 
-  // ── CSV import ─────────────────────────────────────────────────────────────
-
   group('SetupBracketParticipantsImportedFromCsv', () {
     test('parses three-column CSV correctly', () async {
       final setupBracketBloc = _createTestBloc();
 
       setupBracketBloc.add(
         const SetupBracketEvent.participantsImportedFromCsv(
-          csvRawText: 'John Doe, REG001, Tiger Dojang\nJane Smith, REG002, Dragon Club',
+          csvRawText:
+              'John Doe, REG001, Tiger Dojang\nJane Smith, REG002, Dragon Club',
         ),
       );
 
@@ -214,9 +204,7 @@ void main() {
       final setupBracketBloc = _createTestBloc();
 
       setupBracketBloc.add(
-        const SetupBracketEvent.participantsImportedFromCsv(
-          csvRawText: '   ',
-        ),
+        const SetupBracketEvent.participantsImportedFromCsv(csvRawText: '   '),
       );
 
       await Future<void>.delayed(Duration.zero);
@@ -243,8 +231,6 @@ void main() {
       addTearDown(setupBracketBloc.close);
     });
   });
-
-  // ── Participant removed ────────────────────────────────────────────────────
 
   group('SetupBracketParticipantRemoved', () {
     test('removes participant at given index and reseeds remaining', () async {
@@ -299,8 +285,6 @@ void main() {
     });
   });
 
-  // ── Participants cleared ───────────────────────────────────────────────────
-
   group('SetupBracketParticipantsCleared', () {
     test('empties the entire roster', () async {
       final setupBracketBloc = _createTestBloc();
@@ -321,8 +305,6 @@ void main() {
     });
   });
 
-  // ── Participants reordered ─────────────────────────────────────────────────
-
   group('SetupBracketParticipantsReordered', () {
     test('moves participant forwards and reseeds', () async {
       final setupBracketBloc = _createTestBloc();
@@ -341,8 +323,14 @@ void main() {
       await Future<void>.delayed(Duration.zero);
 
       final participants = setupBracketBloc.state.participants;
-      expect(participants.map((p) => p.fullName).toList(), equals(['B', 'C', 'D', 'A']));
-      expect(participants.map((p) => p.seedNumber).toList(), equals([1, 2, 3, 4]));
+      expect(
+        participants.map((p) => p.fullName).toList(),
+        equals(['B', 'C', 'D', 'A']),
+      );
+      expect(
+        participants.map((p) => p.seedNumber).toList(),
+        equals([1, 2, 3, 4]),
+      );
       addTearDown(setupBracketBloc.close);
     });
 
@@ -363,7 +351,10 @@ void main() {
       await Future<void>.delayed(Duration.zero);
 
       final participants = setupBracketBloc.state.participants;
-      expect(participants.map((p) => p.fullName).toList(), equals(['D', 'A', 'B', 'C']));
+      expect(
+        participants.map((p) => p.fullName).toList(),
+        equals(['D', 'A', 'B', 'C']),
+      );
       addTearDown(setupBracketBloc.close);
     });
 
@@ -377,22 +368,29 @@ void main() {
 
       // oldIndex out of range.
       setupBracketBloc.add(
-        const SetupBracketEvent.participantsReordered(oldIndex: 10, newIndex: 0),
+        const SetupBracketEvent.participantsReordered(
+          oldIndex: 10,
+          newIndex: 0,
+        ),
       );
       // Negative oldIndex.
       setupBracketBloc.add(
-        const SetupBracketEvent.participantsReordered(oldIndex: -1, newIndex: 0),
+        const SetupBracketEvent.participantsReordered(
+          oldIndex: -1,
+          newIndex: 0,
+        ),
       );
       await Future<void>.delayed(Duration.zero);
 
       // Roster unchanged.
       expect(setupBracketBloc.state.participants.length, equals(1));
-      expect(setupBracketBloc.state.participants.first.fullName, equals('Solo'));
+      expect(
+        setupBracketBloc.state.participants.first.fullName,
+        equals('Solo'),
+      );
       addTearDown(setupBracketBloc.close);
     });
   });
-
-  // ── Bracket format ─────────────────────────────────────────────────────────
 
   group('SetupBracketFormatChanged', () {
     test('updates selected format', () async {
@@ -413,31 +411,32 @@ void main() {
       addTearDown(setupBracketBloc.close);
     });
 
-    test('clears third place match when switching away from single-elimination', () async {
-      final setupBracketBloc = _createTestBloc();
+    test(
+      'clears third place match when switching away from single-elimination',
+      () async {
+        final setupBracketBloc = _createTestBloc();
 
-      // Enable third-place match first.
-      setupBracketBloc.add(
-        const SetupBracketEvent.thirdPlaceMatchToggled(isEnabled: true),
-      );
-      await Future<void>.delayed(Duration.zero);
+        // Enable third-place match first.
+        setupBracketBloc.add(
+          const SetupBracketEvent.thirdPlaceMatchToggled(isEnabled: true),
+        );
+        await Future<void>.delayed(Duration.zero);
 
-      expect(setupBracketBloc.state.isThirdPlaceMatchIncluded, isTrue);
+        expect(setupBracketBloc.state.isThirdPlaceMatchIncluded, isTrue);
 
-      // Switch to double elimination — third place match must be cleared.
-      setupBracketBloc.add(
-        const SetupBracketEvent.bracketFormatChanged(
-          newFormat: BracketFormat.doubleElimination,
-        ),
-      );
-      await Future<void>.delayed(Duration.zero);
+        // Switch to double elimination — third place match must be cleared.
+        setupBracketBloc.add(
+          const SetupBracketEvent.bracketFormatChanged(
+            newFormat: BracketFormat.doubleElimination,
+          ),
+        );
+        await Future<void>.delayed(Duration.zero);
 
-      expect(setupBracketBloc.state.isThirdPlaceMatchIncluded, isFalse);
-      addTearDown(setupBracketBloc.close);
-    });
+        expect(setupBracketBloc.state.isThirdPlaceMatchIncluded, isFalse);
+        addTearDown(setupBracketBloc.close);
+      },
+    );
   });
-
-  // ── Configuration toggles ──────────────────────────────────────────────────
 
   group('SetupBracketDojangSeparationToggled', () {
     test('toggles dojang separation flag', () async {
@@ -469,8 +468,6 @@ void main() {
     });
   });
 
-  // ── Classification ─────────────────────────────────────────────────────────
-
   group('SetupBracketClassificationUpdated', () {
     test('updates all three classification labels', () async {
       final setupBracketBloc = _createTestBloc();
@@ -486,66 +483,76 @@ void main() {
 
       expect(setupBracketBloc.state.bracketAgeCategoryLabel, equals('Junior'));
       expect(setupBracketBloc.state.bracketGenderLabel, equals('Male'));
-      expect(setupBracketBloc.state.bracketWeightDivisionLabel, equals('-58kg'));
+      expect(
+        setupBracketBloc.state.bracketWeightDivisionLabel,
+        equals('-58kg'),
+      );
       addTearDown(setupBracketBloc.close);
     });
   });
 
-  // ── Generation lifecycle ───────────────────────────────────────────────────
-
   group('SetupBracketGenerationDispatched', () {
-    test('sets isAwaitingBracketGeneration and stores pendingSnapshotId', () async {
-      final setupBracketBloc = _createTestBloc();
-      const fakeSnapshotId = 'snapshot-abc-123';
+    test(
+      'sets isAwaitingBracketGeneration and stores pendingSnapshotId',
+      () async {
+        final setupBracketBloc = _createTestBloc();
+        const fakeSnapshotId = 'snapshot-abc-123';
 
-      setupBracketBloc.add(
-        const SetupBracketEvent.bracketGenerationDispatched(
-          pendingSnapshotId: fakeSnapshotId,
-        ),
-      );
-      await Future<void>.delayed(Duration.zero);
+        setupBracketBloc.add(
+          const SetupBracketEvent.bracketGenerationDispatched(
+            pendingSnapshotId: fakeSnapshotId,
+          ),
+        );
+        await Future<void>.delayed(Duration.zero);
 
-      expect(setupBracketBloc.state.isAwaitingBracketGeneration, isTrue);
-      expect(setupBracketBloc.state.pendingSnapshotId, equals(fakeSnapshotId));
-      addTearDown(setupBracketBloc.close);
-    });
+        expect(setupBracketBloc.state.isAwaitingBracketGeneration, isTrue);
+        expect(
+          setupBracketBloc.state.pendingSnapshotId,
+          equals(fakeSnapshotId),
+        );
+        addTearDown(setupBracketBloc.close);
+      },
+    );
   });
 
   group('SetupBracketGenerationSucceeded', () {
-    test('resets state to fresh SetupBracketState preserving tournamentId', () async {
-      final setupBracketBloc = _createTestBloc();
+    test(
+      'resets state to fresh SetupBracketState preserving tournamentId',
+      () async {
+        final setupBracketBloc = _createTestBloc();
 
-      // Simulate a full bracket setup session.
-      setupBracketBloc.add(
-        const SetupBracketEvent.participantAdded(fullName: 'Athlete One'),
-      );
-      setupBracketBloc.add(
-        const SetupBracketEvent.classificationUpdated(
-          ageCategoryLabel: 'Senior',
-          genderLabel: 'Female',
-          weightDivisionLabel: '-68kg',
-        ),
-      );
-      setupBracketBloc.add(
-        const SetupBracketEvent.bracketGenerationDispatched(
-          pendingSnapshotId: 'snap-001',
-        ),
-      );
-      await Future<void>.delayed(Duration.zero);
+        // Simulate a full bracket setup session.
+        setupBracketBloc.add(
+          const SetupBracketEvent.participantAdded(fullName: 'Athlete One'),
+        );
+        setupBracketBloc.add(
+          const SetupBracketEvent.classificationUpdated(
+            ageCategoryLabel: 'Senior',
+            genderLabel: 'Female',
+            weightDivisionLabel: '-68kg',
+          ),
+        );
+        setupBracketBloc.add(
+          const SetupBracketEvent.bracketGenerationDispatched(
+            pendingSnapshotId: 'snap-001',
+          ),
+        );
+        await Future<void>.delayed(Duration.zero);
 
-      setupBracketBloc.add(
-        const SetupBracketEvent.bracketGenerationSucceeded(),
-      );
-      await Future<void>.delayed(Duration.zero);
+        setupBracketBloc.add(
+          const SetupBracketEvent.bracketGenerationSucceeded(),
+        );
+        await Future<void>.delayed(Duration.zero);
 
-      final stateAfterSuccess = setupBracketBloc.state;
-      expect(stateAfterSuccess.tournamentId, equals(_testTournamentId));
-      expect(stateAfterSuccess.participants, isEmpty);
-      expect(stateAfterSuccess.isAwaitingBracketGeneration, isFalse);
-      expect(stateAfterSuccess.pendingSnapshotId, isNull);
-      expect(stateAfterSuccess.bracketAgeCategoryLabel, isEmpty);
-      addTearDown(setupBracketBloc.close);
-    });
+        final stateAfterSuccess = setupBracketBloc.state;
+        expect(stateAfterSuccess.tournamentId, equals(_testTournamentId));
+        expect(stateAfterSuccess.participants, isEmpty);
+        expect(stateAfterSuccess.isAwaitingBracketGeneration, isFalse);
+        expect(stateAfterSuccess.pendingSnapshotId, isNull);
+        expect(stateAfterSuccess.bracketAgeCategoryLabel, isEmpty);
+        addTearDown(setupBracketBloc.close);
+      },
+    );
   });
 
   group('SetupBracketGenerationFailed', () {
@@ -562,9 +569,7 @@ void main() {
       );
       await Future<void>.delayed(Duration.zero);
 
-      setupBracketBloc.add(
-        const SetupBracketEvent.bracketGenerationFailed(),
-      );
+      setupBracketBloc.add(const SetupBracketEvent.bracketGenerationFailed());
       await Future<void>.delayed(Duration.zero);
 
       final stateAfterFailure = setupBracketBloc.state;
@@ -576,37 +581,41 @@ void main() {
     });
   });
 
-  // ── Convenience getters ────────────────────────────────────────────────────
-
   group('SetupBracketState convenience getters', () {
-    test('hasEnoughParticipantsToGenerate is false for 0 and 1 participants', () async {
-      final setupBracketBloc = _createTestBloc();
+    test(
+      'hasEnoughParticipantsToGenerate is false for 0 and 1 participants',
+      () async {
+        final setupBracketBloc = _createTestBloc();
 
-      expect(setupBracketBloc.state.hasEnoughParticipantsToGenerate, isFalse);
+        expect(setupBracketBloc.state.hasEnoughParticipantsToGenerate, isFalse);
 
-      setupBracketBloc.add(
-        const SetupBracketEvent.participantAdded(fullName: 'Solo Player'),
-      );
-      await Future<void>.delayed(Duration.zero);
+        setupBracketBloc.add(
+          const SetupBracketEvent.participantAdded(fullName: 'Solo Player'),
+        );
+        await Future<void>.delayed(Duration.zero);
 
-      expect(setupBracketBloc.state.hasEnoughParticipantsToGenerate, isFalse);
-      addTearDown(setupBracketBloc.close);
-    });
+        expect(setupBracketBloc.state.hasEnoughParticipantsToGenerate, isFalse);
+        addTearDown(setupBracketBloc.close);
+      },
+    );
 
-    test('hasEnoughParticipantsToGenerate is true with 2+ participants', () async {
-      final setupBracketBloc = _createTestBloc();
+    test(
+      'hasEnoughParticipantsToGenerate is true with 2+ participants',
+      () async {
+        final setupBracketBloc = _createTestBloc();
 
-      setupBracketBloc.add(
-        const SetupBracketEvent.participantAdded(fullName: 'Player One'),
-      );
-      setupBracketBloc.add(
-        const SetupBracketEvent.participantAdded(fullName: 'Player Two'),
-      );
-      await Future<void>.delayed(Duration.zero);
+        setupBracketBloc.add(
+          const SetupBracketEvent.participantAdded(fullName: 'Player One'),
+        );
+        setupBracketBloc.add(
+          const SetupBracketEvent.participantAdded(fullName: 'Player Two'),
+        );
+        await Future<void>.delayed(Duration.zero);
 
-      expect(setupBracketBloc.state.hasEnoughParticipantsToGenerate, isTrue);
-      addTearDown(setupBracketBloc.close);
-    });
+        expect(setupBracketBloc.state.hasEnoughParticipantsToGenerate, isTrue);
+        addTearDown(setupBracketBloc.close);
+      },
+    );
 
     test('isDuplicateParticipantName is case-insensitive', () async {
       final setupBracketBloc = _createTestBloc();
@@ -631,8 +640,6 @@ void main() {
       addTearDown(setupBracketBloc.close);
     });
   });
-
-  // ── JSON round-trip (hydration) ────────────────────────────────────────────
 
   group('SetupBracketBloc JSON hydration round-trip', () {
     test('toJson / fromJson preserves all state fields', () {
@@ -667,10 +674,7 @@ void main() {
         restoredState.participants.length,
         equals(originalState.participants.length),
       );
-      expect(
-        restoredState.participants[0].fullName,
-        equals('Athlete A'),
-      );
+      expect(restoredState.participants[0].fullName, equals('Athlete A'));
       expect(
         restoredState.participants[1].schoolOrDojangName,
         equals('Tiger Dojang'),

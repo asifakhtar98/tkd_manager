@@ -103,7 +103,6 @@ class _ActivateSoftwareContent extends StatelessWidget {
         return LayoutBuilder(
           builder: (context, constraints) {
             if (constraints.maxWidth > 800) {
-              // Wide layout (Web/Desktop)
               return Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -113,7 +112,6 @@ class _ActivateSoftwareContent extends StatelessWidget {
                 ],
               );
             } else {
-              // Mobile layout
               return const Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -262,7 +260,7 @@ class _ActivationFormSectionState extends State<_ActivationFormSection> {
                 ),
                 const SizedBox(height: 24),
 
-                // Calculator Buttons
+                const SpacerOrSizedBox(),
                 const Text(
                   'Select Activation Period',
                   style: TextStyle(fontWeight: FontWeight.w600),
@@ -341,8 +339,6 @@ class _ActivationFormSectionState extends State<_ActivationFormSection> {
                 ],
 
                 const SpacerOrSizedBox(),
-
-                // Pricing Breakdown Table
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
@@ -385,8 +381,6 @@ class _ActivationFormSectionState extends State<_ActivationFormSection> {
                 ),
 
                 const SpacerOrSizedBox(),
-
-                // Contact Details
                 const Text(
                   'Contact Information',
                   style: TextStyle(fontWeight: FontWeight.w600),
@@ -407,8 +401,6 @@ class _ActivationFormSectionState extends State<_ActivationFormSection> {
                 ),
 
                 const SizedBox(height: 32),
-
-                // Submit Action
                 ElevatedButton(
                   onPressed:
                       state.isLoading ||

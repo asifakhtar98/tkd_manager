@@ -8,7 +8,6 @@ import 'package:tkd_saas/features/bracket/domain/services/match_progression_serv
 /// copies via `copyWith`. The returned list preserves the original order.
 @LazySingleton(as: MatchProgressionService)
 class MatchProgressionServiceImplementation implements MatchProgressionService {
-  /// Maximum consecutive auto-advancement walkovers before an error.
   static const _maxByeDepth = 3;
 
   @override
@@ -20,7 +19,6 @@ class MatchProgressionServiceImplementation implements MatchProgressionService {
     int? blueScore,
     int? redScore,
   }) {
-    // Build a mutable indexed map for efficient updates.
     final matchesById = {
       for (final matchEntity in matches) matchEntity.id: matchEntity,
     };
@@ -33,7 +31,6 @@ class MatchProgressionServiceImplementation implements MatchProgressionService {
       throw ArgumentError('Match $matchId is already completed');
     }
 
-    // F5: Validate winnerId belongs to this match.
     if (winnerId != targetMatch.participantBlueId &&
         winnerId != targetMatch.participantRedId) {
       throw ArgumentError(
@@ -41,13 +38,11 @@ class MatchProgressionServiceImplementation implements MatchProgressionService {
       );
     }
 
-    // Determine loser.
     final defeatedParticipantId = _determineDefeatedParticipantId(
       targetMatch,
       winnerId,
     );
 
-    // 1. Mark match completed.
     final now = DateTime.now();
     matchesById[matchId] = targetMatch.copyWith(
       winnerId: winnerId,
@@ -58,7 +53,6 @@ class MatchProgressionServiceImplementation implements MatchProgressionService {
       redScore: redScore,
     );
 
-    // 2. Advance winner to next match.
     if (targetMatch.winnerAdvancesToMatchId != null) {
       _placeParticipantIntoNextMatch(
         matchesById: matchesById,
@@ -68,7 +62,6 @@ class MatchProgressionServiceImplementation implements MatchProgressionService {
       );
     }
 
-    // 3. Drop loser to LB match (double elimination).
     if (targetMatch.loserAdvancesToMatchId != null &&
         defeatedParticipantId != null) {
       _placeParticipantIntoNextMatch(
@@ -79,14 +72,11 @@ class MatchProgressionServiceImplementation implements MatchProgressionService {
       );
     }
 
-    // 4. Auto-advance any resulting byes (cascading).
     _cascadeByeAdvancements(matchesById, depth: 0);
 
-    // Return the list in original order.
     return matches.map((matchEntity) => matchesById[matchEntity.id]!).toList();
   }
 
-  /// Determines which participant lost the match given the [winnerId].
   String? _determineDefeatedParticipantId(MatchEntity match, String winnerId) {
     if (match.participantBlueId == winnerId) {
       return match.participantRedId;
@@ -117,7 +107,6 @@ class MatchProgressionServiceImplementation implements MatchProgressionService {
     final targetMatch = matchesById[intoMatchId];
     if (targetMatch == null) return;
 
-    // Find all matches whose winner or loser routes to this target.
     final feederMatches =
         matchesById.values
             .where(
@@ -127,19 +116,15 @@ class MatchProgressionServiceImplementation implements MatchProgressionService {
             )
             .toList()
           ..sort((a, b) {
-            // F4: compound sort by (roundNumber, matchNumberInRound)
             final roundComparison = a.roundNumber.compareTo(b.roundNumber);
             if (roundComparison != 0) return roundComparison;
             return a.matchNumberInRound.compareTo(b.matchNumberInRound);
           });
 
-    // Determine slot based on feeder ordering.
     bool assignToBlueSlot;
     if (feederMatches.length >= 2) {
-      // First feeder (earlier round or lower matchNumber) → Blue.
       assignToBlueSlot = feederMatches.first.id == sourceMatchId;
     } else {
-      // Single feeder or fallback: fill whichever slot is empty.
       assignToBlueSlot = targetMatch.participantBlueId == null;
     }
 
@@ -175,7 +160,6 @@ class MatchProgressionServiceImplementation implements MatchProgressionService {
       final hasBlueParticipant = currentMatch.participantBlueId != null;
       final hasRedParticipant = currentMatch.participantRedId != null;
 
-      // Both slots empty + no pending feeders → phantom match, mark completed.
       if (!hasBlueParticipant &&
           !hasRedParticipant &&
           !_hasPendingFeederMatch(matchesById, matchId)) {
@@ -236,7 +220,6 @@ class MatchProgressionServiceImplementation implements MatchProgressionService {
     }
   }
 
-  /// Returns true if there is at least one pending match that feeds into [matchId].
   bool _hasPendingFeederMatch(
     Map<String, MatchEntity> matchesById,
     String matchId,

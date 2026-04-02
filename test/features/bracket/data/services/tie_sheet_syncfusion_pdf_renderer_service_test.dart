@@ -221,10 +221,6 @@ void main() {
     document.dispose();
   }
 
-  // ════════════════════════════════════════════════════════════════════════════
-  // SINGLE-PAGE SE BRACKET RENDERING
-  // ════════════════════════════════════════════════════════════════════════════
-
   group('TieSheetSyncfusionPdfRendererService — Single Elimination', () {
     for (final playerCount in [2, 3, 4, 5, 8, 14, 16]) {
       test(
@@ -247,10 +243,6 @@ void main() {
     });
   });
 
-  // ════════════════════════════════════════════════════════════════════════════
-  // SINGLE-PAGE DE BRACKET RENDERING
-  // ════════════════════════════════════════════════════════════════════════════
-
   group('TieSheetSyncfusionPdfRendererService — Double Elimination', () {
     for (final playerCount in [2, 4, 5, 8]) {
       test(
@@ -264,10 +256,6 @@ void main() {
       );
     }
   });
-
-  // ════════════════════════════════════════════════════════════════════════════
-  // WITH MATCH RESULTS
-  // ════════════════════════════════════════════════════════════════════════════
 
   group('TieSheetSyncfusionPdfRendererService — With Match Results', () {
     test('renders valid PDF for 8-player bracket with R1 results', () {
@@ -298,10 +286,6 @@ void main() {
     });
   });
 
-  // ════════════════════════════════════════════════════════════════════════════
-  // PRINT MODE THEME
-  // ════════════════════════════════════════════════════════════════════════════
-
   group('TieSheetSyncfusionPdfRendererService — Print Mode Theme', () {
     test('renders valid PDF with print preset theme', () {
       final result = renderSingleEliminationBracketPdf(
@@ -311,10 +295,6 @@ void main() {
       assertValidSinglePagePdf(result.pdfBytes, result.layoutResult);
     });
   });
-
-  // ════════════════════════════════════════════════════════════════════════════
-  // TILED MULTI-PAGE EXPORT
-  // ════════════════════════════════════════════════════════════════════════════
 
   group('TieSheetSyncfusionPdfRendererService — Tiled Export', () {
     test('generates multi-page tiled PDF for 8-player bracket', () {
@@ -395,10 +375,6 @@ void main() {
     });
   });
 
-  // ════════════════════════════════════════════════════════════════════════════
-  // CANVAS SIZE CONSISTENCY
-  // ════════════════════════════════════════════════════════════════════════════
-
   group('TieSheetSyncfusionPdfRendererService — Canvas Size Scaling', () {
     test('larger player counts produce proportionally wider PDFs', () {
       final result4 = renderSingleEliminationBracketPdf(playerCount: 4);
@@ -428,10 +404,6 @@ void main() {
       );
     });
   });
-
-  // ════════════════════════════════════════════════════════════════════════════
-  // LAYOUT STRUCTURAL ASSERTIONS
-  // ════════════════════════════════════════════════════════════════════════════
 
   group('TieSheetSyncfusionPdfRendererService — Layout Structure', () {
     test(
@@ -489,10 +461,6 @@ void main() {
       );
     });
   });
-
-  // ════════════════════════════════════════════════════════════════════════════
-  // LOGO RENDERING (without actual image bytes)
-  // ════════════════════════════════════════════════════════════════════════════
 
   group('TieSheetSyncfusionPdfRendererService — Logo Support', () {
     test('renders valid PDF with logo bounding rects in layout', () {
@@ -594,10 +562,6 @@ void main() {
     });
   });
 
-  // ════════════════════════════════════════════════════════════════════════════
-  // IDEMPOTENCY
-  // ════════════════════════════════════════════════════════════════════════════
-
   group('TieSheetSyncfusionPdfRendererService — Idempotency', () {
     test('rendering the same layout twice produces identical PDF bytes', () {
       final participants = createTestParticipants(4);
@@ -648,10 +612,6 @@ void main() {
     });
   });
 }
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// HELPERS
-// ═══════════════════════════════════════════════════════════════════════════════
 
 /// Records blue-corner winners for all eligible matches in [roundNumber].
 List<MatchEntity> _recordBlueWinnersForRound(

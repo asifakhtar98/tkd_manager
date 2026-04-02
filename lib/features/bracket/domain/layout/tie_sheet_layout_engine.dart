@@ -49,7 +49,6 @@ class TieSheetLayoutEngine with TieSheetLayoutHelperMixin {
       hasLogos: hasLogos,
     );
 
-    // Internal mutable state for offset tracking during layout.
     final nodeOffsets = <String, Offset>{};
     final participantRows = <ParticipantRowLayoutData>[];
     final matchLayouts = <MatchLayoutData>[];
@@ -74,7 +73,6 @@ class TieSheetLayoutEngine with TieSheetLayoutHelperMixin {
             includeThirdPlaceMatch,
           );
 
-    // Layout header
     final headerData = _computeHeaderLayout(
       tournament: tournament,
       classification: classification,
@@ -88,7 +86,6 @@ class TieSheetLayoutEngine with TieSheetLayoutHelperMixin {
       rightLogoAspectRatio: rightLogoAspectRatio,
     );
 
-    // Layout bracket body
     double headerBottom =
         headerData.classificationInfoRowBoundingRect.bottom + 12;
 
@@ -124,7 +121,6 @@ class TieSheetLayoutEngine with TieSheetLayoutHelperMixin {
       );
     }
 
-    // Layout medal table
     final medalData = _computeMedalTableLayout(
       canvasSize: canvasSize,
       dims: dims,
@@ -149,8 +145,6 @@ class TieSheetLayoutEngine with TieSheetLayoutHelperMixin {
       sectionLabelLayoutDataList: sectionLabels,
     );
   }
-
-  // ── Canvas Size ──────────────────────────────────────────────────────────
 
   Size _computeSeCanvasSize(
     List<MatchEntity> matches,
@@ -282,8 +276,6 @@ class TieSheetLayoutEngine with TieSheetLayoutHelperMixin {
     );
   }
 
-  // ── Header Layout ────────────────────────────────────────────────────────
-
   HeaderLayoutData _computeHeaderLayout({
     required TournamentEntity tournament,
     required BracketClassification classification,
@@ -370,7 +362,6 @@ class TieSheetLayoutEngine with TieSheetLayoutHelperMixin {
     }
     y += bannerH + 12;
 
-    // Info row
     final infoTop = y;
     final infoBottom = y + dims.subHeaderRowHeight;
     final infoRect = Rect.fromLTRB(
@@ -453,8 +444,6 @@ class TieSheetLayoutEngine with TieSheetLayoutHelperMixin {
       classificationCellTextLayoutList: cellTexts,
     );
   }
-
-  // ── SE Layout ──────────────────────────────────────────────────────────
 
   void _computeSeLayout({
     required List<MatchEntity> matches,
@@ -897,8 +886,6 @@ class TieSheetLayoutEngine with TieSheetLayoutHelperMixin {
     );
   }
 
-  // ── DE Layout ──────────────────────────────────────────────────────────
-
   void _computeDeLayout({
     required List<MatchEntity> matches,
     required List<ParticipantEntity> participants,
@@ -931,7 +918,6 @@ class TieSheetLayoutEngine with TieSheetLayoutHelperMixin {
     final wbByRound = TieSheetLayoutDimensionCalculator.groupByRound(wbMatches);
     final lbByRound = TieSheetLayoutDimensionCalculator.groupByRound(lbMatches);
 
-    // WB section label
     sectionLabels.add(
       _computeSectionLabel(
         'WINNERS BRACKET',
@@ -980,7 +966,6 @@ class TieSheetLayoutEngine with TieSheetLayoutHelperMixin {
       }
     }
 
-    // LB section label
     final wbH = TieSheetLayoutDimensionCalculator.computeOneSidedHeight(
       roundOneMatches: wbR1,
       dimensions: dims,
@@ -1036,7 +1021,6 @@ class TieSheetLayoutEngine with TieSheetLayoutHelperMixin {
       }
     }
 
-    // Grand Finals
     if (gfMatches.isNotEmpty) {
       final gfX =
           dims.canvasMargin +
@@ -1342,8 +1326,6 @@ class TieSheetLayoutEngine with TieSheetLayoutHelperMixin {
     );
   }
 
-  // ── Medal Table Layout ─────────────────────────────────────────────────
-
   MedalTableLayoutData _computeMedalTableLayout({
     required Size canvasSize,
     required TieSheetLayoutDimensions dims,
@@ -1385,7 +1367,6 @@ class TieSheetLayoutEngine with TieSheetLayoutHelperMixin {
               includeThirdPlaceMatch: includeThirdPlaceMatch,
             );
 
-    // Map placements to row indices
     final rowWinners = <int, ParticipantEntity>{};
     final usedBronzeRows = <int>{};
     for (final placement in resolvedPlacements) {
@@ -1398,23 +1379,21 @@ class TieSheetLayoutEngine with TieSheetLayoutHelperMixin {
         case 2:
           rowIndex = 1;
         case 3:
-          // Find first unused bronze row (2 or 3), prioritizing row 2
           if (!usedBronzeRows.contains(2)) {
             rowIndex = 2;
           } else if (!usedBronzeRows.contains(3)) {
             rowIndex = 3;
           } else {
-            continue; // Both bronze rows already used
+            continue;
           }
           usedBronzeRows.add(rowIndex);
         case 4:
-          // 4th place gets whatever unused bronze row remains, or skip
           if (!usedBronzeRows.contains(2)) {
             rowIndex = 2;
           } else if (!usedBronzeRows.contains(3)) {
             rowIndex = 3;
           } else {
-            continue; // Both bronze rows already used by 3rd places
+            continue;
           }
           usedBronzeRows.add(rowIndex);
       }

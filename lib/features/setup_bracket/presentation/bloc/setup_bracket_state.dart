@@ -24,7 +24,8 @@ abstract class SetupBracketState with _$SetupBracketState {
     @Default([]) List<ParticipantEntity> participants,
 
     /// The elimination format selected for bracket generation.
-    @Default(BracketFormat.singleElimination) BracketFormat selectedBracketFormat,
+    @Default(BracketFormat.singleElimination)
+    BracketFormat selectedBracketFormat,
 
     /// Whether participants from the same dojang/school are auto-separated
     /// in the bracket seeding order.
@@ -53,8 +54,6 @@ abstract class SetupBracketState with _$SetupBracketState {
 
   factory SetupBracketState.fromJson(Map<String, dynamic> json) =>
       _$SetupBracketStateFromJson(json);
-
-  // ── Convenience getters ──────────────────────────────────────────────────
 
   static const int minimumParticipantsRequiredForGeneration = 2;
 

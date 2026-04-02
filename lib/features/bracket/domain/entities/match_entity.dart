@@ -154,10 +154,6 @@ abstract class MatchEntity with _$MatchEntity {
   factory MatchEntity.fromJson(Map<String, dynamic> json) =>
       _$MatchEntityFromJson(json);
 
-  // ─────────────────────────────────────────
-  // Convenience Getters
-  // ─────────────────────────────────────────
-
   /// True when the match has a recorded winner.
   bool get hasWinner => winnerId != null;
 

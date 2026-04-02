@@ -28,7 +28,6 @@ class BracketHistoryDrawer extends StatelessWidget {
       width: 340,
       child: Column(
         children: [
-          // ── Header ──
           Container(
             width: double.infinity,
             padding: const EdgeInsets.fromLTRB(20, 48, 20, 16),
@@ -60,7 +59,6 @@ class BracketHistoryDrawer extends StatelessWidget {
             ),
           ),
 
-          // ── Initial State Entry ──
           _HistoryEntryTile(
             index: -1,
             label: 'Bracket Generated (Initial State)',
@@ -72,7 +70,6 @@ class BracketHistoryDrawer extends StatelessWidget {
 
           const Divider(height: 1),
 
-          // ── Action Entries ──
           Expanded(
             child: actionHistory.isEmpty
                 ? Center(
@@ -191,7 +188,6 @@ class _HistoryEntryTile extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ── Step indicator ──
               Container(
                 width: 28,
                 height: 28,
@@ -225,7 +221,6 @@ class _HistoryEntryTile extends StatelessWidget {
               ),
               const SizedBox(width: 12),
 
-              // ── Label and timestamp ──
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -256,7 +251,6 @@ class _HistoryEntryTile extends StatelessWidget {
                 ),
               ),
 
-              // ── Current marker ──
               if (isCurrentPosition)
                 Padding(
                   padding: const EdgeInsets.only(left: 8),

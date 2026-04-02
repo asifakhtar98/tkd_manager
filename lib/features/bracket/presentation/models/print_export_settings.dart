@@ -4,9 +4,6 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'print_export_settings.freezed.dart';
 
-// ── Paper Size ──────────────────────────────────────────────────────────────
-
-/// Standard paper sizes supported for bracket PDF export.
 enum PaperSize {
   a4('A4', 595.28, 841.89),
   letter('Letter', 612.0, 792.0),
@@ -25,9 +22,6 @@ enum PaperSize {
   final double heightPoints;
 }
 
-// ── Page Orientation ────────────────────────────────────────────────────────
-
-/// Orientation for printed pages.
 enum PageOrientation {
   portrait('Portrait'),
   landscape('Landscape');
@@ -36,9 +30,6 @@ enum PageOrientation {
   final String label;
 }
 
-// ── Fit Mode ────────────────────────────────────────────────────────────────
-
-/// How the bracket image is mapped onto PDF pages.
 enum PrintFitMode {
   /// Shrink the entire bracket to fit within a single page.
   fitToPage('Fit to Page'),
@@ -51,13 +42,6 @@ enum PrintFitMode {
   final String label;
 }
 
-// ── Print Export Settings ───────────────────────────────────────────────────
-
-/// Immutable configuration for bracket PDF export.
-///
-/// Encapsulates paper size, orientation, fit mode, scale factor, and tile
-/// overlap. Provides computed helpers for printable area, tile grid
-/// dimensions, and total page count.
 @freezed
 abstract class PrintExportSettings with _$PrintExportSettings {
   const PrintExportSettings._();
@@ -84,17 +68,11 @@ abstract class PrintExportSettings with _$PrintExportSettings {
     @Default(true) bool showTileAssemblyHints,
   }) = _PrintExportSettings;
 
-  // ── Millimeter ↔ point conversion ──
-
-  /// Millimeters to PDF points.
   static double mmToPoints(double mm) => mm * (72.0 / 25.4);
 
   /// Tile overlap in PDF points.
   double get tileOverlapPoints => mmToPoints(tileOverlapMillimeters);
 
-  // ── Computed page dimensions ──
-
-  /// Full page size in PDF points, accounting for orientation.
   ({double width, double height}) get pageSize {
     if (orientation == PageOrientation.landscape) {
       return (width: paperSize.heightPoints, height: paperSize.widthPoints);
@@ -111,10 +89,6 @@ abstract class PrintExportSettings with _$PrintExportSettings {
     );
   }
 
-  // ── Tiling calculations ──
-
-  /// The effective area each tile covers on the bracket canvas
-  /// (printable area divided by scale, minus overlap contribution).
   ({double width, double height}) tileCanvasCoverage() {
     final printable = printableAreaPoints;
     return (
@@ -176,9 +150,6 @@ abstract class PrintExportSettings with _$PrintExportSettings {
     return grid.columns * grid.rows;
   }
 
-  // ── Scale factor range ──
-
-  /// Minimum allowed scale factor for the tile mode slider.
   static const double minScaleFactor = 0.1;
 
   /// Maximum allowed scale factor for the tile mode slider.
@@ -187,26 +158,6 @@ abstract class PrintExportSettings with _$PrintExportSettings {
   /// Preset page-count targets shown as quick-action chips in the UI.
   static const List<int> pageTargetPresets = [1, 2, 4, 6, 9];
 
-  // ── Smart-fit: compute optimal scale for a target page count ──
-
-  /// Computes the **largest** scale factor (highest print quality) that
-  /// produces at most [targetPageCount] pages when tiling the given canvas.
-  ///
-  /// **Algorithm**: iterates over every valid `(cols, rows)` grid where
-  /// `cols × rows ≤ targetPageCount` and algebraically solves for the
-  /// maximum scale that fits the canvas within that grid:
-  ///
-  /// ```
-  /// scaleForCols = (printableW + (cols - 1) × netPrintableW) / canvasW
-  /// scaleForRows = (printableH + (rows - 1) × netPrintableH) / canvasH
-  /// scale = min(scaleForCols, scaleForRows)
-  /// ```
-  ///
-  /// where `netPrintableW = printableW - overlapPts` accounts for the
-  /// overlap strip that adjacent tiles share.
-  ///
-  /// Returns the scale clamped to
-  /// [[minScaleFactor], [maxScaleFactor]].
   double computeScaleFactorForTargetPageCount({
     required double canvasWidth,
     required double canvasHeight,

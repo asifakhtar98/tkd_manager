@@ -1,9 +1,5 @@
 import 'dart:ui' show FontStyle, FontWeight, Offset;
 
-// ══════════════════════════════════════════════════════════════════════════════
-// POSITIONED TEXT LAYOUT DATA
-// ══════════════════════════════════════════════════════════════════════════════
-
 /// A renderer-agnostic description of a single text element that has been
 /// positioned by the [TieSheetLayoutEngine].
 ///
@@ -18,7 +14,6 @@ import 'dart:ui' show FontStyle, FontWeight, Offset;
 /// - **Right-aligned**: [renderPosition.dx] is the right edge, and
 ///   the renderer must draw text ending at that X.
 class PositionedTextLayoutData {
-  /// Creates a positioned text layout data element.
   const PositionedTextLayoutData({
     required this.textContent,
     required this.renderPosition,
@@ -34,21 +29,16 @@ class PositionedTextLayoutData {
          'Text cannot be both center-aligned and right-aligned.',
        );
 
-  /// The text string to render.
   final String textContent;
 
-  /// The position at which this text element should be drawn.
-  ///
   /// Interpretation depends on alignment flags — see class-level docs.
   final Offset renderPosition;
 
   /// The font size in logical pixels (before any renderer-specific scaling).
   final double fontSize;
 
-  /// The font weight (e.g., [FontWeight.bold], [FontWeight.normal]).
   final FontWeight fontWeight;
 
-  /// The font style (e.g., [FontStyle.normal], [FontStyle.italic]).
   final FontStyle fontStyle;
 
   /// Whether the text should be horizontally centered around [renderPosition.dx].
@@ -57,7 +47,6 @@ class PositionedTextLayoutData {
   /// Whether the text should be right-aligned to [renderPosition.dx].
   final bool isRightAligned;
 
-  /// Optional letter spacing value for the text.
   final double? letterSpacing;
 
   /// Semantic color type — the renderer resolves this against the active theme.
@@ -65,10 +54,6 @@ class PositionedTextLayoutData {
   /// This avoids storing Flutter [Color] objects in a pure-Dart model.
   final TextColorType textColorType;
 }
-
-// ══════════════════════════════════════════════════════════════════════════════
-// TEXT COLOR TYPE
-// ══════════════════════════════════════════════════════════════════════════════
 
 /// Semantic text color identifiers resolved by the renderer against the
 /// active [TieSheetThemeConfig].
@@ -115,24 +100,17 @@ enum TextColorType {
   sectionLabel,
 }
 
-// ══════════════════════════════════════════════════════════════════════════════
-// LINE SEGMENT LAYOUT DATA
-// ══════════════════════════════════════════════════════════════════════════════
-
 /// A simple geometric line segment defined by start and end [Offset]s.
 ///
 /// Used for column dividers within participant rows, info row dividers,
 /// and simple straight connector lines.
 class LineSegmentLayoutData {
-  /// Creates a line segment between [startOffset] and [endOffset].
   const LineSegmentLayoutData({
     required this.startOffset,
     required this.endOffset,
   });
 
-  /// The starting point of the line segment.
   final Offset startOffset;
 
-  /// The ending point of the line segment.
   final Offset endOffset;
 }

@@ -24,10 +24,6 @@ String _colorToHexString(Color color) {
       .toUpperCase();
 }
 
-// ══════════════════════════════════════════════════════════════════════════════
-// TIE SHEET THEME EDITOR PANEL
-// ══════════════════════════════════════════════════════════════════════════════
-
 /// A side panel for interactively editing every token in [TieSheetThemeConfig].
 ///
 /// Receives the [currentThemeConfig] and fires [onThemeConfigChanged] on
@@ -44,8 +40,6 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
   final TieSheetThemeConfig currentThemeConfig;
   final ValueChanged<TieSheetThemeConfig> onThemeConfigChanged;
   final void Function(BracketThemePresetEntity)? onCloudPresetApplied;
-
-  // ── Preset reset helpers ──────────────────────────────────────────────────
 
   void _confirmAndResetToPreset(
     BuildContext context, {
@@ -77,8 +71,6 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
     );
   }
 
-  // ── Colour picker dialog ──────────────────────────────────────────────────
-
   void _showColorPickerDialog(
     BuildContext context, {
     required String label,
@@ -92,10 +84,7 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
         content: SingleChildScrollView(
           child: ColorPicker(
             pickerColor: currentColor,
-            onColorChanged: (color) {
-              // Live preview: update on every hue change.
-              onColorChanged(color);
-            },
+            onColorChanged: onColorChanged,
             enableAlpha: true,
             displayThumbColor: true,
             pickerAreaHeightPercent: 0.7,
@@ -105,7 +94,6 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () {
-              // Revert to original if cancelled.
               onColorChanged(currentColor);
               Navigator.of(dialogContext).pop();
             },
@@ -119,8 +107,6 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
       ),
     );
   }
-
-  // ── Build ─────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
@@ -137,10 +123,8 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
         ),
         child: Column(
           children: [
-            // ── Header + preset buttons ──
             _buildPanelHeader(context, theme),
             const Divider(height: 1),
-            // ── Scrollable editor sections ──
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.symmetric(vertical: 8),
@@ -170,8 +154,6 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
       ),
     );
   }
-
-  // ── Panel header ──────────────────────────────────────────────────────────
 
   Widget _buildPanelHeader(BuildContext context, ThemeData theme) {
     return Padding(
@@ -258,8 +240,6 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
     );
   }
 
-  // ── BlocListener callback for error-only SnackBar feedback ────────────────
-
   void _handlePresetBlocStateChange(
     BuildContext context,
     BracketThemePresetState state,
@@ -277,10 +257,6 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
     }
   }
 
-  // ── Colour-picker tile factory (DRY helper) ──────────────────────────────
-
-  /// Builds a [_ColorPickerTile] wired to the panel's colour-picker dialog.
-  /// Eliminates the per-tile `onShowPicker` boilerplate.
   _ColorPickerTile _buildColorPickerTile(
     BuildContext context, {
     required String label,
@@ -300,12 +276,6 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
           ),
     );
   }
-
-  // ══════════════════════════════════════════════════════════════════════════
-  // CATEGORY SECTIONS
-  // ══════════════════════════════════════════════════════════════════════════
-
-  // ── Saved Presets (Cloud) ──────────────────────────────────────────────────
 
   Widget _buildSavedPresetsSection(BuildContext context) {
     return BlocBuilder<BracketThemePresetBloc, BracketThemePresetState>(
@@ -451,8 +421,6 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
     );
   }
 
-  // ── Canvas & Cards ──────────────────────────────────────────────────────
-
   Widget _buildCanvasAndCardsSection(BuildContext context) {
     return _ThemeEditorExpansionSection(
       title: 'Canvas & Cards',
@@ -502,8 +470,6 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
     );
   }
 
-  // ── Connector / Junction ──────────────────────────────────────────────────
-
   Widget _buildConnectorJunctionSection(BuildContext context) {
     return _ThemeEditorExpansionSection(
       title: 'Connectors & Junctions',
@@ -549,8 +515,6 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
     );
   }
 
-  // ── Text ──────────────────────────────────────────────────────────────────
-
   Widget _buildTextSection(BuildContext context) {
     return _ThemeEditorExpansionSection(
       title: 'Text',
@@ -593,8 +557,6 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
     );
   }
 
-  // ── Header Banner ─────────────────────────────────────────────────────────
-
   Widget _buildHeaderBannerSection(BuildContext context) {
     return _ThemeEditorExpansionSection(
       title: 'Header Banner',
@@ -619,8 +581,6 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
       ],
     );
   }
-
-  // ── Accents & Badges ──────────────────────────────────────────────────────
 
   Widget _buildAccentsAndBadgesSection(BuildContext context) {
     return _ThemeEditorExpansionSection(
@@ -655,8 +615,6 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
     );
   }
 
-  // ── Section Labels ────────────────────────────────────────────────────────
-
   Widget _buildSectionLabelsSection(BuildContext context) {
     return _ThemeEditorExpansionSection(
       title: 'Section Labels',
@@ -682,14 +640,11 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
     );
   }
 
-  // ── Medals ────────────────────────────────────────────────────────────────
-
   Widget _buildMedalsSection(BuildContext context) {
     return _ThemeEditorExpansionSection(
       title: 'Medals',
       icon: Icons.emoji_events_outlined,
       children: [
-        // Gold
         _SectionSubHeader(label: 'Gold'),
         _buildColorPickerTile(
           context,
@@ -715,7 +670,6 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
             currentThemeConfig.copyWith(medalGoldAccentColor: color),
           ),
         ),
-        // Silver
         _SectionSubHeader(label: 'Silver'),
         _buildColorPickerTile(
           context,
@@ -741,7 +695,6 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
             currentThemeConfig.copyWith(medalSilverAccentColor: color),
           ),
         ),
-        // Bronze
         _SectionSubHeader(label: 'Bronze'),
         _buildColorPickerTile(
           context,
@@ -771,8 +724,6 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
     );
   }
 
-  // ── Shape / Radius ────────────────────────────────────────────────────────
-
   Widget _buildShapeRadiusSection(BuildContext context) {
     return _ThemeEditorExpansionSection(
       title: 'Shape & Radius',
@@ -801,8 +752,6 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
       ],
     );
   }
-
-  // ── Stroke Widths ─────────────────────────────────────────────────────────
 
   Widget _buildStrokeWidthsSection(BuildContext context) {
     return _ThemeEditorExpansionSection(
@@ -874,8 +823,6 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
     );
   }
 
-  // ── Spacing ───────────────────────────────────────────────────────────────
-
   Widget _buildSpacingSection(BuildContext context) {
     return _ThemeEditorExpansionSection(
       title: 'Spacing',
@@ -924,8 +871,6 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
       ],
     );
   }
-
-  // ── Badge & Pill Sizing ───────────────────────────────────────────────────
 
   Widget _buildBadgePillSizingSection(BuildContext context) {
     return _ThemeEditorExpansionSection(
@@ -996,9 +941,6 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
     );
   }
 
-
-  // ── Typography ────────────────────────────────────────────────────────────
-
   Widget _buildTypographySection(BuildContext context) {
     return _ThemeEditorExpansionSection(
       title: 'Typography',
@@ -1033,8 +975,6 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
       ],
     );
   }
-
-  // ── Layout Dimensions ──────────────────────────────────────────────────────
 
   Widget _buildLayoutDimensionsSection(BuildContext context) {
     return _ThemeEditorExpansionSection(
@@ -1256,8 +1196,6 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
     );
   }
 
-  // ── Banner & Logo ─────────────────────────────────────────────────────────
-
   Widget _buildBannerAndLogoSection(BuildContext context) {
     return _ThemeEditorExpansionSection(
       title: 'Banner & Logo',
@@ -1296,8 +1234,6 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
       ],
     );
   }
-
-  // ── Additional Colours & Opacity ──────────────────────────────────────────
 
   Widget _buildAdditionalColorsAndOpacitySection(BuildContext context) {
     return _ThemeEditorExpansionSection(
@@ -1354,10 +1290,6 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
     );
   }
 }
-
-// ══════════════════════════════════════════════════════════════════════════════
-// REUSABLE TILE WIDGETS (PRIVATE)
-// ══════════════════════════════════════════════════════════════════════════════
 
 /// Collapsible section wrapper with icon + title.
 class _ThemeEditorExpansionSection extends StatelessWidget {
@@ -1437,7 +1369,6 @@ class _ColorPickerTile extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
           child: Row(
             children: [
-              // Checkerboard behind the swatch shows transparency.
               ClipRRect(
                 borderRadius: BorderRadius.circular(4),
                 child: SizedBox(

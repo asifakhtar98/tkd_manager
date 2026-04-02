@@ -16,8 +16,6 @@ void main() {
     );
   });
 
-  // ── Test data ────────────────────────────────────────────────────────────────
-
   List<ParticipantEntity> buildParticipants(int count, {String? dojang}) {
     return List.generate(
       count,
@@ -50,8 +48,6 @@ void main() {
     }
     return participants;
   }
-
-  // ── Basic shuffle tests ──────────────────────────────────────────────────────
 
   group('Basic Fisher-Yates shuffle', () {
     test('empty list returns empty list', () {
@@ -155,8 +151,6 @@ void main() {
       expect(idsA, equals(idsB));
     });
   });
-
-  // ── Dojang separation tests ──────────────────────────────────────────────────
 
   group('Dojang separation constraint repair', () {
     test('two athletes from same dojang are placed in opposite halves', () {

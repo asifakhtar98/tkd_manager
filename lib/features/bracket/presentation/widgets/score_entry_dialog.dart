@@ -76,7 +76,6 @@ class _ScoreEntryDialogState extends State<ScoreEntryDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // ── Blue vs Red Selection ──
             Row(
               children: [
                 Expanded(
@@ -115,7 +114,6 @@ class _ScoreEntryDialogState extends State<ScoreEntryDialog> {
             ),
             const SizedBox(height: 16),
 
-            // ── Result Type ──
             DropdownButtonFormField<MatchResultType>(
               initialValue: _resultType,
               decoration: const InputDecoration(
@@ -153,7 +151,6 @@ class _ScoreEntryDialogState extends State<ScoreEntryDialog> {
             ),
             const SizedBox(height: 16),
 
-            // ── Scores (optional) ──
             Row(
               children: [
                 Expanded(

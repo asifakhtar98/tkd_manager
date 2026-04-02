@@ -47,16 +47,11 @@ class AppRouter {
       debugLogDiagnostics: false,
       routes: $appRoutes,
 
-      // When auth is disabled (bloc is null), skip the refresh listenable
-      // and let every route resolve without any redirect guard.
       refreshListenable: authenticationBloc != null
           ? _AuthenticationRefreshListenable(authenticationBloc)
           : null,
 
       redirect: authenticationBloc == null
-          // Auth disabled — only guard auth-only routes so a manual URL
-          // like `/login` doesn't render a screen that expects the
-          // AuthenticationBloc provider (which isn't in the tree).
           ? (_, GoRouterState state) {
               const Set<String> authOnlyPaths = {
                 RoutePaths.login,
@@ -84,21 +79,16 @@ class AppRouter {
               final bool isEmailJustConfirmed =
                   authState is AuthenticationEmailJustConfirmed;
 
-              // Still checking session — don't redirect yet.
               if (authState is AuthenticationUnknown) return null;
 
-              // Email just confirmed — route to the interstitial screen.
               if (isEmailJustConfirmed && !isOnEmailConfirmedPage) {
                 return RoutePaths.emailConfirmed;
               }
 
-              // Password recovery mode — route to the reset screen.
               if (isInPasswordRecovery && !isOnResetPasswordPage) {
                 return RoutePaths.resetPassword;
               }
 
-              // Not authenticated → force to login (unless already on an
-              // allowed unauthenticated page).
               if (!isAuthenticated &&
                   !isOnLoginPage &&
                   !isInPasswordRecovery &&
@@ -108,8 +98,6 @@ class AppRouter {
                 return RoutePaths.login;
               }
 
-              // Authenticated but lingering on login, reset, or confirmed
-              // → send to dashboard.
               if (isAuthenticated &&
                   (isOnLoginPage ||
                       isOnResetPasswordPage ||
@@ -117,7 +105,6 @@ class AppRouter {
                 return RoutePaths.dashboard;
               }
 
-              // All other cases — let the route resolve normally.
               return null;
             },
     );
@@ -130,10 +117,6 @@ class AppRouter {
   @visibleForTesting
   static void resetForTesting() => _cachedRouter = null;
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// GoRouter ↔ BLoC bridge
-// ─────────────────────────────────────────────────────────────────────────────
 
 /// Converts the [AuthenticationBloc] stream into a [ChangeNotifier] that
 /// [GoRouter.refreshListenable] can subscribe to.

@@ -29,12 +29,10 @@ class ActivationStatusBloc
   ) async {
     emit(state.copyWith(isLoading: true, error: null));
 
-    // Fetch activation status and admin role in parallel
-    final statusFuture = _repository.getActivationStatusForCurrentUser();
-    final adminFuture = _repository.isCurrentUserAdmin();
-
-    final Either<Failure, ActivationStatus> statusResult = await statusFuture;
-    final Either<Failure, bool> adminResult = await adminFuture;
+    final Either<Failure, ActivationStatus> statusResult = await _repository
+        .getActivationStatusForCurrentUser();
+    final Either<Failure, bool> adminResult = await _repository
+        .isCurrentUserAdmin();
 
     statusResult.fold(
       (failure) => emit(state.copyWith(isLoading: false, error: failure)),

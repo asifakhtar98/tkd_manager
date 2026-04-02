@@ -172,7 +172,6 @@ class _ActivationRequestCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header row: contact name + date
             Row(
               children: [
                 Container(
@@ -221,8 +220,6 @@ class _ActivationRequestCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 16),
-
-            // Amount and user ID info
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
@@ -248,8 +245,6 @@ class _ActivationRequestCard extends StatelessWidget {
             ),
 
             const SizedBox(height: 16),
-
-            // Action buttons
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [

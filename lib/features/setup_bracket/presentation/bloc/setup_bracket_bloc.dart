@@ -25,11 +25,10 @@ export 'setup_bracket_state.dart';
 /// specific tournament; a new instance is created each time the bracket-setup
 /// route is mounted.
 @injectable
-class SetupBracketBloc extends HydratedBloc<SetupBracketEvent, SetupBracketState> {
-  SetupBracketBloc(
-    @factoryParam String tournamentId,
-    this._uuid,
-  ) : super(SetupBracketState(tournamentId: tournamentId)) {
+class SetupBracketBloc
+    extends HydratedBloc<SetupBracketEvent, SetupBracketState> {
+  SetupBracketBloc(@factoryParam String tournamentId, this._uuid)
+    : super(SetupBracketState(tournamentId: tournamentId)) {
     on<SetupBracketParticipantAdded>(_onParticipantAdded);
     on<SetupBracketParticipantsImportedFromCsv>(_onParticipantsImportedFromCsv);
     on<SetupBracketParticipantRemoved>(_onParticipantRemoved);
@@ -50,9 +49,6 @@ class SetupBracketBloc extends HydratedBloc<SetupBracketEvent, SetupBracketState
   /// to being assigned a gender-specific division from an external system).
   static const String _manualDivisionGenderId = 'manual_division';
 
-  // ── HydratedBloc JSON contract ───────────────────────────────────────────
-
-  /// Per-tournament storage key — isolates persisted state per tournament.
   @override
   String get id => 'setup_bracket_${state.tournamentId}';
 
@@ -84,8 +80,6 @@ class SetupBracketBloc extends HydratedBloc<SetupBracketEvent, SetupBracketState
     }
   }
 
-  // ── Event handlers — roster ──────────────────────────────────────────────
-
   void _onParticipantAdded(
     SetupBracketParticipantAdded event,
     Emitter<SetupBracketState> emit,
@@ -99,11 +93,7 @@ class SetupBracketBloc extends HydratedBloc<SetupBracketEvent, SetupBracketState
       seedNumber: state.participants.length + 1,
     );
 
-    emit(
-      state.copyWith(
-        participants: [...state.participants, newParticipant],
-      ),
-    );
+    emit(state.copyWith(participants: [...state.participants, newParticipant]));
   }
 
   void _onParticipantsImportedFromCsv(
@@ -133,7 +123,8 @@ class SetupBracketBloc extends HydratedBloc<SetupBracketEvent, SetupBracketState
           fullName: name,
           registrationId: registrationId.isNotEmpty ? registrationId : null,
           schoolOrDojangName: dojangName.isNotEmpty ? dojangName : null,
-          seedNumber: state.participants.length + importedParticipants.length + 1,
+          seedNumber:
+              state.participants.length + importedParticipants.length + 1,
         ),
       );
     }
@@ -159,7 +150,9 @@ class SetupBracketBloc extends HydratedBloc<SetupBracketEvent, SetupBracketState
     final updatedParticipants = List<ParticipantEntity>.from(state.participants)
       ..removeAt(event.rosterIndex);
 
-    emit(state.copyWith(participants: _reseedParticipants(updatedParticipants)));
+    emit(
+      state.copyWith(participants: _reseedParticipants(updatedParticipants)),
+    );
   }
 
   void _onParticipantsCleared(
@@ -184,16 +177,17 @@ class SetupBracketBloc extends HydratedBloc<SetupBracketEvent, SetupBracketState
 
     if (newIndex < 0 || newIndex >= participantCount) return;
 
-    final reorderedParticipants = List<ParticipantEntity>.from(state.participants);
+    final reorderedParticipants = List<ParticipantEntity>.from(
+      state.participants,
+    );
     final movedParticipant = reorderedParticipants.removeAt(oldIndex);
     reorderedParticipants.insert(newIndex, movedParticipant);
 
-    emit(state.copyWith(participants: _reseedParticipants(reorderedParticipants)));
+    emit(
+      state.copyWith(participants: _reseedParticipants(reorderedParticipants)),
+    );
   }
 
-  // ── Private helpers ──────────────────────────────────────────────────────
-
-  /// Reassigns sequential seed numbers (1-based) after any roster mutation.
   List<ParticipantEntity> _reseedParticipants(
     List<ParticipantEntity> participants,
   ) {
@@ -211,8 +205,6 @@ class SetupBracketBloc extends HydratedBloc<SetupBracketEvent, SetupBracketState
     return trimmed.isEmpty ? null : trimmed;
   }
 
-  // ── Event handlers — configuration ───────────────────────────────────────
-
   void _onFormatChanged(
     SetupBracketFormatChanged event,
     Emitter<SetupBracketState> emit,
@@ -221,7 +213,8 @@ class SetupBracketBloc extends HydratedBloc<SetupBracketEvent, SetupBracketState
       selectedBracketFormat: event.newFormat,
       // Clear 3rd-place match flag if switching away from single-elimination
       // since it only applies to that format.
-      isThirdPlaceMatchIncluded: event.newFormat == BracketFormat.singleElimination
+      isThirdPlaceMatchIncluded:
+          event.newFormat == BracketFormat.singleElimination
           ? state.isThirdPlaceMatchIncluded
           : false,
     );
@@ -255,8 +248,6 @@ class SetupBracketBloc extends HydratedBloc<SetupBracketEvent, SetupBracketState
     );
   }
 
-  // ── Event handlers — generation lifecycle ────────────────────────────────
-
   void _onGenerationDispatched(
     SetupBracketGenerationDispatched event,
     Emitter<SetupBracketState> emit,
@@ -275,11 +266,7 @@ class SetupBracketBloc extends HydratedBloc<SetupBracketEvent, SetupBracketState
   ) {
     // Reset to a fresh setup state for this tournament after a successful
     // generation so the next bracket starts clean.
-    emit(
-      SetupBracketState(
-        tournamentId: state.tournamentId,
-      ),
-    );
+    emit(SetupBracketState(tournamentId: state.tournamentId));
   }
 
   void _onGenerationFailed(

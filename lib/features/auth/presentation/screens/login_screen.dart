@@ -51,10 +51,6 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  // ───────────────────────────────────────────────────────────────────────────
-  // Actions
-  // ───────────────────────────────────────────────────────────────────────────
-
   void _submitForm() {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
@@ -85,8 +81,6 @@ class _LoginScreenState extends State<LoginScreen> {
   void _switchToMode(_AuthMode mode) {
     setState(() {
       _authMode = mode;
-      // Reset form validation and clear the password field so credentials
-      // typed in one mode don't leak into another.
       _formKey.currentState?.reset();
       if (DebugConfig.forceDebugMode) {
         _passwordController.text = DebugConfig.debugPassword;
@@ -97,10 +91,6 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     });
   }
-
-  // ───────────────────────────────────────────────────────────────────────────
-  // Labels
-  // ───────────────────────────────────────────────────────────────────────────
 
   String get _headerTitle => switch (_authMode) {
     _AuthMode.signIn => 'Welcome Back',
@@ -119,10 +109,6 @@ class _LoginScreenState extends State<LoginScreen> {
     _AuthMode.signUp => 'Sign Up',
     _AuthMode.forgotPassword => 'Send Reset Link',
   };
-
-  // ───────────────────────────────────────────────────────────────────────────
-  // Build
-  // ───────────────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
@@ -153,14 +139,12 @@ class _LoginScreenState extends State<LoginScreen> {
                   return Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // ── Branding ──
                       const AuthBrandingHeader(
                         icon: Icons.sports_martial_arts,
                         title: 'TKD Tournament Manager',
                       ),
                       const SizedBox(height: 40),
 
-                      // ── Card with form ──
                       Card(
                         elevation: 4,
                         shape: RoundedRectangleBorder(
@@ -196,7 +180,6 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ),
                                   const SizedBox(height: 32),
 
-                                  // ── Email field (always visible) ──
                                   TextFormField(
                                     controller: _emailController,
                                     keyboardType: TextInputType.emailAddress,
@@ -217,7 +200,6 @@ class _LoginScreenState extends State<LoginScreen> {
                                         : null,
                                   ),
 
-                                  // ── Organization Name field (sign-up mode only) ──
                                   if (_authMode == _AuthMode.signUp) ...[
                                     const SizedBox(height: 20),
                                     TextFormField(
@@ -244,7 +226,6 @@ class _LoginScreenState extends State<LoginScreen> {
                                     ),
                                   ],
 
-                                  // ── Password field (hidden in forgot-password mode) ──
                                   if (_authMode !=
                                       _AuthMode.forgotPassword) ...[
                                     const SizedBox(height: 20),
@@ -261,7 +242,6 @@ class _LoginScreenState extends State<LoginScreen> {
                                     ),
                                   ],
 
-                                  // ── Forgot Password link (sign-in mode only) ──
                                   if (_authMode == _AuthMode.signIn) ...[
                                     const SizedBox(height: 4),
                                     Align(
@@ -285,7 +265,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
                                   const SizedBox(height: 20),
 
-                                  // ── Submit button ──
                                   AuthSubmitButton(
                                     label: _submitButtonLabel,
                                     isLoading: isLoading,
@@ -293,7 +272,6 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ),
                                   const SizedBox(height: 16),
 
-                                  // ── Toggle links ──
                                   _buildToggleLinks(
                                     isLoading,
                                     colorScheme,
@@ -315,10 +293,6 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
   }
-
-  // ───────────────────────────────────────────────────────────────────────────
-  // Toggle Links
-  // ───────────────────────────────────────────────────────────────────────────
 
   Widget _buildToggleLinks(
     bool isLoading,
@@ -370,10 +344,6 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     };
   }
-
-  // ───────────────────────────────────────────────────────────────────────────
-  // Listener — show snackbar on auth state changes
-  // ───────────────────────────────────────────────────────────────────────────
 
   void _authStateListener(BuildContext context, AuthenticationState state) {
     handleAuthenticationStateForSnackbar(

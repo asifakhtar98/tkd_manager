@@ -86,7 +86,6 @@ class TournamentBloc extends Bloc<TournamentEvent, TournamentState> {
             );
           }
 
-          // Preserve demo data
           final allTournaments = [
             DemoData.demoTournament,
             ...remoteTournaments,

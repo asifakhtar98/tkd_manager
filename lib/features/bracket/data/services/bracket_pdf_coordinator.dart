@@ -11,10 +11,6 @@ import 'package:tkd_saas/features/setup_bracket/domain/entities/participant_enti
 import 'package:tkd_saas/features/tournament/domain/entities/bracket_classification.dart';
 import 'package:tkd_saas/features/tournament/domain/entities/tournament_entity.dart';
 
-// ══════════════════════════════════════════════════════════════════════════════
-// BRACKET PDF GENERATION RESULT
-// ══════════════════════════════════════════════════════════════════════════════
-
 /// Immutable result of a PDF generation cycle.
 ///
 /// Contains both the rendered [pdfBytes] and the underlying [layoutResult]
@@ -35,10 +31,6 @@ class BracketPdfGenerationResult {
   /// redundant layout computation.
   final TieSheetLayoutResult layoutResult;
 }
-
-// ══════════════════════════════════════════════════════════════════════════════
-// BRACKET PDF COORDINATOR
-// ══════════════════════════════════════════════════════════════════════════════
 
 /// Orchestrates the layout → render → cache pipeline for bracket PDFs.
 ///
@@ -83,8 +75,6 @@ class BracketPdfCoordinator {
   /// generation or after [clearCache].
   Uint8List? get cachedPdfBytes => _cachedPdfBytes;
   Uint8List? _cachedPdfBytes;
-
-  // ── Generation ─────────────────────────────────────────────────────────────
 
   /// Computes the bracket layout and renders a single-page preview PDF.
   ///
@@ -142,8 +132,6 @@ class BracketPdfCoordinator {
       layoutResult: layoutResult,
     );
   }
-
-  // ── Export ─────────────────────────────────────────────────────────────────
 
   /// Generates a single-page PDF scaled to fit a specific page size.
   ///
@@ -204,8 +192,6 @@ class BracketPdfCoordinator {
       ),
     );
   }
-
-  // ── Cache Management ───────────────────────────────────────────────────────
 
   /// Clears cached layout result and PDF bytes.
   ///

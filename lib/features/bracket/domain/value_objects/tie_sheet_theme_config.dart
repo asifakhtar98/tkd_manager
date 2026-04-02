@@ -6,10 +6,6 @@ import 'package:tkd_saas/core/utils/color_json_converter.dart';
 part 'tie_sheet_theme_config.freezed.dart';
 part 'tie_sheet_theme_config.g.dart';
 
-// ══════════════════════════════════════════════════════════════════════════════
-// TIE SHEET THEME MODE
-// ══════════════════════════════════════════════════════════════════════════════
-
 /// The visual mode applied to the bracket canvas.
 ///
 /// [defaultMode] uses the standard on-screen palette.
@@ -26,10 +22,6 @@ enum TieSheetThemeMode {
   final String label;
 }
 
-// ══════════════════════════════════════════════════════════════════════════════
-// TIE SHEET THEME CONFIG
-// ══════════════════════════════════════════════════════════════════════════════
-
 /// Immutable set of **all** colour / style / geometry tokens consumed by
 /// [TieSheetLayoutEngine] and [TieSheetSyncfusionPdfRendererService].
 ///
@@ -40,16 +32,12 @@ abstract class TieSheetThemeConfig with _$TieSheetThemeConfig {
   const TieSheetThemeConfig._();
 
   const factory TieSheetThemeConfig({
-    // ── Connector / junction tokens ─────────────────────────────────────────
-
     /// Muted colour used for generic connectors, BYE dashed lines,
     /// TBD placeholder text, and unresolved junction lines.
     @ColorJsonConverter() required Color mutedColor,
 
     /// Resolved connector stroke colour (winner advancement lines).
     @ColorJsonConverter() required Color connectorWonColor,
-
-    // ── Canvas & card tokens ────────────────────────────────────────────────
 
     /// Canvas background fill.
     @ColorJsonConverter() required Color canvasBackgroundColor,
@@ -67,8 +55,6 @@ abstract class TieSheetThemeConfig with _$TieSheetThemeConfig {
     /// participant slot taps) are suppressed on the canvas widget.
     required bool isInteractivityDisabled,
 
-    // ── Text tokens ─────────────────────────────────────────────────────────
-
     /// Primary text colour (headings, names, numbers).
     @ColorJsonConverter() required Color primaryTextColor,
 
@@ -82,8 +68,6 @@ abstract class TieSheetThemeConfig with _$TieSheetThemeConfig {
     /// Additive font-size adjustment applied to **every** text span.
     required double fontSizeDelta,
 
-    // ── Fill tokens ─────────────────────────────────────────────────────────
-
     /// Participant card background fill.
     @ColorJsonConverter() required Color rowFillColor,
 
@@ -93,15 +77,11 @@ abstract class TieSheetThemeConfig with _$TieSheetThemeConfig {
     /// TBD placeholder card background fill.
     @ColorJsonConverter() required Color tbdFillColor,
 
-    // ── Header banner ───────────────────────────────────────────────────────
-
     /// Top banner background colour.
     @ColorJsonConverter() required Color headerBannerBackgroundColor,
 
     /// Top banner text colour.
     @ColorJsonConverter() required Color headerBannerTextColor,
-
-    // ── Accent & badge tokens ───────────────────────────────────────────────
 
     /// Participant row accent strip colour (left/right edge coloured strip).
     @ColorJsonConverter() required Color participantAccentStripColor,
@@ -112,15 +92,12 @@ abstract class TieSheetThemeConfig with _$TieSheetThemeConfig {
     /// Red-corner badge colour.
     @ColorJsonConverter() required Color redCornerColor,
 
-    // ── Section label tokens (DE brackets) ──────────────────────────────────
-
     /// Winners bracket section-label colour.
     @ColorJsonConverter() required Color winnersLabelColor,
 
     /// Losers bracket section-label colour.
     @ColorJsonConverter() required Color losersLabelColor,
 
-    // ── Medal table tokens ──────────────────────────────────────────────────
     @ColorJsonConverter() required Color medalGoldFillColor,
     @ColorJsonConverter() required Color medalSilverFillColor,
     @ColorJsonConverter() required Color medalBronzeFillColor,
@@ -131,15 +108,11 @@ abstract class TieSheetThemeConfig with _$TieSheetThemeConfig {
     @ColorJsonConverter() required Color medalSilverAccentColor,
     @ColorJsonConverter() required Color medalBronzeAccentColor,
 
-    // ── Shape / radius tokens ───────────────────────────────────────────────
-
     /// Unified border radius applied to all rectangular UI elements.
     required double elementBorderRadius,
 
     /// Corner radius for the Bezier curve arms on bracket junctions.
     required double junctionCornerRadius,
-
-    // ── Stroke width tokens ─────────────────────────────────────────────────
 
     /// Primary stroke width for borders, outlines, dividers, and pending
     /// connector lines.
@@ -151,8 +124,6 @@ abstract class TieSheetThemeConfig with _$TieSheetThemeConfig {
     /// Stroke width for resolved / won connector lines.
     required double wonConnectorStrokeWidth,
 
-    // ── Spacing tokens ──────────────────────────────────────────────────────
-
     /// Canvas margin (padding around all edges of the canvas).
     required double canvasMargin,
 
@@ -161,8 +132,6 @@ abstract class TieSheetThemeConfig with _$TieSheetThemeConfig {
 
     /// Width of the coloured accent strip on participant card edges.
     required double accentStripWidth,
-
-    // ── Badge & pill sizing tokens ──────────────────────────────────────────
 
     /// Minimum radius for corner badges (B / R).
     required double badgeMinRadius,
@@ -182,15 +151,11 @@ abstract class TieSheetThemeConfig with _$TieSheetThemeConfig {
     /// Vertical padding for match number pill text.
     required double matchPillVerticalPadding,
 
-    // ── Dashed line tokens ──────────────────────────────────────────────────
-
     /// Width of each dash segment in dashed connector lines.
     required double dashedLineDashWidth,
 
     /// Gap between dash segments in dashed connector lines.
     required double dashedLineGapWidth,
-
-    // ── Typography tokens ───────────────────────────────────────────────────
 
     /// Font family applied to all text rendered on the canvas.
     required String fontFamily,
@@ -200,8 +165,6 @@ abstract class TieSheetThemeConfig with _$TieSheetThemeConfig {
 
     /// Letter spacing for sub-header text (date, venue) in the header banner.
     required double subHeaderLetterSpacing,
-
-    // ── Layout dimension base tokens ────────────────────────────────────────
 
     /// Base height of a single participant row (px).
     required double rowHeight,
@@ -236,8 +199,6 @@ abstract class TieSheetThemeConfig with _$TieSheetThemeConfig {
     /// Height of the Winners/Losers section label bar (px).
     required double sectionLabelHeight,
 
-    // ── Medal table layout tokens ───────────────────────────────────────────
-
     /// Total width of the medal table (px).
     required double medalTableWidth,
 
@@ -252,8 +213,6 @@ abstract class TieSheetThemeConfig with _$TieSheetThemeConfig {
 
     /// Vertical gap between medal rows (px).
     required double medalRowGap,
-
-    // ── Junction geometry tokens ────────────────────────────────────────────
 
     /// Minimum vertical span for center-final junction arms (px).
     required double centerFinalMinimumSpan,
@@ -279,8 +238,6 @@ abstract class TieSheetThemeConfig with _$TieSheetThemeConfig {
     /// Horizontal offset for match number pill relative to junction center (px).
     required double matchPillHorizontalOffset,
 
-    // ── Banner & logo layout tokens ─────────────────────────────────────────
-
     /// Base height of the dark header banner (before fontSizeDelta scaling, px).
     required double headerBannerHeight,
 
@@ -290,15 +247,11 @@ abstract class TieSheetThemeConfig with _$TieSheetThemeConfig {
     /// Padding below the logo row before the header banner starts (px).
     required double logoPadding,
 
-    // ── Color tokens (additional) ───────────────────────────────────────────
-
     /// Fill colour for match number pills.
     @ColorJsonConverter() required Color matchPillFillColor,
 
     /// Text colour inside corner badges (B / R).
     @ColorJsonConverter() required Color badgeTextColor,
-
-    // ── Opacity tokens ──────────────────────────────────────────────────────
 
     /// Background opacity for section label fill (0.0–1.0).
     required double sectionLabelBackgroundOpacity,
@@ -308,8 +261,6 @@ abstract class TieSheetThemeConfig with _$TieSheetThemeConfig {
 
     /// Outline opacity for corner badges B/R (0.0–1.0).
     required double badgeOutlineOpacity,
-
-    // ── Canvas constraint tokens ────────────────────────────────────────────
 
     /// Minimum canvas width in logical pixels.
     required double canvasMinimumWidth,
@@ -321,12 +272,8 @@ abstract class TieSheetThemeConfig with _$TieSheetThemeConfig {
   factory TieSheetThemeConfig.fromJson(Map<String, dynamic> json) =>
       _$TieSheetThemeConfigFromJson(json);
 
-  // ── Computed getters ────────────────────────────────────────────────────────
-
   /// Computed height of the logo row (logoMaxHeight + 2 × logoPadding).
   double get logoRowHeight => logoMaxHeight + logoPadding * 2;
-
-  // ── Named Presets ─────────────────────────────────────────────────────────
 
   /// Standard on-screen palette — matches the original hardcoded values.
   static const TieSheetThemeConfig defaultPreset = TieSheetThemeConfig(

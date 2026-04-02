@@ -50,10 +50,6 @@ class _EmailConfirmedScreenState extends State<EmailConfirmedScreen>
     super.dispose();
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // Build
-  // ─────────────────────────────────────────────────────────────────────────
-
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
@@ -75,7 +71,6 @@ class _EmailConfirmedScreenState extends State<EmailConfirmedScreen>
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // ── Animated check icon ──
                   AnimatedBuilder(
                     animation: _animationController,
                     builder: (BuildContext context, Widget? child) {
@@ -102,7 +97,6 @@ class _EmailConfirmedScreenState extends State<EmailConfirmedScreen>
                   ),
                   const SizedBox(height: 32),
 
-                  // ── Card with confirmation message + CTA ──
                   Card(
                     elevation: 4,
                     shape: RoundedRectangleBorder(
@@ -136,7 +130,6 @@ class _EmailConfirmedScreenState extends State<EmailConfirmedScreen>
                           ),
                           const SizedBox(height: 32),
 
-                          // ── CTA button ──
                           SizedBox(
                             height: 48,
                             child: FilledButton.icon(

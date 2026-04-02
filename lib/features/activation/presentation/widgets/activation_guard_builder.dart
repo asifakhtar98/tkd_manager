@@ -19,13 +19,9 @@ class ActivationGuardBuilder extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<ActivationStatusBloc, ActivationStatusState>(
       builder: (context, state) {
-        // Feature is unlocked if user has an active subscription.
         final bool isUnlocked =
             state.activationStatus is ActivationStatusActive;
-
-        // Feature is locked if not unlocked
         final bool isLocked = !isUnlocked;
-
         return builder(context, isLocked);
       },
     );

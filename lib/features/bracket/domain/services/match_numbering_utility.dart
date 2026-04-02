@@ -54,7 +54,6 @@ abstract final class MatchNumberingUtility {
       );
     }
 
-    // Apply the numbers to the entity
     return matches.map((m) {
       final number = numberingMap[m.id];
       if (number != null) {
@@ -64,10 +63,6 @@ abstract final class MatchNumberingUtility {
     }).toList();
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // Single Elimination
-  // ─────────────────────────────────────────────────────────────────────────
-
   static Map<String, int> _buildSingleEliminationNumbering(
     List<MatchEntity> matches,
     Map<String, int> incomingNonByeCounts,
@@ -75,7 +70,6 @@ abstract final class MatchNumberingUtility {
     final result = <String, int>{};
     final maxRound = _maxRound(matches);
 
-    // Identify special matches in the final round.
     final thirdPlaceMatch = matches
         .where((m) => m.roundNumber == maxRound && m.matchNumberInRound == 2)
         .firstOrNull;
@@ -83,8 +77,6 @@ abstract final class MatchNumberingUtility {
         .where((m) => m.roundNumber == maxRound && m.matchNumberInRound == 1)
         .firstOrNull;
 
-    // Exclude the 3rd-place match from the main round loop — it's numbered
-    // separately between the semi-finals and the final.
     final mainMatches = matches
         .where((m) => !(m.roundNumber == maxRound && m.matchNumberInRound == 2))
         .toList();
@@ -94,12 +86,10 @@ abstract final class MatchNumberingUtility {
 
     var globalNumber = 1;
 
-    // Rounds 1 through the semi-final round: left first, right second.
     for (var roundNumber = 1; roundNumber <= mainMaxRound; roundNumber++) {
       final roundMatches = byRound[roundNumber] ?? [];
       final matchCount = roundMatches.length;
 
-      // The final round (1 match) is handled specially below.
       if (roundNumber == mainMaxRound && matchCount == 1) break;
 
       globalNumber = _numberMatchesWithRestPriority(
@@ -110,22 +100,16 @@ abstract final class MatchNumberingUtility {
       );
     }
 
-    // 3rd-place match comes before the final.
     if (thirdPlaceMatch != null && !thirdPlaceMatch.isBye) {
       result[thirdPlaceMatch.id] = globalNumber++;
     }
 
-    // Final match is always last.
     if (finalMatch != null && !finalMatch.isBye) {
       result[finalMatch.id] = globalNumber++;
     }
 
     return result;
   }
-
-  // ─────────────────────────────────────────────────────────────────────────
-  // Double Elimination
-  // ─────────────────────────────────────────────────────────────────────────
 
   static Map<String, int> _buildDoubleEliminationNumbering({
     required List<MatchEntity> matches,
@@ -150,7 +134,6 @@ abstract final class MatchNumberingUtility {
 
     var globalNumber = 1;
 
-    // Winners Bracket: sort by rest priority.
     final winnersMaxRound = winnersMatches.isEmpty
         ? 0
         : _maxRound(winnersMatches);
@@ -164,9 +147,6 @@ abstract final class MatchNumberingUtility {
       );
     }
 
-    // Losers Bracket: sequential round-by-round (no left/right split —
-    // LB is rendered linearly). Using rest priority here ensures that if an LB
-    // player advances via bye/walkover, they are given fair rest spacing too.
     final losersMaxRound = losersMatches.isEmpty ? 0 : _maxRound(losersMatches);
     final losersByRound = _groupByRound(losersMatches);
     for (var r = 1; r <= losersMaxRound; r++) {
@@ -178,7 +158,6 @@ abstract final class MatchNumberingUtility {
       );
     }
 
-    // Grand Finals: sequential.
     final grandFinalsSorted = List<MatchEntity>.from(grandFinalsMatches)
       ..sort((a, b) {
         if (a.roundNumber != b.roundNumber) {
@@ -195,10 +174,6 @@ abstract final class MatchNumberingUtility {
     return result;
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // Shared Helpers
-  // ─────────────────────────────────────────────────────────────────────────
-
   /// Numbers the round's matches ordering matches with fewer dependencies first
   /// (rest priority), then top-to-bottom.
   ///
@@ -211,9 +186,6 @@ abstract final class MatchNumberingUtility {
   ) {
     var globalNumber = startingNumber;
 
-    // Sort matches:
-    // 1. Matches with FEWER incoming non-bye matches go FIRST.
-    // 2. Tie-breaker: natural layout order (matchNumberInRound).
     final sortedMatches = List<MatchEntity>.from(roundMatches)
       ..sort((a, b) {
         final aIncoming = incomingNonByeCounts[a.id] ?? 0;

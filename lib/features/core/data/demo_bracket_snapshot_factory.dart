@@ -18,8 +18,6 @@ class DemoBracketSnapshotFactory {
 
   static const _uuid = Uuid();
 
-  // ── 100 unique demo participant names ──────────────────────────────────
-
   static const _fullNames = [
     // 1–20
     'Aarav Patel',
@@ -148,13 +146,6 @@ class DemoBracketSnapshotFactory {
     'Mysuru Champions',
   ];
 
-  // ── Public API ─────────────────────────────────────────────────────────
-
-  /// Generates all showcase bracket snapshots for the demo tournament.
-  ///
-  /// Covers every format × size combination the system supports, including
-  /// odd participant counts (which trigger BYE-handling), 3rd-place matches,
-  /// and large 64/100-player brackets.
   static List<BracketSnapshot> generateAllDemoBracketSnapshots() {
     final singleEliminationGenerator =
         SingleEliminationBracketGeneratorServiceImplementation(_uuid);
@@ -168,8 +159,6 @@ class DemoBracketSnapshotFactory {
         baseTimestamp.add(Duration(minutes: 5 * snapshotIndex++));
 
     return [
-      // ── Single Elimination ───────────────────────────────────────────
-
       // 1. SE — 3 Players (odd → 1 BYE, minimal bracket)
       _buildSingleEliminationSnapshot(
         generator: singleEliminationGenerator,
@@ -287,8 +276,6 @@ class DemoBracketSnapshotFactory {
         generatedAt: nextTimestamp(),
       ),
 
-      // ── Double Elimination ───────────────────────────────────────────
-
       // 10. DE — 4 Players (minimal double elim)
       _buildDoubleEliminationSnapshot(
         generator: doubleEliminationGenerator,
@@ -350,8 +337,6 @@ class DemoBracketSnapshotFactory {
       ),
     ];
   }
-
-  // ── Private builders ───────────────────────────────────────────────────
 
   static BracketSnapshot _buildSingleEliminationSnapshot({
     required SingleEliminationBracketGeneratorServiceImplementation generator,

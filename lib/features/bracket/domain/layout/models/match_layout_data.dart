@@ -2,10 +2,6 @@ import 'dart:ui' show Offset, Rect;
 
 import 'package:tkd_saas/features/bracket/domain/layout/models/positioned_text_layout_data.dart';
 
-// ══════════════════════════════════════════════════════════════════════════════
-// MATCH LAYOUT DATA
-// ══════════════════════════════════════════════════════════════════════════════
-
 /// Precomputed layout data for a match junction node.
 ///
 /// A junction is the visual point where two feeder connector lines meet to
@@ -20,7 +16,6 @@ import 'package:tkd_saas/features/bracket/domain/layout/models/positioned_text_l
 /// - [MatchNodeType.grandFinalResetNode] — DE grand final reset match
 /// - [MatchNodeType.thirdPlaceMatchNode] — SE third-place match
 class MatchLayoutData {
-  /// Creates layout data for a match junction node.
   const MatchLayoutData({
     required this.matchId,
     required this.matchNodeType,
@@ -35,45 +30,31 @@ class MatchLayoutData {
     this.grandFinalLabelTextLayout,
   });
 
-  /// The unique match ID, used for identification.
   final String matchId;
 
-  /// The visual type of this match node.
   final MatchNodeType matchNodeType;
 
-  /// Whether this match is a BYE (automatic advancement without playing).
   final bool isByeMatch;
 
-  /// Blue corner badge ("B") position and color — `null` for BYE matches.
   final CornerBadgeLayoutData? blueCornerBadgeLayout;
 
-  /// Red corner badge ("R") position and color — `null` for BYE matches.
   final CornerBadgeLayoutData? redCornerBadgeLayout;
 
-  /// Match number pill position — `null` when match has no display number.
   final MatchNumberPillLayoutData? matchNumberPillLayout;
 
-  /// Winner name text position — `null` when no winner yet.
   final PositionedTextLayoutData? winnerNameTextLayout;
 
-  /// "↑ from WB" or "↓ <name>" label for a missing top feeder input.
-  ///
   /// Used in DE losers bracket when a drop-in match slot is pending.
   final PositionedTextLayoutData? missingTopInputLabelLayout;
 
-  /// "↑ <name>" or "↑ from WB" label for a missing bottom feeder input.
   final PositionedTextLayoutData? missingBottomInputLabelLayout;
 
-  /// "3rd Place" title label — only for [MatchNodeType.thirdPlaceMatchNode].
+  /// Only for [MatchNodeType.thirdPlaceMatchNode].
   final PositionedTextLayoutData? thirdPlaceTitleTextLayout;
 
-  /// "GRAND FINAL" or "RESET" label — only for grand final node types.
+  /// Only for grand final node types.
   final PositionedTextLayoutData? grandFinalLabelTextLayout;
 }
-
-// ══════════════════════════════════════════════════════════════════════════════
-// MATCH NODE TYPE
-// ══════════════════════════════════════════════════════════════════════════════
 
 /// Classifies the visual structure of a match node for the renderer.
 enum MatchNodeType {
@@ -93,15 +74,10 @@ enum MatchNodeType {
   thirdPlaceMatchNode,
 }
 
-// ══════════════════════════════════════════════════════════════════════════════
-// CORNER BADGE LAYOUT DATA
-// ══════════════════════════════════════════════════════════════════════════════
-
 /// Layout data for a small circular corner badge ("B" for blue, "R" for red).
 ///
 /// Badges are drawn as filled circles with centered text.
 class CornerBadgeLayoutData {
-  /// Creates layout data for a corner badge.
   const CornerBadgeLayoutData({
     required this.centerOffset,
     required this.badgeText,
@@ -109,20 +85,16 @@ class CornerBadgeLayoutData {
     required this.computedBadgeRadius,
   });
 
-  /// Center position of the badge circle.
   final Offset centerOffset;
 
-  /// Single-character badge label (e.g., "B" or "R").
   final String badgeText;
 
   /// Semantic color type — the renderer resolves this against the theme.
   final CornerBadgeColorType badgeColorType;
 
-  /// Precomputed badge radius (depends on font size and padding from theme).
   final double computedBadgeRadius;
 }
 
-/// Identifies the corner badge color for theme resolution.
 enum CornerBadgeColorType {
   /// [TieSheetThemeConfig.blueCornerColor]
   blue,
@@ -131,16 +103,11 @@ enum CornerBadgeColorType {
   red,
 }
 
-// ══════════════════════════════════════════════════════════════════════════════
-// MATCH NUMBER PILL LAYOUT DATA
-// ══════════════════════════════════════════════════════════════════════════════
-
 /// Layout data for the rounded match-number pill displayed at a junction.
 ///
 /// The pill is drawn as a filled rounded rectangle (capsule shape) with
 /// centered text showing the global match number.
 class MatchNumberPillLayoutData {
-  /// Creates layout data for a match number pill.
   const MatchNumberPillLayoutData({
     required this.centerOffset,
     required this.matchNumberText,
@@ -148,15 +115,11 @@ class MatchNumberPillLayoutData {
     required this.pillCornerRadius,
   });
 
-  /// Center position of the pill.
   final Offset centerOffset;
 
-  /// Display text (e.g., "1", "2", "15").
   final String matchNumberText;
 
-  /// Bounding rectangle of the pill shape.
   final Rect pillBoundingRect;
 
-  /// Corner radius for the pill's rounded ends.
   final double pillCornerRadius;
 }

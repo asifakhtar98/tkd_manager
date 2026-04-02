@@ -16,10 +16,6 @@ import 'package:tkd_saas/features/bracket/domain/layout/models/tie_sheet_layout_
 import 'package:tkd_saas/features/bracket/domain/value_objects/tie_sheet_theme_config.dart';
 import 'package:tkd_saas/features/bracket/presentation/models/print_export_settings.dart';
 
-// ══════════════════════════════════════════════════════════════════════════════
-// PDF RENDER PARAMS
-// ══════════════════════════════════════════════════════════════════════════════
-
 /// Groups the common parameters shared across all PDF generation methods
 /// on [TieSheetSyncfusionPdfRendererService].
 ///
@@ -69,19 +65,11 @@ class PdfRenderParams {
 /// All three delegate to the private [_renderFullBracket] helper for the
 /// actual drawing, eliminating pipeline duplication.
 class TieSheetSyncfusionPdfRendererService {
-  // ── Public API ─────────────────────────────────────────────────────────────
-
-  /// Generates a single-page PDF document from the given layout result.
-  ///
-  /// The page size matches the bracket canvas exactly (1:1 mapping).
-  /// Returns the raw PDF bytes ready for display or export.
   List<int> renderSinglePagePdfBytes({required PdfRenderParams params}) {
     final document = PdfDocument();
     final canvasWidth = params.layoutResult.computedCanvasSize.width;
     final canvasHeight = params.layoutResult.computedCanvasSize.height;
 
-    // Explicitly set orientation based on aspect ratio so Syncfusion does not clip
-    // documents where width > height in portrait mode.
     document.pageSettings.orientation = canvasWidth > canvasHeight
         ? PdfPageOrientation.landscape
         : PdfPageOrientation.portrait;
@@ -136,12 +124,9 @@ class TieSheetSyncfusionPdfRendererService {
     final document = PdfDocument();
     const assemblyAidRenderer = SyncfusionTileAssemblyAidRendererService();
 
-    // Render the full bracket once into a reusable PdfTemplate.
-    // Each tile page draws this template at scaled size with an offset.
     final bracketTemplate = PdfTemplate(canvasWidth, canvasHeight);
     _renderFullBracket(bracketTemplate.graphics!, params);
 
-    // Scaled full-bracket dimensions in PDF points.
     final scaledBracketWidth = canvasWidth * scaleFactor;
     final scaledBracketHeight = canvasHeight * scaleFactor;
 
@@ -153,7 +138,6 @@ class TieSheetSyncfusionPdfRendererService {
         final regionOffsetX = col * effectiveStepWidth;
         final regionOffsetY = row * effectiveStepHeight;
 
-        // Skip if the region is completely outside canvas bounds
         if (regionOffsetX >= canvasWidth || regionOffsetY >= canvasHeight) {
           continue;
         }
@@ -164,11 +148,8 @@ class TieSheetSyncfusionPdfRendererService {
         final page = document.pages.add();
         final graphics = page.graphics;
 
-        // Save state, clip to printable area, then draw the bracket
-        // template offset and scaled so only this tile's portion is visible.
         final graphicsState = graphics.save();
 
-        // Clip to the printable area
         graphics.setClip(
           bounds: Rect.fromLTWH(
             0,
@@ -178,15 +159,10 @@ class TieSheetSyncfusionPdfRendererService {
           ),
         );
 
-        // Translate so the tile's region aligns with origin, then draw
-        // the full bracket template at its scaled size. The clipping
-        // ensures only the visible portion is rendered.
         final tileTranslateX = -regionOffsetX * scaleFactor;
         final tileTranslateY = -regionOffsetY * scaleFactor;
         graphics.translateTransform(tileTranslateX, tileTranslateY);
 
-        // Draw the full bracket template at scaled size.
-        // PdfGraphics will clip to the printable area automatically.
         graphics.drawPdfTemplate(
           bracketTemplate,
           Offset.zero,
@@ -195,7 +171,6 @@ class TieSheetSyncfusionPdfRendererService {
 
         graphics.restore(graphicsState);
 
-        // Assembly aids (drawn in page coordinate space, not bracket space)
         if (exportSettings.showTileAssemblyHints) {
           assemblyAidRenderer.renderRegistrationMarks(
             tilePageGraphics: graphics,
@@ -215,7 +190,6 @@ class TieSheetSyncfusionPdfRendererService {
           );
         }
 
-        // Page label for assembly reference
         final pageLabelFont = PdfStandardFont(PdfFontFamily.helvetica, 8);
         final pageLabelText =
             'Page $tileIndex of $totalTilePageCount  (R${row + 1} C${col + 1})';
@@ -234,7 +208,6 @@ class TieSheetSyncfusionPdfRendererService {
       }
     }
 
-    // Assembly index page (if hints enabled and grid > 1×1)
     if (exportSettings.showTileAssemblyHints && totalTilePageCount > 1) {
       assemblyAidRenderer.renderAssemblyIndexPage(
         document: document,
@@ -297,13 +270,6 @@ class TieSheetSyncfusionPdfRendererService {
     return bytes;
   }
 
-  // ── Private Rendering Pipeline ─────────────────────────────────────────────
-
-  /// Renders the complete bracket onto the given [graphics] surface.
-  ///
-  /// This is the single source of truth for the drawing pipeline. All three
-  /// public methods delegate to this helper, guaranteeing identical output
-  /// regardless of page configuration.
   void _renderFullBracket(PdfGraphics graphics, PdfRenderParams params) {
     final layoutResult = params.layoutResult;
     final themeConfig = params.themeConfig;
@@ -345,8 +311,6 @@ class TieSheetSyncfusionPdfRendererService {
     }
   }
 
-  // ── Canvas Background ──────────────────────────────────────────────────
-
   void _renderCanvasBackground(
     PdfGraphics graphics,
     TieSheetLayoutResult layoutResult,
@@ -363,8 +327,6 @@ class TieSheetSyncfusionPdfRendererService {
     );
   }
 
-  // ── Header ─────────────────────────────────────────────────────────────
-
   void _renderHeader(
     PdfGraphics graphics,
     HeaderLayoutData headerData,
@@ -372,7 +334,6 @@ class TieSheetSyncfusionPdfRendererService {
     Uint8List? leftLogoImageBytes,
     Uint8List? rightLogoImageBytes,
   }) {
-    // Logo images (drawn before banner so they appear in the logo row above it)
     _renderLogoImage(
       graphics,
       headerData.leftLogoBoundingRect,
@@ -384,7 +345,6 @@ class TieSheetSyncfusionPdfRendererService {
       rightLogoImageBytes,
     );
 
-    // Banner background
     graphics.drawRectangle(
       bounds: headerData.headerBannerBoundingRect,
       brush: PdfSolidBrush(
@@ -416,7 +376,6 @@ class TieSheetSyncfusionPdfRendererService {
       );
     }
 
-    // Info row
     graphics.drawRectangle(
       bounds: headerData.classificationInfoRowBoundingRect,
       brush: PdfSolidBrush(themeConfig.headerFillColor.toPdfColor()),
@@ -459,8 +418,6 @@ class TieSheetSyncfusionPdfRendererService {
     }
   }
 
-  // ── Section Labels ─────────────────────────────────────────────────────
-
   void _renderSectionLabels(
     PdfGraphics graphics,
     List<SectionLabelLayoutData> labels,
@@ -492,15 +449,12 @@ class TieSheetSyncfusionPdfRendererService {
     }
   }
 
-  // ── Participant Rows ───────────────────────────────────────────────────
-
   void _renderParticipantRows(
     PdfGraphics graphics,
     List<ParticipantRowLayoutData> rows,
     TieSheetThemeConfig themeConfig,
   ) {
     for (final row in rows) {
-      // Card (no shadow — flat vector aesthetic)
       final fillColor = row.isPlaceholderRow
           ? themeConfig.tbdFillColor
           : themeConfig.rowFillColor;
@@ -512,14 +466,12 @@ class TieSheetSyncfusionPdfRendererService {
           width: themeConfig.subtleStrokeWidth,
         ),
       );
-      // Accent strip
       graphics.drawRectangle(
         bounds: row.accentStripBoundingRect,
         brush: PdfSolidBrush(
           themeConfig.participantAccentStripColor.toPdfColor(),
         ),
       );
-      // Dividers
       for (final divider in row.columnDividerLines) {
         graphics.drawLine(
           PdfPen(
@@ -530,7 +482,6 @@ class TieSheetSyncfusionPdfRendererService {
           Offset(divider.endOffset.dx, divider.endOffset.dy),
         );
       }
-      // Text
       _drawPositionedText(graphics, row.serialNumberTextLayout, themeConfig);
       _drawPositionedText(graphics, row.participantNameTextLayout, themeConfig);
       if (row.registrationIdTextLayout != null) {
@@ -542,8 +493,6 @@ class TieSheetSyncfusionPdfRendererService {
       }
     }
   }
-
-  // ── Connectors ─────────────────────────────────────────────────────────
 
   void _renderConnectors(
     PdfGraphics graphics,
@@ -566,7 +515,6 @@ class TieSheetSyncfusionPdfRendererService {
       }
       if (connector.arcPathData != null) {
         final arcPath = connector.arcPathData!;
-        // Horizontal segment before arc
         graphics.drawLine(
           pen,
           Offset(arcPath.moveToOffset.dx, arcPath.moveToOffset.dy),
@@ -575,7 +523,6 @@ class TieSheetSyncfusionPdfRendererService {
             arcPath.lineToBeforeArcOffset.dy,
           ),
         );
-        // Vertical segment after arc
         graphics.drawLine(
           pen,
           Offset(arcPath.arcEndOffset.dx, arcPath.arcEndOffset.dy),
@@ -584,7 +531,6 @@ class TieSheetSyncfusionPdfRendererService {
             arcPath.lineToAfterArcOffset.dy,
           ),
         );
-        // Approximate the 90° arc as a diagonal line.
         graphics.drawLine(
           pen,
           Offset(
@@ -650,8 +596,6 @@ class TieSheetSyncfusionPdfRendererService {
     }
   }
 
-  // ── Match Junctions ────────────────────────────────────────────────────
-
   void _renderMatchJunctions(
     PdfGraphics graphics,
     List<MatchLayoutData> matches,
@@ -659,7 +603,6 @@ class TieSheetSyncfusionPdfRendererService {
   ) {
     for (final matchLayout in matches) {
       if (matchLayout.isByeMatch) continue;
-      // Blue badge
       if (matchLayout.blueCornerBadgeLayout != null) {
         _drawCornerBadge(
           graphics,
@@ -667,7 +610,6 @@ class TieSheetSyncfusionPdfRendererService {
           themeConfig,
         );
       }
-      // Red badge
       if (matchLayout.redCornerBadgeLayout != null) {
         _drawCornerBadge(
           graphics,
@@ -675,7 +617,6 @@ class TieSheetSyncfusionPdfRendererService {
           themeConfig,
         );
       }
-      // Match pill
       if (matchLayout.matchNumberPillLayout != null) {
         _drawMatchPill(
           graphics,
@@ -683,7 +624,6 @@ class TieSheetSyncfusionPdfRendererService {
           themeConfig,
         );
       }
-      // Winner text
       if (matchLayout.winnerNameTextLayout != null) {
         _drawPositionedText(
           graphics,
@@ -691,7 +631,6 @@ class TieSheetSyncfusionPdfRendererService {
           themeConfig,
         );
       }
-      // Missing input labels
       if (matchLayout.missingTopInputLabelLayout != null) {
         _drawPositionedText(
           graphics,
@@ -706,7 +645,6 @@ class TieSheetSyncfusionPdfRendererService {
           themeConfig,
         );
       }
-      // 3rd place title
       if (matchLayout.thirdPlaceTitleTextLayout != null) {
         _drawPositionedText(
           graphics,
@@ -714,7 +652,6 @@ class TieSheetSyncfusionPdfRendererService {
           themeConfig,
         );
       }
-      // Grand final label
       if (matchLayout.grandFinalLabelTextLayout != null) {
         _drawPositionedText(
           graphics,
@@ -736,7 +673,6 @@ class TieSheetSyncfusionPdfRendererService {
     final centerX = badgeData.centerOffset.dx;
     final centerY = badgeData.centerOffset.dy;
     final badgeRadius = badgeData.computedBadgeRadius;
-    // Draw circle as ellipse
     graphics.drawEllipse(
       Rect.fromLTWH(
         centerX - badgeRadius,
@@ -752,7 +688,6 @@ class TieSheetSyncfusionPdfRendererService {
         width: themeConfig.subtleStrokeWidth,
       ),
     );
-    // Badge text - use minimum font size to prevent overflow and ensure readability
     final badgeFontSize = max(6.0, badgeData.computedBadgeRadius * 0.9);
     final badgeFont = PdfStandardFont(
       PdfFontFamily.helvetica,
@@ -779,7 +714,6 @@ class TieSheetSyncfusionPdfRendererService {
     MatchNumberPillLayoutData pillData,
     TieSheetThemeConfig themeConfig,
   ) {
-    // Pill background (no shadow — flat vector aesthetic)
     graphics.drawRectangle(
       bounds: pillData.pillBoundingRect,
       brush: PdfSolidBrush(themeConfig.matchPillFillColor.toPdfColor()),
@@ -788,7 +722,6 @@ class TieSheetSyncfusionPdfRendererService {
         width: themeConfig.subtleStrokeWidth,
       ),
     );
-    // Text
     final fontSizeDelta = themeConfig.fontSizeDelta;
     final pillFont = PdfStandardFont(
       PdfFontFamily.helvetica,
@@ -809,8 +742,6 @@ class TieSheetSyncfusionPdfRendererService {
     );
   }
 
-  // ── Medal Table ────────────────────────────────────────────────────────
-
   void _renderMedalTable(
     PdfGraphics graphics,
     MedalTableLayoutData medalTableData,
@@ -829,7 +760,6 @@ class TieSheetSyncfusionPdfRendererService {
           fillColor = themeConfig.medalBronzeFillColor;
           accentColor = themeConfig.medalBronzeAccentColor;
       }
-      // Card (no shadow — flat vector aesthetic)
       graphics.drawRectangle(
         bounds: medalRow.fullCardBoundingRect,
         brush: PdfSolidBrush(fillColor.toPdfColor()),
@@ -838,12 +768,10 @@ class TieSheetSyncfusionPdfRendererService {
           width: themeConfig.subtleStrokeWidth,
         ),
       );
-      // Accent
       graphics.drawRectangle(
         bounds: medalRow.accentStripBoundingRect,
         brush: PdfSolidBrush(accentColor.toPdfColor()),
       );
-      // Divider
       final dividerLine = medalRow.columnDividerLine;
       graphics.drawLine(
         PdfPen(
@@ -853,9 +781,7 @@ class TieSheetSyncfusionPdfRendererService {
         Offset(dividerLine.startOffset.dx, dividerLine.startOffset.dy),
         Offset(dividerLine.endOffset.dx, dividerLine.endOffset.dy),
       );
-      // Medal label
       _drawPositionedText(graphics, medalRow.medalLabelTextLayout, themeConfig);
-      // Winner name
       if (medalRow.winnerNameTextLayout != null) {
         _drawPositionedText(
           graphics,
@@ -865,8 +791,6 @@ class TieSheetSyncfusionPdfRendererService {
       }
     }
   }
-
-  // ── Text Drawing ───────────────────────────────────────────────────────
 
   void _drawPositionedText(
     PdfGraphics graphics,
@@ -878,7 +802,7 @@ class TieSheetSyncfusionPdfRendererService {
         overrideColor ?? _resolveTextColor(textData.textColorType, themeConfig);
     PdfFontStyle pdfFontStyle = PdfFontStyle.regular;
     if (textData.fontWeight.index >= 6) {
-      pdfFontStyle = PdfFontStyle.bold; // w700+
+      pdfFontStyle = PdfFontStyle.bold;
     }
     if (textData.fontStyle == FontStyle.italic) {
       pdfFontStyle = PdfFontStyle.italic;

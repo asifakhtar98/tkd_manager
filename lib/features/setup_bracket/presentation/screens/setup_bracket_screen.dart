@@ -36,21 +36,17 @@ class SetupBracketScreen extends StatefulWidget {
 }
 
 class _SetupBracketScreenState extends State<SetupBracketScreen> {
-  // ── Constants ──────────────────────────────────────────────────────────────
   static const int _maximumFullNameLength = 100;
   static const int _maximumRegistrationIdLength = 100;
   static const int _maximumDojangNameLength = 100;
   static const int _maximumClassificationFieldLength = 100;
 
-  // ── Generator services ────────────────────────────────────────────────────
   final Uuid _uuid = const Uuid();
 
-  // ── Bracket-level classification controllers (ephemeral UI) ───────────────
   late final TextEditingController _bracketAgeCategoryController;
   late final TextEditingController _bracketGenderController;
   late final TextEditingController _bracketWeightDivisionController;
 
-  // ── Participant quick-add form ─────────────────────────────────────────────
   final _participantFormKey = GlobalKey<FormState>();
   final _fullNameController = TextEditingController();
   final _registrationIdController = TextEditingController();
@@ -86,15 +82,11 @@ class _SetupBracketScreenState extends State<SetupBracketScreen> {
     super.dispose();
   }
 
-  // ── Helpers ────────────────────────────────────────────────────────────────
-
   TournamentEntity? _findOwningTournament(TournamentState tournamentState) {
     return tournamentState.tournaments
         .where((tournament) => tournament.id == widget.tournamentId)
         .firstOrNull;
   }
-
-  // ── Actions ────────────────────────────────────────────────────────────────
 
   void _submitParticipantFromFormFields(SetupBracketState setupState) {
     if (!_participantFormKey.currentState!.validate()) return;
@@ -161,19 +153,18 @@ class _SetupBracketScreenState extends State<SetupBracketScreen> {
       weightDivisionLabel: _bracketWeightDivisionController.text.trim(),
     );
 
-    // ── Shuffle participants if dojang separation is enabled ──────────────
     final List<ParticipantEntity> orderedParticipants;
     if (setupState.isDojangSeparationEnabled) {
       final shuffleService = getIt<ParticipantShuffleService>();
-      orderedParticipants = shuffleService.shuffleParticipantsForBracketGeneration(
-        participants: participants,
-        dojangSeparation: true,
-      );
+      orderedParticipants = shuffleService
+          .shuffleParticipantsForBracketGeneration(
+            participants: participants,
+            dojangSeparation: true,
+          );
     } else {
       orderedParticipants = participants;
     }
 
-    // ── Generate bracket ──────────────────────────────────────────────────
     final participantIds = orderedParticipants.map((p) => p.id).toList();
     late final BracketResult bracketResult;
     try {
@@ -209,9 +200,10 @@ class _SetupBracketScreenState extends State<SetupBracketScreen> {
       return;
     }
 
-    // ── Create snapshot and persist to TournamentBloc ─────────────────────
     final snapshotId = _uuid.v4();
-    final thirdPlaceSuffix = setupState.isThirdPlaceMatchIncluded ? ' + 3rd Place' : '';
+    final thirdPlaceSuffix = setupState.isThirdPlaceMatchIncluded
+        ? ' + 3rd Place'
+        : '';
     final snapshot = BracketSnapshot(
       id: snapshotId,
       userId: owningTournament.userId,
@@ -248,21 +240,22 @@ class _SetupBracketScreenState extends State<SetupBracketScreen> {
     );
   }
 
-  // ── Build ──────────────────────────────────────────────────────────────────
-
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<TournamentBloc, TournamentState>(
       listenWhen: (previousTournamentState, currentTournamentState) {
-        final pendingSnapshotId =
-            context.read<SetupBracketBloc>().state.pendingSnapshotId;
+        final pendingSnapshotId = context
+            .read<SetupBracketBloc>()
+            .state
+            .pendingSnapshotId;
         if (pendingSnapshotId == null) return false;
 
         final wasSnapshotAdded = currentTournamentState
             .bracketsFor(widget.tournamentId)
             .any((snapshot) => snapshot.id == pendingSnapshotId);
         if (wasSnapshotAdded) return true;
-        if (previousTournamentState.isSaving && !currentTournamentState.isSaving) {
+        if (previousTournamentState.isSaving &&
+            !currentTournamentState.isSaving) {
           return true;
         }
         return false;
@@ -314,7 +307,8 @@ class _SetupBracketScreenState extends State<SetupBracketScreen> {
 
         return BlocBuilder<SetupBracketBloc, SetupBracketState>(
           builder: (context, setupState) {
-            final bool isGenerating = setupState.isAwaitingBracketGeneration ||
+            final bool isGenerating =
+                setupState.isAwaitingBracketGeneration ||
                 tournamentState.isSaving;
 
             return Scaffold(
@@ -358,7 +352,8 @@ class _SetupBracketScreenState extends State<SetupBracketScreen> {
                           disabledBackgroundColor: Colors.grey.shade300,
                           disabledForegroundColor: Colors.grey.shade600,
                         ),
-                        onPressed: setupState.hasEnoughParticipantsToGenerate &&
+                        onPressed:
+                            setupState.hasEnoughParticipantsToGenerate &&
                                 owningTournament != null &&
                                 !isGenerating
                             ? () => _handleGenerateBracketRequested(
@@ -412,9 +407,9 @@ class _SetupBracketScreenState extends State<SetupBracketScreen> {
     );
   }
 
-  // ──────────────────────────────────────────────────────────────────────────
+
   // Tournament info header (read-only)
-  // ──────────────────────────────────────────────────────────────────────────
+
 
   Widget _buildTournamentInfoHeader(TournamentEntity? tournament) {
     return Column(
@@ -486,9 +481,9 @@ class _SetupBracketScreenState extends State<SetupBracketScreen> {
     );
   }
 
-  // ──────────────────────────────────────────────────────────────────────────
+
   // Bracket details section (age category, gender, weight division)
-  // ──────────────────────────────────────────────────────────────────────────
+
 
   Widget _buildBracketDetailsSection(SetupBracketState setupState) {
     return Column(
@@ -538,9 +533,9 @@ class _SetupBracketScreenState extends State<SetupBracketScreen> {
     );
   }
 
-  // ──────────────────────────────────────────────────────────────────────────
+
   // Configuration section
-  // ──────────────────────────────────────────────────────────────────────────
+
 
   Widget _buildConfigurationSection(SetupBracketState setupState) {
     return Column(
@@ -609,9 +604,9 @@ class _SetupBracketScreenState extends State<SetupBracketScreen> {
     );
   }
 
-  // ──────────────────────────────────────────────────────────────────────────
+
   // Quick Add Player section
-  // ──────────────────────────────────────────────────────────────────────────
+
 
   Widget _buildQuickAddPlayerSection(SetupBracketState setupState) {
     return Column(
@@ -713,9 +708,9 @@ class _SetupBracketScreenState extends State<SetupBracketScreen> {
     );
   }
 
-  // ──────────────────────────────────────────────────────────────────────────
+
   // CSV import dialog
-  // ──────────────────────────────────────────────────────────────────────────
+
 
   Future<void> _showCsvImportDialog() async {
     final csvText = await showDialog<String>(
@@ -753,8 +748,7 @@ class _SetupBracketScreenState extends State<SetupBracketScreen> {
               child: const Text('Cancel'),
             ),
             ElevatedButton(
-              onPressed: () =>
-                  Navigator.pop(dialogContext, csvController.text),
+              onPressed: () => Navigator.pop(dialogContext, csvController.text),
               child: const Text('Import'),
             ),
           ],
@@ -772,8 +766,7 @@ class _SetupBracketScreenState extends State<SetupBracketScreen> {
       // Show feedback after the event propagates on the next frame.
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
-        final importedCountAfter =
-            _setupBracketBloc.state.participants.length;
+        final importedCountAfter = _setupBracketBloc.state.participants.length;
         final importedCount = importedCountAfter - importedCountBefore;
         if (importedCount > 0) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -790,9 +783,9 @@ class _SetupBracketScreenState extends State<SetupBracketScreen> {
     }
   }
 
-  // ──────────────────────────────────────────────────────────────────────────
+
   // Validators
-  // ──────────────────────────────────────────────────────────────────────────
+
 
   String? _validateFullName(String? value) {
     if (value == null || value.trim().isEmpty) {
@@ -804,9 +797,9 @@ class _SetupBracketScreenState extends State<SetupBracketScreen> {
     return null;
   }
 
-  // ──────────────────────────────────────────────────────────────────────────
+
   // Participant roster (right panel)
-  // ──────────────────────────────────────────────────────────────────────────
+
 
   Widget _buildParticipantRoster(SetupBracketState setupState) {
     return Column(
@@ -905,9 +898,9 @@ class _SetupBracketScreenState extends State<SetupBracketScreen> {
     );
   }
 
-  // ──────────────────────────────────────────────────────────────────────────
+
   // Clear-all confirmation
-  // ──────────────────────────────────────────────────────────────────────────
+
 
   Future<void> _confirmClearAllParticipants() async {
     final participantCount = _setupBracketBloc.state.participants.length;

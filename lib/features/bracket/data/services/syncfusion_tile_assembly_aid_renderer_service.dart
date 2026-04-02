@@ -21,8 +21,6 @@ import 'package:tkd_saas/features/bracket/presentation/models/print_export_setti
 class SyncfusionTileAssemblyAidRendererService {
   const SyncfusionTileAssemblyAidRendererService();
 
-  // ── Styling constants ──────────────────────────────────────────────────
-
   static const double _registrationMarkArmLength = 8.0;
   static const double _registrationMarkStrokeWidth = 0.5;
   static const Color _registrationMarkColor = Color(0xFF888888);
@@ -36,16 +34,8 @@ class SyncfusionTileAssemblyAidRendererService {
   static const double _indexPageLabelFontSize = 14.0;
   static const Color _indexPageLabelColor = Color(0xFF1565C0);
 
-  /// Vertical space reserved for title and subtitle on the index page.
   static const double _indexPageHeaderHeight = 50.0;
 
-  // ── 1. Assembly Index Page ─────────────────────────────────────────────
-
-  /// Adds an assembly index page to the [document] — a miniature bracket
-  /// grid showing numbered tile positions.
-  ///
-  /// The bracket area is represented as a rectangle with the tile grid
-  /// drawn on top, showing page numbers in each cell.
   void renderAssemblyIndexPage({
     required PdfDocument document,
     required PrintExportSettings exportSettings,
@@ -70,7 +60,6 @@ class SyncfusionTileAssemblyAidRendererService {
     final printableWidth = exportSettings.printableAreaPoints.width;
     final printableHeight = exportSettings.printableAreaPoints.height;
 
-    // ── Title ──
     final titleFont = PdfStandardFont(
       PdfFontFamily.helvetica,
       14,
@@ -95,7 +84,6 @@ class SyncfusionTileAssemblyAidRendererService {
       brush: PdfSolidBrush(const Color(0xFF777777).toPdfColor()),
     );
 
-    // ── Bracket miniature with grid overlay ──
     final availableWidth = printableWidth;
     final availableHeight = printableHeight - _indexPageHeaderHeight;
     final aspectRatio = canvasWidth / canvasHeight;
@@ -107,12 +95,10 @@ class SyncfusionTileAssemblyAidRendererService {
       displayWidth = displayHeight * aspectRatio;
     }
 
-    // Center the miniature
     final displayOriginX = (availableWidth - displayWidth) / 2;
     final displayOriginY =
         _indexPageHeaderHeight + (availableHeight - displayHeight) / 2;
 
-    // Draw bracket outline
     graphics.drawRectangle(
       bounds: Rect.fromLTWH(
         displayOriginX,
@@ -124,7 +110,6 @@ class SyncfusionTileAssemblyAidRendererService {
       brush: PdfSolidBrush(const Color(0xFFF8F8F8).toPdfColor()),
     );
 
-    // Draw tile grid
     _paintAssemblyIndexGrid(
       graphics: graphics,
       displayOriginX: displayOriginX,
@@ -185,15 +170,12 @@ class SyncfusionTileAssemblyAidRendererService {
 
         final cellRect = Rect.fromLTWH(displayX, displayY, displayW, displayH);
 
-        // Alternating fill for visual distinction
         if ((row + col) % 2 == 0) {
           graphics.drawRectangle(bounds: cellRect, brush: evenFillBrush);
         }
 
-        // Grid border
         graphics.drawRectangle(bounds: cellRect, pen: gridPen);
 
-        // Page number label — centered in the cell
         final labelText = 'P$pageNumber';
         final fontSize = min(
           _indexPageLabelFontSize,
@@ -222,13 +204,6 @@ class SyncfusionTileAssemblyAidRendererService {
     }
   }
 
-  // ── 2. Registration Marks ──────────────────────────────────────────────
-
-  /// Draws registration crosshair marks onto the [tilePageGraphics] for
-  /// a tile at the given [tileRow], [tileColumn] position in the grid.
-  ///
-  /// Marks appear at overlap zone boundaries to help with physical alignment
-  /// when assembling printed tiles.
   void renderRegistrationMarks({
     required PdfGraphics tilePageGraphics,
     required int tileRow,
@@ -243,8 +218,6 @@ class SyncfusionTileAssemblyAidRendererService {
     final overlapPoints = exportSettings.tileOverlapPoints;
     if (overlapPoints <= 0) return;
 
-    // Guard: ensure overlap boundary is within printable area
-    // If overlap exceeds printable area, skip registration marks
     final canShowLeftMark =
         overlapPoints > 0 && overlapPoints < printableArea.width;
     final canShowRightMark =
@@ -266,7 +239,6 @@ class SyncfusionTileAssemblyAidRendererService {
     final bool hasTopNeighbor = tileRow > 0;
     final bool hasBottomNeighbor = tileRow < totalRowCount - 1;
 
-    // Right overlap boundary
     if (hasRightNeighbor && canShowRightMark) {
       final double markX = printableArea.width - overlapPoints;
       if (markX > 0 && markX < printableArea.width) {
@@ -290,7 +262,6 @@ class SyncfusionTileAssemblyAidRendererService {
       }
     }
 
-    // Left overlap boundary
     if (hasLeftNeighbor && canShowLeftMark) {
       final double markX = overlapPoints;
       if (markX > 0 && markX < printableArea.width) {
@@ -314,7 +285,6 @@ class SyncfusionTileAssemblyAidRendererService {
       }
     }
 
-    // Bottom overlap boundary
     if (hasBottomNeighbor && canShowBottomMark) {
       final double markY = printableArea.height - overlapPoints;
       if (markY > 0 && markY < printableArea.height) {
@@ -338,7 +308,6 @@ class SyncfusionTileAssemblyAidRendererService {
       }
     }
 
-    // Top overlap boundary
     if (hasTopNeighbor && canShowTopMark) {
       final double markY = overlapPoints;
       if (markY > 0 && markY < printableArea.height) {
@@ -370,13 +339,11 @@ class SyncfusionTileAssemblyAidRendererService {
     double armLength,
     PdfPen pen,
   ) {
-    // Horizontal arm
     graphics.drawLine(
       pen,
       Offset(centerX - armLength, centerY),
       Offset(centerX + armLength, centerY),
     );
-    // Vertical arm
     graphics.drawLine(
       pen,
       Offset(centerX, centerY - armLength),
@@ -384,11 +351,6 @@ class SyncfusionTileAssemblyAidRendererService {
     );
   }
 
-  // ── 3. Edge Neighbor Labels ────────────────────────────────────────────
-
-  /// Draws directional labels (e.g. `→P3`) on each edge of the tile that
-  /// has an adjacent neighbor. Labels help users identify how tiles connect
-  /// during physical assembly.
   void renderEdgeNeighborLabels({
     required PdfGraphics tilePageGraphics,
     required int tileRow,
@@ -409,7 +371,6 @@ class SyncfusionTileAssemblyAidRendererService {
     int pageNumberOf(int neighborRow, int neighborCol) =>
         neighborRow * totalColumnCount + neighborCol + 1;
 
-    // Right edge → neighbor at (row, col+1)
     if (tileColumn < totalColumnCount - 1) {
       final neighborPageNumber = pageNumberOf(tileRow, tileColumn + 1);
       final labelText = 'P$neighborPageNumber >>';
@@ -427,7 +388,6 @@ class SyncfusionTileAssemblyAidRendererService {
       );
     }
 
-    // Left edge ← neighbor at (row, col-1)
     if (tileColumn > 0) {
       final neighborPageNumber = pageNumberOf(tileRow, tileColumn - 1);
       final labelText = '<< P$neighborPageNumber';
@@ -445,7 +405,6 @@ class SyncfusionTileAssemblyAidRendererService {
       );
     }
 
-    // Top edge ↑ neighbor at (row-1, col)
     if (tileRow > 0) {
       final neighborPageNumber = pageNumberOf(tileRow - 1, tileColumn);
       final labelText = 'P$neighborPageNumber above';
@@ -463,7 +422,6 @@ class SyncfusionTileAssemblyAidRendererService {
       );
     }
 
-    // Bottom edge ↓ neighbor at (row+1, col)
     if (tileRow < totalRowCount - 1) {
       final neighborPageNumber = pageNumberOf(tileRow + 1, tileColumn);
       final labelText = 'P$neighborPageNumber below';

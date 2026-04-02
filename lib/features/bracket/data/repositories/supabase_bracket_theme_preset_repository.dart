@@ -23,8 +23,6 @@ class SupabaseBracketThemePresetRepository extends BaseSupabaseRepository
 
   SupabaseBracketThemePresetRepository(this._supabaseClient);
 
-  /// Returns the authenticated user's ID or throws [AuthenticationFailure]
-  /// which is caught by [executeDbOperation] and mapped to a Left.
   String get _authenticatedUserId {
     final user = _supabaseClient.auth.currentUser;
     if (user == null) {

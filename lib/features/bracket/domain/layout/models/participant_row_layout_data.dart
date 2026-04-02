@@ -2,10 +2,6 @@ import 'dart:ui' show Offset, Rect;
 
 import 'package:tkd_saas/features/bracket/domain/layout/models/positioned_text_layout_data.dart';
 
-// ══════════════════════════════════════════════════════════════════════════════
-// PARTICIPANT ROW LAYOUT DATA
-// ══════════════════════════════════════════════════════════════════════════════
-
 /// Precomputed layout data for a single participant row card.
 ///
 /// Each first-round match contributes one or two participant rows (blue corner
@@ -21,7 +17,6 @@ import 'package:tkd_saas/features/bracket/domain/layout/models/positioned_text_l
 ///   `[reg-id | name | serial#]` with the accent strip on the right edge
 ///   and the connector anchor on the left edge.
 class ParticipantRowLayoutData {
-  /// Creates layout data for a single participant row.
   const ParticipantRowLayoutData({
     required this.matchId,
     required this.slotPosition,
@@ -40,13 +35,11 @@ class ParticipantRowLayoutData {
     this.displayRegistrationId,
   });
 
-  /// The ID of the match this participant row belongs to.
   final String matchId;
 
   /// The slot within the match — either `'blue'` (top) or `'red'` (bottom).
   final String slotPosition;
 
-  /// The participant ID occupying this slot, or `null` for TBD placeholders.
   final String? participantId;
 
   /// 1-based serial number for display (e.g., seed number in the draw).
@@ -98,6 +91,5 @@ class ParticipantRowLayoutData {
   /// The display name string (uppercased participant full name, or "TBD").
   final String displayName;
 
-  /// The display registration ID string, or `null`.
   final String? displayRegistrationId;
 }

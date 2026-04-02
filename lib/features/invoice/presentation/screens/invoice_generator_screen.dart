@@ -55,7 +55,7 @@ class InvoiceGeneratorScreen extends StatefulWidget {
 class _InvoiceGeneratorScreenState extends State<InvoiceGeneratorScreen> {
   final GlobalKey<FormState> _invoiceFormIdentifierKey = GlobalKey<FormState>();
 
-  // Seller Details
+
   final TextEditingController _companyNameInputController =
       TextEditingController(text: 'Asif Akhtar (Indie Softwares)');
   final TextEditingController _companyAddressLine1InputController =
@@ -70,7 +70,7 @@ class _InvoiceGeneratorScreenState extends State<InvoiceGeneratorScreen> {
       TextEditingController(text: '+917002689673');
   Uint8List? _uploadedCompanyLogoBytes;
 
-  // Client Details
+
   final TextEditingController _clientOrgNameInputController =
       TextEditingController();
   final TextEditingController _clientAddr1InputController =
@@ -84,7 +84,7 @@ class _InvoiceGeneratorScreenState extends State<InvoiceGeneratorScreen> {
   final TextEditingController _clientContactEmailInputController =
       TextEditingController();
 
-  // Bank & Payment Details
+
   final TextEditingController _bankNameInputController = TextEditingController();
   final TextEditingController _accHolderNameInputController =
       TextEditingController();
@@ -101,7 +101,7 @@ class _InvoiceGeneratorScreenState extends State<InvoiceGeneratorScreen> {
   final TextEditingController _txRefIdInputController = TextEditingController();
   DateTime? _selectedPaymentDate;
 
-  // Invoice Metadata
+
   final TextEditingController _invoiceTitleInputController =
       TextEditingController(text: 'INVOICE');
   final TextEditingController _invoiceNumberInputController =
@@ -120,7 +120,7 @@ class _InvoiceGeneratorScreenState extends State<InvoiceGeneratorScreen> {
   final TextEditingController _paymentInstructionsInputController =
       TextEditingController();
 
-  // Items & Terms
+
   final List<_InvoiceLineItemControllers> _lineItemControllersList = [];
   final TextEditingController _termsAndNotesInputController =
       TextEditingController(text: 'Payment due within 3 days.');
@@ -716,7 +716,7 @@ class _InvoiceGeneratorScreenState extends State<InvoiceGeneratorScreen> {
         ),
         build: (context) {
           return [
-            // Top Header: Logo and Title/MetaData
+
             pw.Row(
               mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
               crossAxisAlignment: pw.CrossAxisAlignment.start,
@@ -792,7 +792,7 @@ class _InvoiceGeneratorScreenState extends State<InvoiceGeneratorScreen> {
 
             pw.SizedBox(height: 40),
 
-            // Bill To Section
+
             pw.Row(
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [
@@ -821,7 +821,7 @@ class _InvoiceGeneratorScreenState extends State<InvoiceGeneratorScreen> {
 
             pw.SizedBox(height: 30),
 
-            // Line Items Table
+
             pw.TableHelper.fromTextArray(
               headers: ['#', 'DESCRIPTION', 'QTY', 'RATE', 'AMOUNT'],
               headerStyle: pw.TextStyle(color: PdfColors.white, fontWeight: pw.FontWeight.bold, fontSize: 9),
@@ -865,7 +865,7 @@ class _InvoiceGeneratorScreenState extends State<InvoiceGeneratorScreen> {
 
             pw.SizedBox(height: 20),
 
-            // Totals and Notes Section
+
             pw.Row(
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [
@@ -931,7 +931,7 @@ class _InvoiceGeneratorScreenState extends State<InvoiceGeneratorScreen> {
                         ),
                       ),
                       pw.SizedBox(height: 10),
-                      // Amount in Words
+
                       pw.Text(
                         'Total In Words: ${_NumberToWordsConverter.convert(data.calculateGrandTotalAmount())}',
                         style: pw.TextStyle(fontSize: 8, color: PdfColors.grey700, fontStyle: pw.FontStyle.italic),
@@ -945,7 +945,7 @@ class _InvoiceGeneratorScreenState extends State<InvoiceGeneratorScreen> {
 
             pw.Spacer(),
 
-            // Compliance & Signature
+
             if (data.legalDeclarationText.isNotEmpty)
               pw.Container(
                 margin: pw.EdgeInsets.only(top: 20),
@@ -1149,7 +1149,7 @@ class _LineItemRow extends StatelessWidget {
   }
 }
 
-// PDF Helpers (Private)
+
 
 pw.Widget _pdfMetadataRow(String label, String value, PdfColor color) {
   return pw.Padding(

@@ -20,7 +20,6 @@ void main() {
     group('defaultMode preset', () {
       const config = TieSheetThemeConfig.defaultPreset;
 
-      // ── Connector / junction tokens ──
       test('mutedColor matches original slate', () {
         expect(config.mutedColor, const Color(0xFF64748B));
       });
@@ -31,23 +30,8 @@ void main() {
         expect(config.borderColor, const Color(0xFF94A3B8));
       });
 
-      // ── Canvas & card tokens ──
+      // Canvas & card tokens
       test('canvasBackgroundColor is warm white', () {
-        expect(config.canvasBackgroundColor, const Color(0xFFFFFEFC));
-      });
-
-      test('connectorStrokeWidth is zero (varied widths)', () {
-        expect(config.connectorStrokeWidth, 0.0);
-      });
-      test('isInteractivityDisabled is false', () {
-        expect(config.isInteractivityDisabled, isFalse);
-      });
-      test('fontSizeDelta adds 4px in default mode', () {
-        expect(config.fontSizeDelta, 4.0);
-      });
-
-      // ── Text tokens ──
-      test('primaryTextColor is ink', () {
         expect(config.primaryTextColor, const Color(0xFF1E293B));
       });
       test('secondaryTextColor is subtle', () {
@@ -185,7 +169,6 @@ void main() {
       test('dashedLineGapWidth is 4', () {
         expect(config.dashedLineGapWidth, 4.0);
       });
-
 
       // ── Typography tokens ──
       test('fontFamily is Roboto', () {

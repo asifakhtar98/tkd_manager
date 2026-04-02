@@ -26,22 +26,6 @@ export 'package:tkd_saas/features/bracket/domain/entities/bracket_format.dart';
 
 part 'app_routes.g.dart';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Bracket format — type-safe enum replacing raw 'Single Elimination' /
-// 'Double Elimination' strings throughout the codebase.
-// ─────────────────────────────────────────────────────────────────────────────
-
-/// The elimination format used to generate a bracket.
-///
-/// Every bracket-related screen, BLoC event, and snapshot references this enum
-/// instead of a raw string, giving compile-time safety and a single source of
-/// truth for display labels.
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Canonical route paths — used by the redirect guard and anywhere else
-// that needs to reference a route path by compile-safe constant.
-// ─────────────────────────────────────────────────────────────────────────────
-
 /// Compile-safe route path constants.
 ///
 /// Use these instead of raw strings (e.g. `'/login'`) in redirect guards
@@ -78,22 +62,6 @@ abstract final class RoutePaths {
   /// Invoice generator route path `/invoice`
   static const String invoice = '/invoice';
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Route definitions — annotated for go_router_builder code generation.
-// Run: dart run build_runner build --delete-conflicting-outputs
-//
-// Hierarchy:
-//   /                                             → DashboardRoute
-//     tournaments/:tournamentId                   → TournamentDetailRoute
-//       setup                                     → BracketSetupRoute
-//       brackets/:snapshotId                      → BracketViewerRoute
-//   /login                                        → LoginRoute
-//   /reset-password                               → PasswordResetRoute
-//   /email-confirmed                              → EmailConfirmedRoute
-// ─────────────────────────────────────────────────────────────────────────────
-
-// ── Auth routes (top-level, no nesting needed) ───────────────────────────────
 
 @TypedGoRoute<LoginRoute>(path: '/login')
 @immutable
@@ -164,8 +132,6 @@ class InvoiceRoute extends GoRouteData with $InvoiceRoute {
   Widget build(BuildContext context, GoRouterState state) =>
       const InvoiceGeneratorScreen();
 }
-
-// ── Main app routes (nested hierarchy) ───────────────────────────────────────
 
 @TypedGoRoute<DashboardRoute>(
   path: '/',
@@ -258,9 +224,7 @@ class BracketViewerRoute extends GoRouteData with $BracketViewerRoute {
                   getIt<BracketThemePresetBloc>()
                     ..add(const BracketThemePresetEvent.loadRequested()),
             ),
-            BlocProvider(
-              create: (_) => getIt<BracketThemeSelectionBloc>(),
-            ),
+            BlocProvider(create: (_) => getIt<BracketThemeSelectionBloc>()),
           ],
           child: BracketViewerScreen(
             tournament: tournament,
@@ -284,8 +248,6 @@ class _BracketNotFoundPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Check whether the tournament itself still exists so the user can
-    // navigate back to it instead of the root dashboard.
     final tournamentExists = context
         .read<TournamentBloc>()
         .state

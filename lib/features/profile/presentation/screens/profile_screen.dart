@@ -48,7 +48,6 @@ class _ProfileView extends StatelessWidget {
           );
         },
         builder: (context, state) {
-          // Wrap content in a loading overlay if updating
           return Stack(
             children: [
               _buildContent(context),
@@ -101,8 +100,7 @@ class _IdentityCard extends StatelessWidget {
         final user = state.whenOrNull(authenticated: (user) => user);
         if (user == null) return const SizedBox.shrink();
 
-        final orgName =
-            user.userMetadata?['display_name'] as String? ?? 'N/A';
+        final orgName = user.userMetadata?['display_name'] as String? ?? 'N/A';
         final initial = orgName.isNotEmpty ? orgName[0].toUpperCase() : 'A';
 
         return Card(
@@ -159,10 +157,8 @@ class _IdentityCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                // Only show Edit if there's an organization string editable
                 IconButton(
                   onPressed: () {
-                    
                     _showEditOrganizationDialog(context, orgName);
                   },
                   icon: const Icon(Icons.edit_outlined),
@@ -199,7 +195,6 @@ class _IdentityCard extends StatelessWidget {
             onPressed: () {
               final newName = controller.text.trim();
               if (newName != currentName) {
-                // Pass event to BLoC
                 context.read<ProfileBloc>().add(
                   ProfileUpdateOrganizationRequested(
                     newOrganizationName: newName,
@@ -280,7 +275,9 @@ class _SoftwareStatusCard extends StatelessWidget {
                 if (activationStatus is ActivationStatusActive) {
                   final expiresAt = activationStatus.expiresAt;
                   final dateFormat = DateFormat('dd MMM yyyy');
-                  final difference = expiresAt.difference(DateTime.now().toUtc());
+                  final difference = expiresAt.difference(
+                    DateTime.now().toUtc(),
+                  );
                   final daysRemaining = difference.isNegative
                       ? 0
                       : (difference.inMinutes / 1440).ceil();
@@ -289,7 +286,8 @@ class _SoftwareStatusCard extends StatelessWidget {
                     icon: Icons.check_circle,
                     color: Colors.green,
                     title: 'Product Activated',
-                    subtitle: 'Active until ${dateFormat.format(expiresAt.toLocal())} ($daysRemaining days remaining)',
+                    subtitle:
+                        'Active until ${dateFormat.format(expiresAt.toLocal())} ($daysRemaining days remaining)',
                   );
                 } else if (activationStatus == null ||
                     activationStatus is ActivationStatusNotActivated) {
@@ -304,7 +302,8 @@ class _SoftwareStatusCard extends StatelessWidget {
                     icon: Icons.warning_amber_rounded,
                     color: Colors.orange,
                     title: 'Activation Request Pending',
-                    subtitle: 'Your activation request is awaiting admin approval.',
+                    subtitle:
+                        'Your activation request is awaiting admin approval.',
                   );
                 }
               },
@@ -420,8 +419,6 @@ class _DangerZoneCard extends StatelessWidget {
                   context.read<AuthenticationBloc>().add(
                     const AuthenticationSignOutRequested(),
                   );
-                  // No need to redirect manually; the AuthenticationBloc's status stream listener
-                  // inside the app handles kicking the user back to the login screen.
                 },
                 icon: const Icon(Icons.logout),
                 label: const Text('Sign Out'),

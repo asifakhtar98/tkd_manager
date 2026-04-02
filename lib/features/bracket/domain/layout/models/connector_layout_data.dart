@@ -2,10 +2,6 @@ import 'dart:ui' show Offset;
 
 import 'package:tkd_saas/features/bracket/domain/layout/models/positioned_text_layout_data.dart';
 
-// ══════════════════════════════════════════════════════════════════════════════
-// CONNECTOR LAYOUT DATA
-// ══════════════════════════════════════════════════════════════════════════════
-
 /// Precomputed layout data for a single connector line or path.
 ///
 /// Connectors are the lines and curves that connect participant rows to
@@ -19,52 +15,37 @@ import 'package:tkd_saas/features/bracket/domain/layout/models/positioned_text_l
 /// - A bezier arc path ([arcPathData])
 /// - Or both (rare — e.g., a combined connector).
 class ConnectorLayoutData {
-  /// Creates layout data for a connector with straight segments.
   const ConnectorLayoutData.straightSegments({
     required this.connectorVisualType,
     required List<LineSegmentLayoutData> segments,
   }) : straightLineSegments = segments,
        arcPathData = null;
 
-  /// Creates layout data for a connector with a single straight line.
   ConnectorLayoutData.singleLine({
     required this.connectorVisualType,
     required Offset startOffset,
     required Offset endOffset,
   }) : straightLineSegments = [
-         LineSegmentLayoutData(
-           startOffset: startOffset,
-           endOffset: endOffset,
-         ),
+         LineSegmentLayoutData(startOffset: startOffset, endOffset: endOffset),
        ],
        arcPathData = null;
 
-  /// Creates layout data for a connector with a bezier arc path.
   const ConnectorLayoutData.arcPath({
     required this.connectorVisualType,
     required ConnectorArcPathData pathData,
   }) : arcPathData = pathData,
        straightLineSegments = null;
 
-  /// Visual type determining stroke style (color, width, dash pattern).
   final ConnectorVisualType connectorVisualType;
 
-  /// Straight line segments for simple connectors.
-  ///
   /// Used for horizontal feeder lines, vertical trunk lines, and
   /// GF output arms. Multiple segments can form a polyline.
   final List<LineSegmentLayoutData>? straightLineSegments;
 
-  /// Curved path data for bezier junction arms.
-  ///
   /// Used when a feeder line transitions from horizontal to vertical
   /// with a rounded corner (the standard junction arm shape).
   final ConnectorArcPathData? arcPathData;
 }
-
-// ══════════════════════════════════════════════════════════════════════════════
-// CONNECTOR VISUAL TYPE
-// ══════════════════════════════════════════════════════════════════════════════
 
 /// Semantic type determining how a connector is visually rendered.
 ///
@@ -104,10 +85,6 @@ enum ConnectorVisualType {
   thickBorder,
 }
 
-// ══════════════════════════════════════════════════════════════════════════════
-// CONNECTOR ARC PATH DATA
-// ══════════════════════════════════════════════════════════════════════════════
-
 /// Data describing a curved junction arm path.
 ///
 /// The arm shape is: horizontal line → 90° arc → vertical line, creating
@@ -121,7 +98,6 @@ enum ConnectorVisualType {
 /// lineTo(lineToAfterArcOffset)          // vertical segment
 /// ```
 class ConnectorArcPathData {
-  /// Creates arc path data for a junction arm.
   const ConnectorArcPathData({
     required this.moveToOffset,
     required this.lineToBeforeArcOffset,
@@ -131,24 +107,18 @@ class ConnectorArcPathData {
     required this.lineToAfterArcOffset,
   });
 
-  /// Starting point of the path (the feeder input coordinate).
   final Offset moveToOffset;
 
-  /// End of the horizontal segment where the arc begins.
   final Offset lineToBeforeArcOffset;
 
-  /// Endpoint of the 90° arc.
   final Offset arcEndOffset;
 
   /// Corner radius of the arc (from [TieSheetThemeConfig.junctionCornerRadius]).
   final double arcRadius;
 
-  /// Whether the arc sweeps clockwise.
-  ///
   /// Top arms: clockwise when not mirrored.
   /// Bottom arms: clockwise when mirrored.
   final bool isArcClockwise;
 
-  /// End of the vertical segment after the arc (the junction midpoint).
   final Offset lineToAfterArcOffset;
 }
