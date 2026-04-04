@@ -34,3 +34,5 @@ The loop stops only when all completed epics are fully usable and testable in re
 - do exhaustive code review of the changes/implementation. fix all issues found also do some dx enhancements, fix ux gaps if needed on recent code changes and neighbour codes. dont overcommunicate
 
 -continue from where left off.
+
+-Write comments for only very complex business logics. for ovious things dont add any comment/ remove if exist if code is self explanatory.

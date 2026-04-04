@@ -1,10 +1,11 @@
+import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:pdf/pdf.dart';
-import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
+import 'package:syncfusion_flutter_pdf/pdf.dart';
+import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 import 'package:file_picker/file_picker.dart';
 
 import '../../domain/entities/invoice_data_entity.dart';
@@ -55,7 +56,6 @@ class InvoiceGeneratorScreen extends StatefulWidget {
 class _InvoiceGeneratorScreenState extends State<InvoiceGeneratorScreen> {
   final GlobalKey<FormState> _invoiceFormIdentifierKey = GlobalKey<FormState>();
 
-
   final TextEditingController _companyNameInputController =
       TextEditingController(text: 'Asif Akhtar (Indie Softwares)');
   final TextEditingController _companyAddressLine1InputController =
@@ -70,7 +70,6 @@ class _InvoiceGeneratorScreenState extends State<InvoiceGeneratorScreen> {
       TextEditingController(text: '+917002689673');
   Uint8List? _uploadedCompanyLogoBytes;
 
-
   final TextEditingController _clientOrgNameInputController =
       TextEditingController();
   final TextEditingController _clientAddr1InputController =
@@ -84,8 +83,8 @@ class _InvoiceGeneratorScreenState extends State<InvoiceGeneratorScreen> {
   final TextEditingController _clientContactEmailInputController =
       TextEditingController();
 
-
-  final TextEditingController _bankNameInputController = TextEditingController();
+  final TextEditingController _bankNameInputController =
+      TextEditingController();
   final TextEditingController _accHolderNameInputController =
       TextEditingController();
   final TextEditingController _accNumberInputController =
@@ -94,13 +93,11 @@ class _InvoiceGeneratorScreenState extends State<InvoiceGeneratorScreen> {
       TextEditingController();
   final TextEditingController _branchNameInputController =
       TextEditingController();
-  final TextEditingController _upiIdInputController =
-      TextEditingController();
+  final TextEditingController _upiIdInputController = TextEditingController();
   final TextEditingController _paymentModeInputController =
       TextEditingController(text: 'UPI');
   final TextEditingController _txRefIdInputController = TextEditingController();
   DateTime? _selectedPaymentDate;
-
 
   final TextEditingController _invoiceTitleInputController =
       TextEditingController(text: 'INVOICE');
@@ -113,20 +110,21 @@ class _InvoiceGeneratorScreenState extends State<InvoiceGeneratorScreen> {
   String _selectedCurrency = 'INR ';
   bool _isFullyPaid = false;
   bool _isRoundingEnabled = true;
-  final TextEditingController _taxLabelInputController =
-      TextEditingController(text: 'GST');
+  final TextEditingController _taxLabelInputController = TextEditingController(
+    text: 'GST',
+  );
   final TextEditingController _taxPercentageInputController =
       TextEditingController(text: '0');
   final TextEditingController _paymentInstructionsInputController =
       TextEditingController();
 
-
   final List<_InvoiceLineItemControllers> _lineItemControllersList = [];
   final TextEditingController _termsAndNotesInputController =
       TextEditingController(text: 'Payment due within 3 days.');
-  final TextEditingController _legalDeclarationInputController =
-      TextEditingController(
-    text: 'Supplier is not registered under GST. No GST charged under threshold exemption.',
+  final TextEditingController
+  _legalDeclarationInputController = TextEditingController(
+    text:
+        'Supplier is not registered under GST. No GST charged under threshold exemption.',
   );
   bool _includeSignatureBlocks = true;
   final TextEditingController _signatoryNameInputController =
@@ -243,17 +241,20 @@ class _InvoiceGeneratorScreenState extends State<InvoiceGeneratorScreen> {
       invoiceDueDate: _selectedDueDate,
       invoiceCurrencySymbol: _selectedCurrency,
       invoiceLineItems: _lineItemControllersList
-          .map((c) => InvoiceItemEntity(
-                itemName: c.itemNameController.text,
-                itemDescription: c.itemDescriptionController.text,
-                itemQuantity: int.tryParse(c.quantityController.text) ?? 1,
-                itemRateAmount: double.tryParse(c.rateController.text) ?? 0.0,
-              ))
+          .map(
+            (c) => InvoiceItemEntity(
+              itemName: c.itemNameController.text,
+              itemDescription: c.itemDescriptionController.text,
+              itemQuantity: int.tryParse(c.quantityController.text) ?? 1,
+              itemRateAmount: double.tryParse(c.rateController.text) ?? 0.0,
+            ),
+          )
           .toList(),
       invoiceAppliedTaxes: [
         InvoiceTaxEntity(
           taxLabelName: _taxLabelInputController.text,
-          taxPercentageValue: double.tryParse(_taxPercentageInputController.text) ?? 0.0,
+          taxPercentageValue:
+              double.tryParse(_taxPercentageInputController.text) ?? 0.0,
         ),
       ],
       invoiceTermsAndConditionsText: _termsAndNotesInputController.text,
@@ -287,7 +288,17 @@ class _InvoiceGeneratorScreenState extends State<InvoiceGeneratorScreen> {
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
         title: const Text('My Invoice Generator'),
-    
+        actions: [
+          TextButton.icon(
+            onPressed: () => _exportPdf(context, data),
+            icon: const Icon(Icons.download, color: Colors.white),
+            label: const Text(
+              'Export PDF',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
       body: isDesktop
           ? Row(
@@ -606,11 +617,16 @@ class _InvoiceGeneratorScreenState extends State<InvoiceGeneratorScreen> {
             children: _saasPlansAvailable.map((plan) {
               return OutlinedButton.icon(
                 onPressed: () => _addNewLineItem(plan),
-                label: Text(plan.title, style: const TextStyle(color: Colors.black87)),
+                label: Text(
+                  plan.title,
+                  style: const TextStyle(color: Colors.black87),
+                ),
                 icon: const Icon(Icons.flash_on, size: 16, color: Colors.amber),
                 style: OutlinedButton.styleFrom(
                   side: const BorderSide(color: Colors.black12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
               );
             }).toList(),
@@ -631,7 +647,9 @@ class _InvoiceGeneratorScreenState extends State<InvoiceGeneratorScreen> {
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.black,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
           ),
           const SizedBox(height: 32),
@@ -681,307 +699,769 @@ class _InvoiceGeneratorScreenState extends State<InvoiceGeneratorScreen> {
   }
 
   Widget _buildPreview(InvoiceDataEntity data) {
-    return Container(
-      color: Colors.grey[200],
-      child: PdfPreview(
-        build: (format) => _generatePdf(format, data),
-        canChangeOrientation: false,
-        canChangePageFormat: false,
-        canDebug: false,
-      ),
+    return FutureBuilder<Uint8List>(
+      future: _generatePdf(data),
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          return SfPdfViewer.memory(snapshot.data!);
+        }
+        return const Center(child: CircularProgressIndicator());
+      },
     );
   }
 
-  Future<Uint8List> _generatePdf(PdfPageFormat format, InvoiceDataEntity data) async {
-    final pdf = pw.Document();
-    final df = DateFormat('dd-MMM-yyyy');
-    final primaryColor = PdfColors.black;
-    final secondaryColor = PdfColors.grey700;
-    final accentColor = PdfColors.grey200;
-    final successColor = PdfColors.green700;
-    final errorColor = PdfColors.red700;
+  Future<Uint8List> _generatePdf(InvoiceDataEntity data) async {
+    final PdfDocument document = PdfDocument();
+    document.pageSettings.orientation = PdfPageOrientation.portrait;
+    document.pageSettings.margins = PdfMargins()..all = 40;
 
-    final logo = data.companyDetails.companyLogoBytes != null
-        ? pw.MemoryImage(data.companyDetails.companyLogoBytes!)
-        : null;
+    final DateFormat dateFormatter = DateFormat('dd-MMM-yyyy');
+    final PdfColor primaryColor = PdfColor(0, 0, 0);
+    final PdfColor secondaryColor = PdfColor(96, 96, 96);
+    final PdfColor accentColor = PdfColor(238, 238, 238);
+    final PdfColor successColor = PdfColor(27, 94, 32);
+    final PdfColor errorColor = PdfColor(183, 28, 28);
+    final PdfColor whiteColor = PdfColor(255, 255, 255);
+    final PdfColor lightGreenColor = PdfColor(232, 245, 233);
+    final PdfColor lightRedColor = PdfColor(255, 235, 238);
+    final PdfColor greyBorderColor = PdfColor(224, 224, 224);
+    final PdfColor grey500Color = PdfColor(158, 158, 158);
+    final PdfColor grey600Color = PdfColor(117, 117, 117);
+    final PdfColor grey700Color = PdfColor(97, 97, 97);
 
-    pdf.addPage(
-      pw.MultiPage(
-        pageFormat: format,
-        margin: const pw.EdgeInsets.all(40),
-        header: (context) => pw.Container(
-          height: 10,
-          color: primaryColor,
-          margin: const pw.EdgeInsets.only(bottom: 20),
-        ),
-        build: (context) {
-          return [
+    PdfBitmap? logoImage;
+    if (data.companyDetails.companyLogoBytes != null) {
+      try {
+        logoImage = PdfBitmap(data.companyDetails.companyLogoBytes!);
+      } catch (_) {
+        logoImage = null;
+      }
+    }
 
-            pw.Row(
-              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: pw.CrossAxisAlignment.start,
-              children: [
-                pw.Column(
-                  crossAxisAlignment: pw.CrossAxisAlignment.start,
-                  children: [
-                    if (logo != null)
-                      pw.Container(
-                        padding: const pw.EdgeInsets.only(bottom: 10),
-                        child: pw.Image(logo, height: 60),
-                      ),
-                    pw.Text(
-                      data.companyDetails.companyName.toUpperCase(),
-                      style: pw.TextStyle(
-                        fontSize: 16,
-                        fontWeight: pw.FontWeight.bold,
-                        color: secondaryColor,
-                      ),
-                    ),
-                    pw.SizedBox(height: 4),
-                    pw.Text(data.companyDetails.companyAddressLine1, style: pw.TextStyle(fontSize: 9)),
-                    pw.Text(data.companyDetails.companyAddressLine2, style: pw.TextStyle(fontSize: 9)),
-                    if (data.companyDetails.companyTaxIdentificationNumber.isNotEmpty)
-                      pw.Text('PAN: ${data.companyDetails.companyTaxIdentificationNumber}', style: pw.TextStyle(fontSize: 9)),
-                    pw.Text('P: ${data.companyDetails.companyPhone}', style: pw.TextStyle(fontSize: 9)),
-                    pw.Text('E: ${data.companyDetails.companyEmail}', style: pw.TextStyle(fontSize: 9)),
-                  ],
-                ),
-                pw.Column(
-                  crossAxisAlignment: pw.CrossAxisAlignment.end,
-                  children: [
-                    pw.Text(
-                      data.invoiceTitle.toUpperCase(),
-                      style: pw.TextStyle(
-                        fontSize: 32,
-                        fontWeight: pw.FontWeight.bold,
-                        color: primaryColor,
-                      ),
-                    ),
-                    pw.SizedBox(height: 10),
-                    _pdfMetadataRow('Invoice #', data.invoiceDocumentNumber, primaryColor),
-                    _pdfMetadataRow('Date', df.format(data.invoiceIssueDate), primaryColor),
-                    _pdfMetadataRow('Due Date', df.format(data.invoiceDueDate), primaryColor),
-                    if (data.invoiceReferenceNumber.isNotEmpty)
-                      _pdfMetadataRow('Ref #', data.invoiceReferenceNumber, primaryColor),
-                    if (data.isFullyPaid)
-                      pw.Container(
-                        margin: const pw.EdgeInsets.only(top: 10),
-                        padding: pw.EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: pw.BoxDecoration(
-                          color: PdfColors.green50,
-                          borderRadius: pw.BorderRadius.all(pw.Radius.circular(4)),
-                          border: pw.Border.all(color: successColor, width: 0.5),
-                        ),
-                        child: pw.Text('COMPLETED / PAID', style: pw.TextStyle(color: successColor, fontWeight: pw.FontWeight.bold, fontSize: 10)),
-                      ),
-                    if (!data.isFullyPaid && data.invoiceDueDate.isBefore(DateTime.now()))
-                       pw.Container(
-                        margin: const pw.EdgeInsets.only(top: 10),
-                        padding: pw.EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: pw.BoxDecoration(
-                          color: PdfColors.red50,
-                          borderRadius: pw.BorderRadius.all(pw.Radius.circular(4)),
-                          border: pw.Border.all(color: errorColor, width: 0.5),
-                        ),
-                        child: pw.Text('OVERDUE', style: pw.TextStyle(color: errorColor, fontWeight: pw.FontWeight.bold, fontSize: 10)),
-                      ),
-                  ],
-                ),
-              ],
-            ),
+    final PdfPage page = document.pages.add();
+    final PdfGraphics pageGraphics = page.graphics;
+    final Size pageSize = page.getClientSize();
+    final double pageWidth = pageSize.width;
+    double currentY = 0;
 
-            pw.SizedBox(height: 40),
+    final PdfPageTemplateElement headerBar = PdfPageTemplateElement(
+      Rect.fromLTWH(0, 0, pageWidth + 80, 10),
+    );
+    headerBar.graphics.drawRectangle(
+      brush: PdfSolidBrush(primaryColor),
+      bounds: Rect.fromLTWH(0, 0, pageWidth + 80, 10),
+    );
+    document.template.top = headerBar;
 
+    currentY = 10;
 
-            pw.Row(
-              crossAxisAlignment: pw.CrossAxisAlignment.start,
-              children: [
-                pw.Expanded(
-                  child: pw.Column(
-                    crossAxisAlignment: pw.CrossAxisAlignment.start,
-                    children: [
-                      pw.Text('BILL TO', style: pw.TextStyle(fontSize: 8, color: primaryColor, fontWeight: pw.FontWeight.bold)),
-                      pw.SizedBox(height: 4),
-                      pw.Text(
-                        data.clientDetails.clientOrganizationName,
-                        style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 12),
-                      ),
-                      pw.Text(data.clientDetails.clientAddressLine1, style: pw.TextStyle(fontSize: 9)),
-                      pw.Text(data.clientDetails.clientAddressLine2, style: pw.TextStyle(fontSize: 9)),
-                      pw.Text('E: ${data.clientDetails.clientContactEmail}', style: pw.TextStyle(fontSize: 9)),
-                      if (data.clientDetails.clientTaxIdentificationNumber.isNotEmpty)
-                        pw.Text('GSTIN: ${data.clientDetails.clientTaxIdentificationNumber}', style: pw.TextStyle(fontSize: 9)),
-                      pw.SizedBox(height: 4),
-                      pw.Text('Contact: ${data.clientDetails.clientContactPerson}', style: pw.TextStyle(fontSize: 9)),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+    final double leftColumnX = 0;
+    final double rightColumnX = pageWidth * 0.55;
+    final double rightColumnWidth = pageWidth - rightColumnX;
 
-            pw.SizedBox(height: 30),
+    if (logoImage != null) {
+      final double logoHeight = 60;
+      final double logoWidth =
+          logoImage.width * (logoHeight / logoImage.height);
+      pageGraphics.drawImage(
+        logoImage,
+        Rect.fromLTWH(leftColumnX, currentY, logoWidth, logoHeight),
+      );
+      currentY += logoHeight + 5;
+    }
 
-
-            pw.TableHelper.fromTextArray(
-              headers: ['#', 'DESCRIPTION', 'QTY', 'RATE', 'AMOUNT'],
-              headerStyle: pw.TextStyle(color: PdfColors.white, fontWeight: pw.FontWeight.bold, fontSize: 9),
-              headerDecoration: pw.BoxDecoration(color: primaryColor),
-              cellPadding: pw.EdgeInsets.all(8),
-              columnWidths: {
-                0: pw.FixedColumnWidth(25),
-                1: pw.FlexColumnWidth(5),
-                2: pw.FixedColumnWidth(40),
-                3: pw.FixedColumnWidth(80),
-                4: pw.FixedColumnWidth(80),
-              },
-              data: List<List<dynamic>>.generate(data.invoiceLineItems.length, (index) {
-                final item = data.invoiceLineItems[index];
-                return [
-                  (index + 1).toString(),
-                  pw.Column(
-                    crossAxisAlignment: pw.CrossAxisAlignment.start,
-                    children: [
-                      pw.Text(item.itemName, style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10)),
-                      pw.Text(item.itemDescription, style: pw.TextStyle(fontSize: 8, color: PdfColors.grey700)),
-                    ],
-                  ),
-                  item.itemQuantity.toString(),
-                  '${data.invoiceCurrencySymbol}${item.itemRateAmount.toStringAsFixed(2)}',
-                  '${data.invoiceCurrencySymbol}${item.calculateTotalItemAmount().toStringAsFixed(2)}',
-                ];
-              }),
-              border: null,
-              rowDecoration: pw.BoxDecoration(
-                border: pw.Border(bottom: pw.BorderSide(color: PdfColors.grey200, width: 0.5)),
-              ),
-              cellAlignments: {
-                0: pw.Alignment.centerLeft,
-                1: pw.Alignment.centerLeft,
-                2: pw.Alignment.center,
-                3: pw.Alignment.centerRight,
-                4: pw.Alignment.centerRight,
-              },
-            ),
-
-            pw.SizedBox(height: 20),
-
-
-            pw.Row(
-              crossAxisAlignment: pw.CrossAxisAlignment.start,
-              children: [
-                pw.Expanded(
-                  flex: 3,
-                  child: pw.Column(
-                    crossAxisAlignment: pw.CrossAxisAlignment.start,
-                    children: [
-                      if (data.bankDetails.hasAnyInformationalDetails) ...[
-                        pw.Text('PAYMENT INFORMATION', style: pw.TextStyle(fontSize: 8, color: primaryColor, fontWeight: pw.FontWeight.bold)),
-                        pw.SizedBox(height: 6),
-                        _pdfLabelValue('Bank Name', data.bankDetails.bankName),
-                        _pdfLabelValue('Account Name', data.bankDetails.accountHolderName),
-                        _pdfLabelValue('Account Number', data.bankDetails.accountNumber),
-                        _pdfLabelValue('IFSC Code', data.bankDetails.ifscCode),
-                        _pdfLabelValue('Branch', data.bankDetails.branchName),
-                        _pdfLabelValue('UPI ID', data.bankDetails.upiId),
-                        if (data.isFullyPaid) ...[
-                          if (data.paymentMode.isNotEmpty)
-                            _pdfLabelValue('Payment Mode', data.paymentMode),
-                          if (data.transactionReferenceId.isNotEmpty)
-                            _pdfLabelValue('Tx Ref ID', data.transactionReferenceId),
-                          if (data.paymentDate != null)
-                            _pdfLabelValue('Paid Date', df.format(data.paymentDate!)),
-                        ],
-                        pw.SizedBox(height: 10),
-                      ],
-                      if (data.invoicePaymentInstructionsText.isNotEmpty) ...[
-                        pw.Text('PAYMENT INSTRUCTIONS', style: pw.TextStyle(fontSize: 8, color: primaryColor, fontWeight: pw.FontWeight.bold)),
-                        pw.SizedBox(height: 4),
-                        pw.Text(data.invoicePaymentInstructionsText, style: pw.TextStyle(fontSize: 8)),
-                        pw.SizedBox(height: 10),
-                      ],
-                      if (data.invoiceTermsAndConditionsText.isNotEmpty) ...[
-                        pw.Text('NOTES', style: pw.TextStyle(fontSize: 8, color: primaryColor, fontWeight: pw.FontWeight.bold)),
-                        pw.SizedBox(height: 4),
-                        pw.Text(data.invoiceTermsAndConditionsText, style: pw.TextStyle(fontSize: 8)),
-                      ],
-                    ],
-                  ),
-                ),
-                pw.Expanded(
-                  flex: 2,
-                  child: pw.Column(
-                    children: [
-                      _pdfSummaryRow('Subtotal', '${data.invoiceCurrencySymbol}${data.calculateSubTotalAmount().toStringAsFixed(2)}'),
-                      ...data.invoiceAppliedTaxes.map((tax) {
-                        final taxAmount = data.calculateSubTotalAmount() * (tax.taxPercentageValue / 100.0);
-                        if (taxAmount == 0) return pw.SizedBox();
-                        return _pdfSummaryRow('${tax.taxLabelName} (${tax.taxPercentageValue}%)', '${data.invoiceCurrencySymbol}${taxAmount.toStringAsFixed(2)}');
-                      }),
-                      if (data.roundingAmount != 0)
-                        _pdfSummaryRow('Round Off', '${data.roundingAmount > 0 ? "+" : ""}${data.roundingAmount.toStringAsFixed(2)}'),
-                      pw.Divider(color: PdfColors.grey200),
-                      pw.Container(
-                        padding: pw.EdgeInsets.all(6),
-                        decoration: pw.BoxDecoration(color: accentColor, borderRadius: pw.BorderRadius.all(pw.Radius.circular(4))),
-                        child: _pdfSummaryRow(
-                          'Grand Total',
-                          '${data.invoiceCurrencySymbol}${data.calculateGrandTotalAmount().toStringAsFixed(2)}',
-                          isBold: true,
-                          color: primaryColor,
-                        ),
-                      ),
-                      pw.SizedBox(height: 10),
-
-                      pw.Text(
-                        'Total In Words: ${_NumberToWordsConverter.convert(data.calculateGrandTotalAmount())}',
-                        style: pw.TextStyle(fontSize: 8, color: PdfColors.grey700, fontStyle: pw.FontStyle.italic),
-                        textAlign: pw.TextAlign.right,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-
-            pw.Spacer(),
-
-
-            if (data.legalDeclarationText.isNotEmpty)
-              pw.Container(
-                margin: pw.EdgeInsets.only(top: 20),
-                padding: pw.EdgeInsets.all(8),
-                decoration: pw.BoxDecoration(border: pw.Border(left: pw.BorderSide(color: PdfColors.grey300, width: 2))),
-                child: pw.Text(data.legalDeclarationText, style: pw.TextStyle(fontSize: 7, color: PdfColors.grey700)),
-              ),
-
-            pw.SizedBox(height: 20),
-
-            pw.Row(
-              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: pw.CrossAxisAlignment.end,
-              children: [
-                if (data.isComputerGeneratedNotice)
-                  pw.Text('E. & O.E. | This is a computer generated document.',
-                      style: pw.TextStyle(fontSize: 7, color: PdfColors.grey500)),
-                if (data.includeSignaturePlaceholder)
-                  pw.Column(
-                    children: [
-                      pw.Text('For ${data.companyDetails.companyName}',
-                          style: pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold)),
-                      pw.SizedBox(height: 30),
-                      pw.Text(data.signatoryName,
-                          style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold, fontStyle: pw.FontStyle.italic)),
-                      pw.Container(width: 120, height: 1, color: secondaryColor),
-                      pw.Text('Authorised Signatory', style: pw.TextStyle(fontSize: 7)),
-                    ],
-                  ),
-              ],
-            ),
-          ];
-        },
+    final PdfFont companyNameFont = PdfStandardFont(
+      PdfFontFamily.helvetica,
+      16,
+      style: PdfFontStyle.bold,
+    );
+    final Size companyNameSize = companyNameFont.measureString(
+      data.companyDetails.companyName.toUpperCase(),
+    );
+    pageGraphics.drawString(
+      data.companyDetails.companyName.toUpperCase(),
+      companyNameFont,
+      brush: PdfSolidBrush(secondaryColor),
+      bounds: Rect.fromLTWH(
+        leftColumnX,
+        currentY,
+        companyNameSize.width,
+        companyNameSize.height,
       ),
     );
-    return pdf.save();
+    currentY += companyNameSize.height + 4;
+
+    final PdfFont smallFont = PdfStandardFont(PdfFontFamily.helvetica, 9);
+
+    void drawLeftLine(String text) {
+      final Size textSize = smallFont.measureString(text);
+      pageGraphics.drawString(
+        text,
+        smallFont,
+        bounds: Rect.fromLTWH(
+          leftColumnX,
+          currentY,
+          textSize.width,
+          textSize.height,
+        ),
+      );
+      currentY += textSize.height + 2;
+    }
+
+    drawLeftLine(data.companyDetails.companyAddressLine1);
+    drawLeftLine(data.companyDetails.companyAddressLine2);
+    if (data.companyDetails.companyTaxIdentificationNumber.isNotEmpty) {
+      drawLeftLine(
+        'PAN: ${data.companyDetails.companyTaxIdentificationNumber}',
+      );
+    }
+    drawLeftLine('P: ${data.companyDetails.companyPhone}');
+    drawLeftLine('E: ${data.companyDetails.companyEmail}');
+
+    double rightColumnCurrentY = 10;
+
+    final PdfFont titleFont = PdfStandardFont(
+      PdfFontFamily.helvetica,
+      32,
+      style: PdfFontStyle.bold,
+    );
+    final String titleText = data.invoiceTitle.toUpperCase();
+    final Size titleSize = titleFont.measureString(titleText);
+    pageGraphics.drawString(
+      titleText,
+      titleFont,
+      brush: PdfSolidBrush(primaryColor),
+      bounds: Rect.fromLTWH(
+        rightColumnX,
+        rightColumnCurrentY,
+        rightColumnWidth,
+        titleSize.height,
+      ),
+      format: PdfStringFormat(alignment: PdfTextAlignment.right),
+    );
+    rightColumnCurrentY += titleSize.height + 10;
+
+    void drawRightMetadataRow(String label, String value) {
+      final PdfFont labelFont = PdfStandardFont(PdfFontFamily.helvetica, 10);
+      final PdfFont valueFont = PdfStandardFont(
+        PdfFontFamily.helvetica,
+        10,
+        style: PdfFontStyle.bold,
+      );
+      final Size labelSize = labelFont.measureString('$label: ');
+      final Size valueSize = valueFont.measureString(value);
+      final double totalWidth = labelSize.width + valueSize.width;
+      final double startX = rightColumnX + rightColumnWidth - totalWidth;
+      pageGraphics.drawString(
+        '$label: ',
+        labelFont,
+        brush: PdfSolidBrush(grey700Color),
+        bounds: Rect.fromLTWH(
+          startX,
+          rightColumnCurrentY,
+          labelSize.width,
+          labelSize.height,
+        ),
+      );
+      pageGraphics.drawString(
+        value,
+        valueFont,
+        bounds: Rect.fromLTWH(
+          startX + labelSize.width,
+          rightColumnCurrentY,
+          valueSize.width,
+          valueSize.height,
+        ),
+      );
+      rightColumnCurrentY += max(labelSize.height, valueSize.height) + 2;
+    }
+
+    drawRightMetadataRow('Invoice #', data.invoiceDocumentNumber);
+    drawRightMetadataRow('Date', dateFormatter.format(data.invoiceIssueDate));
+    drawRightMetadataRow('Due Date', dateFormatter.format(data.invoiceDueDate));
+    if (data.invoiceReferenceNumber.isNotEmpty) {
+      drawRightMetadataRow('Ref #', data.invoiceReferenceNumber);
+    }
+
+    if (data.isFullyPaid) {
+      rightColumnCurrentY += 10;
+      final PdfFont badgeFont = PdfStandardFont(
+        PdfFontFamily.helvetica,
+        10,
+        style: PdfFontStyle.bold,
+      );
+      const String badgeText = 'COMPLETED / PAID';
+      final Size badgeSize = badgeFont.measureString(badgeText);
+      const double badgePaddingH = 10;
+      const double badgePaddingV = 4;
+      final double badgeWidth = badgeSize.width + badgePaddingH * 2;
+      final double badgeHeight = badgeSize.height + badgePaddingV * 2;
+      final double badgeX = rightColumnX + rightColumnWidth - badgeWidth;
+      pageGraphics.drawRectangle(
+        pen: PdfPen(successColor, width: 0.5),
+        brush: PdfSolidBrush(lightGreenColor),
+        bounds: Rect.fromLTWH(
+          badgeX,
+          rightColumnCurrentY,
+          badgeWidth,
+          badgeHeight,
+        ),
+      );
+      pageGraphics.drawString(
+        badgeText,
+        badgeFont,
+        brush: PdfSolidBrush(successColor),
+        bounds: Rect.fromLTWH(
+          badgeX + badgePaddingH,
+          rightColumnCurrentY + badgePaddingV,
+          badgeSize.width,
+          badgeSize.height,
+        ),
+      );
+      rightColumnCurrentY += badgeHeight;
+    }
+
+    if (!data.isFullyPaid && data.invoiceDueDate.isBefore(DateTime.now())) {
+      rightColumnCurrentY += 10;
+      final PdfFont badgeFont = PdfStandardFont(
+        PdfFontFamily.helvetica,
+        10,
+        style: PdfFontStyle.bold,
+      );
+      const String badgeText = 'OVERDUE';
+      final Size badgeSize = badgeFont.measureString(badgeText);
+      const double badgePaddingH = 10;
+      const double badgePaddingV = 4;
+      final double badgeWidth = badgeSize.width + badgePaddingH * 2;
+      final double badgeHeight = badgeSize.height + badgePaddingV * 2;
+      final double badgeX = rightColumnX + rightColumnWidth - badgeWidth;
+      pageGraphics.drawRectangle(
+        pen: PdfPen(errorColor, width: 0.5),
+        brush: PdfSolidBrush(lightRedColor),
+        bounds: Rect.fromLTWH(
+          badgeX,
+          rightColumnCurrentY,
+          badgeWidth,
+          badgeHeight,
+        ),
+      );
+      pageGraphics.drawString(
+        badgeText,
+        badgeFont,
+        brush: PdfSolidBrush(errorColor),
+        bounds: Rect.fromLTWH(
+          badgeX + badgePaddingH,
+          rightColumnCurrentY + badgePaddingV,
+          badgeSize.width,
+          badgeSize.height,
+        ),
+      );
+      rightColumnCurrentY += badgeHeight;
+    }
+
+    currentY = max(currentY, rightColumnCurrentY) + 40;
+
+    final PdfFont sectionHeaderFont = PdfStandardFont(
+      PdfFontFamily.helvetica,
+      8,
+      style: PdfFontStyle.bold,
+    );
+    final PdfFont bold12Font = PdfStandardFont(
+      PdfFontFamily.helvetica,
+      12,
+      style: PdfFontStyle.bold,
+    );
+
+    pageGraphics.drawString(
+      'BILL TO',
+      sectionHeaderFont,
+      brush: PdfSolidBrush(primaryColor),
+      bounds: Rect.fromLTWH(
+        0,
+        currentY,
+        pageWidth,
+        sectionHeaderFont.measureString('BILL TO').height,
+      ),
+    );
+    currentY += sectionHeaderFont.measureString('BILL TO').height + 4;
+
+    void drawClientLine(String text, {bool isBold = false}) {
+      final PdfFont font = isBold ? bold12Font : smallFont;
+      final Size textSize = font.measureString(text);
+      pageGraphics.drawString(
+        text,
+        font,
+        bounds: Rect.fromLTWH(0, currentY, textSize.width, textSize.height),
+      );
+      currentY += textSize.height + 2;
+    }
+
+    drawClientLine(data.clientDetails.clientOrganizationName, isBold: true);
+    drawClientLine(data.clientDetails.clientAddressLine1);
+    drawClientLine(data.clientDetails.clientAddressLine2);
+    drawClientLine('E: ${data.clientDetails.clientContactEmail}');
+    if (data.clientDetails.clientTaxIdentificationNumber.isNotEmpty) {
+      drawClientLine(
+        'GSTIN: ${data.clientDetails.clientTaxIdentificationNumber}',
+      );
+    }
+    currentY += 4;
+    drawClientLine('Contact: ${data.clientDetails.clientContactPerson}');
+
+    currentY += 30;
+
+    final PdfGrid lineItemsGrid = PdfGrid();
+    lineItemsGrid.columns.add(count: 5);
+    lineItemsGrid.columns[0].width = 25;
+    lineItemsGrid.columns[1].width = pageWidth * 0.45;
+    lineItemsGrid.columns[2].width = 40;
+    lineItemsGrid.columns[3].width = 80;
+    lineItemsGrid.columns[4].width = 80;
+
+    final PdfGridRow headerRow = lineItemsGrid.headers.add(1)[0];
+    final PdfFont headerFont = PdfStandardFont(
+      PdfFontFamily.helvetica,
+      9,
+      style: PdfFontStyle.bold,
+    );
+    headerRow.cells[0].value = '#';
+    headerRow.cells[1].value = 'DESCRIPTION';
+    headerRow.cells[2].value = 'QTY';
+    headerRow.cells[3].value = 'RATE';
+    headerRow.cells[4].value = 'AMOUNT';
+    headerRow.style.font = headerFont;
+    headerRow.style.textBrush = PdfSolidBrush(whiteColor);
+    headerRow.style.backgroundBrush = PdfSolidBrush(primaryColor);
+    headerRow.cells[2].style.stringFormat = PdfStringFormat(
+      alignment: PdfTextAlignment.center,
+    );
+    headerRow.cells[3].style.stringFormat = PdfStringFormat(
+      alignment: PdfTextAlignment.right,
+    );
+    headerRow.cells[4].style.stringFormat = PdfStringFormat(
+      alignment: PdfTextAlignment.right,
+    );
+
+    for (int index = 0; index < data.invoiceLineItems.length; index++) {
+      final currentLineItem = data.invoiceLineItems[index];
+      final PdfGridRow currentRow = lineItemsGrid.rows.add();
+      currentRow.cells[0].value = '${index + 1}';
+      currentRow.cells[1].value = currentLineItem.itemName;
+      currentRow.cells[2].value = '${currentLineItem.itemQuantity}';
+      currentRow.cells[3].value =
+          '${data.invoiceCurrencySymbol}${currentLineItem.itemRateAmount.toStringAsFixed(2)}';
+      currentRow.cells[4].value =
+          '${data.invoiceCurrencySymbol}${currentLineItem.calculateTotalItemAmount().toStringAsFixed(2)}';
+
+      final PdfFont itemNameFont = PdfStandardFont(
+        PdfFontFamily.helvetica,
+        10,
+        style: PdfFontStyle.bold,
+      );
+      currentRow.cells[1].style.font = itemNameFont;
+      currentRow.cells[2].style.stringFormat = PdfStringFormat(
+        alignment: PdfTextAlignment.center,
+      );
+      currentRow.cells[3].style.stringFormat = PdfStringFormat(
+        alignment: PdfTextAlignment.right,
+      );
+      currentRow.cells[4].style.stringFormat = PdfStringFormat(
+        alignment: PdfTextAlignment.right,
+      );
+    }
+
+    lineItemsGrid.style.cellPadding = PdfPaddings(
+      left: 8,
+      top: 8,
+      right: 8,
+      bottom: 8,
+    );
+    lineItemsGrid.style.cellSpacing = 0;
+
+    final PdfLayoutResult? gridResult = lineItemsGrid.draw(
+      page: page,
+      bounds: Rect.fromLTWH(0, currentY, pageWidth, 400),
+    );
+
+    currentY = gridResult != null
+        ? gridResult.bounds.bottom + 20
+        : currentY + 20;
+
+    final double leftInfoColumnWidth = pageWidth * 0.6;
+    final double rightSummaryColumnWidth = pageWidth - leftInfoColumnWidth;
+    final double rightSummaryColumnX = leftInfoColumnWidth + 20;
+
+    double leftInfoY = currentY;
+    double rightSummaryY = currentY;
+
+    if (data.bankDetails.hasAnyInformationalDetails) {
+      pageGraphics.drawString(
+        'PAYMENT INFORMATION',
+        sectionHeaderFont,
+        brush: PdfSolidBrush(primaryColor),
+        bounds: Rect.fromLTWH(
+          0,
+          leftInfoY,
+          leftInfoColumnWidth,
+          sectionHeaderFont.measureString('PAYMENT INFORMATION').height,
+        ),
+      );
+      leftInfoY +=
+          sectionHeaderFont.measureString('PAYMENT INFORMATION').height + 6;
+
+      void drawLabelValue(String label, String value) {
+        if (value.isEmpty) return;
+        final PdfFont labelFont = PdfStandardFont(PdfFontFamily.helvetica, 8);
+        final PdfFont valueFont = PdfStandardFont(
+          PdfFontFamily.helvetica,
+          8,
+          style: PdfFontStyle.bold,
+        );
+        final Size labelSize = labelFont.measureString('$label: ');
+        final Size valueSize = valueFont.measureString(value);
+        pageGraphics.drawString(
+          '$label: ',
+          labelFont,
+          brush: PdfSolidBrush(grey600Color),
+          bounds: Rect.fromLTWH(0, leftInfoY, 80, labelSize.height),
+        );
+        pageGraphics.drawString(
+          value,
+          valueFont,
+          bounds: Rect.fromLTWH(
+            80,
+            leftInfoY,
+            valueSize.width,
+            valueSize.height,
+          ),
+        );
+        leftInfoY += max(labelSize.height, valueSize.height) + 2;
+      }
+
+      drawLabelValue('Bank Name', data.bankDetails.bankName);
+      drawLabelValue('Account Name', data.bankDetails.accountHolderName);
+      drawLabelValue('Account Number', data.bankDetails.accountNumber);
+      drawLabelValue('IFSC Code', data.bankDetails.ifscCode);
+      drawLabelValue('Branch', data.bankDetails.branchName);
+      drawLabelValue('UPI ID', data.bankDetails.upiId);
+
+      if (data.isFullyPaid) {
+        if (data.paymentMode.isNotEmpty)
+          drawLabelValue('Payment Mode', data.paymentMode);
+        if (data.transactionReferenceId.isNotEmpty)
+          drawLabelValue('Tx Ref ID', data.transactionReferenceId);
+        if (data.paymentDate != null)
+          drawLabelValue('Paid Date', dateFormatter.format(data.paymentDate!));
+      }
+      leftInfoY += 10;
+    }
+
+    if (data.invoicePaymentInstructionsText.isNotEmpty) {
+      pageGraphics.drawString(
+        'PAYMENT INSTRUCTIONS',
+        sectionHeaderFont,
+        brush: PdfSolidBrush(primaryColor),
+        bounds: Rect.fromLTWH(
+          0,
+          leftInfoY,
+          leftInfoColumnWidth,
+          sectionHeaderFont.measureString('PAYMENT INSTRUCTIONS').height,
+        ),
+      );
+      leftInfoY +=
+          sectionHeaderFont.measureString('PAYMENT INSTRUCTIONS').height + 4;
+      final PdfFont instructionsFont = PdfStandardFont(
+        PdfFontFamily.helvetica,
+        8,
+      );
+      final PdfTextElement instructionsElement = PdfTextElement(
+        text: data.invoicePaymentInstructionsText,
+        font: instructionsFont,
+        brush: PdfSolidBrush(primaryColor),
+      );
+      final PdfLayoutResult? instructionsResult = instructionsElement.draw(
+        page: page,
+        bounds: Rect.fromLTWH(0, leftInfoY, leftInfoColumnWidth, 100),
+      );
+      if (instructionsResult != null) {
+        leftInfoY = instructionsResult.bounds.bottom + 10;
+      } else {
+        leftInfoY += 20;
+      }
+    }
+
+    if (data.invoiceTermsAndConditionsText.isNotEmpty) {
+      pageGraphics.drawString(
+        'NOTES',
+        sectionHeaderFont,
+        brush: PdfSolidBrush(primaryColor),
+        bounds: Rect.fromLTWH(
+          0,
+          leftInfoY,
+          leftInfoColumnWidth,
+          sectionHeaderFont.measureString('NOTES').height,
+        ),
+      );
+      leftInfoY += sectionHeaderFont.measureString('NOTES').height + 4;
+      final PdfFont notesFont = PdfStandardFont(PdfFontFamily.helvetica, 8);
+      final PdfTextElement notesElement = PdfTextElement(
+        text: data.invoiceTermsAndConditionsText,
+        font: notesFont,
+        brush: PdfSolidBrush(primaryColor),
+      );
+      final PdfLayoutResult? notesResult = notesElement.draw(
+        page: page,
+        bounds: Rect.fromLTWH(0, leftInfoY, leftInfoColumnWidth, 100),
+      );
+      if (notesResult != null) {
+        leftInfoY = notesResult.bounds.bottom;
+      }
+    }
+
+    final PdfFont summaryLabelFont = PdfStandardFont(
+      PdfFontFamily.helvetica,
+      10,
+    );
+    final PdfFont summaryValueFont = PdfStandardFont(
+      PdfFontFamily.helvetica,
+      10,
+    );
+    final PdfFont boldSummaryFont = PdfStandardFont(
+      PdfFontFamily.helvetica,
+      10,
+      style: PdfFontStyle.bold,
+    );
+
+    void drawSummaryRow(String label, String value, {bool isBold = false}) {
+      final PdfFont labelFont = isBold ? boldSummaryFont : summaryLabelFont;
+      final PdfFont valueFont = isBold ? boldSummaryFont : summaryValueFont;
+      final Size labelSize = labelFont.measureString(label);
+      final Size valueSize = valueFont.measureString(value);
+      pageGraphics.drawString(
+        label,
+        labelFont,
+        bounds: Rect.fromLTWH(
+          rightSummaryColumnX,
+          rightSummaryY,
+          rightSummaryColumnWidth,
+          labelSize.height,
+        ),
+        format: PdfStringFormat(alignment: PdfTextAlignment.left),
+      );
+      pageGraphics.drawString(
+        value,
+        valueFont,
+        bounds: Rect.fromLTWH(
+          rightSummaryColumnX,
+          rightSummaryY,
+          rightSummaryColumnWidth,
+          valueSize.height,
+        ),
+        format: PdfStringFormat(alignment: PdfTextAlignment.right),
+      );
+      rightSummaryY += max(labelSize.height, valueSize.height) + 2;
+    }
+
+    drawSummaryRow(
+      'Subtotal',
+      '${data.invoiceCurrencySymbol}${data.calculateSubTotalAmount().toStringAsFixed(2)}',
+    );
+
+    for (final currentTax in data.invoiceAppliedTaxes) {
+      final double taxAmount =
+          data.calculateSubTotalAmount() *
+          (currentTax.taxPercentageValue / 100.0);
+      if (taxAmount == 0) continue;
+      drawSummaryRow(
+        '${currentTax.taxLabelName} (${currentTax.taxPercentageValue}%)',
+        '${data.invoiceCurrencySymbol}${taxAmount.toStringAsFixed(2)}',
+      );
+    }
+
+    if (data.roundingAmount != 0) {
+      final String roundingText = data.roundingAmount > 0
+          ? '+${data.roundingAmount.toStringAsFixed(2)}'
+          : data.roundingAmount.toStringAsFixed(2);
+      drawSummaryRow('Round Off', roundingText);
+    }
+
+    pageGraphics.drawLine(
+      PdfPen(greyBorderColor),
+      Offset(rightSummaryColumnX, rightSummaryY),
+      Offset(rightSummaryColumnX + rightSummaryColumnWidth, rightSummaryY),
+    );
+    rightSummaryY += 5;
+
+    const double grandTotalPadding = 6;
+    final Size grandTotalLabelSize = boldSummaryFont.measureString(
+      'Grand Total',
+    );
+    final Size grandTotalValueSize = boldSummaryFont.measureString(
+      '${data.invoiceCurrencySymbol}${data.calculateGrandTotalAmount().toStringAsFixed(2)}',
+    );
+    final double grandTotalRowHeight =
+        max(grandTotalLabelSize.height, grandTotalValueSize.height) +
+        grandTotalPadding * 2;
+    pageGraphics.drawRectangle(
+      brush: PdfSolidBrush(accentColor),
+      bounds: Rect.fromLTWH(
+        rightSummaryColumnX,
+        rightSummaryY,
+        rightSummaryColumnWidth,
+        grandTotalRowHeight,
+      ),
+    );
+    pageGraphics.drawString(
+      'Grand Total',
+      boldSummaryFont,
+      brush: PdfSolidBrush(primaryColor),
+      bounds: Rect.fromLTWH(
+        rightSummaryColumnX + grandTotalPadding,
+        rightSummaryY + grandTotalPadding,
+        rightSummaryColumnWidth,
+        grandTotalLabelSize.height,
+      ),
+    );
+    pageGraphics.drawString(
+      '${data.invoiceCurrencySymbol}${data.calculateGrandTotalAmount().toStringAsFixed(2)}',
+      boldSummaryFont,
+      brush: PdfSolidBrush(primaryColor),
+      bounds: Rect.fromLTWH(
+        rightSummaryColumnX,
+        rightSummaryY + grandTotalPadding,
+        rightSummaryColumnWidth,
+        grandTotalValueSize.height,
+      ),
+      format: PdfStringFormat(alignment: PdfTextAlignment.right),
+    );
+    rightSummaryY += grandTotalRowHeight + 10;
+
+    final PdfFont wordsFont = PdfStandardFont(
+      PdfFontFamily.helvetica,
+      8,
+      style: PdfFontStyle.italic,
+    );
+    final String wordsText =
+        'Total In Words: ${_NumberToWordsConverter.convert(data.calculateGrandTotalAmount())}';
+    final Size wordsSize = wordsFont.measureString(wordsText);
+    pageGraphics.drawString(
+      wordsText,
+      wordsFont,
+      brush: PdfSolidBrush(grey700Color),
+      bounds: Rect.fromLTWH(
+        rightSummaryColumnX,
+        rightSummaryY,
+        rightSummaryColumnWidth,
+        wordsSize.height,
+      ),
+      format: PdfStringFormat(alignment: PdfTextAlignment.right),
+    );
+
+    final double footerSectionY = max(leftInfoY, rightSummaryY) + 20;
+
+    if (data.legalDeclarationText.isNotEmpty) {
+      pageGraphics.drawLine(
+        PdfPen(greyBorderColor, width: 2),
+        Offset(0, footerSectionY),
+        Offset(0, footerSectionY + 30),
+      );
+      final PdfFont legalFont = PdfStandardFont(PdfFontFamily.helvetica, 7);
+      final PdfTextElement legalElement = PdfTextElement(
+        text: data.legalDeclarationText,
+        font: legalFont,
+        brush: PdfSolidBrush(grey700Color),
+      );
+      legalElement.draw(
+        page: page,
+        bounds: Rect.fromLTWH(8, footerSectionY, pageWidth - 8, 30),
+      );
+    }
+
+    final double signatureSectionY =
+        footerSectionY + (data.legalDeclarationText.isNotEmpty ? 40 : 0);
+
+    if (data.isComputerGeneratedNotice) {
+      pageGraphics.drawString(
+        'E. & O.E. | This is a computer generated document.',
+        PdfStandardFont(PdfFontFamily.helvetica, 7),
+        brush: PdfSolidBrush(grey500Color),
+        bounds: Rect.fromLTWH(0, signatureSectionY, pageWidth * 0.5, 10),
+      );
+    }
+
+    if (data.includeSignaturePlaceholder) {
+      final double signatureX = pageWidth - 120;
+      final PdfFont signatoryHeaderFont = PdfStandardFont(
+        PdfFontFamily.helvetica,
+        8,
+        style: PdfFontStyle.bold,
+      );
+      pageGraphics.drawString(
+        'For ${data.companyDetails.companyName}',
+        signatoryHeaderFont,
+        bounds: Rect.fromLTWH(
+          signatureX,
+          signatureSectionY,
+          120,
+          signatoryHeaderFont
+              .measureString('For ${data.companyDetails.companyName}')
+              .height,
+        ),
+        format: PdfStringFormat(alignment: PdfTextAlignment.right),
+      );
+
+      final PdfFont signatoryNameFont = PdfStandardFont(
+        PdfFontFamily.helvetica,
+        10,
+        style: PdfFontStyle.bold,
+      );
+      final double nameY = signatureSectionY + 30;
+      pageGraphics.drawString(
+        data.signatoryName,
+        signatoryNameFont,
+        bounds: Rect.fromLTWH(
+          signatureX,
+          nameY,
+          120,
+          signatoryNameFont.measureString(data.signatoryName).height,
+        ),
+        format: PdfStringFormat(alignment: PdfTextAlignment.right),
+      );
+
+      pageGraphics.drawLine(
+        PdfPen(secondaryColor),
+        Offset(
+          signatureX,
+          nameY +
+              signatoryNameFont.measureString(data.signatoryName).height +
+              5,
+        ),
+        Offset(
+          signatureX + 120,
+          nameY +
+              signatoryNameFont.measureString(data.signatoryName).height +
+              5,
+        ),
+      );
+
+      pageGraphics.drawString(
+        'Authorised Signatory',
+        PdfStandardFont(PdfFontFamily.helvetica, 7),
+        bounds: Rect.fromLTWH(
+          signatureX,
+          nameY +
+              signatoryNameFont.measureString(data.signatoryName).height +
+              8,
+          120,
+          10,
+        ),
+        format: PdfStringFormat(alignment: PdfTextAlignment.right),
+      );
+    }
+
+    final List<int> bytes = document.saveSync();
+    document.dispose();
+    return Uint8List.fromList(bytes);
   }
 
   void _pickDate(bool issue) async {
@@ -991,7 +1471,16 @@ class _InvoiceGeneratorScreenState extends State<InvoiceGeneratorScreen> {
       firstDate: DateTime(2000),
       lastDate: DateTime(2100),
     );
-    if (d != null) setState(() => issue ? _selectedIssueDate = d : _selectedDueDate = d);
+    if (d != null)
+      setState(() => issue ? _selectedIssueDate = d : _selectedDueDate = d);
+  }
+
+  Future<void> _exportPdf(BuildContext context, InvoiceDataEntity data) async {
+    final bytes = await _generatePdf(data);
+    await Printing.layoutPdf(
+      onLayout: (format) async => bytes,
+      name: '${data.invoiceDocumentNumber}.pdf',
+    );
   }
 }
 
@@ -1005,7 +1494,14 @@ class _SectionTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
-      child: Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black)),
+      child: Text(
+        title,
+        style: const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+          color: Colors.black,
+        ),
+      ),
     );
   }
 }
@@ -1035,7 +1531,9 @@ class _StylizedInput extends StatelessWidget {
       controller: controller,
       maxLines: maxLines,
       onChanged: onChanged,
-      keyboardType: isNumeric ? TextInputType.numberWithOptions(decimal: true) : (isEmail ? TextInputType.emailAddress : TextInputType.text),
+      keyboardType: isNumeric
+          ? TextInputType.numberWithOptions(decimal: true)
+          : (isEmail ? TextInputType.emailAddress : TextInputType.text),
       decoration: InputDecoration(
         labelText: label,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
@@ -1045,8 +1543,10 @@ class _StylizedInput extends StatelessWidget {
       ),
       validator: (v) {
         if (v == null || v.isEmpty) return null;
-        if (isEmail && !RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(v)) return 'Invalid Email';
-        if (isPan && !RegExp(r'^[A-Z]{5}[0-9]{4}[A-Z]{1}$').hasMatch(v)) return 'Invalid PAN Format';
+        if (isEmail && !RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(v))
+          return 'Invalid Email';
+        if (isPan && !RegExp(r'^[A-Z]{5}[0-9]{4}[A-Z]{1}$').hasMatch(v))
+          return 'Invalid PAN Format';
         return null;
       },
     );
@@ -1064,8 +1564,13 @@ class _DateInputField extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       child: InputDecorator(
-        decoration: InputDecoration(labelText: label, border: OutlineInputBorder(borderRadius: BorderRadius.circular(8))),
-        child: Text(date != null ? DateFormat.yMMMd().format(date!) : 'Select Date'),
+        decoration: InputDecoration(
+          labelText: label,
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+        ),
+        child: Text(
+          date != null ? DateFormat.yMMMd().format(date!) : 'Select Date',
+        ),
       ),
     );
   }
@@ -1085,7 +1590,10 @@ class _CurrencyPicker extends StatelessWidget {
         DropdownMenuItem(value: 'USD ', child: Text('US Dollar (USD)')),
       ],
       onChanged: onChanged,
-      decoration: const InputDecoration(labelText: 'Currency', border: OutlineInputBorder()),
+      decoration: const InputDecoration(
+        labelText: 'Currency',
+        border: OutlineInputBorder(),
+      ),
     );
   }
 }
@@ -1102,8 +1610,13 @@ class _LogoPicker extends StatelessWidget {
         Container(
           width: 80,
           height: 80,
-          decoration: BoxDecoration(border: Border.all(color: Colors.grey), borderRadius: BorderRadius.circular(8)),
-          child: bytes != null ? Image.memory(bytes!, fit: BoxFit.contain) : const Icon(Icons.business_center),
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: bytes != null
+              ? Image.memory(bytes!, fit: BoxFit.contain)
+              : const Icon(Icons.business_center),
         ),
         TextButton(onPressed: _pick, child: const Text('Logo')),
       ],
@@ -1111,7 +1624,10 @@ class _LogoPicker extends StatelessWidget {
   }
 
   void _pick() async {
-    final res = await FilePicker.platform.pickFiles(type: FileType.image, withData: true);
+    final res = await FilePicker.platform.pickFiles(
+      type: FileType.image,
+      withData: true,
+    );
     if (res != null) onPicked(res.files.single.bytes);
   }
 }
@@ -1120,7 +1636,11 @@ class _LineItemRow extends StatelessWidget {
   final int index;
   final _InvoiceLineItemControllers controllers;
   final VoidCallback onRemove;
-  const _LineItemRow({required this.index, required this.controllers, required this.onRemove});
+  const _LineItemRow({
+    required this.index,
+    required this.controllers,
+    required this.onRemove,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1132,16 +1652,41 @@ class _LineItemRow extends StatelessWidget {
           children: [
             Row(
               children: [
-                Expanded(child: _StylizedInput(controller: controllers.itemNameController, label: 'Plan Name')),
+                Expanded(
+                  child: _StylizedInput(
+                    controller: controllers.itemNameController,
+                    label: 'Plan Name',
+                  ),
+                ),
                 const SizedBox(width: 8),
-                SizedBox(width: 60, child: _StylizedInput(controller: controllers.quantityController, label: 'Qty', isNumeric: true)),
+                SizedBox(
+                  width: 60,
+                  child: _StylizedInput(
+                    controller: controllers.quantityController,
+                    label: 'Qty',
+                    isNumeric: true,
+                  ),
+                ),
                 const SizedBox(width: 8),
-                SizedBox(width: 100, child: _StylizedInput(controller: controllers.rateController, label: 'Rate', isNumeric: true)),
-                IconButton(onPressed: onRemove, icon: const Icon(Icons.delete_outline, color: Colors.red)),
+                SizedBox(
+                  width: 100,
+                  child: _StylizedInput(
+                    controller: controllers.rateController,
+                    label: 'Rate',
+                    isNumeric: true,
+                  ),
+                ),
+                IconButton(
+                  onPressed: onRemove,
+                  icon: const Icon(Icons.delete_outline, color: Colors.red),
+                ),
               ],
             ),
             const SizedBox(height: 12),
-            _StylizedInput(controller: controllers.itemDescriptionController, label: 'Full Description (Audit Ready)'),
+            _StylizedInput(
+              controller: controllers.itemDescriptionController,
+              label: 'Full Description (Audit Ready)',
+            ),
           ],
         ),
       ),
@@ -1149,59 +1694,21 @@ class _LineItemRow extends StatelessWidget {
   }
 }
 
-
-
-pw.Widget _pdfMetadataRow(String label, String value, PdfColor color) {
-  return pw.Padding(
-    padding: pw.EdgeInsets.only(bottom: 2),
-    child: pw.Row(
-      mainAxisSize: pw.MainAxisSize.min,
-      children: [
-        pw.Text('$label: ', style: pw.TextStyle(fontSize: 10, color: PdfColors.grey700)),
-        pw.Text(value, style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold)),
-      ],
-    ),
-  );
-}
-
-pw.Widget _pdfLabelValue(String label, String value) {
-  if (value.isEmpty) return pw.SizedBox();
-  return pw.Padding(
-    padding: pw.EdgeInsets.only(bottom: 2),
-    child: pw.Row(
-      children: [
-        pw.SizedBox(width: 80, child: pw.Text('$label:', style: pw.TextStyle(fontSize: 8, color: PdfColors.grey600))),
-        pw.Text(value, style: pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold)),
-      ],
-    ),
-  );
-}
-
-pw.Widget _pdfSummaryRow(String label, String value, {bool isBold = false, PdfColor? color}) {
-  return pw.Padding(
-    padding: pw.EdgeInsets.symmetric(vertical: 2),
-    child: pw.Row(
-      mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-      children: [
-        pw.Text(label, style: pw.TextStyle(fontSize: 10, fontWeight: isBold ? pw.FontWeight.bold : pw.FontWeight.normal)),
-        pw.Text(value,
-            style: pw.TextStyle(
-              fontSize: 10,
-              fontWeight: isBold ? pw.FontWeight.bold : pw.FontWeight.normal,
-              color: color ?? PdfColors.black,
-            )),
-      ],
-    ),
-  );
-}
-
 class _InvoiceLineItemControllers {
   final TextEditingController itemNameController = TextEditingController();
-  final TextEditingController itemDescriptionController = TextEditingController();
-  final TextEditingController quantityController = TextEditingController(text: '1');
-  final TextEditingController rateController = TextEditingController(text: '0.00');
+  final TextEditingController itemDescriptionController =
+      TextEditingController();
+  final TextEditingController quantityController = TextEditingController(
+    text: '1',
+  );
+  final TextEditingController rateController = TextEditingController(
+    text: '0.00',
+  );
 
-  _InvoiceLineItemControllers({required VoidCallback onValuesChanged, _PredefinedSaasItem? preset}) {
+  _InvoiceLineItemControllers({
+    required VoidCallback onValuesChanged,
+    _PredefinedSaasItem? preset,
+  }) {
     if (preset != null) {
       itemNameController.text = preset.title;
       itemDescriptionController.text = preset.description;
@@ -1222,8 +1729,40 @@ class _InvoiceLineItemControllers {
 }
 
 class _NumberToWordsConverter {
-  static const List<String> _onesList = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
-  static const List<String> _tensList = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+  static const List<String> _onesList = [
+    '',
+    'One',
+    'Two',
+    'Three',
+    'Four',
+    'Five',
+    'Six',
+    'Seven',
+    'Eight',
+    'Nine',
+    'Ten',
+    'Eleven',
+    'Twelve',
+    'Thirteen',
+    'Fourteen',
+    'Fifteen',
+    'Sixteen',
+    'Seventeen',
+    'Eighteen',
+    'Nineteen',
+  ];
+  static const List<String> _tensList = [
+    '',
+    '',
+    'Twenty',
+    'Thirty',
+    'Forty',
+    'Fifty',
+    'Sixty',
+    'Seventy',
+    'Eighty',
+    'Ninety',
+  ];
 
   static String convert(double num) {
     if (num == 0) return 'Rupees Zero Only';
@@ -1240,10 +1779,14 @@ class _NumberToWordsConverter {
 
   static String _convertToWords(int n) {
     if (n < 20) return _onesList[n];
-    if (n < 100) return '${_tensList[n ~/ 10]}${n % 10 != 0 ? " ${_onesList[n % 10]}" : ""}';
-    if (n < 1000) return '${_onesList[n ~/ 100]} Hundred${n % 100 != 0 ? " and ${_convertToWords(n % 100)}" : ""}';
-    if (n < 100000) return '${_convertToWords(n ~/ 1000)} Thousand${n % 1000 != 0 ? " ${_convertToWords(n % 1000)}" : ""}';
-    if (n < 10000000) return '${_convertToWords(n ~/ 100000)} Lakh${n % 100000 != 0 ? " ${_convertToWords(n % 100000)}" : ""}';
+    if (n < 100)
+      return '${_tensList[n ~/ 10]}${n % 10 != 0 ? " ${_onesList[n % 10]}" : ""}';
+    if (n < 1000)
+      return '${_onesList[n ~/ 100]} Hundred${n % 100 != 0 ? " and ${_convertToWords(n % 100)}" : ""}';
+    if (n < 100000)
+      return '${_convertToWords(n ~/ 1000)} Thousand${n % 1000 != 0 ? " ${_convertToWords(n % 1000)}" : ""}';
+    if (n < 10000000)
+      return '${_convertToWords(n ~/ 100000)} Lakh${n % 100000 != 0 ? " ${_convertToWords(n % 100000)}" : ""}';
     return '${_convertToWords(n ~/ 10000000)} Crore${n % 10000000 != 0 ? " ${_convertToWords(n % 10000000)}" : ""}';
   }
 }
