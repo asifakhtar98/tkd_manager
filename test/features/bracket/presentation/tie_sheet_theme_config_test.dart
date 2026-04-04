@@ -426,6 +426,13 @@ void main() {
           // Junction geometry
           centerFinalMinimumSpan: 60.0,
           grandFinalOutputArmLength: 40.0,
+          // Badge offsets
+          badgeHorizontalOffset: 16.0,
+          badgeBlueVerticalOffset: -6.0,
+          badgeRedVerticalOffset: 14.0,
+          missingInputVerticalOffset: 40.0,
+          thirdPlaceToMedalGap: 60.0,
+          matchPillHorizontalOffset: 0.0,
           // Banner & logo
           headerBannerHeight: 64.0,
           logoMaxHeight: 60.0,
@@ -616,6 +623,12 @@ void main() {
           badgeOutlineOpacity: 0.54,
           canvasMinimumWidth: 53.0,
           canvasMinimumHeight: 52.0,
+          badgeHorizontalOffset: 51.0,
+          badgeBlueVerticalOffset: 50.0,
+          badgeRedVerticalOffset: 49.0,
+          missingInputVerticalOffset: 48.0,
+          thirdPlaceToMedalGap: 47.0,
+          matchPillHorizontalOffset: 46.0,
         );
 
         // Verify every colour field
@@ -700,6 +713,12 @@ void main() {
         expect(overridden.badgeOutlineOpacity, 0.54);
         expect(overridden.canvasMinimumWidth, 53.0);
         expect(overridden.canvasMinimumHeight, 52.0);
+        expect(overridden.badgeHorizontalOffset, 51.0);
+        expect(overridden.badgeBlueVerticalOffset, 50.0);
+        expect(overridden.badgeRedVerticalOffset, 49.0);
+        expect(overridden.missingInputVerticalOffset, 48.0);
+        expect(overridden.thirdPlaceToMedalGap, 47.0);
+        expect(overridden.matchPillHorizontalOffset, 46.0);
       });
     });
   });

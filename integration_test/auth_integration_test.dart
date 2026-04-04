@@ -10,7 +10,7 @@ void main() {
       'test_auth_${DateTime.now().millisecondsSinceEpoch}@test.com';
   const testPassword = 'TestPass123!';
   const existingEmail = 'asak91298@gmail.com';
-  const existingPassword = '123456';
+  const existingPassword = '121314';
 
   Future<void> ensureOnLoginScreen(WidgetTester tester) async {
     await tester.pumpAndSettle(const Duration(seconds: 5));

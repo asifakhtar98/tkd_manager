@@ -5,6 +5,7 @@ import 'package:syncfusion_flutter_pdf/pdf.dart';
 import 'package:uuid/uuid.dart';
 import 'package:tkd_saas/features/bracket/data/services/single_elimination_bracket_generator_service_implementation.dart';
 import 'package:tkd_saas/features/bracket/data/services/double_elimination_bracket_generator_service_implementation.dart';
+import 'package:tkd_saas/features/bracket/data/services/bracket_medal_computation_service_implementation.dart';
 import 'package:tkd_saas/features/bracket/data/services/match_progression_service_implementation.dart';
 import 'package:tkd_saas/features/bracket/data/services/tie_sheet_syncfusion_pdf_renderer_service.dart';
 import 'package:tkd_saas/features/bracket/domain/entities/match_entity.dart';
@@ -28,7 +29,9 @@ void main() {
       DoubleEliminationBracketGeneratorServiceImplementation(uuid);
   final matchProgressionService = MatchProgressionServiceImplementation();
   final rendererService = TieSheetSyncfusionPdfRendererService();
-  final layoutEngine = TieSheetLayoutEngine();
+  final layoutEngine = TieSheetLayoutEngine(
+    const BracketMedalComputationServiceImplementation(),
+  );
 
   const testClassification = BracketClassification(
     ageCategoryLabel: 'JUNIOR',

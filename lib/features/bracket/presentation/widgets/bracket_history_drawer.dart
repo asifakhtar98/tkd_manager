@@ -1,12 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:tkd_saas/features/bracket/domain/entities/bracket_edit_action.dart';
 import 'package:tkd_saas/features/bracket/domain/entities/bracket_result.dart';
 
-/// A drawer widget that displays the chronological history of match-result
-/// actions. Each entry shows a human-readable label and timestamp. The
-/// current history pointer position is visually highlighted.
-///
-/// Tapping an entry fires [onJumpToHistoryIndex] to jump to that point.
 class BracketHistoryDrawer extends StatelessWidget {
   const BracketHistoryDrawer({
     super.key,
@@ -102,36 +96,13 @@ class BracketHistoryDrawer extends StatelessWidget {
                         const Divider(height: 1, indent: 16, endIndent: 16),
                     itemBuilder: (context, index) {
                       final entry = actionHistory[index];
-                      final displayLabel = switch (entry.action) {
-                        BracketActionMatchResult(:final data) =>
-                          data.displayLabel,
-                        BracketActionEditAction(:final data) =>
-                          data.displayLabel,
-                      };
-                      final timestamp = switch (entry.action) {
-                        BracketActionMatchResult(:final data) =>
-                          data.recordedAt,
-                        BracketActionEditAction(:final data) => data.recordedAt,
-                      };
-                      final actionType = switch (entry.action) {
-                        BracketActionMatchResult() =>
-                          _HistoryActionType.matchResult,
-                        BracketActionEditAction(
-                          data: BracketEditActionParticipantSlotSwapped(),
-                        ) =>
-                          _HistoryActionType.swap,
-                        BracketActionEditAction(
-                          data: BracketEditActionParticipantDetailsUpdated(),
-                        ) =>
-                          _HistoryActionType.detailEdit,
-                      };
+                      final BracketActionMatchResult(:data) = entry.action as BracketActionMatchResult;
                       return _HistoryEntryTile(
                         index: index,
-                        label: displayLabel,
-                        timestamp: timestamp,
+                        label: data.displayLabel,
+                        timestamp: data.recordedAt,
                         isCurrentPosition: index == historyPointer,
                         isInitialState: false,
-                        actionType: actionType,
                         onTap: () => onJumpToHistoryIndex(index),
                       );
                     },
@@ -143,9 +114,6 @@ class BracketHistoryDrawer extends StatelessWidget {
   }
 }
 
-/// Differentiates entry types for visual styling in the drawer.
-enum _HistoryActionType { matchResult, swap, detailEdit }
-
 class _HistoryEntryTile extends StatelessWidget {
   const _HistoryEntryTile({
     required this.index,
@@ -154,7 +122,6 @@ class _HistoryEntryTile extends StatelessWidget {
     required this.isCurrentPosition,
     required this.isInitialState,
     required this.onTap,
-    this.actionType,
   });
 
   final int index;
@@ -163,14 +130,6 @@ class _HistoryEntryTile extends StatelessWidget {
   final bool isCurrentPosition;
   final bool isInitialState;
   final VoidCallback onTap;
-  final _HistoryActionType? actionType;
-
-  IconData get _actionIcon => switch (actionType) {
-    _HistoryActionType.matchResult => Icons.emoji_events_outlined,
-    _HistoryActionType.swap => Icons.swap_horiz,
-    _HistoryActionType.detailEdit => Icons.edit_outlined,
-    null => Icons.flag,
-  };
 
   @override
   Widget build(BuildContext context) {
@@ -203,21 +162,13 @@ class _HistoryEntryTile extends StatelessWidget {
                       : Border.all(color: colorScheme.outline.withAlpha(80)),
                 ),
                 alignment: Alignment.center,
-                child: isInitialState
-                    ? Icon(
-                        Icons.flag,
-                        size: 14,
-                        color: isCurrentPosition
-                            ? colorScheme.onPrimary
-                            : colorScheme.onSurfaceVariant,
-                      )
-                    : Icon(
-                        _actionIcon,
-                        size: 14,
-                        color: isCurrentPosition
-                            ? colorScheme.onPrimary
-                            : colorScheme.onSurfaceVariant,
-                      ),
+                child: Icon(
+                  isInitialState ? Icons.flag : Icons.emoji_events_outlined,
+                  size: 14,
+                  color: isCurrentPosition
+                      ? colorScheme.onPrimary
+                      : colorScheme.onSurfaceVariant,
+                ),
               ),
               const SizedBox(width: 12),
 

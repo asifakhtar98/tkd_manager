@@ -20,7 +20,7 @@ void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
   const realUserEmail = 'asak91298@gmail.com';
-  const realUserPassword = '123456';
+  const realUserPassword = '121314';
   const expectedUserId = '5e196368-ae8a-4226-ad16-3c67290161ba';
 
   group('Real Supabase CRUD - Data Validation', () {

@@ -7,6 +7,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pdf/pdf.dart';
 import 'package:printing/printing.dart';
 import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
+import 'package:tkd_saas/features/bracket/data/services/bracket_medal_computation_service_implementation.dart';
 import 'package:tkd_saas/features/bracket/data/services/tie_sheet_syncfusion_pdf_renderer_service.dart';
 import 'package:tkd_saas/features/bracket/domain/entities/bracket_result.dart';
 import 'package:tkd_saas/features/bracket/domain/entities/match_entity.dart';
@@ -27,7 +28,8 @@ import 'package:tkd_saas/features/bracket/presentation/widgets/bracket_participa
 import 'package:tkd_saas/features/bracket/presentation/widgets/print_preview_dialog.dart';
 import 'package:tkd_saas/features/bracket/presentation/widgets/score_entry_dialog.dart';
 import 'package:tkd_saas/features/bracket/presentation/widgets/tie_sheet_theme_editor_panel.dart';
-import 'package:tkd_saas/core/router/app_routes.dart';
+import 'package:tkd_saas/features/bracket/domain/entities/bracket_format.dart';
+import 'package:tkd_saas/core/router/app_routes.dart' hide BracketFormat;
 import 'package:tkd_saas/features/setup_bracket/domain/entities/participant_entity.dart';
 import 'package:tkd_saas/features/tournament/domain/entities/bracket_classification.dart';
 import 'package:tkd_saas/features/tournament/domain/entities/bracket_snapshot.dart';
@@ -212,7 +214,9 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
     String? winnersBracketId,
     String? losersBracketId,
   }) {
-    final engine = TieSheetLayoutEngine();
+    final engine = TieSheetLayoutEngine(
+      const BracketMedalComputationServiceImplementation(),
+    );
     return engine.computeLayout(
       tournament: widget.tournament,
       matches: matches,
@@ -433,60 +437,6 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
     }
   }
 
-  /// Tiled multi-page PDF export — breaks the bracket into multiple pages
-  /// for assembling into a larger poster/flyer format.
-  Future<void> _exportTiledPdf() async {
-    _updateExportProgress(0.0, 'Preparing tiled export…');
-    await Future<void>.delayed(Duration.zero);
-
-    try {
-      if (_cachedLayoutResult == null) {
-        _updateExportProgress(1.0, 'No bracket data available.');
-        return;
-      }
-
-      if (!mounted) return;
-
-      final themeSelectionState = context
-          .read<BracketThemeSelectionBloc>()
-          .state;
-      final themeConfig = _resolveThemeConfigFromSelection(themeSelectionState);
-
-      const defaultSettings = PrintExportSettings();
-
-      _updateExportProgress(0.5, 'Generating tiled PDF…');
-      await Future<void>.delayed(Duration.zero);
-
-      final renderer = TieSheetSyncfusionPdfRendererService();
-      final renderParams = PdfRenderParams(
-        layoutResult: _cachedLayoutResult!,
-        themeConfig: themeConfig,
-        leftLogoImageBytes: _leftLogoImageBytes,
-        rightLogoImageBytes: _rightLogoImageBytes,
-      );
-      final tiledBytes = renderer.generateTiledBracketPdfBytes(
-        params: renderParams,
-        exportSettings: defaultSettings,
-      );
-      final exportPdfBytes = Uint8List.fromList(tiledBytes);
-
-      _updateExportProgress(0.8, 'Opening print dialog…');
-      await Future<void>.delayed(Duration.zero);
-
-      await Printing.layoutPdf(
-        name: 'Bracket_Tiled',
-        onLayout: (PdfPageFormat format) async => exportPdfBytes,
-      );
-    } finally {
-      if (mounted) {
-        setState(() {
-          _pdfExportProgress = null;
-          _pdfExportStatusMessage = '';
-        });
-      }
-    }
-  }
-
   /// Navigates back to the parent tournament detail page using URL
   /// navigation rather than stack-based `pop()`.
   void _navigateBackToTournamentDetail() {
@@ -597,7 +547,6 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
               :final actionHistory,
               :final historyPointer,
               :final isReplayInProgress,
-              :final isEditModeEnabled,
               :final isSaving,
               :final hasUnsavedChanges,
               :final lastSaveTimestamp,
@@ -612,7 +561,6 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
                 actionHistory: actionHistory,
                 historyPointer: historyPointer,
                 isReplayInProgress: isReplayInProgress,
-                isEditModeEnabled: isEditModeEnabled,
                 isSaving: isSaving,
                 hasUnsavedChanges: hasUnsavedChanges,
                 lastSaveTimestamp: lastSaveTimestamp,
@@ -633,7 +581,6 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
     required List<BracketHistoryEntry> actionHistory,
     required int historyPointer,
     required bool isReplayInProgress,
-    required bool isEditModeEnabled,
     required bool isSaving,
     required bool hasUnsavedChanges,
     required DateTime? lastSaveTimestamp,
@@ -817,23 +764,6 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
                   const SizedBox(width: 8),
 
                   TextButton(
-                    style: TextButton.styleFrom(
-                      foregroundColor: isEditModeEnabled
-                          ? Colors.grey.shade400
-                          : Colors.white,
-                      disabledForegroundColor: Colors.grey,
-                    ),
-                    onPressed: isReplayInProgress
-                        ? null
-                        : () => context.read<BracketBloc>().add(
-                            const BracketEvent.editModeToggled(),
-                          ),
-                    child: Text(isEditModeEnabled ? 'Exit Edit' : 'Edit Mode'),
-                  ),
-
-                  const SizedBox(width: 8),
-
-                  TextButton(
                     style: actionButtonStyle,
                     onPressed: () async {
                       final confirm = await showDialog<bool>(
@@ -972,27 +902,6 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
                         BracketParticipantListPanel(
                           matches: bracketData.allMatches,
                           participants: participants,
-                          isEditModeEnabled: isEditModeEnabled,
-                          onSwapParticipants:
-                              (matchIdA, slotA, matchIdB, slotB) {
-                                context.read<BracketBloc>().add(
-                                  BracketEvent.participantSlotSwapped(
-                                    sourceMatchId: matchIdA,
-                                    sourceSlotPosition: slotA,
-                                    targetMatchId: matchIdB,
-                                    targetSlotPosition: slotB,
-                                  ),
-                                );
-                              },
-                          onUpdateParticipant: (updated) {
-                            context.read<BracketBloc>().add(
-                              BracketEvent.participantDetailsUpdated(
-                                participantId: updated.id,
-                                updatedFullName: updated.fullName,
-                                updatedRegistrationId: updated.registrationId,
-                              ),
-                            );
-                          },
                         ),
                         // Tab 2: Theme editor
                         TieSheetThemeEditorPanel(
@@ -1030,34 +939,6 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
                   Expanded(
                     child: Column(
                       children: [
-                        if (isEditModeEnabled)
-                          Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 8,
-                            ),
-                            color: Colors.grey.shade300,
-                            child: const Row(
-                              children: [
-                                Icon(
-                                  Icons.edit,
-                                  size: 16,
-                                  color: Color(0xFF92400E),
-                                ),
-                                SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    'Edit Mode — Use the Participants panel to edit details or swap positions.',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Color(0xFF92400E),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
                         if (isReplayInProgress && actionHistory.isNotEmpty)
                           LinearProgressIndicator(
                             value: (historyPointer + 1) / actionHistory.length,

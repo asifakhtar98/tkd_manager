@@ -60,7 +60,7 @@ void main() {
       });
 
       test('returns null for exactly 6 characters', () {
-        expect(AuthValidators.validatePassword('123456'), isNull);
+        expect(AuthValidators.validatePassword('121314'), isNull);
       });
 
       test('returns null for more than 6 characters', () {

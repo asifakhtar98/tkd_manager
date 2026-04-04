@@ -200,8 +200,8 @@ return doubleElimination(_that.data);case _:
 /// @nodoc
 @JsonSerializable()
 
-class SingleEliminationResult implements BracketResult {
-  const SingleEliminationResult(this.data, {final  String? $type}): $type = $type ?? 'singleElimination';
+class SingleEliminationResult extends BracketResult {
+  const SingleEliminationResult(this.data, {final  String? $type}): $type = $type ?? 'singleElimination',super._();
   factory SingleEliminationResult.fromJson(Map<String, dynamic> json) => _$SingleEliminationResultFromJson(json);
 
 @override final  BracketGenerationResult data;
@@ -282,8 +282,8 @@ $BracketGenerationResultCopyWith<$Res> get data {
 /// @nodoc
 @JsonSerializable()
 
-class DoubleEliminationResult implements BracketResult {
-  const DoubleEliminationResult(this.data, {final  String? $type}): $type = $type ?? 'doubleElimination';
+class DoubleEliminationResult extends BracketResult {
+  const DoubleEliminationResult(this.data, {final  String? $type}): $type = $type ?? 'doubleElimination',super._();
   factory DoubleEliminationResult.fromJson(Map<String, dynamic> json) => _$DoubleEliminationResultFromJson(json);
 
 @override final  DoubleEliminationBracketGenerationResult data;
@@ -364,31 +364,20 @@ $DoubleEliminationBracketGenerationResultCopyWith<$Res> get data {
 BracketAction _$BracketActionFromJson(
   Map<String, dynamic> json
 ) {
-        switch (json['runtimeType']) {
-                  case 'matchResult':
-          return BracketActionMatchResult.fromJson(
-            json
-          );
-                case 'editAction':
-          return BracketActionEditAction.fromJson(
-            json
-          );
-        
-          default:
-            throw CheckedFromJsonException(
-  json,
-  'runtimeType',
-  'BracketAction',
-  'Invalid union type "${json['runtimeType']}"!'
-);
-        }
-      
+    return BracketActionMatchResult.fromJson(
+      json
+    );
 }
 
 /// @nodoc
 mixin _$BracketAction {
 
- Object get data;
+ BracketMatchAction get data;
+/// Create a copy of BracketAction
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$BracketActionCopyWith<BracketAction> get copyWith => _$BracketActionCopyWithImpl<BracketAction>(this as BracketAction, _$identity);
 
   /// Serializes this BracketAction to a JSON map.
   Map<String, dynamic> toJson();
@@ -396,12 +385,12 @@ mixin _$BracketAction {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is BracketAction&&const DeepCollectionEquality().equals(other.data, data));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is BracketAction&&(identical(other.data, data) || other.data == data));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(data));
+int get hashCode => Object.hash(runtimeType,data);
 
 @override
 String toString() {
@@ -412,8 +401,43 @@ String toString() {
 }
 
 /// @nodoc
-class $BracketActionCopyWith<$Res>  {
-$BracketActionCopyWith(BracketAction _, $Res Function(BracketAction) __);
+abstract mixin class $BracketActionCopyWith<$Res>  {
+  factory $BracketActionCopyWith(BracketAction value, $Res Function(BracketAction) _then) = _$BracketActionCopyWithImpl;
+@useResult
+$Res call({
+ BracketMatchAction data
+});
+
+
+$BracketMatchActionCopyWith<$Res> get data;
+
+}
+/// @nodoc
+class _$BracketActionCopyWithImpl<$Res>
+    implements $BracketActionCopyWith<$Res> {
+  _$BracketActionCopyWithImpl(this._self, this._then);
+
+  final BracketAction _self;
+  final $Res Function(BracketAction) _then;
+
+/// Create a copy of BracketAction
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? data = null,}) {
+  return _then(_self.copyWith(
+data: null == data ? _self.data : data // ignore: cast_nullable_to_non_nullable
+as BracketMatchAction,
+  ));
+}
+/// Create a copy of BracketAction
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$BracketMatchActionCopyWith<$Res> get data {
+  
+  return $BracketMatchActionCopyWith<$Res>(_self.data, (value) {
+    return _then(_self.copyWith(data: value));
+  });
+}
 }
 
 
@@ -431,12 +455,11 @@ extension BracketActionPatterns on BracketAction {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( BracketActionMatchResult value)?  matchResult,TResult Function( BracketActionEditAction value)?  editAction,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( BracketActionMatchResult value)?  matchResult,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
 case BracketActionMatchResult() when matchResult != null:
-return matchResult(_that);case BracketActionEditAction() when editAction != null:
-return editAction(_that);case _:
+return matchResult(_that);case _:
   return orElse();
 
 }
@@ -454,12 +477,11 @@ return editAction(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( BracketActionMatchResult value)  matchResult,required TResult Function( BracketActionEditAction value)  editAction,}){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( BracketActionMatchResult value)  matchResult,}){
 final _that = this;
 switch (_that) {
 case BracketActionMatchResult():
-return matchResult(_that);case BracketActionEditAction():
-return editAction(_that);}
+return matchResult(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -473,12 +495,11 @@ return editAction(_that);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( BracketActionMatchResult value)?  matchResult,TResult? Function( BracketActionEditAction value)?  editAction,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( BracketActionMatchResult value)?  matchResult,}){
 final _that = this;
 switch (_that) {
 case BracketActionMatchResult() when matchResult != null:
-return matchResult(_that);case BracketActionEditAction() when editAction != null:
-return editAction(_that);case _:
+return matchResult(_that);case _:
   return null;
 
 }
@@ -495,11 +516,10 @@ return editAction(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( BracketMatchAction data)?  matchResult,TResult Function( BracketEditAction data)?  editAction,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( BracketMatchAction data)?  matchResult,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case BracketActionMatchResult() when matchResult != null:
-return matchResult(_that.data);case BracketActionEditAction() when editAction != null:
-return editAction(_that.data);case _:
+return matchResult(_that.data);case _:
   return orElse();
 
 }
@@ -517,11 +537,10 @@ return editAction(_that.data);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( BracketMatchAction data)  matchResult,required TResult Function( BracketEditAction data)  editAction,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( BracketMatchAction data)  matchResult,}) {final _that = this;
 switch (_that) {
 case BracketActionMatchResult():
-return matchResult(_that.data);case BracketActionEditAction():
-return editAction(_that.data);}
+return matchResult(_that.data);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -535,11 +554,10 @@ return editAction(_that.data);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( BracketMatchAction data)?  matchResult,TResult? Function( BracketEditAction data)?  editAction,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( BracketMatchAction data)?  matchResult,}) {final _that = this;
 switch (_that) {
 case BracketActionMatchResult() when matchResult != null:
-return matchResult(_that.data);case BracketActionEditAction() when editAction != null:
-return editAction(_that.data);case _:
+return matchResult(_that.data);case _:
   return null;
 
 }
@@ -551,18 +569,14 @@ return editAction(_that.data);case _:
 @JsonSerializable()
 
 class BracketActionMatchResult implements BracketAction {
-  const BracketActionMatchResult(this.data, {final  String? $type}): $type = $type ?? 'matchResult';
+  const BracketActionMatchResult(this.data);
   factory BracketActionMatchResult.fromJson(Map<String, dynamic> json) => _$BracketActionMatchResultFromJson(json);
 
 @override final  BracketMatchAction data;
 
-@JsonKey(name: 'runtimeType')
-final String $type;
-
-
 /// Create a copy of BracketAction
 /// with the given fields replaced by the non-null parameter values.
-@JsonKey(includeFromJson: false, includeToJson: false)
+@override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $BracketActionMatchResultCopyWith<BracketActionMatchResult> get copyWith => _$BracketActionMatchResultCopyWithImpl<BracketActionMatchResult>(this, _$identity);
 
@@ -591,13 +605,13 @@ String toString() {
 /// @nodoc
 abstract mixin class $BracketActionMatchResultCopyWith<$Res> implements $BracketActionCopyWith<$Res> {
   factory $BracketActionMatchResultCopyWith(BracketActionMatchResult value, $Res Function(BracketActionMatchResult) _then) = _$BracketActionMatchResultCopyWithImpl;
-@useResult
+@override @useResult
 $Res call({
  BracketMatchAction data
 });
 
 
-$BracketMatchActionCopyWith<$Res> get data;
+@override $BracketMatchActionCopyWith<$Res> get data;
 
 }
 /// @nodoc
@@ -610,7 +624,7 @@ class _$BracketActionMatchResultCopyWithImpl<$Res>
 
 /// Create a copy of BracketAction
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? data = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? data = null,}) {
   return _then(BracketActionMatchResult(
 null == data ? _self.data : data // ignore: cast_nullable_to_non_nullable
 as BracketMatchAction,
@@ -629,97 +643,11 @@ $BracketMatchActionCopyWith<$Res> get data {
 }
 }
 
-/// @nodoc
-@JsonSerializable()
-
-class BracketActionEditAction implements BracketAction {
-  const BracketActionEditAction(this.data, {final  String? $type}): $type = $type ?? 'editAction';
-  factory BracketActionEditAction.fromJson(Map<String, dynamic> json) => _$BracketActionEditActionFromJson(json);
-
-@override final  BracketEditAction data;
-
-@JsonKey(name: 'runtimeType')
-final String $type;
-
-
-/// Create a copy of BracketAction
-/// with the given fields replaced by the non-null parameter values.
-@JsonKey(includeFromJson: false, includeToJson: false)
-@pragma('vm:prefer-inline')
-$BracketActionEditActionCopyWith<BracketActionEditAction> get copyWith => _$BracketActionEditActionCopyWithImpl<BracketActionEditAction>(this, _$identity);
-
-@override
-Map<String, dynamic> toJson() {
-  return _$BracketActionEditActionToJson(this, );
-}
-
-@override
-bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is BracketActionEditAction&&(identical(other.data, data) || other.data == data));
-}
-
-@JsonKey(includeFromJson: false, includeToJson: false)
-@override
-int get hashCode => Object.hash(runtimeType,data);
-
-@override
-String toString() {
-  return 'BracketAction.editAction(data: $data)';
-}
-
-
-}
-
-/// @nodoc
-abstract mixin class $BracketActionEditActionCopyWith<$Res> implements $BracketActionCopyWith<$Res> {
-  factory $BracketActionEditActionCopyWith(BracketActionEditAction value, $Res Function(BracketActionEditAction) _then) = _$BracketActionEditActionCopyWithImpl;
-@useResult
-$Res call({
- BracketEditAction data
-});
-
-
-$BracketEditActionCopyWith<$Res> get data;
-
-}
-/// @nodoc
-class _$BracketActionEditActionCopyWithImpl<$Res>
-    implements $BracketActionEditActionCopyWith<$Res> {
-  _$BracketActionEditActionCopyWithImpl(this._self, this._then);
-
-  final BracketActionEditAction _self;
-  final $Res Function(BracketActionEditAction) _then;
-
-/// Create a copy of BracketAction
-/// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? data = null,}) {
-  return _then(BracketActionEditAction(
-null == data ? _self.data : data // ignore: cast_nullable_to_non_nullable
-as BracketEditAction,
-  ));
-}
-
-/// Create a copy of BracketAction
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$BracketEditActionCopyWith<$Res> get data {
-  
-  return $BracketEditActionCopyWith<$Res>(_self.data, (value) {
-    return _then(_self.copyWith(data: value));
-  });
-}
-}
-
 
 /// @nodoc
 mixin _$BracketHistoryEntry {
 
-/// Type-safe action metadata (match result or bracket edit).
- BracketAction get action;/// The full bracket result snapshot AFTER this action was applied.
- BracketResult get resultSnapshot;/// The full participants list snapshot AFTER this action was applied.
-/// Needed because name/ID edits mutate participants, not matches.
- List<ParticipantEntity> get participantsSnapshot;
+ BracketAction get action; BracketResult get resultSnapshot; List<ParticipantEntity> get participantsSnapshot;
 /// Create a copy of BracketHistoryEntry
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -936,15 +864,9 @@ class _BracketHistoryEntry implements BracketHistoryEntry {
   const _BracketHistoryEntry({required this.action, required this.resultSnapshot, required final  List<ParticipantEntity> participantsSnapshot}): _participantsSnapshot = participantsSnapshot;
   factory _BracketHistoryEntry.fromJson(Map<String, dynamic> json) => _$BracketHistoryEntryFromJson(json);
 
-/// Type-safe action metadata (match result or bracket edit).
 @override final  BracketAction action;
-/// The full bracket result snapshot AFTER this action was applied.
 @override final  BracketResult resultSnapshot;
-/// The full participants list snapshot AFTER this action was applied.
-/// Needed because name/ID edits mutate participants, not matches.
  final  List<ParticipantEntity> _participantsSnapshot;
-/// The full participants list snapshot AFTER this action was applied.
-/// Needed because name/ID edits mutate participants, not matches.
 @override List<ParticipantEntity> get participantsSnapshot {
   if (_participantsSnapshot is EqualUnmodifiableListView) return _participantsSnapshot;
   // ignore: implicit_dynamic_type

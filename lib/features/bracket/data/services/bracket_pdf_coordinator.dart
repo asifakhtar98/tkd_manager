@@ -1,8 +1,10 @@
 import 'dart:typed_data';
 
+import 'package:tkd_saas/features/bracket/data/services/bracket_medal_computation_service_implementation.dart';
 import 'package:tkd_saas/features/bracket/data/services/tie_sheet_syncfusion_pdf_renderer_service.dart';
 import 'package:tkd_saas/features/bracket/domain/entities/bracket_medal_placement_entity.dart';
 import 'package:tkd_saas/features/bracket/domain/entities/match_entity.dart';
+import 'package:tkd_saas/features/bracket/domain/services/bracket_medal_computation_service.dart';
 import 'package:tkd_saas/features/bracket/domain/layout/models/tie_sheet_layout_result.dart';
 import 'package:tkd_saas/features/bracket/domain/layout/tie_sheet_layout_engine.dart';
 import 'package:tkd_saas/features/bracket/domain/value_objects/tie_sheet_theme_config.dart';
@@ -59,7 +61,12 @@ class BracketPdfCoordinator {
   BracketPdfCoordinator({
     TieSheetLayoutEngine? layoutEngine,
     TieSheetSyncfusionPdfRendererService? rendererService,
-  }) : _layoutEngine = layoutEngine ?? TieSheetLayoutEngine(),
+    BracketMedalComputationService? medalComputationService,
+  }) : _layoutEngine = layoutEngine ??
+           TieSheetLayoutEngine(
+             medalComputationService ??
+                 const BracketMedalComputationServiceImplementation(),
+           ),
        _rendererService =
            rendererService ?? TieSheetSyncfusionPdfRendererService();
 

@@ -40,29 +40,11 @@ BracketActionMatchResult _$BracketActionMatchResultFromJson(
   Map<String, dynamic> json,
 ) => BracketActionMatchResult(
   BracketMatchAction.fromJson(json['data'] as Map<String, dynamic>),
-  $type: json['runtimeType'] as String?,
 );
 
 Map<String, dynamic> _$BracketActionMatchResultToJson(
   BracketActionMatchResult instance,
-) => <String, dynamic>{
-  'data': instance.data.toJson(),
-  'runtimeType': instance.$type,
-};
-
-BracketActionEditAction _$BracketActionEditActionFromJson(
-  Map<String, dynamic> json,
-) => BracketActionEditAction(
-  BracketEditAction.fromJson(json['data'] as Map<String, dynamic>),
-  $type: json['runtimeType'] as String?,
-);
-
-Map<String, dynamic> _$BracketActionEditActionToJson(
-  BracketActionEditAction instance,
-) => <String, dynamic>{
-  'data': instance.data.toJson(),
-  'runtimeType': instance.$type,
-};
+) => <String, dynamic>{'data': instance.data.toJson()};
 
 _BracketHistoryEntry _$BracketHistoryEntryFromJson(Map<String, dynamic> json) =>
     _BracketHistoryEntry(

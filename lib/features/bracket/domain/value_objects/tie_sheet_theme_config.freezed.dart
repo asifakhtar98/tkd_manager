@@ -15,12 +15,10 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$TieSheetThemeConfig {
 
-// ── Connector / junction tokens ─────────────────────────────────────────
 /// Muted colour used for generic connectors, BYE dashed lines,
 /// TBD placeholder text, and unresolved junction lines.
 @ColorJsonConverter() Color get mutedColor;/// Resolved connector stroke colour (winner advancement lines).
-@ColorJsonConverter() Color get connectorWonColor;// ── Canvas & card tokens ────────────────────────────────────────────────
-/// Canvas background fill.
+@ColorJsonConverter() Color get connectorWonColor;/// Canvas background fill.
 @ColorJsonConverter() Color get canvasBackgroundColor;/// Unified border stroke colour for cards, TBD outlines, and pending
 /// dashed connectors.
 @ColorJsonConverter() Color get borderColor;/// Uniform stroke width for all connector / junction lines.
@@ -28,55 +26,42 @@ mixin _$TieSheetThemeConfig {
 /// In print mode a single uniform value is used for all connectors.
  double get connectorStrokeWidth;/// When `true`, all interactive overlays (match taps, drag-swap,
 /// participant slot taps) are suppressed on the canvas widget.
- bool get isInteractivityDisabled;// ── Text tokens ─────────────────────────────────────────────────────────
-/// Primary text colour (headings, names, numbers).
+ bool get isInteractivityDisabled;/// Primary text colour (headings, names, numbers).
 @ColorJsonConverter() Color get primaryTextColor;/// Secondary text colour (subtle / supporting text).
 @ColorJsonConverter() Color get secondaryTextColor;/// When `true`, **every** text span is rendered bold regardless of
 /// the font-weight specified by the painter.
  bool get isTextForceBold;/// Additive font-size adjustment applied to **every** text span.
- double get fontSizeDelta;// ── Fill tokens ─────────────────────────────────────────────────────────
-/// Participant card background fill.
+ double get fontSizeDelta;/// Participant card background fill.
 @ColorJsonConverter() Color get rowFillColor;/// Info-row / sub-header background fill.
 @ColorJsonConverter() Color get headerFillColor;/// TBD placeholder card background fill.
-@ColorJsonConverter() Color get tbdFillColor;// ── Header banner ───────────────────────────────────────────────────────
-/// Top banner background colour.
+@ColorJsonConverter() Color get tbdFillColor;/// Top banner background colour.
 @ColorJsonConverter() Color get headerBannerBackgroundColor;/// Top banner text colour.
-@ColorJsonConverter() Color get headerBannerTextColor;// ── Accent & badge tokens ───────────────────────────────────────────────
-/// Participant row accent strip colour (left/right edge coloured strip).
+@ColorJsonConverter() Color get headerBannerTextColor;/// Participant row accent strip colour (left/right edge coloured strip).
 @ColorJsonConverter() Color get participantAccentStripColor;/// Blue-corner badge colour.
 @ColorJsonConverter() Color get blueCornerColor;/// Red-corner badge colour.
-@ColorJsonConverter() Color get redCornerColor;// ── Section label tokens (DE brackets) ──────────────────────────────────
-/// Winners bracket section-label colour.
+@ColorJsonConverter() Color get redCornerColor;/// Winners bracket section-label colour.
 @ColorJsonConverter() Color get winnersLabelColor;/// Losers bracket section-label colour.
-@ColorJsonConverter() Color get losersLabelColor;// ── Medal table tokens ──────────────────────────────────────────────────
-@ColorJsonConverter() Color get medalGoldFillColor;@ColorJsonConverter() Color get medalSilverFillColor;@ColorJsonConverter() Color get medalBronzeFillColor;@ColorJsonConverter() Color get medalGoldTextColor;@ColorJsonConverter() Color get medalSilverTextColor;@ColorJsonConverter() Color get medalBronzeTextColor;@ColorJsonConverter() Color get medalGoldAccentColor;@ColorJsonConverter() Color get medalSilverAccentColor;@ColorJsonConverter() Color get medalBronzeAccentColor;// ── Shape / radius tokens ───────────────────────────────────────────────
-/// Unified border radius applied to all rectangular UI elements.
+@ColorJsonConverter() Color get losersLabelColor;@ColorJsonConverter() Color get medalGoldFillColor;@ColorJsonConverter() Color get medalSilverFillColor;@ColorJsonConverter() Color get medalBronzeFillColor;@ColorJsonConverter() Color get medalGoldTextColor;@ColorJsonConverter() Color get medalSilverTextColor;@ColorJsonConverter() Color get medalBronzeTextColor;@ColorJsonConverter() Color get medalGoldAccentColor;@ColorJsonConverter() Color get medalSilverAccentColor;@ColorJsonConverter() Color get medalBronzeAccentColor;/// Unified border radius applied to all rectangular UI elements.
  double get elementBorderRadius;/// Corner radius for the Bezier curve arms on bracket junctions.
- double get junctionCornerRadius;// ── Stroke width tokens ─────────────────────────────────────────────────
-/// Primary stroke width for borders, outlines, dividers, and pending
+ double get junctionCornerRadius;/// Primary stroke width for borders, outlines, dividers, and pending
 /// connector lines.
  double get borderStrokeWidth;/// Subtle stroke width for secondary borders.
  double get subtleStrokeWidth;/// Stroke width for resolved / won connector lines.
- double get wonConnectorStrokeWidth;// ── Spacing tokens ──────────────────────────────────────────────────────
-/// Canvas margin (padding around all edges of the canvas).
+ double get wonConnectorStrokeWidth;/// Canvas margin (padding around all edges of the canvas).
  double get canvasMargin;/// Vertical gap between Winners and Losers bracket sections (DE only).
  double get sectionGapHeight;/// Width of the coloured accent strip on participant card edges.
- double get accentStripWidth;// ── Badge & pill sizing tokens ──────────────────────────────────────────
-/// Minimum radius for corner badges (B / R).
+ double get accentStripWidth;/// Minimum radius for corner badges (B / R).
  double get badgeMinRadius;/// Padding added around badge text to compute dynamic radius.
  double get badgePadding;/// Minimum half-width for match number pills.
  double get matchPillMinHalfWidth;/// Horizontal padding for match number pill text.
  double get matchPillHorizontalPadding;/// Minimum half-height for match number pills.
  double get matchPillMinHalfHeight;/// Vertical padding for match number pill text.
- double get matchPillVerticalPadding;// ── Dashed line tokens ──────────────────────────────────────────────────
-/// Width of each dash segment in dashed connector lines.
+ double get matchPillVerticalPadding;/// Width of each dash segment in dashed connector lines.
  double get dashedLineDashWidth;/// Gap between dash segments in dashed connector lines.
- double get dashedLineGapWidth;// ── Typography tokens ───────────────────────────────────────────────────
-/// Font family applied to all text rendered on the canvas.
+ double get dashedLineGapWidth;/// Font family applied to all text rendered on the canvas.
  String get fontFamily;/// Letter spacing for the main tournament title in the header banner.
  double get headerLetterSpacing;/// Letter spacing for sub-header text (date, venue) in the header banner.
- double get subHeaderLetterSpacing;// ── Layout dimension base tokens ────────────────────────────────────────
-/// Base height of a single participant row (px).
+ double get subHeaderLetterSpacing;/// Base height of a single participant row (px).
  double get rowHeight;/// Vertical gap between blue & red rows within a single match (px).
  double get intraMatchGapHeight;/// Vertical gap between consecutive match pairs (px).
  double get interMatchGapHeight;/// Width of the serial-number column (px).
@@ -87,14 +72,12 @@ mixin _$TieSheetThemeConfig {
  double get headerTotalHeight;/// Height of the tournament info sub-header row (px).
  double get subHeaderRowHeight;/// Horizontal gap between left and right bracket halves (SE only, px).
  double get centerGapWidth;/// Height of the Winners/Losers section label bar (px).
- double get sectionLabelHeight;// ── Medal table layout tokens ───────────────────────────────────────────
-/// Total width of the medal table (px).
+ double get sectionLabelHeight;/// Total width of the medal table (px).
  double get medalTableWidth;/// Height of each medal row (px).
  double get medalRowHeight;/// Width of the name column inside the medal table (px).
  double get medalNameColumnWidth;/// Width of the label column inside the medal table (px).
  double get medalLabelColumnWidth;/// Vertical gap between medal rows (px).
- double get medalRowGap;// ── Junction geometry tokens ────────────────────────────────────────────
-/// Minimum vertical span for center-final junction arms (px).
+ double get medalRowGap;/// Minimum vertical span for center-final junction arms (px).
  double get centerFinalMinimumSpan;/// Horizontal arm length for grand-final output connector (px).
  double get grandFinalOutputArmLength;/// Horizontal offset for corner badges relative to junction center (px).
  double get badgeHorizontalOffset;/// Vertical offset for blue corner badge from junction arm (px).
@@ -102,19 +85,15 @@ mixin _$TieSheetThemeConfig {
  double get badgeRedVerticalOffset;/// Vertical offset for missing input placeholder from junction center (px).
  double get missingInputVerticalOffset;/// Vertical gap between 3rd place match and medal table (px).
  double get thirdPlaceToMedalGap;/// Horizontal offset for match number pill relative to junction center (px).
- double get matchPillHorizontalOffset;// ── Banner & logo layout tokens ─────────────────────────────────────────
-/// Base height of the dark header banner (before fontSizeDelta scaling, px).
+ double get matchPillHorizontalOffset;/// Base height of the dark header banner (before fontSizeDelta scaling, px).
  double get headerBannerHeight;/// Maximum display height for logo images (px).
  double get logoMaxHeight;/// Padding below the logo row before the header banner starts (px).
- double get logoPadding;// ── Color tokens (additional) ───────────────────────────────────────────
-/// Fill colour for match number pills.
+ double get logoPadding;/// Fill colour for match number pills.
 @ColorJsonConverter() Color get matchPillFillColor;/// Text colour inside corner badges (B / R).
-@ColorJsonConverter() Color get badgeTextColor;// ── Opacity tokens ──────────────────────────────────────────────────────
-/// Background opacity for section label fill (0.0–1.0).
+@ColorJsonConverter() Color get badgeTextColor;/// Background opacity for section label fill (0.0–1.0).
  double get sectionLabelBackgroundOpacity;/// Text opacity for secondary header text (subtitle + organizer, 0.0–1.0).
  double get headerSecondaryTextOpacity;/// Outline opacity for corner badges B/R (0.0–1.0).
- double get badgeOutlineOpacity;// ── Canvas constraint tokens ────────────────────────────────────────────
-/// Minimum canvas width in logical pixels.
+ double get badgeOutlineOpacity;/// Minimum canvas width in logical pixels.
  double get canvasMinimumWidth;/// Minimum canvas height in logical pixels.
  double get canvasMinimumHeight;
 /// Create a copy of TieSheetThemeConfig
@@ -390,13 +369,11 @@ class _TieSheetThemeConfig extends TieSheetThemeConfig {
   const _TieSheetThemeConfig({@ColorJsonConverter() required this.mutedColor, @ColorJsonConverter() required this.connectorWonColor, @ColorJsonConverter() required this.canvasBackgroundColor, @ColorJsonConverter() required this.borderColor, required this.connectorStrokeWidth, required this.isInteractivityDisabled, @ColorJsonConverter() required this.primaryTextColor, @ColorJsonConverter() required this.secondaryTextColor, required this.isTextForceBold, required this.fontSizeDelta, @ColorJsonConverter() required this.rowFillColor, @ColorJsonConverter() required this.headerFillColor, @ColorJsonConverter() required this.tbdFillColor, @ColorJsonConverter() required this.headerBannerBackgroundColor, @ColorJsonConverter() required this.headerBannerTextColor, @ColorJsonConverter() required this.participantAccentStripColor, @ColorJsonConverter() required this.blueCornerColor, @ColorJsonConverter() required this.redCornerColor, @ColorJsonConverter() required this.winnersLabelColor, @ColorJsonConverter() required this.losersLabelColor, @ColorJsonConverter() required this.medalGoldFillColor, @ColorJsonConverter() required this.medalSilverFillColor, @ColorJsonConverter() required this.medalBronzeFillColor, @ColorJsonConverter() required this.medalGoldTextColor, @ColorJsonConverter() required this.medalSilverTextColor, @ColorJsonConverter() required this.medalBronzeTextColor, @ColorJsonConverter() required this.medalGoldAccentColor, @ColorJsonConverter() required this.medalSilverAccentColor, @ColorJsonConverter() required this.medalBronzeAccentColor, required this.elementBorderRadius, required this.junctionCornerRadius, required this.borderStrokeWidth, required this.subtleStrokeWidth, required this.wonConnectorStrokeWidth, required this.canvasMargin, required this.sectionGapHeight, required this.accentStripWidth, required this.badgeMinRadius, required this.badgePadding, required this.matchPillMinHalfWidth, required this.matchPillHorizontalPadding, required this.matchPillMinHalfHeight, required this.matchPillVerticalPadding, required this.dashedLineDashWidth, required this.dashedLineGapWidth, required this.fontFamily, required this.headerLetterSpacing, required this.subHeaderLetterSpacing, required this.rowHeight, required this.intraMatchGapHeight, required this.interMatchGapHeight, required this.numberColumnWidth, required this.nameColumnWidth, required this.registrationIdColumnWidth, required this.roundColumnWidth, required this.headerTotalHeight, required this.subHeaderRowHeight, required this.centerGapWidth, required this.sectionLabelHeight, required this.medalTableWidth, required this.medalRowHeight, required this.medalNameColumnWidth, required this.medalLabelColumnWidth, required this.medalRowGap, required this.centerFinalMinimumSpan, required this.grandFinalOutputArmLength, required this.badgeHorizontalOffset, required this.badgeBlueVerticalOffset, required this.badgeRedVerticalOffset, required this.missingInputVerticalOffset, required this.thirdPlaceToMedalGap, required this.matchPillHorizontalOffset, required this.headerBannerHeight, required this.logoMaxHeight, required this.logoPadding, @ColorJsonConverter() required this.matchPillFillColor, @ColorJsonConverter() required this.badgeTextColor, required this.sectionLabelBackgroundOpacity, required this.headerSecondaryTextOpacity, required this.badgeOutlineOpacity, required this.canvasMinimumWidth, required this.canvasMinimumHeight}): super._();
   factory _TieSheetThemeConfig.fromJson(Map<String, dynamic> json) => _$TieSheetThemeConfigFromJson(json);
 
-// ── Connector / junction tokens ─────────────────────────────────────────
 /// Muted colour used for generic connectors, BYE dashed lines,
 /// TBD placeholder text, and unresolved junction lines.
 @override@ColorJsonConverter() final  Color mutedColor;
 /// Resolved connector stroke colour (winner advancement lines).
 @override@ColorJsonConverter() final  Color connectorWonColor;
-// ── Canvas & card tokens ────────────────────────────────────────────────
 /// Canvas background fill.
 @override@ColorJsonConverter() final  Color canvasBackgroundColor;
 /// Unified border stroke colour for cards, TBD outlines, and pending
@@ -409,7 +386,6 @@ class _TieSheetThemeConfig extends TieSheetThemeConfig {
 /// When `true`, all interactive overlays (match taps, drag-swap,
 /// participant slot taps) are suppressed on the canvas widget.
 @override final  bool isInteractivityDisabled;
-// ── Text tokens ─────────────────────────────────────────────────────────
 /// Primary text colour (headings, names, numbers).
 @override@ColorJsonConverter() final  Color primaryTextColor;
 /// Secondary text colour (subtle / supporting text).
@@ -419,31 +395,26 @@ class _TieSheetThemeConfig extends TieSheetThemeConfig {
 @override final  bool isTextForceBold;
 /// Additive font-size adjustment applied to **every** text span.
 @override final  double fontSizeDelta;
-// ── Fill tokens ─────────────────────────────────────────────────────────
 /// Participant card background fill.
 @override@ColorJsonConverter() final  Color rowFillColor;
 /// Info-row / sub-header background fill.
 @override@ColorJsonConverter() final  Color headerFillColor;
 /// TBD placeholder card background fill.
 @override@ColorJsonConverter() final  Color tbdFillColor;
-// ── Header banner ───────────────────────────────────────────────────────
 /// Top banner background colour.
 @override@ColorJsonConverter() final  Color headerBannerBackgroundColor;
 /// Top banner text colour.
 @override@ColorJsonConverter() final  Color headerBannerTextColor;
-// ── Accent & badge tokens ───────────────────────────────────────────────
 /// Participant row accent strip colour (left/right edge coloured strip).
 @override@ColorJsonConverter() final  Color participantAccentStripColor;
 /// Blue-corner badge colour.
 @override@ColorJsonConverter() final  Color blueCornerColor;
 /// Red-corner badge colour.
 @override@ColorJsonConverter() final  Color redCornerColor;
-// ── Section label tokens (DE brackets) ──────────────────────────────────
 /// Winners bracket section-label colour.
 @override@ColorJsonConverter() final  Color winnersLabelColor;
 /// Losers bracket section-label colour.
 @override@ColorJsonConverter() final  Color losersLabelColor;
-// ── Medal table tokens ──────────────────────────────────────────────────
 @override@ColorJsonConverter() final  Color medalGoldFillColor;
 @override@ColorJsonConverter() final  Color medalSilverFillColor;
 @override@ColorJsonConverter() final  Color medalBronzeFillColor;
@@ -453,12 +424,10 @@ class _TieSheetThemeConfig extends TieSheetThemeConfig {
 @override@ColorJsonConverter() final  Color medalGoldAccentColor;
 @override@ColorJsonConverter() final  Color medalSilverAccentColor;
 @override@ColorJsonConverter() final  Color medalBronzeAccentColor;
-// ── Shape / radius tokens ───────────────────────────────────────────────
 /// Unified border radius applied to all rectangular UI elements.
 @override final  double elementBorderRadius;
 /// Corner radius for the Bezier curve arms on bracket junctions.
 @override final  double junctionCornerRadius;
-// ── Stroke width tokens ─────────────────────────────────────────────────
 /// Primary stroke width for borders, outlines, dividers, and pending
 /// connector lines.
 @override final  double borderStrokeWidth;
@@ -466,14 +435,12 @@ class _TieSheetThemeConfig extends TieSheetThemeConfig {
 @override final  double subtleStrokeWidth;
 /// Stroke width for resolved / won connector lines.
 @override final  double wonConnectorStrokeWidth;
-// ── Spacing tokens ──────────────────────────────────────────────────────
 /// Canvas margin (padding around all edges of the canvas).
 @override final  double canvasMargin;
 /// Vertical gap between Winners and Losers bracket sections (DE only).
 @override final  double sectionGapHeight;
 /// Width of the coloured accent strip on participant card edges.
 @override final  double accentStripWidth;
-// ── Badge & pill sizing tokens ──────────────────────────────────────────
 /// Minimum radius for corner badges (B / R).
 @override final  double badgeMinRadius;
 /// Padding added around badge text to compute dynamic radius.
@@ -486,19 +453,16 @@ class _TieSheetThemeConfig extends TieSheetThemeConfig {
 @override final  double matchPillMinHalfHeight;
 /// Vertical padding for match number pill text.
 @override final  double matchPillVerticalPadding;
-// ── Dashed line tokens ──────────────────────────────────────────────────
 /// Width of each dash segment in dashed connector lines.
 @override final  double dashedLineDashWidth;
 /// Gap between dash segments in dashed connector lines.
 @override final  double dashedLineGapWidth;
-// ── Typography tokens ───────────────────────────────────────────────────
 /// Font family applied to all text rendered on the canvas.
 @override final  String fontFamily;
 /// Letter spacing for the main tournament title in the header banner.
 @override final  double headerLetterSpacing;
 /// Letter spacing for sub-header text (date, venue) in the header banner.
 @override final  double subHeaderLetterSpacing;
-// ── Layout dimension base tokens ────────────────────────────────────────
 /// Base height of a single participant row (px).
 @override final  double rowHeight;
 /// Vertical gap between blue & red rows within a single match (px).
@@ -521,7 +485,6 @@ class _TieSheetThemeConfig extends TieSheetThemeConfig {
 @override final  double centerGapWidth;
 /// Height of the Winners/Losers section label bar (px).
 @override final  double sectionLabelHeight;
-// ── Medal table layout tokens ───────────────────────────────────────────
 /// Total width of the medal table (px).
 @override final  double medalTableWidth;
 /// Height of each medal row (px).
@@ -532,7 +495,6 @@ class _TieSheetThemeConfig extends TieSheetThemeConfig {
 @override final  double medalLabelColumnWidth;
 /// Vertical gap between medal rows (px).
 @override final  double medalRowGap;
-// ── Junction geometry tokens ────────────────────────────────────────────
 /// Minimum vertical span for center-final junction arms (px).
 @override final  double centerFinalMinimumSpan;
 /// Horizontal arm length for grand-final output connector (px).
@@ -549,26 +511,22 @@ class _TieSheetThemeConfig extends TieSheetThemeConfig {
 @override final  double thirdPlaceToMedalGap;
 /// Horizontal offset for match number pill relative to junction center (px).
 @override final  double matchPillHorizontalOffset;
-// ── Banner & logo layout tokens ─────────────────────────────────────────
 /// Base height of the dark header banner (before fontSizeDelta scaling, px).
 @override final  double headerBannerHeight;
 /// Maximum display height for logo images (px).
 @override final  double logoMaxHeight;
 /// Padding below the logo row before the header banner starts (px).
 @override final  double logoPadding;
-// ── Color tokens (additional) ───────────────────────────────────────────
 /// Fill colour for match number pills.
 @override@ColorJsonConverter() final  Color matchPillFillColor;
 /// Text colour inside corner badges (B / R).
 @override@ColorJsonConverter() final  Color badgeTextColor;
-// ── Opacity tokens ──────────────────────────────────────────────────────
 /// Background opacity for section label fill (0.0–1.0).
 @override final  double sectionLabelBackgroundOpacity;
 /// Text opacity for secondary header text (subtitle + organizer, 0.0–1.0).
 @override final  double headerSecondaryTextOpacity;
 /// Outline opacity for corner badges B/R (0.0–1.0).
 @override final  double badgeOutlineOpacity;
-// ── Canvas constraint tokens ────────────────────────────────────────────
 /// Minimum canvas width in logical pixels.
 @override final  double canvasMinimumWidth;
 /// Minimum canvas height in logical pixels.

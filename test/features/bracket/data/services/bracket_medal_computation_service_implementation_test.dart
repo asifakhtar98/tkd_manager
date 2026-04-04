@@ -10,7 +10,7 @@ void main() {
   });
 
   /// Creates a minimal match with the fields needed for medal computation.
-  MatchEntity _createMatch({
+  MatchEntity createMatch({
     required String id,
     required String bracketId,
     required int roundNumber,
@@ -65,7 +65,7 @@ void main() {
     const carol = 'carol-id';
     const dave = 'dave-id';
 
-    List<MatchEntity> _buildCompleteSingleEliminationBracket({
+    List<MatchEntity> buildCompleteSingleEliminationBracket({
       required String finalWinnerId,
       required String finalLoserId,
       String? thirdPlaceWinnerId,
@@ -74,7 +74,7 @@ void main() {
     }) {
       final matches = <MatchEntity>[
         // Round 1
-        _createMatch(
+        createMatch(
           id: 'se-r1-m1',
           bracketId: bracketId,
           roundNumber: 1,
@@ -87,7 +87,7 @@ void main() {
           status: MatchStatus.completed,
           resultType: MatchResultType.points,
         ),
-        _createMatch(
+        createMatch(
           id: 'se-r1-m2',
           bracketId: bracketId,
           roundNumber: 1,
@@ -101,7 +101,7 @@ void main() {
           resultType: MatchResultType.points,
         ),
         // Round 2 - Final (matchNumberInRound == 1)
-        _createMatch(
+        createMatch(
           id: 'se-r2-m1',
           bracketId: bracketId,
           roundNumber: 2,
@@ -117,7 +117,7 @@ void main() {
       // Optionally add 3rd-place match (round 2, match #2)
       if (includeThirdPlaceMatch) {
         matches.add(
-          _createMatch(
+          createMatch(
             id: 'se-r2-m2',
             bracketId: bracketId,
             roundNumber: 2,
@@ -139,7 +139,7 @@ void main() {
     }
 
     test('assigns Gold and Silver from final match winner and loser', () {
-      final matches = _buildCompleteSingleEliminationBracket(
+      final matches = buildCompleteSingleEliminationBracket(
         finalWinnerId: alice,
         finalLoserId: carol,
         includeThirdPlaceMatch: false,
@@ -165,7 +165,7 @@ void main() {
     });
 
     test('assigns Bronze positions from 3rd-place match winner and loser', () {
-      final matches = _buildCompleteSingleEliminationBracket(
+      final matches = buildCompleteSingleEliminationBracket(
         finalWinnerId: alice,
         finalLoserId: carol,
         thirdPlaceWinnerId: bob,
@@ -201,7 +201,7 @@ void main() {
     });
 
     test('returns no bronze when includeThirdPlaceMatch is false', () {
-      final matches = _buildCompleteSingleEliminationBracket(
+      final matches = buildCompleteSingleEliminationBracket(
         finalWinnerId: alice,
         finalLoserId: carol,
         thirdPlaceWinnerId: bob,
@@ -222,7 +222,7 @@ void main() {
 
     test('returns empty list when final match has no winner yet', () {
       final matches = [
-        _createMatch(
+        createMatch(
           id: 'se-r1-m1',
           bracketId: bracketId,
           roundNumber: 1,
@@ -233,7 +233,7 @@ void main() {
           status: MatchStatus.completed,
           resultType: MatchResultType.points,
         ),
-        _createMatch(
+        createMatch(
           id: 'se-r1-m2',
           bracketId: bracketId,
           roundNumber: 1,
@@ -245,7 +245,7 @@ void main() {
           resultType: MatchResultType.points,
         ),
         // Final — NOT yet completed
-        _createMatch(
+        createMatch(
           id: 'se-r2-m1',
           bracketId: bracketId,
           roundNumber: 2,
@@ -287,7 +287,7 @@ void main() {
     const dave = 'dave-id';
 
     /// Builds a minimal 4-player DE bracket with configurable match outcomes.
-    List<MatchEntity> _buildDoubleEliminationBracket({
+    List<MatchEntity> buildDoubleEliminationBracket({
       required String wbFinalWinnerId,
       required String wbFinalLoserId,
       required String lbFinalWinnerId,
@@ -307,7 +307,7 @@ void main() {
 
       final matches = <MatchEntity>[
         // WB R1
-        _createMatch(
+        createMatch(
           id: 'wb-r1-m1',
           bracketId: winnersBracketId,
           roundNumber: 1,
@@ -318,7 +318,7 @@ void main() {
           status: MatchStatus.completed,
           resultType: MatchResultType.points,
         ),
-        _createMatch(
+        createMatch(
           id: 'wb-r1-m2',
           bracketId: winnersBracketId,
           roundNumber: 1,
@@ -330,7 +330,7 @@ void main() {
           resultType: MatchResultType.points,
         ),
         // WB R2 (WB Final)
-        _createMatch(
+        createMatch(
           id: 'wb-r2-m1',
           bracketId: winnersBracketId,
           roundNumber: 2,
@@ -342,7 +342,7 @@ void main() {
           resultType: MatchResultType.points,
         ),
         // LB R1
-        _createMatch(
+        createMatch(
           id: 'lb-r1-m1',
           bracketId: losersBracketId,
           roundNumber: 1,
@@ -356,7 +356,7 @@ void main() {
           resultType: MatchResultType.points,
         ),
         // LB R2 (LB Final)
-        _createMatch(
+        createMatch(
           id: 'lb-r2-m1',
           bracketId: losersBracketId,
           roundNumber: 2,
@@ -368,7 +368,7 @@ void main() {
           resultType: MatchResultType.points,
         ),
         // Grand Final (GF1)
-        _createMatch(
+        createMatch(
           id: 'gf1',
           bracketId: grandFinalsBracketId,
           roundNumber: 3,
@@ -385,7 +385,7 @@ void main() {
       if (includeResetMatch) {
         final String? resetWinnerId = gf2WinnerId;
         matches.add(
-          _createMatch(
+          createMatch(
             id: 'gf2-reset',
             bracketId: grandFinalsBracketId,
             roundNumber: 4,
@@ -405,7 +405,7 @@ void main() {
     }
 
     test('assigns Gold and Silver from GF1 when no reset match exists', () {
-      final matches = _buildDoubleEliminationBracket(
+      final matches = buildDoubleEliminationBracket(
         wbFinalWinnerId: alice,
         wbFinalLoserId: carol,
         lbFinalWinnerId: bob,
@@ -429,7 +429,7 @@ void main() {
     });
 
     test('assigns Gold and Silver from GF2 when reset match is played', () {
-      final matches = _buildDoubleEliminationBracket(
+      final matches = buildDoubleEliminationBracket(
         wbFinalWinnerId: alice,
         wbFinalLoserId: carol,
         lbFinalWinnerId: bob,
@@ -460,7 +460,7 @@ void main() {
       () {
         // This was the original BUG — the code would find the unplayed reset
         // match (max round), see winnerId == null, and assign NO medals.
-        final matches = _buildDoubleEliminationBracket(
+        final matches = buildDoubleEliminationBracket(
           wbFinalWinnerId: alice,
           wbFinalLoserId: carol,
           lbFinalWinnerId: bob,
@@ -488,7 +488,7 @@ void main() {
     );
 
     test('assigns Bronze from LB final loser', () {
-      final matches = _buildDoubleEliminationBracket(
+      final matches = buildDoubleEliminationBracket(
         wbFinalWinnerId: alice,
         wbFinalLoserId: carol,
         lbFinalWinnerId: bob,
@@ -515,7 +515,7 @@ void main() {
     test('returns empty list when no GF match has a winner', () {
       final matches = [
         // WB and LB completed, but GF not yet played
-        _createMatch(
+        createMatch(
           id: 'wb-r1-m1',
           bracketId: winnersBracketId,
           roundNumber: 1,
@@ -526,7 +526,7 @@ void main() {
           status: MatchStatus.completed,
           resultType: MatchResultType.points,
         ),
-        _createMatch(
+        createMatch(
           id: 'lb-r1-m1',
           bracketId: losersBracketId,
           roundNumber: 1,
@@ -538,7 +538,7 @@ void main() {
           resultType: MatchResultType.points,
         ),
         // GF — pending
-        _createMatch(
+        createMatch(
           id: 'gf1',
           bracketId: grandFinalsBracketId,
           roundNumber: 3,

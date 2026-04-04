@@ -9,7 +9,7 @@ void main() {
 
       expect(settings.paperSize, PaperSize.a4);
       expect(settings.orientation, PageOrientation.landscape);
-      expect(settings.fitMode, PrintFitMode.fitToPage);
+      expect(settings.fitMode, PrintFitMode.tileAcrossPages);
       expect(settings.scaleFactor, 1.0);
       expect(settings.tileOverlapMillimeters, 10.0);
       expect(settings.marginPoints, 24.0);

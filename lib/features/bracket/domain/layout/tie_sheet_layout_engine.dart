@@ -17,7 +17,7 @@ import 'package:tkd_saas/features/setup_bracket/domain/entities/participant_enti
 import 'package:tkd_saas/features/tournament/domain/entities/bracket_classification.dart';
 import 'package:tkd_saas/features/tournament/domain/entities/tournament_entity.dart';
 
-import 'package:tkd_saas/features/bracket/data/services/bracket_medal_computation_service_implementation.dart';
+import 'package:tkd_saas/features/bracket/domain/services/bracket_medal_computation_service.dart';
 import 'package:tkd_saas/features/bracket/domain/layout/tie_sheet_layout_helper_mixin.dart';
 
 /// Pure-Dart layout engine that computes all bracket geometry.
@@ -25,6 +25,10 @@ import 'package:tkd_saas/features/bracket/domain/layout/tie_sheet_layout_helper_
 /// Produces a [TieSheetLayoutResult] consumed by both the Syncfusion PDF
 /// renderer (on-screen + export) and any future widget renderer.
 class TieSheetLayoutEngine with TieSheetLayoutHelperMixin {
+  TieSheetLayoutEngine(this._medalComputationService);
+
+  final BracketMedalComputationService _medalComputationService;
+
   /// Computes the complete bracket layout.
   TieSheetLayoutResult computeLayout({
     required TournamentEntity tournament,
@@ -772,8 +776,9 @@ class TieSheetLayoutEngine with TieSheetLayoutHelperMixin {
     final finals = allMatches
         .where((m) => m.roundNumber == allRounds && m.matchNumberInRound == 1)
         .firstOrNull;
-    if (finals == null || !nodeOffsets.containsKey('${finals.id}_output'))
+    if (finals == null || !nodeOffsets.containsKey('${finals.id}_output')) {
       return;
+    }
 
     final fPos = nodeOffsets['${finals.id}_output']!;
     final x = fPos.dx;
@@ -1082,10 +1087,12 @@ class TieSheetLayoutEngine with TieSheetLayoutHelperMixin {
     final gfMidY = (gfTopY + gfBotY) / 2;
 
     nodeOffsets['${gf1.id}_output'] = Offset(gfX, gfMidY);
-    if (wbChampOffset != null)
+    if (wbChampOffset != null) {
       nodeOffsets['${gf1.id}_top_input'] = wbChampOffset;
-    if (lbChampOffset != null)
+    }
+    if (lbChampOffset != null) {
       nodeOffsets['${gf1.id}_bot_input'] = lbChampOffset;
+    }
 
     _computeGrandFinalNode(
       gf1,
@@ -1358,7 +1365,7 @@ class TieSheetLayoutEngine with TieSheetLayoutHelperMixin {
 
     final resolvedPlacements =
         finalMedalPlacements ??
-        const BracketMedalComputationServiceImplementation()
+        _medalComputationService
             .computeRuntimeMedalPlacements(
               matches: matches,
               isDoubleElimination: isDouble,
