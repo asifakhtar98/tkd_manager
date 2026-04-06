@@ -1,6 +1,6 @@
 import 'dart:math';
 import 'dart:typed_data';
-import 'dart:ui' show Color, FontStyle, Offset, Rect, Size;
+import 'dart:ui' show Color, FontStyle, FontWeight, Offset, Rect, Size;
 
 import 'package:syncfusion_flutter_pdf/pdf.dart';
 import 'package:tkd_saas/features/bracket/data/services/pdf_color_converter.dart';
@@ -800,18 +800,38 @@ class TieSheetSyncfusionPdfRendererService {
   }) {
     final resolvedTextColor =
         overrideColor ?? _resolveTextColor(textData.textColorType, themeConfig);
-    PdfFontStyle pdfFontStyle = PdfFontStyle.regular;
-    if (textData.fontWeight.index >= 6) {
-      pdfFontStyle = PdfFontStyle.bold;
+
+    // Determine the required font styles. PdfStandardFont supports combining
+    // bold + italic via the `multiStyle` parameter — using the single `style`
+    // parameter would silently drop one when both are needed.
+    final isBold = textData.fontWeight.value >= FontWeight.w600.value;
+    final isItalic = textData.fontStyle == FontStyle.italic;
+
+    final PdfStandardFont font;
+    if (isBold && isItalic) {
+      font = PdfStandardFont(
+        PdfFontFamily.helvetica,
+        textData.fontSize,
+        multiStyle: <PdfFontStyle>[PdfFontStyle.bold, PdfFontStyle.italic],
+      );
+    } else if (isBold) {
+      font = PdfStandardFont(
+        PdfFontFamily.helvetica,
+        textData.fontSize,
+        style: PdfFontStyle.bold,
+      );
+    } else if (isItalic) {
+      font = PdfStandardFont(
+        PdfFontFamily.helvetica,
+        textData.fontSize,
+        style: PdfFontStyle.italic,
+      );
+    } else {
+      font = PdfStandardFont(
+        PdfFontFamily.helvetica,
+        textData.fontSize,
+      );
     }
-    if (textData.fontStyle == FontStyle.italic) {
-      pdfFontStyle = PdfFontStyle.italic;
-    }
-    final font = PdfStandardFont(
-      PdfFontFamily.helvetica,
-      textData.fontSize,
-      style: pdfFontStyle,
-    );
 
     // PdfStandardFont (Helvetica) only supports Latin-1 characters.
     // Replace common Unicode symbols used in bracket labels with ASCII
