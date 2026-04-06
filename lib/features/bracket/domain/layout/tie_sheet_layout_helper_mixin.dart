@@ -423,7 +423,6 @@ mixin TieSheetLayoutHelperMixin {
     final midY = (effectiveTop.dy + effectiveBot.dy) / 2;
     nodeOffsets['${match.id}_output'] = Offset(junctionX, midY);
 
-    final r = themeConfig.junctionCornerRadius;
     final topArcType = match.participantBlueId != null
         ? ConnectorVisualType.wonAdvancement
         : ConnectorVisualType.pendingAdvancement;
@@ -431,36 +430,36 @@ mixin TieSheetLayoutHelperMixin {
         ? ConnectorVisualType.wonAdvancement
         : ConnectorVisualType.pendingAdvancement;
 
+    // Top arm: horizontal from input → right-angle corner → vertical to midY
     connectors.add(
-      ConnectorLayoutData.arcPath(
+      ConnectorLayoutData.straightSegments(
         connectorVisualType: topArcType,
-        pathData: ConnectorArcPathData(
-          moveToOffset: effectiveTop,
-          lineToBeforeArcOffset: Offset(
-            junctionX - (isMirrored ? -r : r),
-            effectiveTop.dy,
+        segments: [
+          LineSegmentLayoutData(
+            startOffset: effectiveTop,
+            endOffset: Offset(junctionX, effectiveTop.dy),
           ),
-          arcEndOffset: Offset(junctionX, effectiveTop.dy + r),
-          arcRadius: r,
-          isArcClockwise: !isMirrored,
-          lineToAfterArcOffset: Offset(junctionX, midY),
-        ),
+          LineSegmentLayoutData(
+            startOffset: Offset(junctionX, effectiveTop.dy),
+            endOffset: Offset(junctionX, midY),
+          ),
+        ],
       ),
     );
+    // Bottom arm: horizontal from input → right-angle corner → vertical to midY
     connectors.add(
-      ConnectorLayoutData.arcPath(
+      ConnectorLayoutData.straightSegments(
         connectorVisualType: botArcType,
-        pathData: ConnectorArcPathData(
-          moveToOffset: effectiveBot,
-          lineToBeforeArcOffset: Offset(
-            junctionX - (isMirrored ? -r : r),
-            effectiveBot.dy,
+        segments: [
+          LineSegmentLayoutData(
+            startOffset: effectiveBot,
+            endOffset: Offset(junctionX, effectiveBot.dy),
           ),
-          arcEndOffset: Offset(junctionX, effectiveBot.dy - r),
-          arcRadius: r,
-          isArcClockwise: isMirrored,
-          lineToAfterArcOffset: Offset(junctionX, midY),
-        ),
+          LineSegmentLayoutData(
+            startOffset: Offset(junctionX, effectiveBot.dy),
+            endOffset: Offset(junctionX, midY),
+          ),
+        ],
       ),
     );
 
@@ -470,8 +469,8 @@ mixin TieSheetLayoutHelperMixin {
         ? findParticipantById(match.winnerId, participants)
         : null;
     final badgeX = junctionX + (isMirrored ? 20 : -20);
-    final badgeRadius = max(
-      themeConfig.badgeMinRadius,
+    final badgeHalfSize = max(
+      themeConfig.badgeMinHalfSize,
       max(computeFontSize(9, delta), computeFontSize(9, delta)) / 2 +
           themeConfig.badgePadding,
     );
@@ -495,7 +494,6 @@ mixin TieSheetLayoutHelperMixin {
         centerOffset: Offset(junctionX, midY),
         matchNumberText: '$gNum',
         pillBoundingRect: pillRect,
-        pillCornerRadius: pillHalfH,
       );
     }
 
@@ -547,13 +545,13 @@ mixin TieSheetLayoutHelperMixin {
           centerOffset: Offset(badgeX, effectiveTop.dy - 14),
           badgeText: 'B',
           badgeColorType: CornerBadgeColorType.blue,
-          computedBadgeRadius: badgeRadius,
+          computedBadgeHalfSize: badgeHalfSize,
         ),
         redCornerBadgeLayout: CornerBadgeLayoutData(
           centerOffset: Offset(badgeX, effectiveBot.dy + 14),
           badgeText: 'R',
           badgeColorType: CornerBadgeColorType.red,
-          computedBadgeRadius: badgeRadius,
+          computedBadgeHalfSize: badgeHalfSize,
         ),
         matchNumberPillLayout: pillLayout,
         winnerNameTextLayout: winnerText,

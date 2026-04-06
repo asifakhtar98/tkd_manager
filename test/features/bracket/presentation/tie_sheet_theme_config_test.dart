@@ -108,13 +108,6 @@ void main() {
         expect(config.medalBronzeAccentColor, const Color(0xFFF97316));
       });
 
-      // ── Shape / radius tokens ──
-      test('elementBorderRadius is 6', () {
-        expect(config.elementBorderRadius, 6.0);
-      });
-      test('junctionCornerRadius is 10', () {
-        expect(config.junctionCornerRadius, 10.0);
-      });
 
       // ── Stroke width tokens ──
       test('borderStrokeWidth is 3.5', () {
@@ -143,8 +136,8 @@ void main() {
       });
 
       // ── Badge & pill sizing tokens ──
-      test('badgeMinRadius is 10', () {
-        expect(config.badgeMinRadius, 10.0);
+      test('badgeMinHalfSize is 10', () {
+        expect(config.badgeMinHalfSize, 10.0);
       });
       test('badgePadding is 4', () {
         expect(config.badgePadding, 4.0);
@@ -276,13 +269,6 @@ void main() {
         expect(config.medalBronzeAccentColor, const Color(0xFF000000));
       });
 
-      // ── Shape / radius tokens (same geometry as default) ──
-      test('elementBorderRadius is 6', () {
-        expect(config.elementBorderRadius, 6.0);
-      });
-      test('junctionCornerRadius is 10', () {
-        expect(config.junctionCornerRadius, 10.0);
-      });
 
       // ── Spacing tokens (same as default) ──
       test('canvasMargin is 36', () {
@@ -380,9 +366,6 @@ void main() {
           medalGoldAccentColor: Color(0xFFF59E0B),
           medalSilverAccentColor: Color(0xFF94A3B8),
           medalBronzeAccentColor: Color(0xFFF97316),
-          // Shape / radius
-          elementBorderRadius: 6.0,
-          junctionCornerRadius: 10.0,
           // Stroke widths
           borderStrokeWidth: 3.5,
           subtleStrokeWidth: 1.5,
@@ -392,7 +375,7 @@ void main() {
           sectionGapHeight: 50.0,
           accentStripWidth: 4.0,
           // Badge & pill
-          badgeMinRadius: 10.0,
+          badgeMinHalfSize: 10.0,
           badgePadding: 4.0,
           matchPillMinHalfWidth: 16.0,
           matchPillHorizontalPadding: 8.0,
@@ -467,13 +450,12 @@ void main() {
         expect(copied.primaryTextColor, overrideColor);
         // All other fields remain unchanged.
         expect(copied.mutedColor, baseConfig.mutedColor);
-        expect(copied.elementBorderRadius, baseConfig.elementBorderRadius);
         expect(copied.fontFamily, baseConfig.fontFamily);
       });
 
       test('overrides only the specified double field', () {
-        final copied = baseConfig.copyWith(elementBorderRadius: 20.0);
-        expect(copied.elementBorderRadius, 20.0);
+        final copied = baseConfig.copyWith(badgeMinHalfSize: 20.0);
+        expect(copied.badgeMinHalfSize, 20.0);
         expect(copied.primaryTextColor, baseConfig.primaryTextColor);
       });
 
@@ -501,7 +483,6 @@ void main() {
         expect(copied.fontFamily, 'Montserrat');
         // Untouched fields.
         expect(copied.mutedColor, baseConfig.mutedColor);
-        expect(copied.elementBorderRadius, baseConfig.elementBorderRadius);
       });
 
       test('chained copyWith calls accumulate overrides', () {
@@ -573,15 +554,13 @@ void main() {
           medalGoldAccentColor: c25,
           medalSilverAccentColor: c26,
           medalBronzeAccentColor: c27,
-          elementBorderRadius: 99.0,
-          junctionCornerRadius: 96.0,
           borderStrokeWidth: 95.0,
           subtleStrokeWidth: 94.0,
           wonConnectorStrokeWidth: 93.0,
           canvasMargin: 91.0,
           sectionGapHeight: 90.0,
           accentStripWidth: 89.0,
-          badgeMinRadius: 87.0,
+          badgeMinHalfSize: 87.0,
           badgePadding: 86.0,
           matchPillMinHalfWidth: 85.0,
           matchPillHorizontalPadding: 84.0,
@@ -665,15 +644,13 @@ void main() {
         expect(overridden.isInteractivityDisabled, isTrue);
         expect(overridden.isTextForceBold, isTrue);
         expect(overridden.fontSizeDelta, 12.0);
-        expect(overridden.elementBorderRadius, 99.0);
-        expect(overridden.junctionCornerRadius, 96.0);
         expect(overridden.borderStrokeWidth, 95.0);
         expect(overridden.subtleStrokeWidth, 94.0);
         expect(overridden.wonConnectorStrokeWidth, 93.0);
         expect(overridden.canvasMargin, 91.0);
         expect(overridden.sectionGapHeight, 90.0);
         expect(overridden.accentStripWidth, 89.0);
-        expect(overridden.badgeMinRadius, 87.0);
+        expect(overridden.badgeMinHalfSize, 87.0);
         expect(overridden.badgePadding, 86.0);
         expect(overridden.matchPillMinHalfWidth, 85.0);
         expect(overridden.matchPillHorizontalPadding, 84.0);

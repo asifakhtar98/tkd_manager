@@ -1146,12 +1146,15 @@ class _InvoiceGeneratorScreenState extends State<InvoiceGeneratorScreen> {
       drawLabelValue('UPI ID', data.bankDetails.upiId);
 
       if (data.isFullyPaid) {
-        if (data.paymentMode.isNotEmpty)
+        if (data.paymentMode.isNotEmpty) {
           drawLabelValue('Payment Mode', data.paymentMode);
-        if (data.transactionReferenceId.isNotEmpty)
+        }
+        if (data.transactionReferenceId.isNotEmpty) {
           drawLabelValue('Tx Ref ID', data.transactionReferenceId);
-        if (data.paymentDate != null)
+        }
+        if (data.paymentDate != null) {
           drawLabelValue('Paid Date', dateFormatter.format(data.paymentDate!));
+        }
       }
       leftInfoY += 10;
     }
@@ -1471,8 +1474,9 @@ class _InvoiceGeneratorScreenState extends State<InvoiceGeneratorScreen> {
       firstDate: DateTime(2000),
       lastDate: DateTime(2100),
     );
-    if (d != null)
+    if (d != null) {
       setState(() => issue ? _selectedIssueDate = d : _selectedDueDate = d);
+    }
   }
 
   Future<void> _exportPdf(BuildContext context, InvoiceDataEntity data) async {
@@ -1543,10 +1547,12 @@ class _StylizedInput extends StatelessWidget {
       ),
       validator: (v) {
         if (v == null || v.isEmpty) return null;
-        if (isEmail && !RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(v))
+        if (isEmail && !RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(v)) {
           return 'Invalid Email';
-        if (isPan && !RegExp(r'^[A-Z]{5}[0-9]{4}[A-Z]{1}$').hasMatch(v))
+        }
+        if (isPan && !RegExp(r'^[A-Z]{5}[0-9]{4}[A-Z]{1}$').hasMatch(v)) {
           return 'Invalid PAN Format';
+        }
         return null;
       },
     );
@@ -1779,14 +1785,18 @@ class _NumberToWordsConverter {
 
   static String _convertToWords(int n) {
     if (n < 20) return _onesList[n];
-    if (n < 100)
+    if (n < 100) {
       return '${_tensList[n ~/ 10]}${n % 10 != 0 ? " ${_onesList[n % 10]}" : ""}';
-    if (n < 1000)
+    }
+    if (n < 1000) {
       return '${_onesList[n ~/ 100]} Hundred${n % 100 != 0 ? " and ${_convertToWords(n % 100)}" : ""}';
-    if (n < 100000)
+    }
+    if (n < 100000) {
       return '${_convertToWords(n ~/ 1000)} Thousand${n % 1000 != 0 ? " ${_convertToWords(n % 1000)}" : ""}';
-    if (n < 10000000)
+    }
+    if (n < 10000000) {
       return '${_convertToWords(n ~/ 100000)} Lakh${n % 100000 != 0 ? " ${_convertToWords(n % 100000)}" : ""}';
+    }
     return '${_convertToWords(n ~/ 10000000)} Crore${n % 10000000 != 0 ? " ${_convertToWords(n % 10000000)}" : ""}';
   }
 }

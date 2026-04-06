@@ -504,40 +504,11 @@ class TieSheetSyncfusionPdfRendererService {
         connector.connectorVisualType,
         themeConfig,
       );
-      if (connector.straightLineSegments != null) {
-        for (final segment in connector.straightLineSegments!) {
-          graphics.drawLine(
-            pen,
-            Offset(segment.startOffset.dx, segment.startOffset.dy),
-            Offset(segment.endOffset.dx, segment.endOffset.dy),
-          );
-        }
-      }
-      if (connector.arcPathData != null) {
-        final arcPath = connector.arcPathData!;
+      for (final segment in connector.straightLineSegments) {
         graphics.drawLine(
           pen,
-          Offset(arcPath.moveToOffset.dx, arcPath.moveToOffset.dy),
-          Offset(
-            arcPath.lineToBeforeArcOffset.dx,
-            arcPath.lineToBeforeArcOffset.dy,
-          ),
-        );
-        graphics.drawLine(
-          pen,
-          Offset(arcPath.arcEndOffset.dx, arcPath.arcEndOffset.dy),
-          Offset(
-            arcPath.lineToAfterArcOffset.dx,
-            arcPath.lineToAfterArcOffset.dy,
-          ),
-        );
-        graphics.drawLine(
-          pen,
-          Offset(
-            arcPath.lineToBeforeArcOffset.dx,
-            arcPath.lineToBeforeArcOffset.dy,
-          ),
-          Offset(arcPath.arcEndOffset.dx, arcPath.arcEndOffset.dy),
+          Offset(segment.startOffset.dx, segment.startOffset.dy),
+          Offset(segment.endOffset.dx, segment.endOffset.dy),
         );
       }
     }
@@ -672,13 +643,13 @@ class TieSheetSyncfusionPdfRendererService {
         : themeConfig.redCornerColor;
     final centerX = badgeData.centerOffset.dx;
     final centerY = badgeData.centerOffset.dy;
-    final badgeRadius = badgeData.computedBadgeRadius;
-    graphics.drawEllipse(
-      Rect.fromLTWH(
-        centerX - badgeRadius,
-        centerY - badgeRadius,
-        badgeRadius * 2,
-        badgeRadius * 2,
+    final badgeHalfSize = badgeData.computedBadgeHalfSize;
+    graphics.drawRectangle(
+      bounds: Rect.fromLTWH(
+        centerX - badgeHalfSize,
+        centerY - badgeHalfSize,
+        badgeHalfSize * 2,
+        badgeHalfSize * 2,
       ),
       brush: PdfSolidBrush(badgeColor.toPdfColor()),
       pen: PdfPen(
@@ -688,7 +659,7 @@ class TieSheetSyncfusionPdfRendererService {
         width: themeConfig.subtleStrokeWidth,
       ),
     );
-    final badgeFontSize = max(6.0, badgeData.computedBadgeRadius * 0.9);
+    final badgeFontSize = max(6.0, badgeData.computedBadgeHalfSize * 0.9);
     final badgeFont = PdfStandardFont(
       PdfFontFamily.helvetica,
       badgeFontSize,

@@ -10,7 +10,7 @@ import 'package:tkd_saas/features/bracket/domain/layout/models/positioned_text_l
 /// any logic.
 ///
 /// Different [matchNodeType] values produce different visual structures:
-/// - [MatchNodeType.standardJunction] — two bezier arms + vertical trunk
+/// - [MatchNodeType.standardJunction] — two straight-line arms + vertical trunk
 /// - [MatchNodeType.centerFinalJunction] — center-positioned SE final
 /// - [MatchNodeType.grandFinalNode] — DE grand final vertical bar
 /// - [MatchNodeType.grandFinalResetNode] — DE grand final reset match
@@ -58,7 +58,7 @@ class MatchLayoutData {
 
 /// Classifies the visual structure of a match node for the renderer.
 enum MatchNodeType {
-  /// Standard two-arm junction with bezier curves and a vertical trunk.
+  /// Standard two-arm junction with straight lines and a vertical trunk.
   standardJunction,
 
   /// Center-positioned SE final junction (both arms come from opposite sides).
@@ -74,15 +74,15 @@ enum MatchNodeType {
   thirdPlaceMatchNode,
 }
 
-/// Layout data for a small circular corner badge ("B" for blue, "R" for red).
+/// Layout data for a small square corner badge ("B" for blue, "R" for red).
 ///
-/// Badges are drawn as filled circles with centered text.
+/// Badges are drawn as filled squares with centered text.
 class CornerBadgeLayoutData {
   const CornerBadgeLayoutData({
     required this.centerOffset,
     required this.badgeText,
     required this.badgeColorType,
-    required this.computedBadgeRadius,
+    required this.computedBadgeHalfSize,
   });
 
   final Offset centerOffset;
@@ -92,7 +92,7 @@ class CornerBadgeLayoutData {
   /// Semantic color type — the renderer resolves this against the theme.
   final CornerBadgeColorType badgeColorType;
 
-  final double computedBadgeRadius;
+  final double computedBadgeHalfSize;
 }
 
 enum CornerBadgeColorType {
@@ -103,16 +103,15 @@ enum CornerBadgeColorType {
   red,
 }
 
-/// Layout data for the rounded match-number pill displayed at a junction.
+/// Layout data for the match-number pill displayed at a junction.
 ///
-/// The pill is drawn as a filled rounded rectangle (capsule shape) with
-/// centered text showing the global match number.
+/// The pill is drawn as a filled rectangle with centered text showing
+/// the global match number.
 class MatchNumberPillLayoutData {
   const MatchNumberPillLayoutData({
     required this.centerOffset,
     required this.matchNumberText,
     required this.pillBoundingRect,
-    required this.pillCornerRadius,
   });
 
   final Offset centerOffset;
@@ -120,6 +119,4 @@ class MatchNumberPillLayoutData {
   final String matchNumberText;
 
   final Rect pillBoundingRect;
-
-  final double pillCornerRadius;
 }

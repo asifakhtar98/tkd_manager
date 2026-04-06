@@ -698,8 +698,8 @@ class TieSheetLayoutEngine with TieSheetLayoutHelperMixin {
     final winner = match.winnerId != null
         ? findParticipantById(match.winnerId, participants)
         : null;
-    final badgeRadius = max(
-      themeConfig.badgeMinRadius,
+    final badgeHalfSize = max(
+      themeConfig.badgeMinHalfSize,
       computeFontSize(9, delta) / 2 + themeConfig.badgePadding,
     );
 
@@ -723,7 +723,6 @@ class TieSheetLayoutEngine with TieSheetLayoutHelperMixin {
         centerOffset: Offset(pillX, rawMidY),
         matchNumberText: '$gNum',
         pillBoundingRect: pr,
-        pillCornerRadius: hh,
       );
     }
 
@@ -748,13 +747,13 @@ class TieSheetLayoutEngine with TieSheetLayoutHelperMixin {
           centerOffset: Offset(junctionX - 20, topArmY - 14),
           badgeText: 'B',
           badgeColorType: CornerBadgeColorType.blue,
-          computedBadgeRadius: badgeRadius,
+          computedBadgeHalfSize: badgeHalfSize,
         ),
         redCornerBadgeLayout: CornerBadgeLayoutData(
           centerOffset: Offset(junctionX + 20, botArmY + 14),
           badgeText: 'R',
           badgeColorType: CornerBadgeColorType.red,
-          computedBadgeRadius: badgeRadius,
+          computedBadgeHalfSize: badgeHalfSize,
         ),
         matchNumberPillLayout: pill,
         winnerNameTextLayout: winnerText,
@@ -838,7 +837,6 @@ class TieSheetLayoutEngine with TieSheetLayoutHelperMixin {
         centerOffset: Offset(x - 4, y),
         matchNumberText: '$gNum',
         pillBoundingRect: pr,
-        pillCornerRadius: hh,
       );
     }
 
@@ -856,8 +854,8 @@ class TieSheetLayoutEngine with TieSheetLayoutHelperMixin {
       );
     }
 
-    final badgeRadius = max(
-      themeConfig.badgeMinRadius,
+    final badgeHalfSize = max(
+      themeConfig.badgeMinHalfSize,
       computeFontSize(9, delta) / 2 + themeConfig.badgePadding,
     );
     matchLayouts.add(
@@ -869,13 +867,13 @@ class TieSheetLayoutEngine with TieSheetLayoutHelperMixin {
           centerOffset: Offset(x + 4, y - 34),
           badgeText: 'B',
           badgeColorType: CornerBadgeColorType.blue,
-          computedBadgeRadius: badgeRadius,
+          computedBadgeHalfSize: badgeHalfSize,
         ),
         redCornerBadgeLayout: CornerBadgeLayoutData(
           centerOffset: Offset(x + 4, y + 28),
           badgeText: 'R',
           badgeColorType: CornerBadgeColorType.red,
-          computedBadgeRadius: badgeRadius,
+          computedBadgeHalfSize: badgeHalfSize,
         ),
         matchNumberPillLayout: pill,
         winnerNameTextLayout: winnerText,
@@ -1221,8 +1219,8 @@ class TieSheetLayoutEngine with TieSheetLayoutHelperMixin {
     final winner = match.winnerId != null
         ? findParticipantById(match.winnerId, participants)
         : null;
-    final badgeRadius = max(
-      themeConfig.badgeMinRadius,
+    final badgeHalfSize = max(
+      themeConfig.badgeMinHalfSize,
       computeFontSize(9, delta) / 2 + themeConfig.badgePadding,
     );
 
@@ -1245,7 +1243,6 @@ class TieSheetLayoutEngine with TieSheetLayoutHelperMixin {
         centerOffset: Offset(x + 18, midY),
         matchNumberText: '$gNum',
         pillBoundingRect: pr,
-        pillCornerRadius: hh,
       );
     }
 
@@ -1276,7 +1273,7 @@ class TieSheetLayoutEngine with TieSheetLayoutHelperMixin {
           ),
           badgeText: 'B',
           badgeColorType: CornerBadgeColorType.blue,
-          computedBadgeRadius: badgeRadius,
+          computedBadgeHalfSize: badgeHalfSize,
         ),
         redCornerBadgeLayout: CornerBadgeLayoutData(
           centerOffset: Offset(
@@ -1285,7 +1282,7 @@ class TieSheetLayoutEngine with TieSheetLayoutHelperMixin {
           ),
           badgeText: 'R',
           badgeColorType: CornerBadgeColorType.red,
-          computedBadgeRadius: badgeRadius,
+          computedBadgeHalfSize: badgeHalfSize,
         ),
         matchNumberPillLayout: pill,
         winnerNameTextLayout: winnerText,

@@ -137,7 +137,6 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
                   _buildAccentsAndBadgesSection(context),
                   _buildSectionLabelsSection(context),
                   _buildMedalsSection(context),
-                  _buildShapeRadiusSection(context),
                   _buildStrokeWidthsSection(context),
                   _buildSpacingSection(context),
                   _buildBadgePillSizingSection(context),
@@ -501,16 +500,6 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
             currentThemeConfig.copyWith(connectorStrokeWidth: value),
           ),
         ),
-        _SliderTile(
-          label: 'Junction Corner Radius',
-          value: currentThemeConfig.junctionCornerRadius,
-          min: 0.0,
-          max: 30.0,
-          divisions: 30,
-          onChanged: (value) => onThemeConfigChanged(
-            currentThemeConfig.copyWith(junctionCornerRadius: value),
-          ),
-        ),
       ],
     );
   }
@@ -724,34 +713,6 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
     );
   }
 
-  Widget _buildShapeRadiusSection(BuildContext context) {
-    return _ThemeEditorExpansionSection(
-      title: 'Shape & Radius',
-      icon: Icons.rounded_corner,
-      children: [
-        _SliderTile(
-          label: 'Element Border Radius',
-          value: currentThemeConfig.elementBorderRadius,
-          min: 0,
-          max: 48,
-          divisions: 96,
-          onChanged: (value) => onThemeConfigChanged(
-            currentThemeConfig.copyWith(elementBorderRadius: value),
-          ),
-        ),
-        _SliderTile(
-          label: 'Junction Corner Radius',
-          value: currentThemeConfig.junctionCornerRadius,
-          min: 0,
-          max: 60,
-          divisions: 120,
-          onChanged: (value) => onThemeConfigChanged(
-            currentThemeConfig.copyWith(junctionCornerRadius: value),
-          ),
-        ),
-      ],
-    );
-  }
 
   Widget _buildStrokeWidthsSection(BuildContext context) {
     return _ThemeEditorExpansionSection(
@@ -875,16 +836,16 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
   Widget _buildBadgePillSizingSection(BuildContext context) {
     return _ThemeEditorExpansionSection(
       title: 'Badge & Pill Sizing',
-      icon: Icons.circle_outlined,
+      icon: Icons.square_outlined,
       children: [
         _SliderTile(
-          label: 'Badge Min Radius',
-          value: currentThemeConfig.badgeMinRadius,
+          label: 'Badge Min Half Size',
+          value: currentThemeConfig.badgeMinHalfSize,
           min: 4,
           max: 48,
           divisions: 88,
           onChanged: (value) => onThemeConfigChanged(
-            currentThemeConfig.copyWith(badgeMinRadius: value),
+            currentThemeConfig.copyWith(badgeMinHalfSize: value),
           ),
         ),
         _SliderTile(

@@ -108,11 +108,6 @@ abstract class TieSheetThemeConfig with _$TieSheetThemeConfig {
     @ColorJsonConverter() required Color medalSilverAccentColor,
     @ColorJsonConverter() required Color medalBronzeAccentColor,
 
-    /// Unified border radius applied to all rectangular UI elements.
-    required double elementBorderRadius,
-
-    /// Corner radius for the Bezier curve arms on bracket junctions.
-    required double junctionCornerRadius,
 
     /// Primary stroke width for borders, outlines, dividers, and pending
     /// connector lines.
@@ -133,8 +128,8 @@ abstract class TieSheetThemeConfig with _$TieSheetThemeConfig {
     /// Width of the coloured accent strip on participant card edges.
     required double accentStripWidth,
 
-    /// Minimum radius for corner badges (B / R).
-    required double badgeMinRadius,
+    /// Minimum half-size for square corner badges (B / R).
+    required double badgeMinHalfSize,
 
     /// Padding added around badge text to compute dynamic radius.
     required double badgePadding,
@@ -314,9 +309,6 @@ abstract class TieSheetThemeConfig with _$TieSheetThemeConfig {
     medalGoldAccentColor: Color(0xFFF59E0B),
     medalSilverAccentColor: Color(0xFF94A3B8),
     medalBronzeAccentColor: Color(0xFFF97316),
-    // Shape / radius
-    elementBorderRadius: 6.0,
-    junctionCornerRadius: 10.0,
     // Stroke widths
     borderStrokeWidth: 3.5,
     subtleStrokeWidth: 1.5,
@@ -326,7 +318,7 @@ abstract class TieSheetThemeConfig with _$TieSheetThemeConfig {
     sectionGapHeight: 50.0,
     accentStripWidth: 4.0,
     // Badge & pill sizing
-    badgeMinRadius: 10.0,
+    badgeMinHalfSize: 10.0,
     badgePadding: 4.0,
     matchPillMinHalfWidth: 16.0,
     matchPillHorizontalPadding: 8.0,
@@ -422,9 +414,6 @@ abstract class TieSheetThemeConfig with _$TieSheetThemeConfig {
     medalGoldAccentColor: Color(0xFF000000),
     medalSilverAccentColor: Color(0xFF000000),
     medalBronzeAccentColor: Color(0xFF000000),
-    // Shape / radius (same as default — geometry stays consistent)
-    elementBorderRadius: 6.0,
-    junctionCornerRadius: 10.0,
     // Stroke widths
     borderStrokeWidth: 3.5,
     subtleStrokeWidth: 1.5,
@@ -434,7 +423,7 @@ abstract class TieSheetThemeConfig with _$TieSheetThemeConfig {
     sectionGapHeight: 50.0,
     accentStripWidth: 4.0,
     // Badge & pill sizing
-    badgeMinRadius: 10.0,
+    badgeMinHalfSize: 10.0,
     badgePadding: 4.0,
     matchPillMinHalfWidth: 16.0,
     matchPillHorizontalPadding: 8.0,
