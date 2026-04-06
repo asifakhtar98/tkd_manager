@@ -1,14 +1,17 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:dio/dio.dart';
 
 import 'package:printing/printing.dart';
 import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 import 'package:tkd_saas/features/bracket/data/services/bracket_medal_computation_service_implementation.dart';
 import 'package:tkd_saas/features/bracket/data/services/tie_sheet_syncfusion_pdf_renderer_service.dart';
+import 'package:tkd_saas/features/bracket/presentation/widgets/bracket_export_settings_dialog.dart';
 import 'package:tkd_saas/features/bracket/domain/entities/bracket_result.dart';
 import 'package:tkd_saas/features/bracket/domain/entities/match_entity.dart';
 import 'package:tkd_saas/features/bracket/domain/layout/tie_sheet_layout_engine.dart';
@@ -89,12 +92,17 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
   Uint8List? _rightLogoImageBytes;
   double _leftLogoAspectRatio = 1.0;
   double _rightLogoAspectRatio = 1.0;
-  bool _logosLoadingComplete = false;
   int _activeSidePanelTab = 0;
   double? _pdfExportProgress;
   String _pdfExportStatusMessage = '';
 
   bool get _isExportingPdf => _pdfExportProgress != null;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTournamentLogoImages();
+  }
 
   TieSheetThemeConfig _resolveThemeConfigFromSelection(
     BracketThemeSelectionState selectionState,
@@ -177,7 +185,6 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
       _leftLogoAspectRatio = leftResult?.aspectRatio ?? 1.0;
       _rightLogoImageBytes = rightResult?.imageBytes;
       _rightLogoAspectRatio = rightResult?.aspectRatio ?? 1.0;
-      _logosLoadingComplete = true;
     });
 
     // Regenerate PDF now that logos are available.
@@ -188,8 +195,30 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
   _loadImageBytesAndAspectRatioFromUrl(String url) async {
     if (url.isEmpty) return null;
     try {
-      final ByteData data = await NetworkAssetBundle(Uri.parse(url)).load('');
-      final Uint8List imageBytes = data.buffer.asUint8List();
+      final Uint8List imageBytes;
+      if (url.startsWith('data:')) {
+        // Base64 data URI — decode the payload directly.
+        final commaIndex = url.indexOf(',');
+        if (commaIndex == -1) return null;
+        final base64String = url.substring(commaIndex + 1);
+        imageBytes = base64Decode(base64String);
+      } else {
+        // Standard HTTP/HTTPS URL — fetch over the network using dio package.
+        final response = await Dio().get(
+           url,
+           options: Options(responseType: ResponseType.bytes),
+        );
+        if (response.statusCode != 200) {
+          debugPrint('Failed to load image from network, status: ${response.statusCode}');
+          return null;
+        }
+        
+        // Dio returns bytes as List<dynamic> or List<int> depending on platform,
+        // but typically as Uint8List when responseType is bytes. Let's safely cast.
+        imageBytes = response.data is Uint8List 
+            ? response.data 
+            : Uint8List.fromList(List<int>.from(response.data));
+      }
 
       final completer = Completer<ImageInfo>();
       final imageStream = MemoryImage(
@@ -216,7 +245,7 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
 
       return (imageBytes: imageBytes, aspectRatio: aspectRatio);
     } catch (error) {
-      debugPrint('Failed to load logo image from $url: $error');
+      debugPrint('Failed to load logo image from url: $url, error: $error');
       return null;
     }
   }
@@ -312,8 +341,17 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
     );
   }
 
-  Future<void> _exportSinglePagePdf() async {
-    _updateExportProgress(0.0, 'Preparing single-page export…');
+  Future<void> _showExportSettingsAndExport() async {
+    final exportSettings = await BracketExportSettingsDialog.show(context);
+    if (exportSettings == null || !mounted) return;
+    _exportSinglePagePdf(exportSettings);
+  }
+
+  Future<void> _exportSinglePagePdf(
+    BracketExportSettings exportSettings,
+  ) async {
+    final paperLabel = exportSettings.paperSize.shortLabel;
+    _updateExportProgress(0.0, 'Preparing $paperLabel export…');
     await Future<void>.delayed(Duration.zero);
 
     try {
@@ -329,13 +367,8 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
           .state;
       final themeConfig = _resolveThemeConfigFromSelection(themeSelectionState);
 
-      _updateExportProgress(0.5, 'Generating single-page PDF…');
+      _updateExportProgress(0.5, 'Generating $paperLabel PDF…');
       await Future<void>.delayed(Duration.zero);
-
-      // Always generate a portrait A4 page. The renderer will auto-rotate
-      // wide bracket content 90° so it fills the long edge of the paper.
-      const double a4PortraitWidth = 595.28;
-      const double a4PortraitHeight = 841.89;
 
       final renderer = TieSheetSyncfusionPdfRendererService();
       final renderParams = PdfRenderParams(
@@ -345,13 +378,15 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
         rightLogoImageBytes: _rightLogoImageBytes,
       );
 
-      // Zero margins — bracket content fills the entire page.
+      // The renderer auto-rotates wide bracket content 90° so it fills
+      // the long edge of the paper. Printable area accounts for optional
+      // 15 mm printer-safe margins when enabled by the user.
       final bytes = renderer.generateScaledSinglePagePdfBytes(
         params: renderParams,
-        fullPageWidth: a4PortraitWidth,
-        fullPageHeight: a4PortraitHeight,
-        printableAreaWidth: a4PortraitWidth,
-        printableAreaHeight: a4PortraitHeight,
+        fullPageWidth: exportSettings.effectivePageWidth,
+        fullPageHeight: exportSettings.effectivePageHeight,
+        printableAreaWidth: exportSettings.printableAreaWidth,
+        printableAreaHeight: exportSettings.printableAreaHeight,
         autoRotateWideContent: true,
       );
 
@@ -361,7 +396,7 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
       await Future<void>.delayed(Duration.zero);
 
       await Printing.layoutPdf(
-        name: 'Bracket_SinglePage',
+        name: 'Bracket_$paperLabel',
         onLayout: (format) async => exportPdfBytes,
       );
     } finally {
@@ -578,9 +613,6 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (mounted) {
               _regeneratePdfFromCurrentState();
-              if (!_logosLoadingComplete) {
-                _loadTournamentLogoImages();
-              }
             }
           });
         }
@@ -598,7 +630,9 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
             actions: [
               TextButton(
                 style: actionButtonStyle,
-                onPressed: _isExportingPdf ? null : _exportSinglePagePdf,
+                onPressed: _isExportingPdf
+                    ? null
+                    : _showExportSettingsAndExport,
                 child: _isExportingPdf
                     ? const SizedBox(
                         width: 16,
@@ -611,9 +645,9 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
                     : const Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.article_outlined, size: 18),
+                          Icon(Icons.picture_as_pdf, size: 18),
                           SizedBox(width: 4),
-                          Text('Single Export'),
+                          Text('Export'),
                         ],
                       ),
               ),
@@ -633,14 +667,14 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               reverse: true,
-            
+
               child: Row(
                 spacing: 8,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   // ── Zoom Slider ──
                   _buildZoomSlider(),
-                 
+
                   const SizedBox(
                     height: 24,
                     child: VerticalDivider(width: 16, color: Colors.white24),
@@ -937,15 +971,15 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
                                     if (_fitZoomLevel != computedFitZoomLevel) {
                                       WidgetsBinding.instance
                                           .addPostFrameCallback((_) {
-                                        if (mounted) {
-                                          setState(() {
-                                            _fitZoomLevel =
-                                                computedFitZoomLevel;
-                                            _currentZoomLevel =
-                                                computedFitZoomLevel;
+                                            if (mounted) {
+                                              setState(() {
+                                                _fitZoomLevel =
+                                                    computedFitZoomLevel;
+                                                _currentZoomLevel =
+                                                    computedFitZoomLevel;
+                                              });
+                                            }
                                           });
-                                        }
-                                      });
                                     }
 
                                     return SfPdfViewer.memory(
@@ -1024,8 +1058,10 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
   /// and synchronises the slider state.
   void _handlePdfZoomLevelChanged(PdfZoomDetails details) {
     if (!mounted) return;
-    final newZoomLevel = details.newZoomLevel
-        .clamp(_fitZoomLevel, _maximumZoomLevel);
+    final newZoomLevel = details.newZoomLevel.clamp(
+      _fitZoomLevel,
+      _maximumZoomLevel,
+    );
     if ((_currentZoomLevel - newZoomLevel).abs() > 0.001) {
       setState(() {
         _currentZoomLevel = newZoomLevel;
@@ -1045,8 +1081,10 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
           tooltip: 'Zoom Out',
           onPressed: _currentZoomLevel > _fitZoomLevel
               ? () {
-                  final newZoomLevel = (_currentZoomLevel - 0.25)
-                      .clamp(_fitZoomLevel, _maximumZoomLevel);
+                  final newZoomLevel = (_currentZoomLevel - 0.25).clamp(
+                    _fitZoomLevel,
+                    _maximumZoomLevel,
+                  );
                   _pdfViewerController.zoomLevel = newZoomLevel;
                   setState(() => _currentZoomLevel = newZoomLevel);
                 }
@@ -1061,17 +1099,12 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
               thumbColor: Colors.white,
               overlayColor: Colors.white24,
               trackHeight: 3,
-              thumbShape: const RoundSliderThumbShape(
-                enabledThumbRadius: 6,
-              ),
+              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
             ),
             child: Slider(
               min: _fitZoomLevel,
               max: _maximumZoomLevel,
-              value: _currentZoomLevel.clamp(
-                _fitZoomLevel,
-                _maximumZoomLevel,
-              ),
+              value: _currentZoomLevel.clamp(_fitZoomLevel, _maximumZoomLevel),
               onChanged: (double newZoomLevel) {
                 _pdfViewerController.zoomLevel = newZoomLevel;
                 setState(() => _currentZoomLevel = newZoomLevel);
@@ -1085,8 +1118,10 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
           tooltip: 'Zoom In',
           onPressed: _currentZoomLevel < _maximumZoomLevel
               ? () {
-                  final newZoomLevel = (_currentZoomLevel + 0.25)
-                      .clamp(_fitZoomLevel, _maximumZoomLevel);
+                  final newZoomLevel = (_currentZoomLevel + 0.25).clamp(
+                    _fitZoomLevel,
+                    _maximumZoomLevel,
+                  );
                   _pdfViewerController.zoomLevel = newZoomLevel;
                   setState(() => _currentZoomLevel = newZoomLevel);
                 }
