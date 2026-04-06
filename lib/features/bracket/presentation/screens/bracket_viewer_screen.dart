@@ -2,10 +2,11 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:dio/dio.dart';
 
 import 'package:printing/printing.dart';
 import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
@@ -195,55 +196,47 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
   _loadImageBytesAndAspectRatioFromUrl(String url) async {
     if (url.isEmpty) return null;
     try {
-      final Uint8List imageBytes;
+      final ImageProvider imageProvider;
       if (url.startsWith('data:')) {
-        // Base64 data URI — decode the payload directly.
         final commaIndex = url.indexOf(',');
         if (commaIndex == -1) return null;
         final base64String = url.substring(commaIndex + 1);
-        imageBytes = base64Decode(base64String);
+        final imageBytes = base64Decode(base64String);
+        imageProvider = MemoryImage(imageBytes);
       } else {
-        // Standard HTTP/HTTPS URL — fetch over the network using dio package.
-        final response = await Dio().get(
-           url,
-           options: Options(responseType: ResponseType.bytes),
-        );
-        if (response.statusCode != 200) {
-          debugPrint('Failed to load image from network, status: ${response.statusCode}');
-          return null;
-        }
-        
-        // Dio returns bytes as List<dynamic> or List<int> depending on platform,
-        // but typically as Uint8List when responseType is bytes. Let's safely cast.
-        imageBytes = response.data is Uint8List 
-            ? response.data 
-            : Uint8List.fromList(List<int>.from(response.data));
+        imageProvider = NetworkImage(url);
       }
 
-      final completer = Completer<ImageInfo>();
-      final imageStream = MemoryImage(
-        imageBytes,
-      ).resolve(ImageConfiguration.empty);
+      final Completer<ImageInfo> completer = Completer<ImageInfo>();
+      final ImageStream stream = imageProvider.resolve(ImageConfiguration.empty);
+      
       late ImageStreamListener listener;
       listener = ImageStreamListener(
-        (info, _) {
+        (ImageInfo info, bool synchronousCall) {
           completer.complete(info);
-          imageStream.removeListener(listener);
+          stream.removeListener(listener);
         },
-        onError: (error, _) {
+        onError: (Object exception, StackTrace? stackTrace) {
           if (!completer.isCompleted) {
-            completer.completeError(error);
+            completer.completeError(exception);
           }
-          imageStream.removeListener(listener);
+          stream.removeListener(listener);
         },
       );
-      imageStream.addListener(listener);
+      stream.addListener(listener);
 
-      final imageInfo = await completer.future;
-      final double aspectRatio = imageInfo.image.width / imageInfo.image.height;
-      imageInfo.dispose();
+      final ImageInfo imageInfo = await completer.future;
+      final ui.Image uiImage = imageInfo.image;
+      
+      final ByteData? byteData = await uiImage.toByteData(format: ui.ImageByteFormat.png);
+      if (byteData == null) return null;
+      
+      final Uint8List pngBytes = byteData.buffer.asUint8List();
+      final double aspectRatio = uiImage.width / uiImage.height;
+      
+      uiImage.dispose();
 
-      return (imageBytes: imageBytes, aspectRatio: aspectRatio);
+      return (imageBytes: pngBytes, aspectRatio: aspectRatio);
     } catch (error) {
       debugPrint('Failed to load logo image from url: $url, error: $error');
       return null;
