@@ -12,7 +12,7 @@ import 'package:tkd_saas/features/bracket/domain/entities/match_entity.dart';
 import 'package:tkd_saas/features/bracket/domain/layout/tie_sheet_layout_engine.dart';
 import 'package:tkd_saas/features/bracket/domain/layout/models/tie_sheet_layout_result.dart';
 import 'package:tkd_saas/features/bracket/domain/value_objects/tie_sheet_theme_config.dart';
-import 'package:tkd_saas/features/bracket/presentation/models/print_export_settings.dart';
+
 import 'package:tkd_saas/features/setup_bracket/domain/entities/participant_entity.dart';
 import 'package:tkd_saas/features/tournament/domain/entities/bracket_classification.dart';
 import 'package:tkd_saas/features/tournament/domain/entities/tournament_entity.dart';
@@ -299,84 +299,7 @@ void main() {
     });
   });
 
-  group('TieSheetSyncfusionPdfRendererService — Tiled Export', () {
-    test('generates multi-page tiled PDF for 8-player bracket', () {
-      final singlePageResult = renderSingleEliminationBracketPdf(
-        playerCount: 8,
-      );
 
-      const exportSettings = PrintExportSettings(
-        fitMode: PrintFitMode.tileAcrossPages,
-        paperSize: PaperSize.a4,
-        orientation: PageOrientation.landscape,
-        showTileAssemblyHints: true,
-      );
-
-      final tiledPdfBytes = rendererService.generateTiledBracketPdfBytes(
-        params: PdfRenderParams(
-          layoutResult: singlePageResult.layoutResult,
-          themeConfig: TieSheetThemeConfig.defaultPreset,
-        ),
-        exportSettings: exportSettings,
-      );
-
-      expect(tiledPdfBytes, isNotEmpty);
-      final tiledPdfUint8 = Uint8List.fromList(tiledPdfBytes);
-
-      final document = PdfDocument(inputBytes: tiledPdfUint8);
-      // Tiled export should produce more than 1 page for a bracket
-      // wider than a single A4 page.
-      final expectedPageCount = exportSettings.totalPageCount(
-        canvasWidth: singlePageResult.layoutResult.computedCanvasSize.width,
-        canvasHeight: singlePageResult.layoutResult.computedCanvasSize.height,
-      );
-
-      // +1 for the assembly index page when showTileAssemblyHints is true
-      // and the grid is > 1×1.
-      final tileGrid = exportSettings.tileGridDimensions(
-        canvasWidth: singlePageResult.layoutResult.computedCanvasSize.width,
-        canvasHeight: singlePageResult.layoutResult.computedCanvasSize.height,
-      );
-      final hasAssemblyIndexPage =
-          exportSettings.showTileAssemblyHints &&
-          (tileGrid.rows * tileGrid.columns) > 1;
-
-      final expectedTotalPages =
-          expectedPageCount + (hasAssemblyIndexPage ? 1 : 0);
-
-      expect(
-        document.pages.count,
-        equals(expectedTotalPages),
-        reason:
-            'Tiled PDF should have $expectedTotalPages pages '
-            '($expectedPageCount tile pages'
-            '${hasAssemblyIndexPage ? " + 1 assembly index" : ""})',
-      );
-
-      document.dispose();
-    });
-
-    test('fit-to-page mode reuses single-page PDF (no tiled generation)', () {
-      final singlePageResult = renderSingleEliminationBracketPdf(
-        playerCount: 4,
-      );
-
-      const exportSettings = PrintExportSettings(
-        fitMode: PrintFitMode.fitToPage,
-        paperSize: PaperSize.a4,
-        orientation: PageOrientation.landscape,
-      );
-
-      // For fit-to-page mode, the regular single-page PDF is reused
-      // directly — verify the single-page render is valid and that
-      // fitMode is correctly set.
-      expect(exportSettings.fitMode, equals(PrintFitMode.fitToPage));
-      assertValidSinglePagePdf(
-        singlePageResult.pdfBytes,
-        singlePageResult.layoutResult,
-      );
-    });
-  });
 
   group('TieSheetSyncfusionPdfRendererService — Canvas Size Scaling', () {
     test('larger player counts produce proportionally wider PDFs', () {

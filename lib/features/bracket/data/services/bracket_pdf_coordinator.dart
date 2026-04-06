@@ -8,7 +8,7 @@ import 'package:tkd_saas/features/bracket/domain/services/bracket_medal_computat
 import 'package:tkd_saas/features/bracket/domain/layout/models/tie_sheet_layout_result.dart';
 import 'package:tkd_saas/features/bracket/domain/layout/tie_sheet_layout_engine.dart';
 import 'package:tkd_saas/features/bracket/domain/value_objects/tie_sheet_theme_config.dart';
-import 'package:tkd_saas/features/bracket/presentation/models/print_export_settings.dart';
+
 import 'package:tkd_saas/features/setup_bracket/domain/entities/participant_entity.dart';
 import 'package:tkd_saas/features/tournament/domain/entities/bracket_classification.dart';
 import 'package:tkd_saas/features/tournament/domain/entities/tournament_entity.dart';
@@ -173,32 +173,6 @@ class BracketPdfCoordinator {
     );
   }
 
-  /// Generates a multi-page tiled PDF for large-format printing.
-  ///
-  /// Uses the [cachedLayoutResult] from the most recent [generatePreviewPdf]
-  /// call. Throws [StateError] if no layout result is cached.
-  Uint8List generateTiledPdf({
-    required TieSheetThemeConfig themeConfig,
-    required PrintExportSettings exportSettings,
-    Uint8List? leftLogoImageBytes,
-    Uint8List? rightLogoImageBytes,
-  }) {
-    _throwIfNoCachedLayout();
-
-    final params = PdfRenderParams(
-      layoutResult: _cachedLayoutResult!,
-      themeConfig: themeConfig,
-      leftLogoImageBytes: leftLogoImageBytes,
-      rightLogoImageBytes: rightLogoImageBytes,
-    );
-
-    return Uint8List.fromList(
-      _rendererService.generateTiledBracketPdfBytes(
-        params: params,
-        exportSettings: exportSettings,
-      ),
-    );
-  }
 
   /// Clears cached layout result and PDF bytes.
   ///

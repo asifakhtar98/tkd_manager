@@ -21,11 +21,11 @@ import 'package:tkd_saas/features/bracket/presentation/bloc/bracket_theme_preset
 import 'package:tkd_saas/features/bracket/presentation/bloc/bracket_theme_selection_bloc.dart';
 import 'package:tkd_saas/features/bracket/presentation/bloc/bracket_theme_selection_event.dart';
 import 'package:tkd_saas/features/bracket/presentation/bloc/bracket_theme_selection_state.dart';
-import 'package:tkd_saas/features/bracket/presentation/models/print_export_settings.dart';
+
 import 'package:tkd_saas/features/bracket/presentation/widgets/bracket_history_drawer.dart';
 import 'package:tkd_saas/features/bracket/presentation/widgets/bracket_match_list_panel.dart';
 import 'package:tkd_saas/features/bracket/presentation/widgets/bracket_participant_list_panel.dart';
-import 'package:tkd_saas/features/bracket/presentation/widgets/print_preview_dialog.dart';
+
 import 'package:tkd_saas/features/bracket/presentation/widgets/score_entry_dialog.dart';
 import 'package:tkd_saas/features/bracket/presentation/widgets/tie_sheet_theme_editor_panel.dart';
 import 'package:tkd_saas/features/bracket/domain/entities/bracket_format.dart';
@@ -360,80 +360,6 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
   }
 
 
-  /// Opens the print preview dialog for configuring export settings,
-  /// then generates either a single-page or tiled PDF and sends it to
-  /// the native print dialog.
-  ///
-  /// Reuses cached layout result and PDF bytes to avoid redundant
-  /// recomputation.
-  Future<void> _showTiledExportPreview() async {
-    final previewPdfBytes = _cachedPdfBytes;
-    final layoutResult = _cachedLayoutResult;
-    if (previewPdfBytes == null || layoutResult == null) return;
-
-    final canvasSize = layoutResult.computedCanvasSize;
-    if (!mounted) return;
-
-    // Show print preview and collect confirmed settings.
-    final confirmedSettings = await PrintPreviewDialog.show(
-      context: context,
-      bracketPdfBytes: previewPdfBytes,
-      canvasSize: canvasSize,
-    );
-
-    if (confirmedSettings == null || !mounted) return;
-
-    _updateExportProgress(0.0, 'Generating export PDF…');
-    await Future<void>.delayed(Duration.zero);
-
-    try {
-      late final Uint8List exportPdfBytes;
-
-      if (!mounted) return;
-
-      if (confirmedSettings.fitMode == PrintFitMode.fitToPage) {
-        exportPdfBytes = previewPdfBytes;
-      } else {
-        final themeSelectionState = context
-            .read<BracketThemeSelectionBloc>()
-            .state;
-        final themeConfig = _resolveThemeConfigFromSelection(
-          themeSelectionState,
-        );
-
-        _updateExportProgress(0.4, 'Generating tiled PDF…');
-        await Future<void>.delayed(Duration.zero);
-
-        final renderer = TieSheetSyncfusionPdfRendererService();
-        final renderParams = PdfRenderParams(
-          layoutResult: layoutResult,
-          themeConfig: themeConfig,
-          leftLogoImageBytes: _leftLogoImageBytes,
-          rightLogoImageBytes: _rightLogoImageBytes,
-        );
-        final tiledBytes = renderer.generateTiledBracketPdfBytes(
-          params: renderParams,
-          exportSettings: confirmedSettings,
-        );
-        exportPdfBytes = Uint8List.fromList(tiledBytes);
-      }
-
-      _updateExportProgress(0.8, 'Opening print dialog…');
-      await Future<void>.delayed(Duration.zero);
-
-      await Printing.layoutPdf(
-        onLayout: (format) async => exportPdfBytes,
-      );
-    } finally {
-      if (mounted) {
-        setState(() {
-          _pdfExportProgress = null;
-          _pdfExportStatusMessage = '';
-        });
-      }
-    }
-  }
-
   /// Navigates back to the parent tournament detail page using URL
   /// navigation rather than stack-based `pop()`.
   void _navigateBackToTournamentDetail() {
@@ -678,20 +604,7 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
                       ),
               ),
 
-              const SizedBox(width: 4),
 
-              TextButton(
-                style: actionButtonStyle,
-                onPressed: _isExportingPdf ? null : _showTiledExportPreview,
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.preview, size: 18),
-                    SizedBox(width: 4),
-                    Text('Tiled Export Preview'),
-                  ],
-                ),
-              ),
 
               const SizedBox(width: 8),
 

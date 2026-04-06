@@ -4,7 +4,7 @@ import 'dart:ui' show Color, FontStyle, FontWeight, Offset, Rect, Size;
 
 import 'package:syncfusion_flutter_pdf/pdf.dart';
 import 'package:tkd_saas/features/bracket/data/services/pdf_color_converter.dart';
-import 'package:tkd_saas/features/bracket/data/services/syncfusion_tile_assembly_aid_renderer_service.dart';
+
 import 'package:tkd_saas/features/bracket/domain/layout/models/connector_layout_data.dart';
 import 'package:tkd_saas/features/bracket/domain/layout/models/header_layout_data.dart';
 import 'package:tkd_saas/features/bracket/domain/layout/models/match_layout_data.dart';
@@ -14,7 +14,7 @@ import 'package:tkd_saas/features/bracket/domain/layout/models/positioned_text_l
 import 'package:tkd_saas/features/bracket/domain/layout/models/section_label_layout_data.dart';
 import 'package:tkd_saas/features/bracket/domain/layout/models/tie_sheet_layout_result.dart';
 import 'package:tkd_saas/features/bracket/domain/value_objects/tie_sheet_theme_config.dart';
-import 'package:tkd_saas/features/bracket/presentation/models/print_export_settings.dart';
+
 
 /// Groups the common parameters shared across all PDF generation methods
 /// on [TieSheetSyncfusionPdfRendererService].
@@ -60,7 +60,6 @@ class PdfRenderParams {
 ///
 /// - [renderSinglePagePdfBytes] — 1:1 canvas-sized page (screen preview).
 /// - [generateScaledSinglePagePdfBytes] — scaled to fit A4/Letter.
-/// - [generateTiledBracketPdfBytes] — multi-page tile grid.
 ///
 /// All three delegate to the private [_renderFullBracket] helper for the
 /// actual drawing, eliminating pipeline duplication.
@@ -85,142 +84,6 @@ class TieSheetSyncfusionPdfRendererService {
     return bytes;
   }
 
-  /// Generates a multi-page tiled PDF from the given layout result,
-  /// slicing the bracket into a grid of pages per the [exportSettings].
-  ///
-  /// Uses a [PdfTemplate] approach: the full bracket is rendered once into
-  /// a reusable template, then each tile page clips to its visible portion
-  /// and draws the template at the configured scale and offset. Because all
-  /// drawing is vector-based, each tile is resolution-independent.
-  ///
-  /// Optionally includes assembly aids (registration crosshairs, edge
-  /// neighbor labels, and an assembly index page) when
-  /// [exportSettings.showTileAssemblyHints] is `true`.
-  List<int> generateTiledBracketPdfBytes({
-    required PdfRenderParams params,
-    required PrintExportSettings exportSettings,
-  }) {
-    final layoutResult = params.layoutResult;
-    final canvasWidth = layoutResult.computedCanvasSize.width;
-    final canvasHeight = layoutResult.computedCanvasSize.height;
-
-    final tileGridDimensions = exportSettings.tileGridDimensions(
-      canvasWidth: canvasWidth,
-      canvasHeight: canvasHeight,
-    );
-    final totalTilePageCount =
-        tileGridDimensions.columns * tileGridDimensions.rows;
-
-    final tileCoverageArea = exportSettings.tileCanvasCoverage();
-    final overlapCanvasPixels = exportSettings.tileOverlapCanvasPixels;
-    final effectiveStepWidth = tileCoverageArea.width - overlapCanvasPixels;
-    final effectiveStepHeight = tileCoverageArea.height - overlapCanvasPixels;
-
-    final scaleFactor = exportSettings.scaleFactor;
-    final printableArea = exportSettings.printableAreaPoints;
-    final pageWidth = exportSettings.pageSize.width;
-    final pageHeight = exportSettings.pageSize.height;
-
-    final document = PdfDocument();
-    const assemblyAidRenderer = SyncfusionTileAssemblyAidRendererService();
-
-    final bracketTemplate = PdfTemplate(canvasWidth, canvasHeight);
-    _renderFullBracket(bracketTemplate.graphics!, params);
-
-    final scaledBracketWidth = canvasWidth * scaleFactor;
-    final scaledBracketHeight = canvasHeight * scaleFactor;
-
-    int tileIndex = 0;
-    for (int row = 0; row < tileGridDimensions.rows; row++) {
-      for (int col = 0; col < tileGridDimensions.columns; col++) {
-        tileIndex++;
-
-        final regionOffsetX = col * effectiveStepWidth;
-        final regionOffsetY = row * effectiveStepHeight;
-
-        if (regionOffsetX >= canvasWidth || regionOffsetY >= canvasHeight) {
-          continue;
-        }
-
-        document.pageSettings.size = Size(pageWidth, pageHeight);
-        document.pageSettings.margins.all = exportSettings.marginPoints;
-
-        final page = document.pages.add();
-        final graphics = page.graphics;
-
-        final graphicsState = graphics.save();
-
-        graphics.setClip(
-          bounds: Rect.fromLTWH(
-            0,
-            0,
-            printableArea.width,
-            printableArea.height,
-          ),
-        );
-
-        final tileTranslateX = -regionOffsetX * scaleFactor;
-        final tileTranslateY = -regionOffsetY * scaleFactor;
-        graphics.translateTransform(tileTranslateX, tileTranslateY);
-
-        graphics.drawPdfTemplate(
-          bracketTemplate,
-          Offset.zero,
-          Size(scaledBracketWidth, scaledBracketHeight),
-        );
-
-        graphics.restore(graphicsState);
-
-        if (exportSettings.showTileAssemblyHints) {
-          assemblyAidRenderer.renderRegistrationMarks(
-            tilePageGraphics: graphics,
-            tileRow: row,
-            tileColumn: col,
-            totalColumnCount: tileGridDimensions.columns,
-            totalRowCount: tileGridDimensions.rows,
-            exportSettings: exportSettings,
-          );
-          assemblyAidRenderer.renderEdgeNeighborLabels(
-            tilePageGraphics: graphics,
-            tileRow: row,
-            tileColumn: col,
-            totalColumnCount: tileGridDimensions.columns,
-            totalRowCount: tileGridDimensions.rows,
-            exportSettings: exportSettings,
-          );
-        }
-
-        final pageLabelFont = PdfStandardFont(PdfFontFamily.helvetica, 8);
-        final pageLabelText =
-            'Page $tileIndex of $totalTilePageCount  (R${row + 1} C${col + 1})';
-        final pageLabelSize = pageLabelFont.measureString(pageLabelText);
-        graphics.drawString(
-          pageLabelText,
-          pageLabelFont,
-          bounds: Rect.fromLTWH(
-            printableArea.width - pageLabelSize.width - 4,
-            printableArea.height - pageLabelSize.height - 4,
-            pageLabelSize.width + 4,
-            pageLabelSize.height + 2,
-          ),
-          brush: PdfSolidBrush(const Color(0xFF999999).toPdfColor()),
-        );
-      }
-    }
-
-    if (exportSettings.showTileAssemblyHints && totalTilePageCount > 1) {
-      assemblyAidRenderer.renderAssemblyIndexPage(
-        document: document,
-        exportSettings: exportSettings,
-        canvasWidth: canvasWidth,
-        canvasHeight: canvasHeight,
-      );
-    }
-
-    final bytes = document.saveSync();
-    document.dispose();
-    return bytes;
-  }
 
   /// Generates a single-page PDF document scaled to fit a specific page dimension,
   /// preserving aspect ratio. Ideal for printing the entire bracket on an A4/Letter page.
