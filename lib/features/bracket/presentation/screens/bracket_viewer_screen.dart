@@ -55,6 +55,22 @@ class BracketViewerScreen extends StatefulWidget {
 class _BracketViewerScreenState extends State<BracketViewerScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
+  /// Controls the [SfPdfViewer] zoom level programmatically.
+  PdfViewerController _pdfViewerController = PdfViewerController();
+
+  /// Tracks the current zoom level from the PDF viewer for the slider.
+  /// Synchronised bidirectionally: slider → controller, and
+  /// `onZoomLevelChanged` → slider.
+  double _currentZoomLevel = 1.0;
+
+  /// The fit-to-viewport zoom level computed when the PDF is first laid out.
+  /// Used as the minimum zoom for the slider so the bracket always fills the
+  /// viewport at the lowest slider position.
+  double _fitZoomLevel = 0.5;
+
+  /// Maximum zoom level allowed by the viewer and slider.
+  static const double _maximumZoomLevel = 5.0;
+
   /// Cached PDF bytes for the on-screen viewer.
   Uint8List? _cachedPdfBytes;
 
@@ -136,6 +152,7 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
 
   @override
   void dispose() {
+    _pdfViewerController.dispose();
     super.dispose();
   }
 
@@ -616,9 +633,19 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               reverse: true,
+            
               child: Row(
+                spacing: 8,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
+                  // ── Zoom Slider ──
+                  _buildZoomSlider(),
+                 
+                  const SizedBox(
+                    height: 24,
+                    child: VerticalDivider(width: 16, color: Colors.white24),
+                  ),
+
                   TextButton(
                     style: actionButtonStyle,
                     onPressed: canUndo
@@ -894,7 +921,7 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
                                     final viewportHeight =
                                         constraints.maxHeight;
 
-                                    final fitZoomLevel =
+                                    final computedFitZoomLevel =
                                         (viewportWidth > 0 &&
                                             viewportHeight > 0 &&
                                             canvasSize.width > 0 &&
@@ -902,12 +929,29 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
                                         ? min(
                                             viewportWidth / canvasSize.width,
                                             viewportHeight / canvasSize.height,
-                                          ).clamp(0.01, 5.0)
+                                          ).clamp(0.01, _maximumZoomLevel)
                                         : 0.5;
+
+                                    // Cache the fit zoom level so the slider
+                                    // uses it as its minimum bound.
+                                    if (_fitZoomLevel != computedFitZoomLevel) {
+                                      WidgetsBinding.instance
+                                          .addPostFrameCallback((_) {
+                                        if (mounted) {
+                                          setState(() {
+                                            _fitZoomLevel =
+                                                computedFitZoomLevel;
+                                            _currentZoomLevel =
+                                                computedFitZoomLevel;
+                                          });
+                                        }
+                                      });
+                                    }
 
                                     return SfPdfViewer.memory(
                                       _cachedPdfBytes!,
                                       key: ValueKey(_pdfGenerationCounter),
+                                      controller: _pdfViewerController,
                                       canShowScrollHead: false,
                                       canShowPaginationDialog: false,
                                       canShowScrollStatus: false,
@@ -917,8 +961,10 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
                                       scrollDirection:
                                           PdfScrollDirection.horizontal,
                                       interactionMode: PdfInteractionMode.pan,
-                                      initialZoomLevel: fitZoomLevel,
-                                      maxZoomLevel: 5,
+                                      initialZoomLevel: computedFitZoomLevel,
+                                      maxZoomLevel: _maximumZoomLevel,
+                                      onZoomLevelChanged:
+                                          _handlePdfZoomLevelChanged,
                                     );
                                   },
                                 )
@@ -971,6 +1017,90 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
           ),
         );
       },
+    );
+  }
+
+  /// Handles zoom level changes from the PDF viewer (double-tap, pinch, etc.)
+  /// and synchronises the slider state.
+  void _handlePdfZoomLevelChanged(PdfZoomDetails details) {
+    if (!mounted) return;
+    final newZoomLevel = details.newZoomLevel
+        .clamp(_fitZoomLevel, _maximumZoomLevel);
+    if ((_currentZoomLevel - newZoomLevel).abs() > 0.001) {
+      setState(() {
+        _currentZoomLevel = newZoomLevel;
+      });
+    }
+  }
+
+  /// Builds the zoom slider widget displayed in the bottom app bar.
+  Widget _buildZoomSlider() {
+    final int zoomPercentage = (_currentZoomLevel * 100).round();
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        IconButton(
+          icon: const Icon(Icons.zoom_out, size: 18),
+          color: Colors.white70,
+          tooltip: 'Zoom Out',
+          onPressed: _currentZoomLevel > _fitZoomLevel
+              ? () {
+                  final newZoomLevel = (_currentZoomLevel - 0.25)
+                      .clamp(_fitZoomLevel, _maximumZoomLevel);
+                  _pdfViewerController.zoomLevel = newZoomLevel;
+                  setState(() => _currentZoomLevel = newZoomLevel);
+                }
+              : null,
+        ),
+        SizedBox(
+          width: 120,
+          child: SliderTheme(
+            data: SliderThemeData(
+              activeTrackColor: Colors.white70,
+              inactiveTrackColor: Colors.white24,
+              thumbColor: Colors.white,
+              overlayColor: Colors.white24,
+              trackHeight: 3,
+              thumbShape: const RoundSliderThumbShape(
+                enabledThumbRadius: 6,
+              ),
+            ),
+            child: Slider(
+              min: _fitZoomLevel,
+              max: _maximumZoomLevel,
+              value: _currentZoomLevel.clamp(
+                _fitZoomLevel,
+                _maximumZoomLevel,
+              ),
+              onChanged: (double newZoomLevel) {
+                _pdfViewerController.zoomLevel = newZoomLevel;
+                setState(() => _currentZoomLevel = newZoomLevel);
+              },
+            ),
+          ),
+        ),
+        IconButton(
+          icon: const Icon(Icons.zoom_in, size: 18),
+          color: Colors.white70,
+          tooltip: 'Zoom In',
+          onPressed: _currentZoomLevel < _maximumZoomLevel
+              ? () {
+                  final newZoomLevel = (_currentZoomLevel + 0.25)
+                      .clamp(_fitZoomLevel, _maximumZoomLevel);
+                  _pdfViewerController.zoomLevel = newZoomLevel;
+                  setState(() => _currentZoomLevel = newZoomLevel);
+                }
+              : null,
+        ),
+        Text(
+          '$zoomPercentage%',
+          style: const TextStyle(
+            color: Colors.white70,
+            fontSize: 11,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
     );
   }
 
