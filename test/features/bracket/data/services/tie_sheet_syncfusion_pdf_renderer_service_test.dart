@@ -12,7 +12,6 @@ import 'package:tkd_saas/features/bracket/domain/entities/match_entity.dart';
 import 'package:tkd_saas/features/bracket/domain/layout/tie_sheet_layout_engine.dart';
 import 'package:tkd_saas/features/bracket/domain/layout/models/tie_sheet_layout_result.dart';
 import 'package:tkd_saas/features/bracket/domain/value_objects/tie_sheet_theme_config.dart';
-
 import 'package:tkd_saas/features/setup_bracket/domain/entities/participant_entity.dart';
 import 'package:tkd_saas/features/tournament/domain/entities/bracket_classification.dart';
 import 'package:tkd_saas/features/tournament/domain/entities/tournament_entity.dart';
@@ -298,8 +297,6 @@ void main() {
       assertValidSinglePagePdf(result.pdfBytes, result.layoutResult);
     });
   });
-
-
 
   group('TieSheetSyncfusionPdfRendererService — Canvas Size Scaling', () {
     test('larger player counts produce proportionally wider PDFs', () {

@@ -21,11 +21,9 @@ import 'package:tkd_saas/features/bracket/presentation/bloc/bracket_theme_preset
 import 'package:tkd_saas/features/bracket/presentation/bloc/bracket_theme_selection_bloc.dart';
 import 'package:tkd_saas/features/bracket/presentation/bloc/bracket_theme_selection_event.dart';
 import 'package:tkd_saas/features/bracket/presentation/bloc/bracket_theme_selection_state.dart';
-
 import 'package:tkd_saas/features/bracket/presentation/widgets/bracket_history_drawer.dart';
 import 'package:tkd_saas/features/bracket/presentation/widgets/bracket_match_list_panel.dart';
 import 'package:tkd_saas/features/bracket/presentation/widgets/bracket_participant_list_panel.dart';
-
 import 'package:tkd_saas/features/bracket/presentation/widgets/score_entry_dialog.dart';
 import 'package:tkd_saas/features/bracket/presentation/widgets/tie_sheet_theme_editor_panel.dart';
 import 'package:tkd_saas/features/bracket/domain/entities/bracket_format.dart';
@@ -359,7 +357,6 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
     }
   }
 
-
   /// Navigates back to the parent tournament detail page using URL
   /// navigation rather than stack-based `pop()`.
   void _navigateBackToTournamentDetail() {
@@ -603,8 +600,6 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
                         ],
                       ),
               ),
-
-
 
               const SizedBox(width: 8),
 

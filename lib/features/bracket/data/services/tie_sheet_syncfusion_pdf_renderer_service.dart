@@ -4,7 +4,6 @@ import 'dart:ui' show Color, FontStyle, FontWeight, Offset, Rect, Size;
 
 import 'package:syncfusion_flutter_pdf/pdf.dart';
 import 'package:tkd_saas/features/bracket/data/services/pdf_color_converter.dart';
-
 import 'package:tkd_saas/features/bracket/domain/layout/models/connector_layout_data.dart';
 import 'package:tkd_saas/features/bracket/domain/layout/models/header_layout_data.dart';
 import 'package:tkd_saas/features/bracket/domain/layout/models/match_layout_data.dart';
@@ -14,7 +13,6 @@ import 'package:tkd_saas/features/bracket/domain/layout/models/positioned_text_l
 import 'package:tkd_saas/features/bracket/domain/layout/models/section_label_layout_data.dart';
 import 'package:tkd_saas/features/bracket/domain/layout/models/tie_sheet_layout_result.dart';
 import 'package:tkd_saas/features/bracket/domain/value_objects/tie_sheet_theme_config.dart';
-
 
 /// Groups the common parameters shared across all PDF generation methods
 /// on [TieSheetSyncfusionPdfRendererService].
@@ -55,13 +53,13 @@ class PdfRenderParams {
 /// ## Architecture
 ///
 /// The renderer consumes a [TieSheetLayoutResult] (computed by
-/// [TieSheetLayoutEngine]) and a [PdfRenderParams] bundle. Three public
+/// [TieSheetLayoutEngine]) and a [PdfRenderParams] bundle. Two public
 /// entry points produce different PDF shapes:
 ///
 /// - [renderSinglePagePdfBytes] — 1:1 canvas-sized page (screen preview).
 /// - [generateScaledSinglePagePdfBytes] — scaled to fit A4/Letter.
 ///
-/// All three delegate to the private [_renderFullBracket] helper for the
+/// Both delegate to the private [_renderFullBracket] helper for the
 /// actual drawing, eliminating pipeline duplication.
 class TieSheetSyncfusionPdfRendererService {
   List<int> renderSinglePagePdfBytes({required PdfRenderParams params}) {
@@ -83,7 +81,6 @@ class TieSheetSyncfusionPdfRendererService {
     document.dispose();
     return bytes;
   }
-
 
   /// Generates a single-page PDF document scaled to fit a specific page dimension,
   /// preserving aspect ratio. Ideal for printing the entire bracket on an A4/Letter page.
@@ -707,10 +704,7 @@ class TieSheetSyncfusionPdfRendererService {
         style: PdfFontStyle.italic,
       );
     } else {
-      font = PdfStandardFont(
-        PdfFontFamily.helvetica,
-        textData.fontSize,
-      );
+      font = PdfStandardFont(PdfFontFamily.helvetica, textData.fontSize);
     }
 
     // PdfStandardFont (Helvetica) only supports Latin-1 characters.

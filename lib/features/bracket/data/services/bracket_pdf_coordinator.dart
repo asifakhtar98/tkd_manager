@@ -8,7 +8,6 @@ import 'package:tkd_saas/features/bracket/domain/services/bracket_medal_computat
 import 'package:tkd_saas/features/bracket/domain/layout/models/tie_sheet_layout_result.dart';
 import 'package:tkd_saas/features/bracket/domain/layout/tie_sheet_layout_engine.dart';
 import 'package:tkd_saas/features/bracket/domain/value_objects/tie_sheet_theme_config.dart';
-
 import 'package:tkd_saas/features/setup_bracket/domain/entities/participant_entity.dart';
 import 'package:tkd_saas/features/tournament/domain/entities/bracket_classification.dart';
 import 'package:tkd_saas/features/tournament/domain/entities/tournament_entity.dart';
@@ -29,7 +28,7 @@ class BracketPdfGenerationResult {
 
   /// The computed layout geometry used to produce the PDF.
   ///
-  /// Can be reused for export operations (single-page, tiled) to avoid
+  /// Can be reused for export operations to avoid
   /// redundant layout computation.
   final TieSheetLayoutResult layoutResult;
 }
@@ -62,7 +61,8 @@ class BracketPdfCoordinator {
     TieSheetLayoutEngine? layoutEngine,
     TieSheetSyncfusionPdfRendererService? rendererService,
     BracketMedalComputationService? medalComputationService,
-  }) : _layoutEngine = layoutEngine ??
+  }) : _layoutEngine =
+           layoutEngine ??
            TieSheetLayoutEngine(
              medalComputationService ??
                  const BracketMedalComputationServiceImplementation(),
@@ -172,7 +172,6 @@ class BracketPdfCoordinator {
       ),
     );
   }
-
 
   /// Clears cached layout result and PDF bytes.
   ///
