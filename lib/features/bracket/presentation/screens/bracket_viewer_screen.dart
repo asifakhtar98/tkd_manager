@@ -317,13 +317,19 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
   /// Called from BlocListener callbacks when bracket data or theme changes.
   /// Triggers a full PDF regeneration only when the underlying inputs
   /// have actually changed.
-  void _regeneratePdfFromCurrentState() {
+  Future<void> _regeneratePdfFromCurrentState() async {
     final bracketState = context.read<BracketBloc>().state;
     if (bracketState is! BracketLoadSuccess) return;
 
     final themeSelectionState = context.read<BracketThemeSelectionBloc>().state;
     final themeConfig = _resolveThemeConfigFromSelection(themeSelectionState);
     final bracketData = _extractBracketDataFromResult(bracketState.result);
+
+    // Delay execution by 1 second to allow screen transition animations
+    // to complete, avoiding main thread blocking and jank.
+    await Future.delayed(const Duration(seconds: 1));
+
+    if (!mounted) return;
 
     _regeneratePdfAndCacheResult(
       matches: bracketData.allMatches,
