@@ -1,6 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
-import '../../domain/repositories/i_activation_repository.dart';
+import 'package:tkd_saas/features/activation/domain/repositories/i_activation_repository.dart';
 import 'admin_activation_event.dart';
 import 'admin_activation_state.dart';
 

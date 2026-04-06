@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/di/injection.dart';
-import '../../domain/entities/activation_request_entity.dart';
+import 'package:tkd_saas/features/activation/domain/entities/activation_request_entity.dart';
 import '../bloc/admin_activation_bloc.dart';
 import '../bloc/admin_activation_event.dart';
 import '../bloc/admin_activation_state.dart';
@@ -30,7 +30,7 @@ class AdminActivationScreen extends StatelessWidget {
               if (context.canPop()) {
                 context.pop();
               } else {
-                context.go('/');
+                context.go('/admin');
               }
             },
           ),

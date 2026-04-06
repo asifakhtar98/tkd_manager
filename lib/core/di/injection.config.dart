@@ -23,8 +23,8 @@ import 'package:tkd_saas/features/activation/presentation/bloc/activation_bloc.d
     as _i84;
 import 'package:tkd_saas/features/activation/presentation/bloc/activation_status_bloc.dart'
     as _i558;
-import 'package:tkd_saas/features/activation/presentation/bloc/admin_activation_bloc.dart'
-    as _i784;
+import 'package:tkd_saas/features/admin_panel/presentation/bloc/admin_activation_bloc.dart'
+    as _i443;
 import 'package:tkd_saas/features/auth/data/repositories/authentication_repository_implementation.dart'
     as _i330;
 import 'package:tkd_saas/features/auth/domain/repositories/authentication_repository.dart'
@@ -169,8 +169,8 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i84.ActivationBloc>(
       () => _i84.ActivationBloc(gh<_i936.IActivationRepository>()),
     );
-    gh.factory<_i784.AdminActivationBloc>(
-      () => _i784.AdminActivationBloc(gh<_i936.IActivationRepository>()),
+    gh.factory<_i443.AdminActivationBloc>(
+      () => _i443.AdminActivationBloc(gh<_i936.IActivationRepository>()),
     );
     gh.lazySingleton<_i558.ActivationStatusBloc>(
       () => _i558.ActivationStatusBloc(gh<_i936.IActivationRepository>()),

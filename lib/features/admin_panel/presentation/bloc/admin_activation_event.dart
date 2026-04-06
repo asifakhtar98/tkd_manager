@@ -1,5 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import '../../domain/entities/activation_request_entity.dart';
+import 'package:tkd_saas/features/activation/domain/entities/activation_request_entity.dart';
 
 part 'admin_activation_event.freezed.dart';
 

@@ -18,7 +18,8 @@ import 'package:tkd_saas/features/tournament/domain/entities/tournament_entity.d
 import 'package:tkd_saas/features/tournament/presentation/bloc/tournament_bloc.dart';
 import 'package:tkd_saas/features/tournament/presentation/screens/tournament_detail_screen.dart';
 import 'package:tkd_saas/features/activation/presentation/screens/activate_software_screen.dart';
-import 'package:tkd_saas/features/activation/presentation/screens/admin_activation_screen.dart';
+import 'package:tkd_saas/features/admin_panel/presentation/screens/admin_activation_screen.dart';
+import 'package:tkd_saas/features/admin_panel/presentation/screens/admin_dashboard_screen.dart';
 import 'package:tkd_saas/features/profile/presentation/screens/profile_screen.dart';
 import 'package:tkd_saas/features/invoice/presentation/screens/invoice_generator_screen.dart';
 
@@ -103,10 +104,24 @@ class ActivateRoute extends GoRouteData with $ActivateRoute {
       const ActivateSoftwareScreen();
 }
 
-@TypedGoRoute<AdminRoute>(path: '/admin')
+@TypedGoRoute<AdminRoute>(
+  path: '/admin',
+  routes: <TypedGoRoute<GoRouteData>>[
+    TypedGoRoute<AdminActivationRequestsRoute>(path: 'activations'),
+  ],
+)
 @immutable
 class AdminRoute extends GoRouteData with $AdminRoute {
   const AdminRoute();
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      const AdminDashboardScreen();
+}
+
+@immutable
+class AdminActivationRequestsRoute extends GoRouteData with $AdminActivationRequestsRoute {
+  const AdminActivationRequestsRoute();
 
   @override
   Widget build(BuildContext context, GoRouterState state) =>

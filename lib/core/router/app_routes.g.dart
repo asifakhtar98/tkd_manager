@@ -115,14 +115,43 @@ mixin $ActivateRoute on GoRouteData {
   void replace(BuildContext context) => context.replace(location);
 }
 
-RouteBase get $adminRoute =>
-    GoRouteData.$route(path: '/admin', factory: $AdminRoute._fromState);
+RouteBase get $adminRoute => GoRouteData.$route(
+  path: '/admin',
+  factory: $AdminRoute._fromState,
+  routes: [
+    GoRouteData.$route(
+      path: 'activations',
+      factory: $AdminActivationRequestsRoute._fromState,
+    ),
+  ],
+);
 
 mixin $AdminRoute on GoRouteData {
   static AdminRoute _fromState(GoRouterState state) => const AdminRoute();
 
   @override
   String get location => GoRouteData.$location('/admin');
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+mixin $AdminActivationRequestsRoute on GoRouteData {
+  static AdminActivationRequestsRoute _fromState(GoRouterState state) =>
+      const AdminActivationRequestsRoute();
+
+  @override
+  String get location => GoRouteData.$location('/admin/activations');
 
   @override
   void go(BuildContext context) => context.go(location);

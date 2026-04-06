@@ -4,9 +4,9 @@ import 'package:mocktail/mocktail.dart';
 import 'package:tkd_saas/core/error/failures.dart';
 import 'package:tkd_saas/features/activation/domain/entities/activation_request_entity.dart';
 import 'package:tkd_saas/features/activation/domain/repositories/i_activation_repository.dart';
-import 'package:tkd_saas/features/activation/presentation/bloc/admin_activation_bloc.dart';
-import 'package:tkd_saas/features/activation/presentation/bloc/admin_activation_event.dart';
-import 'package:tkd_saas/features/activation/presentation/bloc/admin_activation_state.dart';
+import 'package:tkd_saas/features/admin_panel/presentation/bloc/admin_activation_bloc.dart';
+import 'package:tkd_saas/features/admin_panel/presentation/bloc/admin_activation_event.dart';
+import 'package:tkd_saas/features/admin_panel/presentation/bloc/admin_activation_state.dart';
 
 class MockActivationRepository extends Mock implements IActivationRepository {}
 
