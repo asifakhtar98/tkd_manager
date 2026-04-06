@@ -8,7 +8,7 @@ import 'package:tkd_saas/features/auth/domain/repositories/authentication_reposi
 import 'package:tkd_saas/features/bracket/domain/entities/bracket_match_action.dart';
 import 'package:tkd_saas/features/bracket/domain/entities/bracket_result.dart';
 import 'package:tkd_saas/features/bracket/domain/entities/match_entity.dart';
-import 'package:tkd_saas/features/core/data/demo_bracket_snapshot_factory.dart';
+import 'package:tkd_saas/core/data/demo_bracket_snapshot_factory.dart';
 
 import 'package:tkd_saas/features/tournament/domain/entities/bracket_snapshot.dart';
 import 'package:tkd_saas/features/tournament/domain/entities/tournament_entity.dart';

@@ -1,4 +1,4 @@
-import '../../tournament/domain/entities/tournament_entity.dart';
+import '../../features/tournament/domain/entities/tournament_entity.dart';
 
 /// Static helpers that produce deterministic demo data for the pre-seeded
 /// demo tournament.

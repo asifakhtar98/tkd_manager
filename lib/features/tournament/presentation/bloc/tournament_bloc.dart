@@ -2,8 +2,8 @@ import 'dart:developer';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
-import 'package:tkd_saas/features/core/data/demo_bracket_snapshot_factory.dart';
-import 'package:tkd_saas/features/core/data/demo_data.dart';
+import 'package:tkd_saas/core/data/demo_bracket_snapshot_factory.dart';
+import 'package:tkd_saas/core/data/demo_data.dart';
 import 'package:tkd_saas/features/tournament/domain/entities/bracket_snapshot.dart';
 import 'package:tkd_saas/features/tournament/domain/entities/tournament_entity.dart';
 import 'package:tkd_saas/features/tournament/domain/repositories/bracket_snapshot_repository.dart';
