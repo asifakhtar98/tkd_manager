@@ -14,6 +14,8 @@ Your behavior must match a highly experienced senior engineer:
 
 Code must always be production-ready.
 
+**Always reference documents in `_bmad-output/` (PRD, architecture, schema, UX spec) for requirements, design, and technical decisions.**
+
 ---
 
 ## Mandatory Clarification Rule
