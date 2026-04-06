@@ -4,7 +4,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:pdf/pdf.dart';
+
 import 'package:printing/printing.dart';
 import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 import 'package:tkd_saas/features/bracket/data/services/bracket_medal_computation_service_implementation.dart';
@@ -314,44 +314,40 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
           .state;
       final themeConfig = _resolveThemeConfigFromSelection(themeSelectionState);
 
-      _updateExportProgress(0.5, 'Opening print dialog…');
+      _updateExportProgress(0.5, 'Generating single-page PDF…');
       await Future<void>.delayed(Duration.zero);
 
-      final isLandscape =
-          _cachedLayoutResult!.computedCanvasSize.width >
-          _cachedLayoutResult!.computedCanvasSize.height;
+      // Always generate a portrait A4 page. The renderer will auto-rotate
+      // wide bracket content 90° so it fills the long edge of the paper.
+      const double a4PortraitWidth = 595.28;
+      const double a4PortraitHeight = 841.89;
+
+      final renderer = TieSheetSyncfusionPdfRendererService();
+      final renderParams = PdfRenderParams(
+        layoutResult: _cachedLayoutResult!,
+        themeConfig: themeConfig,
+        leftLogoImageBytes: _leftLogoImageBytes,
+        rightLogoImageBytes: _rightLogoImageBytes,
+      );
+
+      // Zero margins — bracket content fills the entire page.
+      final bytes = renderer.generateScaledSinglePagePdfBytes(
+        params: renderParams,
+        fullPageWidth: a4PortraitWidth,
+        fullPageHeight: a4PortraitHeight,
+        printableAreaWidth: a4PortraitWidth,
+        printableAreaHeight: a4PortraitHeight,
+        autoRotateWideContent: true,
+      );
+
+      final exportPdfBytes = Uint8List.fromList(bytes);
+
+      _updateExportProgress(0.8, 'Opening print dialog…');
+      await Future<void>.delayed(Duration.zero);
 
       await Printing.layoutPdf(
         name: 'Bracket_SinglePage',
-        format: isLandscape
-            ? PdfPageFormat.a4.landscape
-            : PdfPageFormat.a4.portrait,
-        onLayout: (PdfPageFormat format) async {
-          _updateExportProgress(0.8, 'Generating single-page PDF…');
-
-          const double printerMarginPoints = 72.0;
-          final double printableWidth =
-              format.width - (printerMarginPoints * 2);
-          final double printableHeight =
-              format.height - (printerMarginPoints * 2);
-
-          final renderer = TieSheetSyncfusionPdfRendererService();
-          final renderParams = PdfRenderParams(
-            layoutResult: _cachedLayoutResult!,
-            themeConfig: themeConfig,
-            leftLogoImageBytes: _leftLogoImageBytes,
-            rightLogoImageBytes: _rightLogoImageBytes,
-          );
-          final bytes = renderer.generateScaledSinglePagePdfBytes(
-            params: renderParams,
-            fullPageWidth: format.width,
-            fullPageHeight: format.height,
-            printableAreaWidth: printableWidth,
-            printableAreaHeight: printableHeight,
-          );
-
-          return Uint8List.fromList(bytes);
-        },
+        onLayout: (format) async => exportPdfBytes,
       );
     } finally {
       if (mounted) {
@@ -362,6 +358,7 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
       }
     }
   }
+
 
   /// Opens the print preview dialog for configuring export settings,
   /// then generates either a single-page or tiled PDF and sends it to
@@ -425,7 +422,7 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
       await Future<void>.delayed(Duration.zero);
 
       await Printing.layoutPdf(
-        onLayout: (PdfPageFormat format) async => exportPdfBytes,
+        onLayout: (format) async => exportPdfBytes,
       );
     } finally {
       if (mounted) {

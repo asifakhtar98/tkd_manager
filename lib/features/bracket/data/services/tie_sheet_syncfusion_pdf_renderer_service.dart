@@ -226,44 +226,90 @@ class TieSheetSyncfusionPdfRendererService {
   /// preserving aspect ratio. Ideal for printing the entire bracket on an A4/Letter page.
   ///
   /// The [fullPageWidth] and [fullPageHeight] define the actual PDF page size
-  /// (e.g., A4). The [printableAreaWidth] and [printableAreaHeight] define the
-  /// safe drawing area within those margins. The bracket is scaled to fit the
-  /// printable area and centered on the full page.
+  /// (e.g., A4 portrait). The [printableAreaWidth] and [printableAreaHeight]
+  /// define the safe drawing area within those margins. The bracket is scaled
+  /// to fit the printable area and centered on the full page.
+  ///
+  /// When [autoRotateWideContent] is `true` and the bracket canvas is wider
+  /// than tall, the content is rotated 90° clockwise on the portrait page so
+  /// that the long axis of the bracket runs along the long edge of the paper.
+  /// The page itself stays portrait — only the drawn content is rotated.
   List<int> generateScaledSinglePagePdfBytes({
     required PdfRenderParams params,
     required double fullPageWidth,
     required double fullPageHeight,
     required double printableAreaWidth,
     required double printableAreaHeight,
+    bool autoRotateWideContent = false,
   }) {
+    final canvasWidth = params.layoutResult.computedCanvasSize.width;
+    final canvasHeight = params.layoutResult.computedCanvasSize.height;
+
+    final bool shouldRotateContent =
+        autoRotateWideContent && canvasWidth > canvasHeight;
+
     final document = PdfDocument();
+    document.pageSettings.orientation = PdfPageOrientation.portrait;
     document.pageSettings.size = Size(fullPageWidth, fullPageHeight);
     document.pageSettings.margins.all = 0;
 
     final page = document.pages.add();
     final graphics = page.graphics;
 
-    final canvasWidth = params.layoutResult.computedCanvasSize.width;
-    final canvasHeight = params.layoutResult.computedCanvasSize.height;
-
     final bracketTemplate = PdfTemplate(canvasWidth, canvasHeight);
     _renderFullBracket(bracketTemplate.graphics!, params);
 
-    final scaleX = printableAreaWidth / canvasWidth;
-    final scaleY = printableAreaHeight / canvasHeight;
-    final scaleToFit = min(scaleX, scaleY);
+    if (shouldRotateContent) {
+      // Rotate content 90° clockwise on the portrait page.
+      // After rotation the available drawing space is swapped:
+      //   effective width  = pageHeight  (long edge)
+      //   effective height = pageWidth   (short edge)
+      final double effectiveAvailableWidth = printableAreaHeight;
+      final double effectiveAvailableHeight = printableAreaWidth;
 
-    final scaledWidth = canvasWidth * scaleToFit;
-    final scaledHeight = canvasHeight * scaleToFit;
+      final scaleX = effectiveAvailableWidth / canvasWidth;
+      final scaleY = effectiveAvailableHeight / canvasHeight;
+      final scaleToFit = min(scaleX, scaleY);
 
-    final offsetX = (fullPageWidth - scaledWidth) / 2;
-    final offsetY = (fullPageHeight - scaledHeight) / 2;
+      final scaledWidth = canvasWidth * scaleToFit;
+      final scaledHeight = canvasHeight * scaleToFit;
 
-    graphics.drawPdfTemplate(
-      bracketTemplate,
-      Offset(offsetX, offsetY),
-      Size(scaledWidth, scaledHeight),
-    );
+      // Center within the rotated coordinate system.
+      final offsetX = (effectiveAvailableWidth - scaledWidth) / 2;
+      final offsetY = (effectiveAvailableHeight - scaledHeight) / 2;
+
+      // Apply transforms: translate origin to top-right corner of the page,
+      // then rotate 90° clockwise. In the rotated coordinate system,
+      // +X runs down the page and +Y runs leftward from the right edge.
+      final graphicsState = graphics.save();
+      graphics.translateTransform(fullPageWidth, 0);
+      graphics.rotateTransform(90);
+
+      graphics.drawPdfTemplate(
+        bracketTemplate,
+        Offset(offsetX, offsetY),
+        Size(scaledWidth, scaledHeight),
+      );
+
+      graphics.restore(graphicsState);
+    } else {
+      // Standard (no rotation) — scale to fit and center.
+      final scaleX = printableAreaWidth / canvasWidth;
+      final scaleY = printableAreaHeight / canvasHeight;
+      final scaleToFit = min(scaleX, scaleY);
+
+      final scaledWidth = canvasWidth * scaleToFit;
+      final scaledHeight = canvasHeight * scaleToFit;
+
+      final offsetX = (fullPageWidth - scaledWidth) / 2;
+      final offsetY = (fullPageHeight - scaledHeight) / 2;
+
+      graphics.drawPdfTemplate(
+        bracketTemplate,
+        Offset(offsetX, offsetY),
+        Size(scaledWidth, scaledHeight),
+      );
+    }
 
     final bytes = document.saveSync();
     document.dispose();
