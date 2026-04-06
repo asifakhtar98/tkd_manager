@@ -40,7 +40,21 @@ class _DashboardScreenBodyState extends State<_DashboardScreenBody> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('TKD Tournament Manager'),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(6),
+              child: Image.asset(
+                'assets/images/logo.png',
+                height: 28,
+                width: 28,
+              ),
+            ),
+            const SizedBox(width: 10),
+            const Text('TKD Tournament Manager'),
+          ],
+        ),
         elevation: 0,
         centerTitle: false,
         actions: [

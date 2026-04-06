@@ -140,7 +140,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       const AuthBrandingHeader(
-                        icon: Icons.sports_martial_arts,
+                        imagePath: 'assets/images/logo.png',
                         title: 'TKD Tournament Manager',
                       ),
                       const SizedBox(height: 40),
