@@ -52,7 +52,7 @@ class _DashboardScreenBodyState extends State<_DashboardScreenBody> {
               ),
             ),
             const SizedBox(width: 10),
-            const Text('TKD Tournament Manager'),
+            const Text('GameCon Tournament Manager'),
           ],
         ),
         elevation: 0,

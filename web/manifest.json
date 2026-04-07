@@ -1,12 +1,12 @@
 {
-    "name": "TKD Tournament Manager",
-    "short_name": "TKD Manager",
+    "name": "GameCon Tournament Manager",
+    "short_name": "GameCon",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "Easy-to-use tool for Taekwondo organizers to automatically create brackets and manage scores offline.",
-    "orientation": "portrait-primary",
+    "description": "Easy-to-use tool for Taekwondo organizers to automatically create brackets.",
+    "orientation": "landscape-primary",
     "prefer_related_applications": false,
     "icons": [
         {

@@ -97,7 +97,7 @@ class TkdTournamentApp extends StatelessWidget {
               : null;
 
           Widget app = MaterialApp.router(
-            title: 'TKD Tournament Manager',
+            title: 'GameCon Tournament Manager',
             debugShowCheckedModeBanner: false,
             theme: AppTheme.light,
             routerConfig: AppRouter.createRouter(

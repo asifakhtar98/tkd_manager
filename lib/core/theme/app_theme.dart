@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Centralized Material 3 token system for the TKD Tournament Manager.
+/// Centralized Material 3 token system for the GameCon Tournament Manager.
 ///
 /// Light theme only — use [AppTheme.light] everywhere.
 abstract final class AppTheme {

@@ -141,7 +141,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     children: [
                       const AuthBrandingHeader(
                         imagePath: 'assets/images/logo.png',
-                        title: 'TKD Tournament Manager',
+                        title: 'GameCon Tournament Manager',
                       ),
                       const SizedBox(height: 40),
 
