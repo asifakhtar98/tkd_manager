@@ -10,13 +10,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:printing/printing.dart';
 import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
-import 'package:tkd_saas/features/bracket/data/services/bracket_medal_computation_service_implementation.dart';
 import 'package:tkd_saas/features/bracket/data/services/tie_sheet_syncfusion_pdf_renderer_service.dart';
 import 'package:tkd_saas/features/bracket/presentation/widgets/bracket_export_settings_dialog.dart';
 import 'package:tkd_saas/features/bracket/domain/entities/bracket_result.dart';
 import 'package:tkd_saas/features/bracket/domain/entities/match_entity.dart';
-import 'package:tkd_saas/features/bracket/domain/layout/tie_sheet_layout_engine.dart';
-import 'package:tkd_saas/features/bracket/domain/layout/models/tie_sheet_layout_result.dart';
 import 'package:tkd_saas/features/bracket/domain/value_objects/bracket_theme_selection.dart';
 import 'package:tkd_saas/features/bracket/domain/value_objects/tie_sheet_theme_config.dart';
 import 'package:tkd_saas/features/bracket/presentation/bloc/bracket_bloc.dart';
@@ -25,6 +22,7 @@ import 'package:tkd_saas/features/bracket/presentation/bloc/bracket_theme_preset
 import 'package:tkd_saas/features/bracket/presentation/bloc/bracket_theme_selection_bloc.dart';
 import 'package:tkd_saas/features/bracket/presentation/bloc/bracket_theme_selection_event.dart';
 import 'package:tkd_saas/features/bracket/presentation/bloc/bracket_theme_selection_state.dart';
+import 'package:tkd_saas/features/bracket/presentation/orchestrators/bracket_pdf_regeneration_orchestrator.dart';
 import 'package:tkd_saas/features/bracket/presentation/widgets/bracket_history_drawer.dart';
 import 'package:tkd_saas/features/bracket/presentation/widgets/bracket_match_list_panel.dart';
 import 'package:tkd_saas/features/bracket/presentation/widgets/bracket_participant_list_panel.dart';
@@ -77,19 +75,10 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
   /// Maximum zoom level allowed by the viewer and slider.
   static const double _maximumZoomLevel = 5.0;
 
-  /// Cached PDF bytes for the on-screen viewer.
-  Uint8List? _cachedPdfBytes;
-
-  /// Cached layout result to avoid redundant recomputation during export.
-  TieSheetLayoutResult? _cachedLayoutResult;
-
-  /// Monotonically increasing counter to force [SfPdfViewer.memory] recreation
-  /// when PDF bytes change. Using byte length as a key is fragile since
-  /// two different PDFs can share the same length.
-  int _pdfGenerationCounter = 0;
-
-  /// Non-null when the most recent PDF generation attempt failed.
-  String? _pdfGenerationError;
+  /// Central orchestrator that owns debounce timer, layout engine,
+  /// PDF renderer, and cached results. All PDF generation triggers
+  /// delegate to this instance.
+  late final BracketPdfRegenerationOrchestrator _pdfRegenerationOrchestrator;
 
   Uint8List? _leftLogoImageBytes;
   Uint8List? _rightLogoImageBytes;
@@ -101,10 +90,31 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
 
   bool get _isExportingPdf => _pdfExportProgress != null;
 
+  /// Whether any background processing is in progress.
+  ///
+  /// Drives the generic circular indicator in the bottom app bar.
+  /// Currently reflects the PDF regeneration debounce pending state;
+  /// extend this getter to include other async operations as needed.
+  bool get _isBackgroundProcessing =>
+      _pdfRegenerationOrchestrator.isRegenerationPending;
+
   @override
   void initState() {
     super.initState();
+    _pdfRegenerationOrchestrator = BracketPdfRegenerationOrchestrator(
+      debounceDuration: const Duration(milliseconds: 3000),
+      onPdfGenerationCompleted: _handlePdfGenerationCompleted,
+      onRegenerationScheduled: _handlePdfGenerationCompleted,
+    );
     _loadTournamentLogoImages();
+  }
+
+  /// Callback invoked by the orchestrator after each generation attempt.
+  /// Triggers a `setState` to refresh the UI with updated cached PDF
+  /// bytes, layout result, or error.
+  void _handlePdfGenerationCompleted() {
+    if (!mounted) return;
+    setState(() {});
   }
 
   TieSheetThemeConfig _resolveThemeConfigFromSelection(
@@ -163,6 +173,7 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
 
   @override
   void dispose() {
+    _pdfRegenerationOrchestrator.dispose();
     _pdfViewerController.dispose();
     super.dispose();
   }
@@ -191,7 +202,7 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
     });
 
     // Regenerate PDF now that logos are available.
-    _regeneratePdfFromCurrentState();
+    _executeImmediateRegenerationFromCurrentState();
   }
 
   Future<({Uint8List imageBytes, double aspectRatio})?>
@@ -245,100 +256,59 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
     }
   }
 
-  /// Computes a [TieSheetLayoutResult] from the current bracket state.
-  TieSheetLayoutResult _computeBracketLayout({
-    required List<MatchEntity> matches,
-    required List<ParticipantEntity> participants,
-    required TieSheetThemeConfig themeConfig,
-    String? winnersBracketId,
-    String? losersBracketId,
-  }) {
-    final engine = TieSheetLayoutEngine(
-      const BracketMedalComputationServiceImplementation(),
-    );
-    return engine.computeLayout(
-      tournament: widget.tournament,
-      matches: matches,
-      participants: participants,
-      bracketType: _bracketFormat.displayLabel,
-      includeThirdPlaceMatch: _includeThirdPlaceMatch,
-      winnersBracketId: winnersBracketId,
-      losersBracketId: losersBracketId,
-      themeConfig: themeConfig,
-      classification: _classification,
-      hasLeftLogo: _leftLogoImageBytes != null,
-      hasRightLogo: _rightLogoImageBytes != null,
-      leftLogoAspectRatio: _leftLogoAspectRatio,
-      rightLogoAspectRatio: _rightLogoAspectRatio,
-    );
-  }
-
-  /// Generates vector PDF bytes and caches both the layout result and the
-  /// rendered PDF. Called only when bracket data or theme actually changes
-  /// (via [_regeneratePdfIfInputsChanged]), never from a build method.
-  void _regeneratePdfAndCacheResult({
-    required List<MatchEntity> matches,
-    required List<ParticipantEntity> participants,
-    required TieSheetThemeConfig themeConfig,
-    String? winnersBracketId,
-    String? losersBracketId,
-  }) {
-    try {
-      final layoutResult = _computeBracketLayout(
-        matches: matches,
-        participants: participants,
-        themeConfig: themeConfig,
-        winnersBracketId: winnersBracketId,
-        losersBracketId: losersBracketId,
-      );
-      final renderer = TieSheetSyncfusionPdfRendererService();
-      final renderParams = PdfRenderParams(
-        layoutResult: layoutResult,
-        themeConfig: themeConfig,
-        leftLogoImageBytes: _leftLogoImageBytes,
-        rightLogoImageBytes: _rightLogoImageBytes,
-      );
-      final bytes = renderer.renderSinglePagePdfBytes(params: renderParams);
-
-      setState(() {
-        _cachedLayoutResult = layoutResult;
-        _cachedPdfBytes = Uint8List.fromList(bytes);
-        _pdfGenerationCounter++;
-        _pdfGenerationError = null;
-      });
-    } catch (error, stackTrace) {
-      debugPrint('PDF generation failed: $error\n$stackTrace');
-      setState(() {
-        _pdfGenerationError = 'Failed to generate bracket PDF: $error';
-        _cachedPdfBytes = null;
-        _cachedLayoutResult = null;
-      });
-    }
-  }
-
-  /// Called from BlocListener callbacks when bracket data or theme changes.
-  /// Triggers a full PDF regeneration only when the underlying inputs
-  /// have actually changed.
-  Future<void> _regeneratePdfFromCurrentState() async {
+  /// Builds a [PdfRegenerationInputSnapshot] from the current bracket
+  /// and theme selection state. Returns `null` if the bracket is not
+  /// in a loaded state.
+  PdfRegenerationInputSnapshot? _buildRegenerationInputSnapshotFromCurrentState() {
     final bracketState = context.read<BracketBloc>().state;
-    if (bracketState is! BracketLoadSuccess) return;
+    if (bracketState is! BracketLoadSuccess) return null;
 
     final themeSelectionState = context.read<BracketThemeSelectionBloc>().state;
     final themeConfig = _resolveThemeConfigFromSelection(themeSelectionState);
     final bracketData = _extractBracketDataFromResult(bracketState.result);
 
-    // Delay execution by 1 second to allow screen transition animations
-    // to complete, avoiding main thread blocking and jank.
-    await Future.delayed(const Duration(seconds: 1));
-
-    if (!mounted) return;
-
-    _regeneratePdfAndCacheResult(
+    return PdfRegenerationInputSnapshot(
+      tournament: widget.tournament,
       matches: bracketData.allMatches,
       participants: bracketState.participants,
+      bracketFormat: _bracketFormat,
+      includeThirdPlaceMatch: _includeThirdPlaceMatch,
+      classification: _classification,
       themeConfig: themeConfig,
       winnersBracketId: bracketData.winnersBracketId,
       losersBracketId: bracketData.losersBracketId,
+      leftLogoImageBytes: _leftLogoImageBytes,
+      rightLogoImageBytes: _rightLogoImageBytes,
+      leftLogoAspectRatio: _leftLogoAspectRatio,
+      rightLogoAspectRatio: _rightLogoAspectRatio,
+    );
+  }
+
+  /// Requests a debounced PDF regeneration from the orchestrator.
+  ///
+  /// Called from BlocListener callbacks when bracket data or theme
+  /// changes. Multiple rapid-fire calls collapse into a single
+  /// generation after the debounce window.
+  void _requestDebouncedPdfRegeneration() {
+    final inputSnapshot = _buildRegenerationInputSnapshotFromCurrentState();
+    if (inputSnapshot == null) return;
+
+    _pdfRegenerationOrchestrator.requestDebouncedRegeneration(
+      inputSnapshot: inputSnapshot,
+    );
+  }
+
+  /// Executes PDF regeneration immediately, bypassing the debounce.
+  ///
+  /// Used for initial page load (after logos resolve) and explicit
+  /// retry after a generation error — paths where the user should
+  /// not wait for the debounce window.
+  void _executeImmediateRegenerationFromCurrentState() {
+    final inputSnapshot = _buildRegenerationInputSnapshotFromCurrentState();
+    if (inputSnapshot == null) return;
+
+    _pdfRegenerationOrchestrator.executeImmediateRegeneration(
+      inputSnapshot: inputSnapshot,
     );
   }
 
@@ -356,7 +326,7 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
     await Future<void>.delayed(Duration.zero);
 
     try {
-      if (_cachedLayoutResult == null) {
+      if (_pdfRegenerationOrchestrator.cachedLayoutResult == null) {
         _updateExportProgress(1.0, 'No bracket data available.');
         return;
       }
@@ -373,7 +343,7 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
 
       final renderer = TieSheetSyncfusionPdfRendererService();
       final renderParams = PdfRenderParams(
-        layoutResult: _cachedLayoutResult!,
+        layoutResult: _pdfRegenerationOrchestrator.cachedLayoutResult!,
         themeConfig: themeConfig,
         leftLogoImageBytes: _leftLogoImageBytes,
         rightLogoImageBytes: _rightLogoImageBytes,
@@ -548,7 +518,7 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
             );
           }
 
-          _regeneratePdfFromCurrentState();
+          _requestDebouncedPdfRegeneration();
         },
         builder: (context, state) {
           return switch (state) {
@@ -677,14 +647,17 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
           );
         }
 
-        _regeneratePdfFromCurrentState();
+        _requestDebouncedPdfRegeneration();
       },
       builder: (context, selectionState) {
-        if (_cachedPdfBytes == null && _pdfGenerationError == null) {
-          // Schedule generation after frame to avoid setState-in-build.
+        if (_pdfRegenerationOrchestrator.cachedPdfBytes == null &&
+            _pdfRegenerationOrchestrator.pdfGenerationError == null) {
+          // Schedule immediate generation after frame to avoid
+          // setState-in-build. Uses immediate (non-debounced) path
+          // because this is the initial load — user should not wait.
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (mounted) {
-              _regeneratePdfFromCurrentState();
+              _executeImmediateRegenerationFromCurrentState();
             }
           });
         }
@@ -744,6 +717,20 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
                 spacing: 8,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
+                  // ── Background Processing Indicator ──
+                  if (_isBackgroundProcessing)
+                    const Padding(
+                      padding: EdgeInsets.only(right: 4),
+                      child: SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white54,
+                        ),
+                      ),
+                    ),
+
                   // ── Zoom Slider ──
                   _buildZoomSlider(),
 
@@ -995,7 +982,7 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
                           ),
 
                         Expanded(
-                          child: _pdfGenerationError != null
+                          child: _pdfRegenerationOrchestrator.pdfGenerationError != null
                               ? Center(
                                   child: Column(
                                     mainAxisSize: MainAxisSize.min,
@@ -1007,7 +994,7 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
                                       ),
                                       const SizedBox(height: 12),
                                       Text(
-                                        _pdfGenerationError!,
+                                        _pdfRegenerationOrchestrator.pdfGenerationError!,
                                         textAlign: TextAlign.center,
                                         style: TextStyle(
                                           color: Colors.red.shade300,
@@ -1017,15 +1004,15 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
                                       const SizedBox(height: 16),
                                       OutlinedButton.icon(
                                         onPressed:
-                                            _regeneratePdfFromCurrentState,
+                                            _executeImmediateRegenerationFromCurrentState,
                                         icon: const Icon(Icons.refresh),
                                         label: const Text('Retry'),
                                       ),
                                     ],
                                   ),
                                 )
-                              : _cachedPdfBytes != null &&
-                                    _cachedLayoutResult != null
+                              : _pdfRegenerationOrchestrator.cachedPdfBytes != null &&
+                                    _pdfRegenerationOrchestrator.cachedLayoutResult != null
                               ? LayoutBuilder(
                                   builder: (context, constraints) {
                                     // Compute initial zoom to fit the entire
@@ -1033,7 +1020,7 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
                                     // one cohesive unit — mimics the old
                                     // InteractiveViewer "fit all" behavior.
                                     final canvasSize =
-                                        _cachedLayoutResult!.computedCanvasSize;
+                                        _pdfRegenerationOrchestrator.cachedLayoutResult!.computedCanvasSize;
                                     final viewportWidth = constraints.maxWidth;
                                     final viewportHeight =
                                         constraints.maxHeight;
@@ -1066,8 +1053,8 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
                                     }
 
                                     return SfPdfViewer.memory(
-                                      _cachedPdfBytes!,
-                                      key: ValueKey(_pdfGenerationCounter),
+                                      _pdfRegenerationOrchestrator.cachedPdfBytes!,
+                                      key: ValueKey(_pdfRegenerationOrchestrator.pdfGenerationCounter),
                                       controller: _pdfViewerController,
                                       canShowScrollHead: false,
                                       canShowPaginationDialog: false,
