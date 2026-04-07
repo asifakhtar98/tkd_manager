@@ -66,13 +66,22 @@ class _SetupBracketScreenState extends State<SetupBracketScreen> {
 
   late final SetupBracketBloc _setupBracketBloc;
 
+  /// Guards against re-dispatching the seed data import event.
+  ///
+  /// While `initState` only runs once per [State] lifecycle, this flag
+  /// makes the single-consumption contract explicit and protects against
+  /// future refactors that might introduce `didUpdateWidget` handling.
+  bool _hasConsumedSeedData = false;
+
   @override
   void initState() {
     super.initState();
     _setupBracketBloc = context.read<SetupBracketBloc>();
 
     final seedData = widget.initialSeedData;
-    if (seedData != null) {
+    if (seedData != null && !_hasConsumedSeedData) {
+      _hasConsumedSeedData = true;
+
       // "Copy & Start Over" flow — import seed data into the bloc,
       // which overwrites the hydrated state and persists the new values.
       _setupBracketBloc.add(
@@ -89,6 +98,23 @@ class _SetupBracketScreenState extends State<SetupBracketScreen> {
       _bracketWeightDivisionController = TextEditingController(
         text: seedData.bracketWeightDivisionLabel,
       );
+
+      // Show success feedback after the first frame is painted.
+      final importedParticipantCount = seedData.participants.length;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Imported $importedParticipantCount '
+              '${importedParticipantCount == 1 ? 'participant' : 'participants'} '
+              'from existing bracket.',
+            ),
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      });
     } else {
       // Normal flow — seed controllers from HydratedBloc persisted state.
       final persistedState = _setupBracketBloc.state;

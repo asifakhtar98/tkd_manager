@@ -419,19 +419,28 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
   /// Handles the "Copy & Start Over" action by building seed data from the
   /// current bracket snapshot and navigating to the setup screen.
   ///
+  /// Uses [widget.snapshot.participants] (last persisted state) as the source
+  /// of truth, not the live [BracketLoadSuccess.participants] which may be in
+  /// a mid-undo, mid-redo, or unsaved state.
+  ///
   /// Filters BYE participants since they are structural entries added by the
   /// bracket generator, not real participants entered by the user.
-  void _handleCopyAndStartOverRequested(
-    BuildContext context,
-    List<ParticipantEntity> currentParticipants,
-  ) async {
-    final realParticipants = currentParticipants
+  Future<void> _handleCopyAndStartOverRequested(
+    BuildContext context, {
+    required bool hasUnsavedChanges,
+  }) async {
+    final realParticipants = widget.snapshot.participants
         .where((participant) => !participant.isBye)
         .toList();
 
     final participantCountLabel = realParticipants.length == 1
         ? '1 participant'
         : '${realParticipants.length} participants';
+
+    final unsavedChangesWarning = hasUnsavedChanges
+        ? '\n\n⚠ You have unsaved changes on this bracket that will not '
+          'be included in the copy.'
+        : '';
 
     final confirm = await showDialog<bool>(
       context: context,
@@ -440,7 +449,8 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
         content: Text(
           'This will open a new bracket setup pre-populated with '
           '$participantCountLabel from this bracket.\n\n'
-          'Your current bracket will not be deleted.',
+          'Your current bracket will not be deleted.'
+          '$unsavedChangesWarning',
         ),
         actions: [
           TextButton(
@@ -795,7 +805,7 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
                     style: actionButtonStyle,
                     onPressed: () => _handleCopyAndStartOverRequested(
                       context,
-                      participants,
+                      hasUnsavedChanges: hasUnsavedChanges,
                     ),
                     icon: const Icon(Icons.content_copy, size: 18),
                     label: const Text('Copy & Start Over'),
