@@ -58,6 +58,7 @@ document.dispose();
 
 ## References
 
+- [pdf_viewer.md](references/pdf_viewer.md) - Display, interact with, or integrate PDF documents in a Flutter app using the syncfusion_flutter_pdfviewer package
 - [document-creation.md](references/document-creation.md) - Creating PDFs from scratch, pages, basic structure
 - [text-formatting.md](references/text-formatting.md) - Fonts, text formatting, flow layout, lists
 - [images-shapes.md](references/images-shapes.md) - Images, shapes, graphics, colors
