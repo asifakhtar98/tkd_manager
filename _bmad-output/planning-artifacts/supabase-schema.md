@@ -1,10 +1,10 @@
-# Supabase Database Schema - TKD Manager
+# Supabase Database Schema - Gamecon Manager
 
-Supabase Project ID: lldlunqzkltclpfzpjxh
+Gamecon Supabase Project ID: lldlunqzkltclpfzpjxh
 
 ## Overview
 
-This document describes the complete database schema for the TKD Manager bracket management system, including all table definitions and Row Level Security (RLS) policies.
+This document describes the complete database schema for the Gamecon Manager bracket management system, including all table definitions and Row Level Security (RLS) policies.
 
 ---
 

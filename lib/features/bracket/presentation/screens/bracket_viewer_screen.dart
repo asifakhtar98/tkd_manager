@@ -728,13 +728,13 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
 
                   const SizedBox(width: 8),
 
-                  TextButton(
+                  TextButton.icon(
                     style: actionButtonStyle,
                     onPressed: () async {
                       final confirm = await showDialog<bool>(
                         context: context,
                         builder: (c) => AlertDialog(
-                          title: const Text('Regenerate Bracket?'),
+                          title: const Text('Reset & Redraw Bracket?'),
                           content: const Text(
                             'Current match scores and progress will be lost.',
                           ),
@@ -745,7 +745,7 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
                             ),
                             ElevatedButton(
                               onPressed: () => Navigator.pop(c, true),
-                              child: const Text('Regenerate'),
+                              child: const Text('Reset & Redraw'),
                             ),
                           ],
                         ),
@@ -756,7 +756,8 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
                         );
                       }
                     },
-                    child: const Text('Regenerate & Shuffle'),
+                    icon: const Icon(Icons.casino, size: 18),
+                    label: const Text('Reset & Redraw'),
                   ),
                   const SizedBox(
                     height: 24,
