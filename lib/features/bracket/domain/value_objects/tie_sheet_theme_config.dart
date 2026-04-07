@@ -337,17 +337,17 @@ abstract class TieSheetThemeConfig with _$TieSheetThemeConfig {
     interMatchGapHeight: 100.0,
     numberColumnWidth: 32.0,
     nameColumnWidth: 200.0,
-    registrationIdColumnWidth: 120.0,
+    registrationIdColumnWidth: 150.0,
     roundColumnWidth: 170.0,
     headerTotalHeight: 100.0,
     subHeaderRowHeight: 28.0,
     centerGapWidth: 340.0,
     sectionLabelHeight: 32.0,
     // Medal table layout
-    medalTableWidth: 440.0,
+    medalTableWidth: 460.0,
     medalRowHeight: 36.0,
     medalNameColumnWidth: 250.0,
-    medalLabelColumnWidth: 100.0,
+    medalLabelColumnWidth: 120.0,
     medalRowGap: 4.0,
     // Junction geometry
     centerFinalMinimumSpan: 60.0,
@@ -389,7 +389,7 @@ abstract class TieSheetThemeConfig with _$TieSheetThemeConfig {
     primaryTextColor: Color(0xFF000000),
     secondaryTextColor: Color(0xFF000000),
     isTextForceBold: true,
-    fontSizeDelta: 8.0,
+    fontSizeDelta: 10.0,
     // Fill
     rowFillColor: Color(0xFFFFFFFF),
     headerFillColor: Color(0xFFFFFFFF),
@@ -399,8 +399,8 @@ abstract class TieSheetThemeConfig with _$TieSheetThemeConfig {
     headerBannerTextColor: Color(0xFF000000),
     // Accent & badge
     participantAccentStripColor: Color(0xFF000000),
-    blueCornerColor: Color(0xFF000000),
-    redCornerColor: Color(0xFF000000),
+    blueCornerColor: Color(0xFF2563EB),
+    redCornerColor: Color(0xFFDC2626),
     // Section labels
     winnersLabelColor: Color(0xFF000000),
     losersLabelColor: Color(0xFF000000),
@@ -442,17 +442,17 @@ abstract class TieSheetThemeConfig with _$TieSheetThemeConfig {
     interMatchGapHeight: 100.0,
     numberColumnWidth: 32.0,
     nameColumnWidth: 200.0,
-    registrationIdColumnWidth: 120.0,
+    registrationIdColumnWidth: 150.0,
     roundColumnWidth: 170.0,
     headerTotalHeight: 100.0,
     subHeaderRowHeight: 28.0,
     centerGapWidth: 340.0,
     sectionLabelHeight: 32.0,
     // Medal table layout
-    medalTableWidth: 440.0,
+    medalTableWidth: 460.0,
     medalRowHeight: 36.0,
     medalNameColumnWidth: 250.0,
-    medalLabelColumnWidth: 100.0,
+    medalLabelColumnWidth: 150.0,
     medalRowGap: 4.0,
     // Junction geometry
     centerFinalMinimumSpan: 60.0,
@@ -465,11 +465,11 @@ abstract class TieSheetThemeConfig with _$TieSheetThemeConfig {
     matchPillHorizontalOffset: 0.0,
     // Banner & logo
     headerBannerHeight: 64.0,
-    logoMaxHeight: 60.0,
+    logoMaxHeight: 85.0,
     logoPadding: 12.0,
     // Additional colours
     matchPillFillColor: Color(0xFFFFFFFF),
-    badgeTextColor: Color(0xFF000000),
+    badgeTextColor: Color(0xFFFFFFFF),
     // Opacity
     sectionLabelBackgroundOpacity: 0.0,
     headerSecondaryTextOpacity: 0.8,
