@@ -643,6 +643,57 @@ class _SetupBracketScreenState extends State<SetupBracketScreen> {
                     ),
                   ),
                 ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16.0,
+                    vertical: 8.0,
+                  ),
+                  child: AnimatedSize(
+                    duration: const Duration(milliseconds: 300),
+                    alignment: Alignment.topCenter,
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: setupState.isDojangSeparationEnabled
+                            ? Colors.blue.withOpacity(0.1)
+                            : Colors.orange.withOpacity(0.1),
+                        border: Border.all(
+                          color: setupState.isDojangSeparationEnabled
+                              ? Colors.blue.shade200
+                              : Colors.orange.shade200,
+                        ),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(
+                            Icons.info_outline,
+                            size: 20,
+                            color: setupState.isDojangSeparationEnabled
+                                ? Colors.blue.shade700
+                                : Colors.orange.shade800,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              setupState.isDojangSeparationEnabled
+                                  ? 'Manual order is ignored. Players are completely randomized and auto-distributed to separate teammates across the bracket.'
+                                  : 'Manual order is respected. Players are seeded into the bracket exactly in the order they appear in the roster list.',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: setupState.isDojangSeparationEnabled
+                                    ? Colors.blue.shade900
+                                    : Colors.orange.shade900,
+                                height: 1.4,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
                 if (setupState.selectedBracketFormat ==
                     BracketFormat.singleElimination)
                   SwitchListTile(
@@ -915,6 +966,7 @@ class _SetupBracketScreenState extends State<SetupBracketScreen> {
                       child: ListTile(
                         leading: CircleAvatar(
                           backgroundColor: Colors.grey.shade800,
+                          foregroundColor: Colors.white,
                           child: Text('${index + 1}'),
                         ),
                         title: Text(
@@ -931,22 +983,16 @@ class _SetupBracketScreenState extends State<SetupBracketScreen> {
                               'Dojang: ${participant.schoolOrDojangName}',
                           ].join(' | '),
                         ),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.drag_handle, color: Colors.grey),
-                            IconButton(
-                              icon: Icon(
-                                Icons.close,
-                                color: Colors.grey.shade800,
-                              ),
-                              onPressed: () => _setupBracketBloc.add(
-                                SetupBracketEvent.participantRemoved(
-                                  rosterIndex: index,
-                                ),
-                              ),
+                        trailing: IconButton(
+                          icon: Icon(
+                            Icons.close,
+                            color: Colors.grey.shade800,
+                          ),
+                          onPressed: () => _setupBracketBloc.add(
+                            SetupBracketEvent.participantRemoved(
+                              rosterIndex: index,
                             ),
-                          ],
+                          ),
                         ),
                       ),
                     );
