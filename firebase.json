@@ -31,7 +31,7 @@
       ]
     },
     {
-      "target": "tkd-manager-wasm",
+      "target": "gamecon",
       "public": "build/web/wasm",
       "ignore": [
         "firebase.json",

@@ -115,13 +115,13 @@
     {
       "label": "Firebase: Deploy (WASM)",
       "type": "shell",
-      "command": "npx firebase-tools deploy --only hosting:tkd-manager-wasm",
+      "command": "npx firebase-tools deploy --only hosting:gamecon",
       "options": {
         "cwd": "${workspaceFolder}"
       },
       "problemMatcher": [],
       "group": "build",
-      "detail": "Deploys to tkd-manager-wasm hosting"
+      "detail": "Deploys to gamecon hosting"
     },
     {
       "label": "🚀 Build & Deploy: SAAS",

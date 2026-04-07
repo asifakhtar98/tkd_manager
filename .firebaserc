@@ -8,15 +8,15 @@
         "tkd-saas": [
           "tkd-saas"
         ],
-        "tkd-manager-wasm": [
-          "tkd-manager-wasm"
+        "gamecon": [
+          "gamecon"
         ]
       }
     },
-    "tkd-manager-wasm": {
+    "gamecon": {
       "hosting": {
-        "tkd-manager-wasm": [
-          "tkd-manager-wasm"
+        "gamecon": [
+          "gamecon"
         ]
       }
     }
