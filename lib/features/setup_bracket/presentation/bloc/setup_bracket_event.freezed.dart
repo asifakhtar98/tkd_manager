@@ -55,7 +55,7 @@ extension SetupBracketEventPatterns on SetupBracketEvent {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( SetupBracketParticipantAdded value)?  participantAdded,TResult Function( SetupBracketParticipantsImportedFromCsv value)?  participantsImportedFromCsv,TResult Function( SetupBracketParticipantRemoved value)?  participantRemoved,TResult Function( SetupBracketParticipantsCleared value)?  participantsCleared,TResult Function( SetupBracketParticipantsReordered value)?  participantsReordered,TResult Function( SetupBracketFormatChanged value)?  bracketFormatChanged,TResult Function( SetupBracketDojangSeparationToggled value)?  dojangSeparationToggled,TResult Function( SetupBracketThirdPlaceMatchToggled value)?  thirdPlaceMatchToggled,TResult Function( SetupBracketClassificationUpdated value)?  classificationUpdated,TResult Function( SetupBracketGenerationDispatched value)?  bracketGenerationDispatched,TResult Function( SetupBracketGenerationSucceeded value)?  bracketGenerationSucceeded,TResult Function( SetupBracketGenerationFailed value)?  bracketGenerationFailed,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( SetupBracketParticipantAdded value)?  participantAdded,TResult Function( SetupBracketParticipantsImportedFromCsv value)?  participantsImportedFromCsv,TResult Function( SetupBracketParticipantRemoved value)?  participantRemoved,TResult Function( SetupBracketParticipantsCleared value)?  participantsCleared,TResult Function( SetupBracketParticipantsReordered value)?  participantsReordered,TResult Function( SetupBracketFormatChanged value)?  bracketFormatChanged,TResult Function( SetupBracketDojangSeparationToggled value)?  dojangSeparationToggled,TResult Function( SetupBracketThirdPlaceMatchToggled value)?  thirdPlaceMatchToggled,TResult Function( SetupBracketClassificationUpdated value)?  classificationUpdated,TResult Function( SetupBracketGenerationDispatched value)?  bracketGenerationDispatched,TResult Function( SetupBracketGenerationSucceeded value)?  bracketGenerationSucceeded,TResult Function( SetupBracketGenerationFailed value)?  bracketGenerationFailed,TResult Function( SetupBracketExistingBracketDataImported value)?  existingBracketDataImported,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
 case SetupBracketParticipantAdded() when participantAdded != null:
@@ -70,7 +70,8 @@ return thirdPlaceMatchToggled(_that);case SetupBracketClassificationUpdated() wh
 return classificationUpdated(_that);case SetupBracketGenerationDispatched() when bracketGenerationDispatched != null:
 return bracketGenerationDispatched(_that);case SetupBracketGenerationSucceeded() when bracketGenerationSucceeded != null:
 return bracketGenerationSucceeded(_that);case SetupBracketGenerationFailed() when bracketGenerationFailed != null:
-return bracketGenerationFailed(_that);case _:
+return bracketGenerationFailed(_that);case SetupBracketExistingBracketDataImported() when existingBracketDataImported != null:
+return existingBracketDataImported(_that);case _:
   return orElse();
 
 }
@@ -88,7 +89,7 @@ return bracketGenerationFailed(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( SetupBracketParticipantAdded value)  participantAdded,required TResult Function( SetupBracketParticipantsImportedFromCsv value)  participantsImportedFromCsv,required TResult Function( SetupBracketParticipantRemoved value)  participantRemoved,required TResult Function( SetupBracketParticipantsCleared value)  participantsCleared,required TResult Function( SetupBracketParticipantsReordered value)  participantsReordered,required TResult Function( SetupBracketFormatChanged value)  bracketFormatChanged,required TResult Function( SetupBracketDojangSeparationToggled value)  dojangSeparationToggled,required TResult Function( SetupBracketThirdPlaceMatchToggled value)  thirdPlaceMatchToggled,required TResult Function( SetupBracketClassificationUpdated value)  classificationUpdated,required TResult Function( SetupBracketGenerationDispatched value)  bracketGenerationDispatched,required TResult Function( SetupBracketGenerationSucceeded value)  bracketGenerationSucceeded,required TResult Function( SetupBracketGenerationFailed value)  bracketGenerationFailed,}){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( SetupBracketParticipantAdded value)  participantAdded,required TResult Function( SetupBracketParticipantsImportedFromCsv value)  participantsImportedFromCsv,required TResult Function( SetupBracketParticipantRemoved value)  participantRemoved,required TResult Function( SetupBracketParticipantsCleared value)  participantsCleared,required TResult Function( SetupBracketParticipantsReordered value)  participantsReordered,required TResult Function( SetupBracketFormatChanged value)  bracketFormatChanged,required TResult Function( SetupBracketDojangSeparationToggled value)  dojangSeparationToggled,required TResult Function( SetupBracketThirdPlaceMatchToggled value)  thirdPlaceMatchToggled,required TResult Function( SetupBracketClassificationUpdated value)  classificationUpdated,required TResult Function( SetupBracketGenerationDispatched value)  bracketGenerationDispatched,required TResult Function( SetupBracketGenerationSucceeded value)  bracketGenerationSucceeded,required TResult Function( SetupBracketGenerationFailed value)  bracketGenerationFailed,required TResult Function( SetupBracketExistingBracketDataImported value)  existingBracketDataImported,}){
 final _that = this;
 switch (_that) {
 case SetupBracketParticipantAdded():
@@ -103,7 +104,8 @@ return thirdPlaceMatchToggled(_that);case SetupBracketClassificationUpdated():
 return classificationUpdated(_that);case SetupBracketGenerationDispatched():
 return bracketGenerationDispatched(_that);case SetupBracketGenerationSucceeded():
 return bracketGenerationSucceeded(_that);case SetupBracketGenerationFailed():
-return bracketGenerationFailed(_that);}
+return bracketGenerationFailed(_that);case SetupBracketExistingBracketDataImported():
+return existingBracketDataImported(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -117,7 +119,7 @@ return bracketGenerationFailed(_that);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( SetupBracketParticipantAdded value)?  participantAdded,TResult? Function( SetupBracketParticipantsImportedFromCsv value)?  participantsImportedFromCsv,TResult? Function( SetupBracketParticipantRemoved value)?  participantRemoved,TResult? Function( SetupBracketParticipantsCleared value)?  participantsCleared,TResult? Function( SetupBracketParticipantsReordered value)?  participantsReordered,TResult? Function( SetupBracketFormatChanged value)?  bracketFormatChanged,TResult? Function( SetupBracketDojangSeparationToggled value)?  dojangSeparationToggled,TResult? Function( SetupBracketThirdPlaceMatchToggled value)?  thirdPlaceMatchToggled,TResult? Function( SetupBracketClassificationUpdated value)?  classificationUpdated,TResult? Function( SetupBracketGenerationDispatched value)?  bracketGenerationDispatched,TResult? Function( SetupBracketGenerationSucceeded value)?  bracketGenerationSucceeded,TResult? Function( SetupBracketGenerationFailed value)?  bracketGenerationFailed,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( SetupBracketParticipantAdded value)?  participantAdded,TResult? Function( SetupBracketParticipantsImportedFromCsv value)?  participantsImportedFromCsv,TResult? Function( SetupBracketParticipantRemoved value)?  participantRemoved,TResult? Function( SetupBracketParticipantsCleared value)?  participantsCleared,TResult? Function( SetupBracketParticipantsReordered value)?  participantsReordered,TResult? Function( SetupBracketFormatChanged value)?  bracketFormatChanged,TResult? Function( SetupBracketDojangSeparationToggled value)?  dojangSeparationToggled,TResult? Function( SetupBracketThirdPlaceMatchToggled value)?  thirdPlaceMatchToggled,TResult? Function( SetupBracketClassificationUpdated value)?  classificationUpdated,TResult? Function( SetupBracketGenerationDispatched value)?  bracketGenerationDispatched,TResult? Function( SetupBracketGenerationSucceeded value)?  bracketGenerationSucceeded,TResult? Function( SetupBracketGenerationFailed value)?  bracketGenerationFailed,TResult? Function( SetupBracketExistingBracketDataImported value)?  existingBracketDataImported,}){
 final _that = this;
 switch (_that) {
 case SetupBracketParticipantAdded() when participantAdded != null:
@@ -132,7 +134,8 @@ return thirdPlaceMatchToggled(_that);case SetupBracketClassificationUpdated() wh
 return classificationUpdated(_that);case SetupBracketGenerationDispatched() when bracketGenerationDispatched != null:
 return bracketGenerationDispatched(_that);case SetupBracketGenerationSucceeded() when bracketGenerationSucceeded != null:
 return bracketGenerationSucceeded(_that);case SetupBracketGenerationFailed() when bracketGenerationFailed != null:
-return bracketGenerationFailed(_that);case _:
+return bracketGenerationFailed(_that);case SetupBracketExistingBracketDataImported() when existingBracketDataImported != null:
+return existingBracketDataImported(_that);case _:
   return null;
 
 }
@@ -149,7 +152,7 @@ return bracketGenerationFailed(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String fullName,  String? registrationId,  String? schoolOrDojangName)?  participantAdded,TResult Function( String csvRawText)?  participantsImportedFromCsv,TResult Function( int rosterIndex)?  participantRemoved,TResult Function()?  participantsCleared,TResult Function( int oldIndex,  int newIndex)?  participantsReordered,TResult Function( BracketFormat newFormat)?  bracketFormatChanged,TResult Function( bool isEnabled)?  dojangSeparationToggled,TResult Function( bool isEnabled)?  thirdPlaceMatchToggled,TResult Function( String ageCategoryLabel,  String genderLabel,  String weightDivisionLabel)?  classificationUpdated,TResult Function( String pendingSnapshotId)?  bracketGenerationDispatched,TResult Function()?  bracketGenerationSucceeded,TResult Function()?  bracketGenerationFailed,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String fullName,  String? registrationId,  String? schoolOrDojangName)?  participantAdded,TResult Function( String csvRawText)?  participantsImportedFromCsv,TResult Function( int rosterIndex)?  participantRemoved,TResult Function()?  participantsCleared,TResult Function( int oldIndex,  int newIndex)?  participantsReordered,TResult Function( BracketFormat newFormat)?  bracketFormatChanged,TResult Function( bool isEnabled)?  dojangSeparationToggled,TResult Function( bool isEnabled)?  thirdPlaceMatchToggled,TResult Function( String ageCategoryLabel,  String genderLabel,  String weightDivisionLabel)?  classificationUpdated,TResult Function( String pendingSnapshotId)?  bracketGenerationDispatched,TResult Function()?  bracketGenerationSucceeded,TResult Function()?  bracketGenerationFailed,TResult Function( BracketSetupSeedData seedData)?  existingBracketDataImported,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case SetupBracketParticipantAdded() when participantAdded != null:
 return participantAdded(_that.fullName,_that.registrationId,_that.schoolOrDojangName);case SetupBracketParticipantsImportedFromCsv() when participantsImportedFromCsv != null:
@@ -163,7 +166,8 @@ return thirdPlaceMatchToggled(_that.isEnabled);case SetupBracketClassificationUp
 return classificationUpdated(_that.ageCategoryLabel,_that.genderLabel,_that.weightDivisionLabel);case SetupBracketGenerationDispatched() when bracketGenerationDispatched != null:
 return bracketGenerationDispatched(_that.pendingSnapshotId);case SetupBracketGenerationSucceeded() when bracketGenerationSucceeded != null:
 return bracketGenerationSucceeded();case SetupBracketGenerationFailed() when bracketGenerationFailed != null:
-return bracketGenerationFailed();case _:
+return bracketGenerationFailed();case SetupBracketExistingBracketDataImported() when existingBracketDataImported != null:
+return existingBracketDataImported(_that.seedData);case _:
   return orElse();
 
 }
@@ -181,7 +185,7 @@ return bracketGenerationFailed();case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String fullName,  String? registrationId,  String? schoolOrDojangName)  participantAdded,required TResult Function( String csvRawText)  participantsImportedFromCsv,required TResult Function( int rosterIndex)  participantRemoved,required TResult Function()  participantsCleared,required TResult Function( int oldIndex,  int newIndex)  participantsReordered,required TResult Function( BracketFormat newFormat)  bracketFormatChanged,required TResult Function( bool isEnabled)  dojangSeparationToggled,required TResult Function( bool isEnabled)  thirdPlaceMatchToggled,required TResult Function( String ageCategoryLabel,  String genderLabel,  String weightDivisionLabel)  classificationUpdated,required TResult Function( String pendingSnapshotId)  bracketGenerationDispatched,required TResult Function()  bracketGenerationSucceeded,required TResult Function()  bracketGenerationFailed,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String fullName,  String? registrationId,  String? schoolOrDojangName)  participantAdded,required TResult Function( String csvRawText)  participantsImportedFromCsv,required TResult Function( int rosterIndex)  participantRemoved,required TResult Function()  participantsCleared,required TResult Function( int oldIndex,  int newIndex)  participantsReordered,required TResult Function( BracketFormat newFormat)  bracketFormatChanged,required TResult Function( bool isEnabled)  dojangSeparationToggled,required TResult Function( bool isEnabled)  thirdPlaceMatchToggled,required TResult Function( String ageCategoryLabel,  String genderLabel,  String weightDivisionLabel)  classificationUpdated,required TResult Function( String pendingSnapshotId)  bracketGenerationDispatched,required TResult Function()  bracketGenerationSucceeded,required TResult Function()  bracketGenerationFailed,required TResult Function( BracketSetupSeedData seedData)  existingBracketDataImported,}) {final _that = this;
 switch (_that) {
 case SetupBracketParticipantAdded():
 return participantAdded(_that.fullName,_that.registrationId,_that.schoolOrDojangName);case SetupBracketParticipantsImportedFromCsv():
@@ -195,7 +199,8 @@ return thirdPlaceMatchToggled(_that.isEnabled);case SetupBracketClassificationUp
 return classificationUpdated(_that.ageCategoryLabel,_that.genderLabel,_that.weightDivisionLabel);case SetupBracketGenerationDispatched():
 return bracketGenerationDispatched(_that.pendingSnapshotId);case SetupBracketGenerationSucceeded():
 return bracketGenerationSucceeded();case SetupBracketGenerationFailed():
-return bracketGenerationFailed();}
+return bracketGenerationFailed();case SetupBracketExistingBracketDataImported():
+return existingBracketDataImported(_that.seedData);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -209,7 +214,7 @@ return bracketGenerationFailed();}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String fullName,  String? registrationId,  String? schoolOrDojangName)?  participantAdded,TResult? Function( String csvRawText)?  participantsImportedFromCsv,TResult? Function( int rosterIndex)?  participantRemoved,TResult? Function()?  participantsCleared,TResult? Function( int oldIndex,  int newIndex)?  participantsReordered,TResult? Function( BracketFormat newFormat)?  bracketFormatChanged,TResult? Function( bool isEnabled)?  dojangSeparationToggled,TResult? Function( bool isEnabled)?  thirdPlaceMatchToggled,TResult? Function( String ageCategoryLabel,  String genderLabel,  String weightDivisionLabel)?  classificationUpdated,TResult? Function( String pendingSnapshotId)?  bracketGenerationDispatched,TResult? Function()?  bracketGenerationSucceeded,TResult? Function()?  bracketGenerationFailed,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String fullName,  String? registrationId,  String? schoolOrDojangName)?  participantAdded,TResult? Function( String csvRawText)?  participantsImportedFromCsv,TResult? Function( int rosterIndex)?  participantRemoved,TResult? Function()?  participantsCleared,TResult? Function( int oldIndex,  int newIndex)?  participantsReordered,TResult? Function( BracketFormat newFormat)?  bracketFormatChanged,TResult? Function( bool isEnabled)?  dojangSeparationToggled,TResult? Function( bool isEnabled)?  thirdPlaceMatchToggled,TResult? Function( String ageCategoryLabel,  String genderLabel,  String weightDivisionLabel)?  classificationUpdated,TResult? Function( String pendingSnapshotId)?  bracketGenerationDispatched,TResult? Function()?  bracketGenerationSucceeded,TResult? Function()?  bracketGenerationFailed,TResult? Function( BracketSetupSeedData seedData)?  existingBracketDataImported,}) {final _that = this;
 switch (_that) {
 case SetupBracketParticipantAdded() when participantAdded != null:
 return participantAdded(_that.fullName,_that.registrationId,_that.schoolOrDojangName);case SetupBracketParticipantsImportedFromCsv() when participantsImportedFromCsv != null:
@@ -223,7 +228,8 @@ return thirdPlaceMatchToggled(_that.isEnabled);case SetupBracketClassificationUp
 return classificationUpdated(_that.ageCategoryLabel,_that.genderLabel,_that.weightDivisionLabel);case SetupBracketGenerationDispatched() when bracketGenerationDispatched != null:
 return bracketGenerationDispatched(_that.pendingSnapshotId);case SetupBracketGenerationSucceeded() when bracketGenerationSucceeded != null:
 return bracketGenerationSucceeded();case SetupBracketGenerationFailed() when bracketGenerationFailed != null:
-return bracketGenerationFailed();case _:
+return bracketGenerationFailed();case SetupBracketExistingBracketDataImported() when existingBracketDataImported != null:
+return existingBracketDataImported(_that.seedData);case _:
   return null;
 
 }
@@ -930,5 +936,80 @@ String toString() {
 
 
 
+
+/// @nodoc
+
+
+class SetupBracketExistingBracketDataImported implements SetupBracketEvent {
+  const SetupBracketExistingBracketDataImported({required this.seedData});
+  
+
+ final  BracketSetupSeedData seedData;
+
+/// Create a copy of SetupBracketEvent
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$SetupBracketExistingBracketDataImportedCopyWith<SetupBracketExistingBracketDataImported> get copyWith => _$SetupBracketExistingBracketDataImportedCopyWithImpl<SetupBracketExistingBracketDataImported>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SetupBracketExistingBracketDataImported&&(identical(other.seedData, seedData) || other.seedData == seedData));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,seedData);
+
+@override
+String toString() {
+  return 'SetupBracketEvent.existingBracketDataImported(seedData: $seedData)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $SetupBracketExistingBracketDataImportedCopyWith<$Res> implements $SetupBracketEventCopyWith<$Res> {
+  factory $SetupBracketExistingBracketDataImportedCopyWith(SetupBracketExistingBracketDataImported value, $Res Function(SetupBracketExistingBracketDataImported) _then) = _$SetupBracketExistingBracketDataImportedCopyWithImpl;
+@useResult
+$Res call({
+ BracketSetupSeedData seedData
+});
+
+
+$BracketSetupSeedDataCopyWith<$Res> get seedData;
+
+}
+/// @nodoc
+class _$SetupBracketExistingBracketDataImportedCopyWithImpl<$Res>
+    implements $SetupBracketExistingBracketDataImportedCopyWith<$Res> {
+  _$SetupBracketExistingBracketDataImportedCopyWithImpl(this._self, this._then);
+
+  final SetupBracketExistingBracketDataImported _self;
+  final $Res Function(SetupBracketExistingBracketDataImported) _then;
+
+/// Create a copy of SetupBracketEvent
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? seedData = null,}) {
+  return _then(SetupBracketExistingBracketDataImported(
+seedData: null == seedData ? _self.seedData : seedData // ignore: cast_nullable_to_non_nullable
+as BracketSetupSeedData,
+  ));
+}
+
+/// Create a copy of SetupBracketEvent
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$BracketSetupSeedDataCopyWith<$Res> get seedData {
+  
+  return $BracketSetupSeedDataCopyWith<$Res>(_self.seedData, (value) {
+    return _then(_self.copyWith(seedData: value));
+  });
+}
+}
 
 // dart format on

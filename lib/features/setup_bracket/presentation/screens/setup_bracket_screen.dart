@@ -6,6 +6,7 @@ import 'package:tkd_saas/core/router/app_routes.dart';
 import 'package:tkd_saas/features/bracket/domain/services/double_elimination_bracket_generator_service.dart';
 import 'package:tkd_saas/features/bracket/domain/services/participant_shuffle_service.dart';
 import 'package:tkd_saas/features/bracket/domain/services/single_elimination_bracket_generator_service.dart';
+import 'package:tkd_saas/features/setup_bracket/domain/entities/bracket_setup_seed_data.dart';
 import 'package:tkd_saas/features/setup_bracket/domain/entities/participant_entity.dart';
 import 'package:tkd_saas/features/setup_bracket/presentation/bloc/setup_bracket_bloc.dart';
 import 'package:tkd_saas/features/tournament/domain/entities/bracket_classification.dart';
@@ -26,10 +27,21 @@ import 'package:uuid/uuid.dart';
 /// The screen itself only holds [TextEditingController]s, which are ephemeral
 /// UI concerns not worth persisting.
 class SetupBracketScreen extends StatefulWidget {
-  const SetupBracketScreen({super.key, required this.tournamentId});
+  const SetupBracketScreen({
+    super.key,
+    required this.tournamentId,
+    this.initialSeedData,
+  });
 
   /// The owning tournament — always required and inherited from the route.
   final String tournamentId;
+
+  /// Optional seed data from the "Copy & Start Over" flow.
+  ///
+  /// When non-null, the setup form is pre-populated with participants,
+  /// format, classification, and config from an existing bracket.
+  /// Passed through [GoRouterState.extra] by [BracketViewerScreen].
+  final BracketSetupSeedData? initialSeedData;
 
   @override
   State<SetupBracketScreen> createState() => _SetupBracketScreenState();
@@ -58,17 +70,38 @@ class _SetupBracketScreenState extends State<SetupBracketScreen> {
   void initState() {
     super.initState();
     _setupBracketBloc = context.read<SetupBracketBloc>();
-    // Seed controllers from persisted bloc state so they show restored values.
-    final persistedState = _setupBracketBloc.state;
-    _bracketAgeCategoryController = TextEditingController(
-      text: persistedState.bracketAgeCategoryLabel,
-    );
-    _bracketGenderController = TextEditingController(
-      text: persistedState.bracketGenderLabel,
-    );
-    _bracketWeightDivisionController = TextEditingController(
-      text: persistedState.bracketWeightDivisionLabel,
-    );
+
+    final seedData = widget.initialSeedData;
+    if (seedData != null) {
+      // "Copy & Start Over" flow — import seed data into the bloc,
+      // which overwrites the hydrated state and persists the new values.
+      _setupBracketBloc.add(
+        SetupBracketEvent.existingBracketDataImported(seedData: seedData),
+      );
+      // Initialize controllers directly from seed data (not stale
+      // persisted state) to avoid a flash of wrong values on the first frame.
+      _bracketAgeCategoryController = TextEditingController(
+        text: seedData.bracketAgeCategoryLabel,
+      );
+      _bracketGenderController = TextEditingController(
+        text: seedData.bracketGenderLabel,
+      );
+      _bracketWeightDivisionController = TextEditingController(
+        text: seedData.bracketWeightDivisionLabel,
+      );
+    } else {
+      // Normal flow — seed controllers from HydratedBloc persisted state.
+      final persistedState = _setupBracketBloc.state;
+      _bracketAgeCategoryController = TextEditingController(
+        text: persistedState.bracketAgeCategoryLabel,
+      );
+      _bracketGenderController = TextEditingController(
+        text: persistedState.bracketGenderLabel,
+      );
+      _bracketWeightDivisionController = TextEditingController(
+        text: persistedState.bracketWeightDivisionLabel,
+      );
+    }
   }
 
   @override

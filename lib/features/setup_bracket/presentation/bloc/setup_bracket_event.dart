@@ -1,5 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:tkd_saas/features/bracket/domain/entities/bracket_format.dart';
+import 'package:tkd_saas/features/setup_bracket/domain/entities/bracket_setup_seed_data.dart';
 
 part 'setup_bracket_event.freezed.dart';
 
@@ -58,4 +59,14 @@ sealed class SetupBracketEvent with _$SetupBracketEvent {
   /// Clear the pending snapshot reference when generation aborted or failed.
   const factory SetupBracketEvent.bracketGenerationFailed() =
       SetupBracketGenerationFailed;
+
+  /// Pre-populates the setup form with data from an existing bracket.
+  ///
+  /// Used by the "Copy & Start Over" flow from [BracketViewerScreen].
+  /// The handler assigns fresh UUIDs to all participants and resequences
+  /// seed numbers to avoid referential identity collision with the
+  /// co-existing original bracket.
+  const factory SetupBracketEvent.existingBracketDataImported({
+    required BracketSetupSeedData seedData,
+  }) = SetupBracketExistingBracketDataImported;
 }

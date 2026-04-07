@@ -41,6 +41,9 @@ class SetupBracketBloc
     on<SetupBracketGenerationDispatched>(_onGenerationDispatched);
     on<SetupBracketGenerationSucceeded>(_onGenerationSucceeded);
     on<SetupBracketGenerationFailed>(_onGenerationFailed);
+    on<SetupBracketExistingBracketDataImported>(
+      _onExistingBracketDataImported,
+    );
   }
 
   final Uuid _uuid;
@@ -275,6 +278,44 @@ class SetupBracketBloc
   ) {
     emit(
       state.copyWith(
+        isAwaitingBracketGeneration: false,
+        pendingSnapshotId: null,
+      ),
+    );
+  }
+
+  /// Handles the "Copy & Start Over" flow by pre-populating the setup form
+  /// with data extracted from an existing bracket.
+  ///
+  /// Assigns fresh UUIDs to all imported participants to prevent referential
+  /// identity collision with the co-existing original bracket. Preserves
+  /// participant names, dojang/school names, and registration IDs exactly.
+  void _onExistingBracketDataImported(
+    SetupBracketExistingBracketDataImported event,
+    Emitter<SetupBracketState> emit,
+  ) {
+    final seedData = event.seedData;
+
+    // Assign fresh UUIDs and resequence seed numbers.
+    // Preserves: fullName, genderId, schoolOrDojangName, beltRank, registrationId.
+    final importedParticipants = <ParticipantEntity>[
+      for (var index = 0; index < seedData.participants.length; index++)
+        seedData.participants[index].copyWith(
+          id: _uuid.v4(),
+          seedNumber: index + 1,
+        ),
+    ];
+
+    emit(
+      state.copyWith(
+        participants: importedParticipants,
+        selectedBracketFormat: seedData.selectedBracketFormat,
+        isDojangSeparationEnabled: seedData.isDojangSeparationEnabled,
+        isThirdPlaceMatchIncluded: seedData.isThirdPlaceMatchIncluded,
+        bracketAgeCategoryLabel: seedData.bracketAgeCategoryLabel,
+        bracketGenderLabel: seedData.bracketGenderLabel,
+        bracketWeightDivisionLabel: seedData.bracketWeightDivisionLabel,
+        // Reset any generation-in-progress flags from previous sessions.
         isAwaitingBracketGeneration: false,
         pendingSnapshotId: null,
       ),

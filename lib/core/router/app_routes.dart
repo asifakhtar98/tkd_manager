@@ -13,6 +13,7 @@ import 'package:tkd_saas/features/bracket/presentation/screens/bracket_viewer_sc
 import 'package:tkd_saas/features/dashboard/presentation/screens/dashboard_screen.dart';
 import 'package:tkd_saas/features/setup_bracket/presentation/bloc/setup_bracket_bloc.dart';
 import 'package:tkd_saas/features/setup_bracket/presentation/screens/setup_bracket_screen.dart';
+import 'package:tkd_saas/features/setup_bracket/domain/entities/bracket_setup_seed_data.dart';
 import 'package:tkd_saas/features/tournament/domain/entities/bracket_snapshot.dart';
 import 'package:tkd_saas/features/tournament/domain/entities/tournament_entity.dart';
 import 'package:tkd_saas/features/tournament/presentation/bloc/tournament_bloc.dart';
@@ -188,11 +189,23 @@ class BracketSetupRoute extends GoRouteData with $BracketSetupRoute {
   final String tournamentId;
 
   @override
-  Widget build(BuildContext context, GoRouterState state) =>
-      BlocProvider<SetupBracketBloc>(
-        create: (_) => getIt<SetupBracketBloc>(param1: tournamentId),
-        child: SetupBracketScreen(tournamentId: tournamentId),
-      );
+  Widget build(BuildContext context, GoRouterState state) {
+    // Extract optional seed data from `GoRouterState.extra` for the
+    // "Copy & Start Over" flow. Normal navigation (typed route) passes
+    // no extra, so this is null in the standard setup path.
+    final BracketSetupSeedData? initialSeedData =
+        state.extra is BracketSetupSeedData
+            ? state.extra as BracketSetupSeedData
+            : null;
+
+    return BlocProvider<SetupBracketBloc>(
+      create: (_) => getIt<SetupBracketBloc>(param1: tournamentId),
+      child: SetupBracketScreen(
+        tournamentId: tournamentId,
+        initialSeedData: initialSeedData,
+      ),
+    );
+  }
 }
 
 @immutable

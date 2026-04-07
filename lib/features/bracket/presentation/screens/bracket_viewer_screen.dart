@@ -32,10 +32,12 @@ import 'package:tkd_saas/features/bracket/presentation/widgets/score_entry_dialo
 import 'package:tkd_saas/features/bracket/presentation/widgets/tie_sheet_theme_editor_panel.dart';
 import 'package:tkd_saas/features/bracket/domain/entities/bracket_format.dart';
 import 'package:tkd_saas/core/router/app_routes.dart' hide BracketFormat;
+import 'package:tkd_saas/features/setup_bracket/domain/entities/bracket_setup_seed_data.dart';
 import 'package:tkd_saas/features/setup_bracket/domain/entities/participant_entity.dart';
 import 'package:tkd_saas/features/tournament/domain/entities/bracket_classification.dart';
 import 'package:tkd_saas/features/tournament/domain/entities/bracket_snapshot.dart';
 import 'package:tkd_saas/features/tournament/domain/entities/tournament_entity.dart';
+import 'package:go_router/go_router.dart';
 
 /// Bracket viewer — now URL-driven via `/tournaments/:tId/brackets/:sId`.
 ///
@@ -414,6 +416,67 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
     TournamentDetailRoute(tournamentId: widget.tournament.id).go(context);
   }
 
+  /// Handles the "Copy & Start Over" action by building seed data from the
+  /// current bracket snapshot and navigating to the setup screen.
+  ///
+  /// Filters BYE participants since they are structural entries added by the
+  /// bracket generator, not real participants entered by the user.
+  void _handleCopyAndStartOverRequested(
+    BuildContext context,
+    List<ParticipantEntity> currentParticipants,
+  ) async {
+    final realParticipants = currentParticipants
+        .where((participant) => !participant.isBye)
+        .toList();
+
+    final participantCountLabel = realParticipants.length == 1
+        ? '1 participant'
+        : '${realParticipants.length} participants';
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Copy & Start Over?'),
+        content: Text(
+          'This will open a new bracket setup pre-populated with '
+          '$participantCountLabel from this bracket.\n\n'
+          'Your current bracket will not be deleted.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton.icon(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            icon: const Icon(Icons.content_copy, size: 18),
+            label: const Text('Copy & Start Over'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true || !context.mounted) return;
+
+    final snapshot = widget.snapshot;
+    final seedData = BracketSetupSeedData(
+      participants: realParticipants,
+      selectedBracketFormat: snapshot.format,
+      isDojangSeparationEnabled: snapshot.dojangSeparation,
+      isThirdPlaceMatchIncluded: snapshot.includeThirdPlaceMatch,
+      bracketAgeCategoryLabel: snapshot.classification.ageCategoryLabel,
+      bracketGenderLabel: snapshot.classification.genderLabel,
+      bracketWeightDivisionLabel: snapshot.classification.weightDivisionLabel,
+    );
+
+    // Use raw context.go() instead of typed route because
+    // TypedGoRoute.go() does not support passing `extra` data.
+    context.go(
+      RoutePaths.bracketSetup(widget.tournament.id),
+      extra: seedData,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocListener<BracketThemePresetBloc, BracketThemePresetState>(
@@ -727,6 +790,16 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
                   ),
 
                   const SizedBox(width: 8),
+
+                  TextButton.icon(
+                    style: actionButtonStyle,
+                    onPressed: () => _handleCopyAndStartOverRequested(
+                      context,
+                      participants,
+                    ),
+                    icon: const Icon(Icons.content_copy, size: 18),
+                    label: const Text('Copy & Start Over'),
+                  ),
 
                   TextButton.icon(
                     style: actionButtonStyle,
