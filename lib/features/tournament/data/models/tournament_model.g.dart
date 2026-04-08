@@ -17,10 +17,10 @@ _TournamentModel _$TournamentModelFromJson(
   organizer: json['organizer'] as String? ?? '',
   rightLogoUrl:
       json['right_logo_url'] as String? ??
-      'https://lldlunqzkltclpfzpjxh.supabase.co/storage/v1/object/public/assets/India_Taekwondo_logo_5346.png',
+      'https://lldlunqzkltclpfzpjxh.supabase.co/storage/v1/object/public/assets/logo_placeholder_4536.png',
   leftLogoUrl:
       json['left_logo_url'] as String? ??
-      'https://lldlunqzkltclpfzpjxh.supabase.co/storage/v1/object/public/assets/World_Taekwondo+logo_356345.png',
+      'https://lldlunqzkltclpfzpjxh.supabase.co/storage/v1/object/public/assets/logo_placeholder_4536.png',
   createdAt: DateTime.parse(json['created_at'] as String),
   updatedAt: DateTime.parse(json['updated_at'] as String),
 );

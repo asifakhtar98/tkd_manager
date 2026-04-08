@@ -22,5 +22,5 @@ abstract final class AppConfig {
 
   /// Background image URL for auth screens.
   static const String authBackgroundImage =
-      'https://lldlunqzkltclpfzpjxh.supabase.co/storage/v1/object/public/assets/tkd_bw_534.jpg';
+      'https://lldlunqzkltclpfzpjxh.supabase.co/storage/v1/object/public/assets/tkd-bg-4234.jpg';
 }

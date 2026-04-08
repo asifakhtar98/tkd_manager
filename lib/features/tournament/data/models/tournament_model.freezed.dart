@@ -218,7 +218,7 @@ return $default(_that.id,_that.userId,_that.name,_that.dateRange,_that.venue,_th
 
 @JsonSerializable(explicitToJson: true, fieldRename: FieldRename.snake)
 class _TournamentModel extends TournamentModel {
-  const _TournamentModel({required this.id, required this.userId, required this.name, this.dateRange = '', this.venue = '', this.organizer = '', this.rightLogoUrl = 'https://lldlunqzkltclpfzpjxh.supabase.co/storage/v1/object/public/assets/India_Taekwondo_logo_5346.png', this.leftLogoUrl = 'https://lldlunqzkltclpfzpjxh.supabase.co/storage/v1/object/public/assets/World_Taekwondo+logo_356345.png', required this.createdAt, required this.updatedAt}): super._();
+  const _TournamentModel({required this.id, required this.userId, required this.name, this.dateRange = '', this.venue = '', this.organizer = '', this.rightLogoUrl = 'https://lldlunqzkltclpfzpjxh.supabase.co/storage/v1/object/public/assets/logo_placeholder_4536.png', this.leftLogoUrl = 'https://lldlunqzkltclpfzpjxh.supabase.co/storage/v1/object/public/assets/logo_placeholder_4536.png', required this.createdAt, required this.updatedAt}): super._();
   factory _TournamentModel.fromJson(Map<String, dynamic> json) => _$TournamentModelFromJson(json);
 
 @override final  String id;

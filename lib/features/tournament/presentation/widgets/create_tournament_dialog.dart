@@ -11,9 +11,9 @@ import 'package:uuid/uuid.dart';
 /// Default Supabase-hosted logo URLs used when creating new tournaments.
 abstract final class TournamentLogoDefaults {
   static const String rightLogoUrl =
-      'https://lldlunqzkltclpfzpjxh.supabase.co/storage/v1/object/public/assets/India_Taekwondo_logo_5346.png';
+      'https://lldlunqzkltclpfzpjxh.supabase.co/storage/v1/object/public/assets/logo_placeholder_4536.png';
   static const String leftLogoUrl =
-      'https://lldlunqzkltclpfzpjxh.supabase.co/storage/v1/object/public/assets/World_Taekwondo+logo_356345.png';
+      'https://lldlunqzkltclpfzpjxh.supabase.co/storage/v1/object/public/assets/logo_placeholder_4536.png';
 
   /// Returns `true` if the given [url] is a base64 data URI.
   static bool isDataUri(String url) => url.startsWith('data:');

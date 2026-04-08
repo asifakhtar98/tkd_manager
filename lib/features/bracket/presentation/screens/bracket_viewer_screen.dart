@@ -90,31 +90,60 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
 
   bool get _isExportingPdf => _pdfExportProgress != null;
 
-  /// Whether any background processing is in progress.
+  // ── Background Task Tracking ──────────────────────────────────
+
+  /// Active background task labels. When non-empty, the bottom app bar
+  /// shows a circular indicator alongside the most recently added label.
   ///
-  /// Drives the generic circular indicator in the bottom app bar.
-  /// Currently reflects the PDF regeneration debounce pending state;
-  /// extend this getter to include other async operations as needed.
-  bool get _isBackgroundProcessing =>
-      _pdfRegenerationOrchestrator.isRegenerationPending;
+  /// Designed for multiple concurrent tasks. Each task is identified by
+  /// a unique string key. The displayed label is the last entry.
+  final Set<String> _activeBackgroundTasks = {};
+
+  /// Whether any background task is currently active.
+  bool get _isBackgroundProcessing => _activeBackgroundTasks.isNotEmpty;
+
+  /// The label to show beside the spinner. Uses the most recently added
+  /// task so the label reflects what just started.
+  String get _backgroundProcessingLabel =>
+      _activeBackgroundTasks.lastOrNull ?? '';
+
+  /// Marks a background task as active and refreshes the UI.
+  void _beginBackgroundTask(String label) {
+    _activeBackgroundTasks.add(label);
+    if (mounted) setState(() {});
+  }
+
+  /// Marks a background task as completed and refreshes the UI.
+  void _endBackgroundTask(String label) {
+    _activeBackgroundTasks.remove(label);
+    if (mounted) setState(() {});
+  }
+
+  // Background task label constants.
+  static const String _taskLabelLoadingLogos = 'Loading logos…';
+  static const String _taskLabelRegeneratingPdf = 'Rendering…';
+  static const String _taskLabelSaving = 'Saving…';
+  static const String _taskLabelGenerating = 'Generating…';
 
   @override
   void initState() {
     super.initState();
     _pdfRegenerationOrchestrator = BracketPdfRegenerationOrchestrator(
-      debounceDuration: const Duration(milliseconds: 3000),
-      onPdfGenerationCompleted: _handlePdfGenerationCompleted,
-      onRegenerationScheduled: _handlePdfGenerationCompleted,
+      debounceDuration: const Duration(milliseconds: 2000),
+      onPdfGenerationCompleted: _handlePdfRegenerationCompleted,
+      onRegenerationScheduled: _handlePdfRegenerationScheduled,
     );
     _loadTournamentLogoImages();
   }
 
-  /// Callback invoked by the orchestrator after each generation attempt.
-  /// Triggers a `setState` to refresh the UI with updated cached PDF
-  /// bytes, layout result, or error.
-  void _handlePdfGenerationCompleted() {
-    if (!mounted) return;
-    setState(() {});
+  /// Called when the orchestrator starts a debounce timer.
+  void _handlePdfRegenerationScheduled() {
+    _beginBackgroundTask(_taskLabelRegeneratingPdf);
+  }
+
+  /// Called when the orchestrator finishes generating (success or error).
+  void _handlePdfRegenerationCompleted() {
+    _endBackgroundTask(_taskLabelRegeneratingPdf);
   }
 
   TieSheetThemeConfig _resolveThemeConfigFromSelection(
@@ -184,6 +213,8 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
   /// Called once on first build. Triggers a PDF regeneration when both logos
   /// have been resolved (even if they fail — missing logos are acceptable).
   Future<void> _loadTournamentLogoImages() async {
+    _beginBackgroundTask(_taskLabelLoadingLogos);
+
     final results = await Future.wait([
       _loadImageBytesAndAspectRatioFromUrl(widget.tournament.leftLogoUrl),
       _loadImageBytesAndAspectRatioFromUrl(widget.tournament.rightLogoUrl),
@@ -200,6 +231,8 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
       _rightLogoImageBytes = rightResult?.imageBytes;
       _rightLogoAspectRatio = rightResult?.aspectRatio ?? 1.0;
     });
+
+    _endBackgroundTask(_taskLabelLoadingLogos);
 
     // Regenerate PDF now that logos are available.
     _executeImmediateRegenerationFromCurrentState();
@@ -474,25 +507,41 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
       },
       child: BlocConsumer<BracketBloc, BracketState>(
         listenWhen: (prev, current) {
-          if (current is! BracketLoadSuccess) return false;
+          if (current is! BracketLoadSuccess) {
+            // Track when we enter BracketGenerating state.
+            if (current is BracketGenerating && prev is! BracketGenerating) {
+              return true;
+            }
+            return false;
+          }
           if (prev is! BracketLoadSuccess) return true;
 
           final hasNewErrorMessage =
               current.errorMessage != null &&
               current.errorMessage != prev.errorMessage;
 
-          final saveJustCompleted = prev.isSaving && !current.isSaving;
+          final hasSavingStateChanged =
+              prev.isSaving != current.isSaving;
 
           final hasBracketDataChanged =
               current.result != prev.result ||
               current.participants != prev.participants;
 
           return hasNewErrorMessage ||
-              saveJustCompleted ||
+              hasSavingStateChanged ||
               hasBracketDataChanged;
         },
         listener: (context, state) {
+          // ── Track bracket generation ──
+          if (state is BracketGenerating) {
+            _beginBackgroundTask(_taskLabelGenerating);
+            return;
+          }
+
           if (state is! BracketLoadSuccess) return;
+
+          // Generation just completed (BracketGenerating → LoadSuccess).
+          _endBackgroundTask(_taskLabelGenerating);
 
           if (!state.isSaving && state.lastSaveTimestamp != null) {
             if (state.saveError != null) {
@@ -504,6 +553,13 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
                 ),
               );
             }
+          }
+
+          // ── Track auto-save state via isSaving flag ──
+          if (state.isSaving) {
+            _beginBackgroundTask(_taskLabelSaving);
+          } else {
+            _endBackgroundTask(_taskLabelSaving);
           }
 
           if (state.errorMessage != null) {
@@ -522,7 +578,15 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
         },
         builder: (context, state) {
           return switch (state) {
-            BracketInitial() || BracketGenerating() => Scaffold(
+            BracketInitial() => Scaffold(
+              appBar: AppBar(
+                title: Text(
+                  '${_bracketFormat.displayLabel} — ${widget.snapshot.participantCount} Players',
+                ),
+              ),
+              body: const Center(child: CircularProgressIndicator()),
+            ),
+            BracketGenerating() => Scaffold(
               appBar: AppBar(
                 title: Text(
                   '${_bracketFormat.displayLabel} — ${widget.snapshot.participantCount} Players',
@@ -718,18 +782,25 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   // ── Background Processing Indicator ──
-                  if (_isBackgroundProcessing)
-                    const Padding(
-                      padding: EdgeInsets.only(right: 4),
-                      child: SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white54,
-                        ),
+                  if (_isBackgroundProcessing) ...[
+                    const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white54,
                       ),
                     ),
+                    const SizedBox(width: 6),
+                    Text(
+                      _backgroundProcessingLabel,
+                      style: const TextStyle(
+                        color: Colors.white54,
+                        fontSize: 11,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                  ],
 
                   // ── Zoom Slider ──
                   _buildZoomSlider(),

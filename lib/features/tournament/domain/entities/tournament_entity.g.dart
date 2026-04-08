@@ -17,10 +17,10 @@ _TournamentEntity _$TournamentEntityFromJson(
   organizer: json['organizer'] as String? ?? '',
   rightLogoUrl:
       json['rightLogoUrl'] as String? ??
-      'https://lldlunqzkltclpfzpjxh.supabase.co/storage/v1/object/public/assets/India_Taekwondo_logo_5346.png',
+      'https://lldlunqzkltclpfzpjxh.supabase.co/storage/v1/object/public/assets/logo_placeholder_4536.png',
   leftLogoUrl:
       json['leftLogoUrl'] as String? ??
-      'https://lldlunqzkltclpfzpjxh.supabase.co/storage/v1/object/public/assets/World_Taekwondo+logo_356345.png',
+      'https://lldlunqzkltclpfzpjxh.supabase.co/storage/v1/object/public/assets/logo_placeholder_4536.png',
   createdAt: DateTime.parse(json['createdAt'] as String),
   updatedAt: DateTime.parse(json['updatedAt'] as String),
 );
