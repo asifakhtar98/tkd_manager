@@ -29,24 +29,24 @@
     {
       "label": "Flutter: Build Web (SAAS)",
       "type": "shell",
-      "command": "flutter build web --release && rm -rf build/web/saas && mkdir -p build/web/saas && cp -r build/web/* build/web/saas/",
+      "command": "rm -rf build/web/saas && flutter build web --release -o build/web/saas",
       "options": {
         "cwd": "${workspaceFolder}"
       },
       "problemMatcher": [],
       "group": "build",
-      "detail": "Builds standard Flutter web and moves to build/web/saas"
+      "detail": "Builds standard Flutter web directly to build/web/saas"
     },
     {
       "label": "Flutter: Build Web (WASM)",
       "type": "shell",
-      "command": "flutter build web --wasm --release && rm -rf build/web/wasm && mkdir -p build/web/wasm && cp -r build/web/* build/web/wasm/",
+      "command": "rm -rf build/web/wasm && flutter build web --wasm --release -o build/web/wasm",
       "options": {
         "cwd": "${workspaceFolder}"
       },
       "problemMatcher": [],
       "group": "build",
-      "detail": "Builds WASM Flutter web and moves to build/web/wasm"
+      "detail": "Builds WASM Flutter web directly to build/web/wasm"
     },
     {
       "label": "Flutter: Generate Code",
