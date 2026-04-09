@@ -171,15 +171,15 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
             children: [
               Expanded(
                 child: Tooltip(
-                  message: 'Revert all tokens to the default screen preset',
+                  message: 'Revert all tokens to the Colourful preset',
                   child: OutlinedButton.icon(
                     onPressed: () => _confirmAndResetToPreset(
                       context,
-                      presetName: 'Screen',
-                      presetConfig: TieSheetThemeConfig.defaultPreset,
+                      presetName: 'Colourful',
+                      presetConfig: TieSheetThemeConfig.colourfulPreset,
                     ),
                     icon: const Icon(Icons.visibility, size: 14),
-                    label: const Text('Screen', style: TextStyle(fontSize: 12)),
+                    label: const Text('Colourful', style: TextStyle(fontSize: 12)),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 6),
                       visualDensity: VisualDensity.compact,
@@ -191,15 +191,15 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
               Expanded(
                 child: Tooltip(
                   message:
-                      'Revert all tokens to the high-contrast print preset',
+                      'Revert all tokens to the High Contrast preset',
                   child: OutlinedButton.icon(
                     onPressed: () => _confirmAndResetToPreset(
                       context,
-                      presetName: 'Print',
-                      presetConfig: TieSheetThemeConfig.printPreset,
+                      presetName: 'High Contrast',
+                      presetConfig: TieSheetThemeConfig.highContrastPreset,
                     ),
                     icon: const Icon(Icons.print, size: 14),
-                    label: const Text('Print', style: TextStyle(fontSize: 12)),
+                    label: const Text('High Contrast', style: TextStyle(fontSize: 12)),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 6),
                       visualDensity: VisualDensity.compact,
@@ -567,6 +567,46 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
             currentThemeConfig.copyWith(headerBannerTextColor: color),
           ),
         ),
+        _SliderTile(
+          label: 'Title Top Padding',
+          value: currentThemeConfig.headerTitleTopPadding,
+          min: 0,
+          max: 40,
+          divisions: 80,
+          onChanged: (value) => onThemeConfigChanged(
+            currentThemeConfig.copyWith(headerTitleTopPadding: value),
+          ),
+        ),
+        _SliderTile(
+          label: 'Subtitle Top Offset',
+          value: currentThemeConfig.headerSubtitleTopOffset,
+          min: 10,
+          max: 80,
+          divisions: 140,
+          onChanged: (value) => onThemeConfigChanged(
+            currentThemeConfig.copyWith(headerSubtitleTopOffset: value),
+          ),
+        ),
+        _SliderTile(
+          label: 'Organizer Top Offset',
+          value: currentThemeConfig.headerOrganizerTopOffset,
+          min: 20,
+          max: 100,
+          divisions: 160,
+          onChanged: (value) => onThemeConfigChanged(
+            currentThemeConfig.copyWith(headerOrganizerTopOffset: value),
+          ),
+        ),
+        _SliderTile(
+          label: 'Banner Bottom Gap',
+          value: currentThemeConfig.headerBannerBottomGap,
+          min: 0,
+          max: 40,
+          divisions: 80,
+          onChanged: (value) => onThemeConfigChanged(
+            currentThemeConfig.copyWith(headerBannerBottomGap: value),
+          ),
+        ),
       ],
     );
   }
@@ -829,6 +869,66 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
             currentThemeConfig.copyWith(logoPadding: value),
           ),
         ),
+        _SliderTile(
+          label: 'Header to Table Gap',
+          value: currentThemeConfig.headerToTableGap,
+          min: 0,
+          max: 40,
+          divisions: 80,
+          onChanged: (value) => onThemeConfigChanged(
+            currentThemeConfig.copyWith(headerToTableGap: value),
+          ),
+        ),
+        _SliderTile(
+          label: 'Section Label to Table Gap',
+          value: currentThemeConfig.sectionLabelToTableGap,
+          min: 0,
+          max: 30,
+          divisions: 60,
+          onChanged: (value) => onThemeConfigChanged(
+            currentThemeConfig.copyWith(sectionLabelToTableGap: value),
+          ),
+        ),
+        _SliderTile(
+          label: 'DE Bracket-to-Medal Gap',
+          value: currentThemeConfig.deCanvasBracketToMedalGap,
+          min: 0,
+          max: 200,
+          divisions: 100,
+          onChanged: (value) => onThemeConfigChanged(
+            currentThemeConfig.copyWith(deCanvasBracketToMedalGap: value),
+          ),
+        ),
+        _SliderTile(
+          label: 'Medal Table Top Padding',
+          value: currentThemeConfig.medalTableTopPadding,
+          min: 0,
+          max: 40,
+          divisions: 80,
+          onChanged: (value) => onThemeConfigChanged(
+            currentThemeConfig.copyWith(medalTableTopPadding: value),
+          ),
+        ),
+        _SliderTile(
+          label: 'DE Extra Width Padding',
+          value: currentThemeConfig.deCanvasExtraWidthPadding,
+          min: 0,
+          max: 300,
+          divisions: 150,
+          onChanged: (value) => onThemeConfigChanged(
+            currentThemeConfig.copyWith(deCanvasExtraWidthPadding: value),
+          ),
+        ),
+        _SliderTile(
+          label: 'Classification Divider Inset',
+          value: currentThemeConfig.classificationDividerInset,
+          min: 0,
+          max: 20,
+          divisions: 40,
+          onChanged: (value) => onThemeConfigChanged(
+            currentThemeConfig.copyWith(classificationDividerInset: value),
+          ),
+        ),
       ],
     );
   }
@@ -931,6 +1031,46 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
           divisions: 100,
           onChanged: (value) => onThemeConfigChanged(
             currentThemeConfig.copyWith(subHeaderLetterSpacing: value),
+          ),
+        ),
+        _SliderTile(
+          label: 'Title Base Font Size',
+          value: currentThemeConfig.headerTitleBaseFontSize,
+          min: 8,
+          max: 36,
+          divisions: 56,
+          onChanged: (value) => onThemeConfigChanged(
+            currentThemeConfig.copyWith(headerTitleBaseFontSize: value),
+          ),
+        ),
+        _SliderTile(
+          label: 'Subtitle Base Font Size',
+          value: currentThemeConfig.headerSubtitleBaseFontSize,
+          min: 6,
+          max: 24,
+          divisions: 36,
+          onChanged: (value) => onThemeConfigChanged(
+            currentThemeConfig.copyWith(headerSubtitleBaseFontSize: value),
+          ),
+        ),
+        _SliderTile(
+          label: 'Organizer Base Font Size',
+          value: currentThemeConfig.headerOrganizerBaseFontSize,
+          min: 6,
+          max: 24,
+          divisions: 36,
+          onChanged: (value) => onThemeConfigChanged(
+            currentThemeConfig.copyWith(headerOrganizerBaseFontSize: value),
+          ),
+        ),
+        _SliderTile(
+          label: 'Match Pill Base Font Size',
+          value: currentThemeConfig.matchPillBaseFontSize,
+          min: 6,
+          max: 24,
+          divisions: 36,
+          onChanged: (value) => onThemeConfigChanged(
+            currentThemeConfig.copyWith(matchPillBaseFontSize: value),
           ),
         ),
       ],

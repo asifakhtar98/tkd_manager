@@ -6,8 +6,8 @@ import 'package:tkd_saas/features/bracket/presentation/widgets/tie_sheet_theme_c
 void main() {
   group('TieSheetThemeMode', () {
     test('has correct labels', () {
-      expect(TieSheetThemeMode.defaultMode.label, 'Screen');
-      expect(TieSheetThemeMode.printMode.label, 'Print');
+      expect(TieSheetThemeMode.colourful.label, 'Colourful');
+      expect(TieSheetThemeMode.highContrast.label, 'High Contrast');
       expect(TieSheetThemeMode.customMode.label, 'Custom');
     });
 
@@ -17,8 +17,8 @@ void main() {
   });
 
   group('TieSheetThemeConfig', () {
-    group('defaultMode preset', () {
-      const config = TieSheetThemeConfig.defaultPreset;
+    group('colourful preset', () {
+      const config = TieSheetThemeConfig.colourfulPreset;
 
       test('mutedColor matches original slate', () {
         expect(config.mutedColor, const Color(0xFF64748B));
@@ -175,8 +175,8 @@ void main() {
       });
     });
 
-    group('printMode preset', () {
-      const config = TieSheetThemeConfig.printPreset;
+    group('highContrast preset', () {
+      const config = TieSheetThemeConfig.highContrastPreset;
 
       // ── All connectors are black ──
       test('mutedColor is black', () {
@@ -193,14 +193,14 @@ void main() {
       test('borderColor is black', () {
         expect(config.borderColor, const Color(0xFF000000));
       });
-      test('connectorStrokeWidth is uniform 3.0', () {
-        expect(config.connectorStrokeWidth, 3.0);
+      test('connectorStrokeWidth is uniform 4.0', () {
+        expect(config.connectorStrokeWidth, 4.0);
       });
       test('isInteractivityDisabled is true', () {
         expect(config.isInteractivityDisabled, isTrue);
       });
-      test('fontSizeDelta adds 8px in print mode', () {
-        expect(config.fontSizeDelta, 8.0);
+      test('fontSizeDelta adds 5.5px in high contrast mode', () {
+        expect(config.fontSizeDelta, 5.5);
       });
 
       // ── Text — all black + bold ──
@@ -275,7 +275,7 @@ void main() {
         expect(config.canvasMargin, 36.0);
       });
       test('logoRowHeight is derived from components', () {
-        expect(config.logoRowHeight, 84.0);
+        expect(config.logoRowHeight, config.logoMaxHeight + config.logoPadding * 2);
       });
 
       // ── Typography tokens (same as default) ──
@@ -297,45 +297,45 @@ void main() {
     });
 
     group('fromMode factory', () {
-      test('defaultMode returns defaultMode preset', () {
+      test('colourful returns colourful preset', () {
         final config = TieSheetThemeConfig.fromMode(
-          TieSheetThemeMode.defaultMode,
+          TieSheetThemeMode.colourful,
         );
-        expect(config, TieSheetThemeConfig.defaultPreset);
+        expect(config, TieSheetThemeConfig.colourfulPreset);
       });
 
-      test('printMode returns printMode preset', () {
+      test('highContrast returns highContrast preset', () {
         final config = TieSheetThemeConfig.fromMode(
-          TieSheetThemeMode.printMode,
+          TieSheetThemeMode.highContrast,
         );
-        expect(config, TieSheetThemeConfig.printPreset);
+        expect(config, TieSheetThemeConfig.highContrastPreset);
       });
 
-      test('customMode returns defaultMode as starting base', () {
+      test('customMode returns colourful as starting base', () {
         final config = TieSheetThemeConfig.fromMode(
           TieSheetThemeMode.customMode,
         );
-        expect(config, TieSheetThemeConfig.defaultPreset);
+        expect(config, TieSheetThemeConfig.colourfulPreset);
       });
     });
 
     group('equality', () {
       test('identical presets are equal', () {
-        const configA = TieSheetThemeConfig.defaultPreset;
-        const configB = TieSheetThemeConfig.defaultPreset;
+        const configA = TieSheetThemeConfig.colourfulPreset;
+        const configB = TieSheetThemeConfig.colourfulPreset;
         expect(configA, equals(configB));
         expect(configA.hashCode, configB.hashCode);
       });
 
       test('different presets are not equal', () {
-        const defaultConfig = TieSheetThemeConfig.defaultPreset;
-        const printConfig = TieSheetThemeConfig.printPreset;
-        expect(defaultConfig, isNot(equals(printConfig)));
-        expect(defaultConfig.hashCode, isNot(equals(printConfig.hashCode)));
+        const colourfulConfig = TieSheetThemeConfig.colourfulPreset;
+        const highContrastConfig = TieSheetThemeConfig.highContrastPreset;
+        expect(colourfulConfig, isNot(equals(highContrastConfig)));
+        expect(colourfulConfig.hashCode, isNot(equals(highContrastConfig.hashCode)));
       });
 
       test('custom config with same values as preset is equal', () {
-        const preset = TieSheetThemeConfig.defaultPreset;
+        const preset = TieSheetThemeConfig.colourfulPreset;
         const custom = TieSheetThemeConfig(
           mutedColor: Color(0xFF64748B),
           connectorWonColor: Color(0xFF334155),
@@ -436,7 +436,7 @@ void main() {
     });
 
     group('copyWith', () {
-      const baseConfig = TieSheetThemeConfig.defaultPreset;
+      const baseConfig = TieSheetThemeConfig.colourfulPreset;
 
       test('returns identical config when no arguments are provided', () {
         final copied = baseConfig.copyWith();

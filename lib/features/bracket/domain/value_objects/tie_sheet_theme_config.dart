@@ -8,12 +8,12 @@ part 'tie_sheet_theme_config.g.dart';
 
 /// The visual mode applied to the bracket canvas.
 ///
-/// [defaultMode] uses the standard on-screen palette.
-/// [printMode] switches to a high-contrast all-black-on-white appearance
+/// [colourful] uses the colourful palette.
+/// [highContrast] switches to a high-contrast all-black-on-white appearance
 /// so the bracket reproduces cleanly on paper or PDF.
 enum TieSheetThemeMode {
-  defaultMode('Screen'),
-  printMode('Print'),
+  colourful('Colourful'),
+  highContrast('High Contrast'),
   customMode('Custom');
 
   const TieSheetThemeMode(this.label);
@@ -25,7 +25,7 @@ enum TieSheetThemeMode {
 /// Immutable set of **all** colour / style / geometry tokens consumed by
 /// [TieSheetLayoutEngine] and [TieSheetSyncfusionPdfRendererService].
 ///
-/// Use the static preset factories ([defaultPreset], [printPreset]) to pick
+/// Use the static preset factories ([colourfulPreset], [highContrastPreset]) to pick
 /// a preset, or supply custom values via [copyWith].
 @Freezed(toStringOverride: false)
 abstract class TieSheetThemeConfig with _$TieSheetThemeConfig {
@@ -262,6 +262,56 @@ abstract class TieSheetThemeConfig with _$TieSheetThemeConfig {
 
     /// Minimum canvas height in logical pixels.
     required double canvasMinimumHeight,
+
+    // ── Header text positioning (inside banner) ────────────────────────────
+
+    /// Top padding of the tournament title text inside the header banner (px).
+    required double headerTitleTopPadding,
+
+    /// Vertical offset of the subtitle (date/venue) line from the banner top (px).
+    required double headerSubtitleTopOffset,
+
+    /// Vertical offset of the organiser line from the banner top (px).
+    required double headerOrganizerTopOffset,
+
+    /// Gap between the header banner bottom edge and the info row (px).
+    required double headerBannerBottomGap,
+
+    // ── Layout gaps & spacers ──────────────────────────────────────────────
+
+    /// Gap between the sub-header info row and the bracket table (px).
+    required double headerToTableGap,
+
+    /// Gap between a section label bar and the R1 rows beneath it (DE, px).
+    required double sectionLabelToTableGap,
+
+    /// Gap between losers bracket bottom and the medal table (DE only, px).
+    required double deCanvasBracketToMedalGap,
+
+    /// Fine-tune vertical offset for the medal table position (px).
+    required double medalTableTopPadding,
+
+    /// Extra horizontal padding added to the DE canvas width calculation (px).
+    required double deCanvasExtraWidthPadding,
+
+    // ── Info row sizing ────────────────────────────────────────────────────
+
+    /// Vertical inset for column dividers inside the classification info row (px).
+    required double classificationDividerInset,
+
+    // ── Base font sizes ────────────────────────────────────────────────────
+
+    /// Base font size for the tournament title (before fontSizeDelta scaling).
+    required double headerTitleBaseFontSize,
+
+    /// Base font size for the subtitle line (date/venue, before fontSizeDelta).
+    required double headerSubtitleBaseFontSize,
+
+    /// Base font size for the organiser line (before fontSizeDelta scaling).
+    required double headerOrganizerBaseFontSize,
+
+    /// Base font size for match number pill text (before fontSizeDelta scaling).
+    required double matchPillBaseFontSize,
   }) = _TieSheetThemeConfig;
 
   factory TieSheetThemeConfig.fromJson(Map<String, dynamic> json) =>
@@ -270,8 +320,8 @@ abstract class TieSheetThemeConfig with _$TieSheetThemeConfig {
   /// Computed height of the logo row (logoMaxHeight + 2 × logoPadding).
   double get logoRowHeight => logoMaxHeight + logoPadding * 2;
 
-  /// Standard on-screen palette — matches the original hardcoded values.
-  static const TieSheetThemeConfig defaultPreset = TieSheetThemeConfig(
+  /// Colourful palette — matches the original hardcoded values.
+  static const TieSheetThemeConfig colourfulPreset = TieSheetThemeConfig(
     // Connector / junction
     mutedColor: Color(0xFF64748B),
     connectorWonColor: Color(0xFF334155),
@@ -372,24 +422,42 @@ abstract class TieSheetThemeConfig with _$TieSheetThemeConfig {
     // Canvas constraints
     canvasMinimumWidth: 700.0,
     canvasMinimumHeight: 500.0,
+    // Header text positioning
+    headerTitleTopPadding: 8.0,
+    headerSubtitleTopOffset: 30.0,
+    headerOrganizerTopOffset: 46.0,
+    headerBannerBottomGap: 12.0,
+    // Layout gaps
+    headerToTableGap: 12.0,
+    sectionLabelToTableGap: 8.0,
+    deCanvasBracketToMedalGap: 60.0,
+    medalTableTopPadding: 10.0,
+    deCanvasExtraWidthPadding: 100.0,
+    // Info row sizing
+    classificationDividerInset: 3.0,
+    // Base font sizes
+    headerTitleBaseFontSize: 18.0,
+    headerSubtitleBaseFontSize: 11.0,
+    headerOrganizerBaseFontSize: 10.0,
+    matchPillBaseFontSize: 10.0,
   );
 
   /// High-contrast print palette — pure black text, no background fills,
   /// borders-only elements, zero shadows. Optimised for monochrome printing.
-  static const TieSheetThemeConfig printPreset = TieSheetThemeConfig(
+  static const TieSheetThemeConfig highContrastPreset = TieSheetThemeConfig(
     // Connector / junction
     mutedColor: Color(0xFF000000),
     connectorWonColor: Color(0xFF000000),
     // Canvas & card
     canvasBackgroundColor: Color(0xFFFFFFFF),
     borderColor: Color(0xFF000000),
-    connectorStrokeWidth: 3.0,
+    connectorStrokeWidth: 4.0,
     isInteractivityDisabled: true,
     // Text
     primaryTextColor: Color(0xFF000000),
     secondaryTextColor: Color(0xFF000000),
     isTextForceBold: true,
-    fontSizeDelta: 10.0,
+    fontSizeDelta: 5.5,
     // Fill
     rowFillColor: Color(0xFFFFFFFF),
     headerFillColor: Color(0xFFFFFFFF),
@@ -415,8 +483,8 @@ abstract class TieSheetThemeConfig with _$TieSheetThemeConfig {
     medalSilverAccentColor: Color(0xFF000000),
     medalBronzeAccentColor: Color(0xFF000000),
     // Stroke widths
-    borderStrokeWidth: 3.5,
-    subtleStrokeWidth: 1.5,
+    borderStrokeWidth: 4.0,
+    subtleStrokeWidth: 4.0,
     wonConnectorStrokeWidth: 4.0,
     // Spacing
     canvasMargin: 36.0,
@@ -438,7 +506,7 @@ abstract class TieSheetThemeConfig with _$TieSheetThemeConfig {
     subHeaderLetterSpacing: 0.5,
     // Layout dimensions
     rowHeight: 42.0,
-    intraMatchGapHeight: 35.0,
+    intraMatchGapHeight: 60.0,
     interMatchGapHeight: 100.0,
     numberColumnWidth: 32.0,
     nameColumnWidth: 200.0,
@@ -449,11 +517,11 @@ abstract class TieSheetThemeConfig with _$TieSheetThemeConfig {
     centerGapWidth: 340.0,
     sectionLabelHeight: 32.0,
     // Medal table layout
-    medalTableWidth: 460.0,
-    medalRowHeight: 36.0,
-    medalNameColumnWidth: 250.0,
-    medalLabelColumnWidth: 150.0,
-    medalRowGap: 4.0,
+    medalTableWidth: 590.0,
+    medalRowHeight: 54.0,
+    medalNameColumnWidth: 455.0,
+    medalLabelColumnWidth: 120.0,
+    medalRowGap: 7.0,
     // Junction geometry
     centerFinalMinimumSpan: 60.0,
     grandFinalOutputArmLength: 40.0,
@@ -464,9 +532,9 @@ abstract class TieSheetThemeConfig with _$TieSheetThemeConfig {
     thirdPlaceToMedalGap: 60.0,
     matchPillHorizontalOffset: 0.0,
     // Banner & logo
-    headerBannerHeight: 64.0,
-    logoMaxHeight: 85.0,
-    logoPadding: 12.0,
+    headerBannerHeight: 90.0,
+    logoMaxHeight: 105.0,
+    logoPadding: 18.0,
     // Additional colours
     matchPillFillColor: Color(0xFFFFFFFF),
     badgeTextColor: Color(0xFFFFFFFF),
@@ -475,8 +543,26 @@ abstract class TieSheetThemeConfig with _$TieSheetThemeConfig {
     headerSecondaryTextOpacity: 0.8,
     badgeOutlineOpacity: 1.0,
     // Canvas constraints
-    canvasMinimumWidth: 700.0,
-    canvasMinimumHeight: 500.0,
+    canvasMinimumWidth: 800.0,
+    canvasMinimumHeight: 1150.0,
+    // Header text positioning
+    headerTitleTopPadding: 8.0,
+    headerSubtitleTopOffset: 30.0,
+    headerOrganizerTopOffset: 46.0,
+    headerBannerBottomGap: 12.0,
+    // Layout gaps
+    headerToTableGap: 12.0,
+    sectionLabelToTableGap: 8.0,
+    deCanvasBracketToMedalGap: 60.0,
+    medalTableTopPadding: 10.0,
+    deCanvasExtraWidthPadding: 100.0,
+    // Info row sizing
+    classificationDividerInset: 3.0,
+    // Base font sizes
+    headerTitleBaseFontSize: 18.0,
+    headerSubtitleBaseFontSize: 11.0,
+    headerOrganizerBaseFontSize: 10.0,
+    matchPillBaseFontSize: 10.0,
   );
 
   // ── Factory helper ────────────────────────────────────────────────────────
@@ -484,11 +570,11 @@ abstract class TieSheetThemeConfig with _$TieSheetThemeConfig {
   /// Returns the preset config for the given [mode].
   factory TieSheetThemeConfig.fromMode(TieSheetThemeMode mode) {
     return switch (mode) {
-      TieSheetThemeMode.defaultMode => defaultPreset,
-      TieSheetThemeMode.printMode => printPreset,
-      // Custom mode starts from the default preset; the caller overrides
+      TieSheetThemeMode.colourful => colourfulPreset,
+      TieSheetThemeMode.highContrast => highContrastPreset,
+      // Custom mode starts from the colourful preset; the caller overrides
       // individual tokens via [copyWith].
-      TieSheetThemeMode.customMode => defaultPreset,
+      TieSheetThemeMode.customMode => colourfulPreset,
     };
   }
 }

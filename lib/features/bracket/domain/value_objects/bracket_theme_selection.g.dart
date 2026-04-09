@@ -6,20 +6,22 @@ part of 'bracket_theme_selection.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-BracketThemeSelectionDefaultMode _$BracketThemeSelectionDefaultModeFromJson(
+BracketThemeSelectionColourfulMode _$BracketThemeSelectionColourfulModeFromJson(
   Map<String, dynamic> json,
-) => BracketThemeSelectionDefaultMode($type: json['runtimeType'] as String?);
+) => BracketThemeSelectionColourfulMode($type: json['runtimeType'] as String?);
 
-Map<String, dynamic> _$BracketThemeSelectionDefaultModeToJson(
-  BracketThemeSelectionDefaultMode instance,
+Map<String, dynamic> _$BracketThemeSelectionColourfulModeToJson(
+  BracketThemeSelectionColourfulMode instance,
 ) => <String, dynamic>{'runtimeType': instance.$type};
 
-BracketThemeSelectionPrintMode _$BracketThemeSelectionPrintModeFromJson(
-  Map<String, dynamic> json,
-) => BracketThemeSelectionPrintMode($type: json['runtimeType'] as String?);
+BracketThemeSelectionHighContrastMode
+_$BracketThemeSelectionHighContrastModeFromJson(Map<String, dynamic> json) =>
+    BracketThemeSelectionHighContrastMode(
+      $type: json['runtimeType'] as String?,
+    );
 
-Map<String, dynamic> _$BracketThemeSelectionPrintModeToJson(
-  BracketThemeSelectionPrintMode instance,
+Map<String, dynamic> _$BracketThemeSelectionHighContrastModeToJson(
+  BracketThemeSelectionHighContrastMode instance,
 ) => <String, dynamic>{'runtimeType': instance.$type};
 
 BracketThemeSelectionCloudPreset _$BracketThemeSelectionCloudPresetFromJson(

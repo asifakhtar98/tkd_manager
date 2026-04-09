@@ -91,7 +91,7 @@ class TieSheetLayoutEngine with TieSheetLayoutHelperMixin {
     );
 
     double headerBottom =
-        headerData.classificationInfoRowBoundingRect.bottom + 12;
+        headerData.classificationInfoRowBoundingRect.bottom + themeConfig.headerBannerBottomGap;
 
     if (isDouble) {
       _computeDeLayout(
@@ -243,7 +243,7 @@ class TieSheetLayoutEngine with TieSheetLayoutHelperMixin {
         dims.participantListTotalWidth +
         (maxRounds * dims.roundColumnWidth) +
         (gfColumns * dims.roundColumnWidth) +
-        100;
+        themeConfig.deCanvasExtraWidthPadding;
 
     final wbR1 =
         TieSheetLayoutDimensionCalculator.groupByRound(wbMatches)[1] ?? [];
@@ -270,7 +270,7 @@ class TieSheetLayoutEngine with TieSheetLayoutHelperMixin {
         dims.sectionGapHeight +
         dims.sectionLabelHeight +
         lbH +
-        60 +
+        themeConfig.deCanvasBracketToMedalGap +
         dims.medalTableTotalHeight +
         dims.canvasMargin;
 
@@ -324,8 +324,8 @@ class TieSheetLayoutEngine with TieSheetLayoutHelperMixin {
             .toUpperCase();
     final titleText = PositionedTextLayoutData(
       textContent: title,
-      renderPosition: Offset(canvasSize.width / 2, y + 8 + delta * 0.5),
-      fontSize: fontSize(18),
+      renderPosition: Offset(canvasSize.width / 2, y + themeConfig.headerTitleTopPadding + delta * 0.5),
+      fontSize: fontSize(themeConfig.headerTitleBaseFontSize),
       fontWeight: FontWeight.bold,
       isCenterAligned: true,
       letterSpacing: themeConfig.headerLetterSpacing,
@@ -340,8 +340,8 @@ class TieSheetLayoutEngine with TieSheetLayoutHelperMixin {
       ].where((s) => s.isNotEmpty).join('  •  ');
       subtitleText = PositionedTextLayoutData(
         textContent: sub.toUpperCase(),
-        renderPosition: Offset(canvasSize.width / 2, y + 30 + delta * 1.0),
-        fontSize: fontSize(11),
+        renderPosition: Offset(canvasSize.width / 2, y + themeConfig.headerSubtitleTopOffset + delta * 1.0),
+        fontSize: fontSize(themeConfig.headerSubtitleBaseFontSize),
         fontWeight: themeConfig.isTextForceBold
             ? FontWeight.w900
             : FontWeight.normal,
@@ -355,8 +355,8 @@ class TieSheetLayoutEngine with TieSheetLayoutHelperMixin {
     if (tournament.organizer.isNotEmpty) {
       organizerText = PositionedTextLayoutData(
         textContent: 'Organised by ${tournament.organizer.toUpperCase()}',
-        renderPosition: Offset(canvasSize.width / 2, y + 46 + delta * 1.5),
-        fontSize: fontSize(10),
+        renderPosition: Offset(canvasSize.width / 2, y + themeConfig.headerOrganizerTopOffset + delta * 1.5),
+        fontSize: fontSize(themeConfig.headerOrganizerBaseFontSize),
         fontWeight: themeConfig.isTextForceBold
             ? FontWeight.w900
             : FontWeight.normal,
@@ -364,7 +364,7 @@ class TieSheetLayoutEngine with TieSheetLayoutHelperMixin {
         textColorType: TextColorType.headerBannerSecondary,
       );
     }
-    y += bannerH + 12;
+    y += bannerH + themeConfig.headerBannerBottomGap;
 
     final infoTop = y;
     final infoBottom = y + dims.subHeaderRowHeight;
@@ -385,21 +385,21 @@ class TieSheetLayoutEngine with TieSheetLayoutHelperMixin {
 
     final dividers = <LineSegmentLayoutData>[
       LineSegmentLayoutData(
-        startOffset: Offset(headerLeft + infoColNoW, infoTop + 3),
-        endOffset: Offset(headerLeft + infoColNoW, infoBottom - 3),
+        startOffset: Offset(headerLeft + infoColNoW, infoTop + themeConfig.classificationDividerInset),
+        endOffset: Offset(headerLeft + infoColNoW, infoBottom - themeConfig.classificationDividerInset),
       ),
       LineSegmentLayoutData(
-        startOffset: Offset(headerLeft + infoColNoW + infoColW, infoTop + 3),
-        endOffset: Offset(headerLeft + infoColNoW + infoColW, infoBottom - 3),
+        startOffset: Offset(headerLeft + infoColNoW + infoColW, infoTop + themeConfig.classificationDividerInset),
+        endOffset: Offset(headerLeft + infoColNoW + infoColW, infoBottom - themeConfig.classificationDividerInset),
       ),
       LineSegmentLayoutData(
         startOffset: Offset(
           headerLeft + infoColNoW + infoColW * 2,
-          infoTop + 3,
+          infoTop + themeConfig.classificationDividerInset,
         ),
         endOffset: Offset(
           headerLeft + infoColNoW + infoColW * 2,
-          infoBottom - 3,
+          infoBottom - themeConfig.classificationDividerInset,
         ),
       ),
     ];
@@ -436,6 +436,10 @@ class TieSheetLayoutEngine with TieSheetLayoutHelperMixin {
       ),
     ];
 
+    final infoRowFontSize = fontSize(themeConfig.headerSubtitleBaseFontSize);
+    // Use the subtitle base font size for info row cells to keep them
+    // consistent with the header secondary text scale.
+
     return HeaderLayoutData(
       headerBannerBoundingRect: bannerRect,
       tournamentTitleTextLayout: titleText,
@@ -462,7 +466,7 @@ class TieSheetLayoutEngine with TieSheetLayoutHelperMixin {
     required List<MatchLayoutData> matchLayouts,
     required List<ConnectorLayoutData> connectors,
   }) {
-    final tableTop = startY + 12;
+    final tableTop = startY + themeConfig.headerToTableGap;
     final seMaxRound = matches.isNotEmpty
         ? matches.map((m) => m.roundNumber).reduce(max)
         : 0;
@@ -932,7 +936,7 @@ class TieSheetLayoutEngine with TieSheetLayoutHelperMixin {
         SectionLabelType.winnersBracket,
       ),
     );
-    final wbTableTop = startY + dims.sectionLabelHeight + 8;
+    final wbTableTop = startY + dims.sectionLabelHeight + themeConfig.sectionLabelToTableGap;
     final wbR1 = wbByRound[1] ?? [];
     final wbNextIdx = computeParticipantListLayout(
       roundOneMatches: wbR1,
@@ -985,7 +989,7 @@ class TieSheetLayoutEngine with TieSheetLayoutHelperMixin {
         SectionLabelType.losersBracket,
       ),
     );
-    final lbTableTop = lbSectionTop + dims.sectionLabelHeight + 8;
+    final lbTableTop = lbSectionTop + dims.sectionLabelHeight + themeConfig.sectionLabelToTableGap;
     final lbR1 = lbByRound[1] ?? [];
     computeParticipantListLayout(
       roundOneMatches: lbR1,
@@ -1344,7 +1348,7 @@ class TieSheetLayoutEngine with TieSheetLayoutHelperMixin {
   }) {
     final x = (canvasSize.width - dims.medalTableWidth) / 2;
     final y =
-        canvasSize.height - dims.medalTableTotalHeight - dims.canvasMargin + 10;
+        canvasSize.height - dims.medalTableTotalHeight - dims.canvasMargin + themeConfig.medalTableTopPadding;
     final delta = dims.fontSizeDelta;
     final labels = ['Gold', 'Silver', '1st Bronze', '2nd Bronze'];
     final medalTypes = [

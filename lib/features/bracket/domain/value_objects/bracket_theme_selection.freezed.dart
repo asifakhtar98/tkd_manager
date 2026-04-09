@@ -15,12 +15,12 @@ BracketThemeSelection _$BracketThemeSelectionFromJson(
   Map<String, dynamic> json
 ) {
         switch (json['runtimeType']) {
-                  case 'defaultModeSelected':
-          return BracketThemeSelectionDefaultMode.fromJson(
+                  case 'colourfulModeSelected':
+          return BracketThemeSelectionColourfulMode.fromJson(
             json
           );
-                case 'printModeSelected':
-          return BracketThemeSelectionPrintMode.fromJson(
+                case 'highContrastModeSelected':
+          return BracketThemeSelectionHighContrastMode.fromJson(
             json
           );
                 case 'cloudPresetSelected':
@@ -89,12 +89,12 @@ extension BracketThemeSelectionPatterns on BracketThemeSelection {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( BracketThemeSelectionDefaultMode value)?  defaultModeSelected,TResult Function( BracketThemeSelectionPrintMode value)?  printModeSelected,TResult Function( BracketThemeSelectionCloudPreset value)?  cloudPresetSelected,TResult Function( BracketThemeSelectionCustomMode value)?  customModeSelected,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( BracketThemeSelectionColourfulMode value)?  colourfulModeSelected,TResult Function( BracketThemeSelectionHighContrastMode value)?  highContrastModeSelected,TResult Function( BracketThemeSelectionCloudPreset value)?  cloudPresetSelected,TResult Function( BracketThemeSelectionCustomMode value)?  customModeSelected,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
-case BracketThemeSelectionDefaultMode() when defaultModeSelected != null:
-return defaultModeSelected(_that);case BracketThemeSelectionPrintMode() when printModeSelected != null:
-return printModeSelected(_that);case BracketThemeSelectionCloudPreset() when cloudPresetSelected != null:
+case BracketThemeSelectionColourfulMode() when colourfulModeSelected != null:
+return colourfulModeSelected(_that);case BracketThemeSelectionHighContrastMode() when highContrastModeSelected != null:
+return highContrastModeSelected(_that);case BracketThemeSelectionCloudPreset() when cloudPresetSelected != null:
 return cloudPresetSelected(_that);case BracketThemeSelectionCustomMode() when customModeSelected != null:
 return customModeSelected(_that);case _:
   return orElse();
@@ -114,12 +114,12 @@ return customModeSelected(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( BracketThemeSelectionDefaultMode value)  defaultModeSelected,required TResult Function( BracketThemeSelectionPrintMode value)  printModeSelected,required TResult Function( BracketThemeSelectionCloudPreset value)  cloudPresetSelected,required TResult Function( BracketThemeSelectionCustomMode value)  customModeSelected,}){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( BracketThemeSelectionColourfulMode value)  colourfulModeSelected,required TResult Function( BracketThemeSelectionHighContrastMode value)  highContrastModeSelected,required TResult Function( BracketThemeSelectionCloudPreset value)  cloudPresetSelected,required TResult Function( BracketThemeSelectionCustomMode value)  customModeSelected,}){
 final _that = this;
 switch (_that) {
-case BracketThemeSelectionDefaultMode():
-return defaultModeSelected(_that);case BracketThemeSelectionPrintMode():
-return printModeSelected(_that);case BracketThemeSelectionCloudPreset():
+case BracketThemeSelectionColourfulMode():
+return colourfulModeSelected(_that);case BracketThemeSelectionHighContrastMode():
+return highContrastModeSelected(_that);case BracketThemeSelectionCloudPreset():
 return cloudPresetSelected(_that);case BracketThemeSelectionCustomMode():
 return customModeSelected(_that);}
 }
@@ -135,12 +135,12 @@ return customModeSelected(_that);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( BracketThemeSelectionDefaultMode value)?  defaultModeSelected,TResult? Function( BracketThemeSelectionPrintMode value)?  printModeSelected,TResult? Function( BracketThemeSelectionCloudPreset value)?  cloudPresetSelected,TResult? Function( BracketThemeSelectionCustomMode value)?  customModeSelected,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( BracketThemeSelectionColourfulMode value)?  colourfulModeSelected,TResult? Function( BracketThemeSelectionHighContrastMode value)?  highContrastModeSelected,TResult? Function( BracketThemeSelectionCloudPreset value)?  cloudPresetSelected,TResult? Function( BracketThemeSelectionCustomMode value)?  customModeSelected,}){
 final _that = this;
 switch (_that) {
-case BracketThemeSelectionDefaultMode() when defaultModeSelected != null:
-return defaultModeSelected(_that);case BracketThemeSelectionPrintMode() when printModeSelected != null:
-return printModeSelected(_that);case BracketThemeSelectionCloudPreset() when cloudPresetSelected != null:
+case BracketThemeSelectionColourfulMode() when colourfulModeSelected != null:
+return colourfulModeSelected(_that);case BracketThemeSelectionHighContrastMode() when highContrastModeSelected != null:
+return highContrastModeSelected(_that);case BracketThemeSelectionCloudPreset() when cloudPresetSelected != null:
 return cloudPresetSelected(_that);case BracketThemeSelectionCustomMode() when customModeSelected != null:
 return customModeSelected(_that);case _:
   return null;
@@ -159,11 +159,11 @@ return customModeSelected(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  defaultModeSelected,TResult Function()?  printModeSelected,TResult Function( String presetId)?  cloudPresetSelected,TResult Function()?  customModeSelected,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  colourfulModeSelected,TResult Function()?  highContrastModeSelected,TResult Function( String presetId)?  cloudPresetSelected,TResult Function()?  customModeSelected,required TResult orElse(),}) {final _that = this;
 switch (_that) {
-case BracketThemeSelectionDefaultMode() when defaultModeSelected != null:
-return defaultModeSelected();case BracketThemeSelectionPrintMode() when printModeSelected != null:
-return printModeSelected();case BracketThemeSelectionCloudPreset() when cloudPresetSelected != null:
+case BracketThemeSelectionColourfulMode() when colourfulModeSelected != null:
+return colourfulModeSelected();case BracketThemeSelectionHighContrastMode() when highContrastModeSelected != null:
+return highContrastModeSelected();case BracketThemeSelectionCloudPreset() when cloudPresetSelected != null:
 return cloudPresetSelected(_that.presetId);case BracketThemeSelectionCustomMode() when customModeSelected != null:
 return customModeSelected();case _:
   return orElse();
@@ -183,11 +183,11 @@ return customModeSelected();case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  defaultModeSelected,required TResult Function()  printModeSelected,required TResult Function( String presetId)  cloudPresetSelected,required TResult Function()  customModeSelected,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  colourfulModeSelected,required TResult Function()  highContrastModeSelected,required TResult Function( String presetId)  cloudPresetSelected,required TResult Function()  customModeSelected,}) {final _that = this;
 switch (_that) {
-case BracketThemeSelectionDefaultMode():
-return defaultModeSelected();case BracketThemeSelectionPrintMode():
-return printModeSelected();case BracketThemeSelectionCloudPreset():
+case BracketThemeSelectionColourfulMode():
+return colourfulModeSelected();case BracketThemeSelectionHighContrastMode():
+return highContrastModeSelected();case BracketThemeSelectionCloudPreset():
 return cloudPresetSelected(_that.presetId);case BracketThemeSelectionCustomMode():
 return customModeSelected();}
 }
@@ -203,11 +203,11 @@ return customModeSelected();}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  defaultModeSelected,TResult? Function()?  printModeSelected,TResult? Function( String presetId)?  cloudPresetSelected,TResult? Function()?  customModeSelected,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  colourfulModeSelected,TResult? Function()?  highContrastModeSelected,TResult? Function( String presetId)?  cloudPresetSelected,TResult? Function()?  customModeSelected,}) {final _that = this;
 switch (_that) {
-case BracketThemeSelectionDefaultMode() when defaultModeSelected != null:
-return defaultModeSelected();case BracketThemeSelectionPrintMode() when printModeSelected != null:
-return printModeSelected();case BracketThemeSelectionCloudPreset() when cloudPresetSelected != null:
+case BracketThemeSelectionColourfulMode() when colourfulModeSelected != null:
+return colourfulModeSelected();case BracketThemeSelectionHighContrastMode() when highContrastModeSelected != null:
+return highContrastModeSelected();case BracketThemeSelectionCloudPreset() when cloudPresetSelected != null:
 return cloudPresetSelected(_that.presetId);case BracketThemeSelectionCustomMode() when customModeSelected != null:
 return customModeSelected();case _:
   return null;
@@ -220,9 +220,9 @@ return customModeSelected();case _:
 /// @nodoc
 @JsonSerializable()
 
-class BracketThemeSelectionDefaultMode extends BracketThemeSelection {
-  const BracketThemeSelectionDefaultMode({final  String? $type}): $type = $type ?? 'defaultModeSelected',super._();
-  factory BracketThemeSelectionDefaultMode.fromJson(Map<String, dynamic> json) => _$BracketThemeSelectionDefaultModeFromJson(json);
+class BracketThemeSelectionColourfulMode extends BracketThemeSelection {
+  const BracketThemeSelectionColourfulMode({final  String? $type}): $type = $type ?? 'colourfulModeSelected',super._();
+  factory BracketThemeSelectionColourfulMode.fromJson(Map<String, dynamic> json) => _$BracketThemeSelectionColourfulModeFromJson(json);
 
 
 
@@ -233,12 +233,12 @@ final String $type;
 
 @override
 Map<String, dynamic> toJson() {
-  return _$BracketThemeSelectionDefaultModeToJson(this, );
+  return _$BracketThemeSelectionColourfulModeToJson(this, );
 }
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is BracketThemeSelectionDefaultMode);
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is BracketThemeSelectionColourfulMode);
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -247,7 +247,7 @@ int get hashCode => runtimeType.hashCode;
 
 @override
 String toString() {
-  return 'BracketThemeSelection.defaultModeSelected()';
+  return 'BracketThemeSelection.colourfulModeSelected()';
 }
 
 
@@ -259,9 +259,9 @@ String toString() {
 /// @nodoc
 @JsonSerializable()
 
-class BracketThemeSelectionPrintMode extends BracketThemeSelection {
-  const BracketThemeSelectionPrintMode({final  String? $type}): $type = $type ?? 'printModeSelected',super._();
-  factory BracketThemeSelectionPrintMode.fromJson(Map<String, dynamic> json) => _$BracketThemeSelectionPrintModeFromJson(json);
+class BracketThemeSelectionHighContrastMode extends BracketThemeSelection {
+  const BracketThemeSelectionHighContrastMode({final  String? $type}): $type = $type ?? 'highContrastModeSelected',super._();
+  factory BracketThemeSelectionHighContrastMode.fromJson(Map<String, dynamic> json) => _$BracketThemeSelectionHighContrastModeFromJson(json);
 
 
 
@@ -272,12 +272,12 @@ final String $type;
 
 @override
 Map<String, dynamic> toJson() {
-  return _$BracketThemeSelectionPrintModeToJson(this, );
+  return _$BracketThemeSelectionHighContrastModeToJson(this, );
 }
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is BracketThemeSelectionPrintMode);
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is BracketThemeSelectionHighContrastMode);
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -286,7 +286,7 @@ int get hashCode => runtimeType.hashCode;
 
 @override
 String toString() {
-  return 'BracketThemeSelection.printModeSelected()';
+  return 'BracketThemeSelection.highContrastModeSelected()';
 }
 
 

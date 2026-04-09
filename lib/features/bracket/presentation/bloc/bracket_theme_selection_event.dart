@@ -6,7 +6,7 @@ part 'bracket_theme_selection_event.freezed.dart';
 
 @freezed
 sealed class BracketThemeSelectionEvent with _$BracketThemeSelectionEvent {
-  /// User toggled the SegmentedButton to Screen / Print / Custom.
+  /// User toggled the SegmentedButton to Colourful / High Contrast / Custom.
   const factory BracketThemeSelectionEvent.themeModeToggled({
     required TieSheetThemeMode selectedMode,
   }) = BracketThemeSelectionModeToggled;

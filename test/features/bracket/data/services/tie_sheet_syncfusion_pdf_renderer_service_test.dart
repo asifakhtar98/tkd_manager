@@ -87,7 +87,7 @@ void main() {
   ({TieSheetLayoutResult layoutResult, Uint8List pdfBytes})
   renderSingleEliminationBracketPdf({
     required int playerCount,
-    TieSheetThemeConfig themeConfig = TieSheetThemeConfig.defaultPreset,
+    TieSheetThemeConfig themeConfig = TieSheetThemeConfig.colourfulPreset,
     bool includeThirdPlaceMatch = false,
     List<int> roundsToResolveWithBlueWinners = const [],
   }) {
@@ -137,7 +137,7 @@ void main() {
   ({TieSheetLayoutResult layoutResult, Uint8List pdfBytes})
   renderDoubleEliminationBracketPdf({
     required int playerCount,
-    TieSheetThemeConfig themeConfig = TieSheetThemeConfig.defaultPreset,
+    TieSheetThemeConfig themeConfig = TieSheetThemeConfig.colourfulPreset,
   }) {
     final participants = createTestParticipants(playerCount);
     final generateResult = doubleEliminationGenerator.generate(
@@ -288,11 +288,11 @@ void main() {
     });
   });
 
-  group('TieSheetSyncfusionPdfRendererService — Print Mode Theme', () {
-    test('renders valid PDF with print preset theme', () {
+  group('TieSheetSyncfusionPdfRendererService — High Contrast Theme', () {
+    test('renders valid PDF with high contrast preset theme', () {
       final result = renderSingleEliminationBracketPdf(
         playerCount: 8,
-        themeConfig: TieSheetThemeConfig.printPreset,
+        themeConfig: TieSheetThemeConfig.highContrastPreset,
       );
       assertValidSinglePagePdf(result.pdfBytes, result.layoutResult);
     });
@@ -401,7 +401,7 @@ void main() {
         participants: participants,
         bracketType: 'Single Elimination',
         includeThirdPlaceMatch: false,
-        themeConfig: TieSheetThemeConfig.defaultPreset,
+        themeConfig: TieSheetThemeConfig.colourfulPreset,
         classification: testClassification,
         hasLeftLogo: true,
         hasRightLogo: true,
@@ -426,7 +426,7 @@ void main() {
       final pdfBytes = rendererService.renderSinglePagePdfBytes(
         params: PdfRenderParams(
           layoutResult: layoutResult,
-          themeConfig: TieSheetThemeConfig.defaultPreset,
+          themeConfig: TieSheetThemeConfig.colourfulPreset,
         ),
       );
 
@@ -461,7 +461,7 @@ void main() {
         participants: participants,
         bracketType: 'Single Elimination',
         includeThirdPlaceMatch: false,
-        themeConfig: TieSheetThemeConfig.defaultPreset,
+        themeConfig: TieSheetThemeConfig.colourfulPreset,
         classification: testClassification,
       );
 
@@ -471,7 +471,7 @@ void main() {
         participants: participants,
         bracketType: 'Single Elimination',
         includeThirdPlaceMatch: false,
-        themeConfig: TieSheetThemeConfig.defaultPreset,
+        themeConfig: TieSheetThemeConfig.colourfulPreset,
         classification: testClassification,
         hasLeftLogo: true,
         hasRightLogo: true,
@@ -501,21 +501,21 @@ void main() {
         participants: participants,
         bracketType: 'Single Elimination',
         includeThirdPlaceMatch: false,
-        themeConfig: TieSheetThemeConfig.defaultPreset,
+        themeConfig: TieSheetThemeConfig.colourfulPreset,
         classification: testClassification,
       );
 
       final firstRenderBytes = rendererService.renderSinglePagePdfBytes(
         params: PdfRenderParams(
           layoutResult: layoutResult,
-          themeConfig: TieSheetThemeConfig.defaultPreset,
+          themeConfig: TieSheetThemeConfig.colourfulPreset,
         ),
       );
 
       final secondRenderBytes = rendererService.renderSinglePagePdfBytes(
         params: PdfRenderParams(
           layoutResult: layoutResult,
-          themeConfig: TieSheetThemeConfig.defaultPreset,
+          themeConfig: TieSheetThemeConfig.colourfulPreset,
         ),
       );
 

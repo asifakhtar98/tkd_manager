@@ -151,6 +151,26 @@ _TieSheetThemeConfig _$TieSheetThemeConfigFromJson(
   badgeOutlineOpacity: (json['badgeOutlineOpacity'] as num).toDouble(),
   canvasMinimumWidth: (json['canvasMinimumWidth'] as num).toDouble(),
   canvasMinimumHeight: (json['canvasMinimumHeight'] as num).toDouble(),
+  headerTitleTopPadding: (json['headerTitleTopPadding'] as num).toDouble(),
+  headerSubtitleTopOffset: (json['headerSubtitleTopOffset'] as num).toDouble(),
+  headerOrganizerTopOffset: (json['headerOrganizerTopOffset'] as num)
+      .toDouble(),
+  headerBannerBottomGap: (json['headerBannerBottomGap'] as num).toDouble(),
+  headerToTableGap: (json['headerToTableGap'] as num).toDouble(),
+  sectionLabelToTableGap: (json['sectionLabelToTableGap'] as num).toDouble(),
+  deCanvasBracketToMedalGap: (json['deCanvasBracketToMedalGap'] as num)
+      .toDouble(),
+  medalTableTopPadding: (json['medalTableTopPadding'] as num).toDouble(),
+  deCanvasExtraWidthPadding: (json['deCanvasExtraWidthPadding'] as num)
+      .toDouble(),
+  classificationDividerInset: (json['classificationDividerInset'] as num)
+      .toDouble(),
+  headerTitleBaseFontSize: (json['headerTitleBaseFontSize'] as num).toDouble(),
+  headerSubtitleBaseFontSize: (json['headerSubtitleBaseFontSize'] as num)
+      .toDouble(),
+  headerOrganizerBaseFontSize: (json['headerOrganizerBaseFontSize'] as num)
+      .toDouble(),
+  matchPillBaseFontSize: (json['matchPillBaseFontSize'] as num).toDouble(),
 );
 
 Map<String, dynamic> _$TieSheetThemeConfigToJson(
@@ -278,4 +298,18 @@ Map<String, dynamic> _$TieSheetThemeConfigToJson(
   'badgeOutlineOpacity': instance.badgeOutlineOpacity,
   'canvasMinimumWidth': instance.canvasMinimumWidth,
   'canvasMinimumHeight': instance.canvasMinimumHeight,
+  'headerTitleTopPadding': instance.headerTitleTopPadding,
+  'headerSubtitleTopOffset': instance.headerSubtitleTopOffset,
+  'headerOrganizerTopOffset': instance.headerOrganizerTopOffset,
+  'headerBannerBottomGap': instance.headerBannerBottomGap,
+  'headerToTableGap': instance.headerToTableGap,
+  'sectionLabelToTableGap': instance.sectionLabelToTableGap,
+  'deCanvasBracketToMedalGap': instance.deCanvasBracketToMedalGap,
+  'medalTableTopPadding': instance.medalTableTopPadding,
+  'deCanvasExtraWidthPadding': instance.deCanvasExtraWidthPadding,
+  'classificationDividerInset': instance.classificationDividerInset,
+  'headerTitleBaseFontSize': instance.headerTitleBaseFontSize,
+  'headerSubtitleBaseFontSize': instance.headerSubtitleBaseFontSize,
+  'headerOrganizerBaseFontSize': instance.headerOrganizerBaseFontSize,
+  'matchPillBaseFontSize': instance.matchPillBaseFontSize,
 };

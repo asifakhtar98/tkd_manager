@@ -602,7 +602,7 @@ class TieSheetSyncfusionPdfRendererService {
     final fontSizeDelta = themeConfig.fontSizeDelta;
     final pillFont = PdfStandardFont(
       PdfFontFamily.helvetica,
-      10 + fontSizeDelta,
+      themeConfig.matchPillBaseFontSize + fontSizeDelta,
       style: PdfFontStyle.bold,
     );
     final pillTextSize = pillFont.measureString(pillData.matchNumberText);

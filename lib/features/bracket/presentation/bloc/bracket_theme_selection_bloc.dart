@@ -12,7 +12,7 @@ class BracketThemeSelectionBloc
     extends HydratedBloc<BracketThemeSelectionEvent, BracketThemeSelectionState> {
   BracketThemeSelectionBloc()
       : super(const BracketThemeSelectionState(
-          activeThemeSelection: BracketThemeSelection.defaultModeSelected(),
+          activeThemeSelection: BracketThemeSelection.colourfulModeSelected(),
         )) {
     on<BracketThemeSelectionModeToggled>(_onThemeModeToggled);
     on<BracketThemeSelectionCloudPresetApplied>(_onCloudPresetApplied);
@@ -29,14 +29,14 @@ class BracketThemeSelectionBloc
     Emitter<BracketThemeSelectionState> emit,
   ) {
     switch (event.selectedMode) {
-      case TieSheetThemeMode.defaultMode:
+      case TieSheetThemeMode.colourful:
         emit(state.copyWith(
-          activeThemeSelection: const BracketThemeSelection.defaultModeSelected(),
+          activeThemeSelection: const BracketThemeSelection.colourfulModeSelected(),
         ));
         break;
-      case TieSheetThemeMode.printMode:
+      case TieSheetThemeMode.highContrast:
         emit(state.copyWith(
-          activeThemeSelection: const BracketThemeSelection.printModeSelected(),
+          activeThemeSelection: const BracketThemeSelection.highContrastModeSelected(),
         ));
         break;
       case TieSheetThemeMode.customMode:
@@ -47,7 +47,7 @@ class BracketThemeSelectionBloc
               const BracketThemeSelection.customModeSelected(),
           liveCustomThemeConfiguration:
               state.liveCustomThemeConfiguration ??
-                  TieSheetThemeConfig.defaultPreset,
+                  TieSheetThemeConfig.colourfulPreset,
         ));
         break;
     }
@@ -100,7 +100,7 @@ class BracketThemeSelectionBloc
           // Preset was deleted from another device/browser.
           // Fallback to default and show expiry message.
           emit(state.copyWith(
-            activeThemeSelection: const BracketThemeSelection.defaultModeSelected(),
+            activeThemeSelection: const BracketThemeSelection.colourfulModeSelected(),
             themeExpiredMessage:
                 'Your saved cloud theme preset is no longer available. Falling back to default theme.',
           ));

@@ -150,14 +150,14 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
     BracketThemeSelectionState selectionState,
   ) {
     return selectionState.activeThemeSelection.when(
-      defaultModeSelected: () => TieSheetThemeConfig.defaultPreset,
-      printModeSelected: () => TieSheetThemeConfig.printPreset,
+      colourfulModeSelected: () => TieSheetThemeConfig.colourfulPreset,
+      highContrastModeSelected: () => TieSheetThemeConfig.highContrastPreset,
       cloudPresetSelected: (_) =>
           selectionState.liveCustomThemeConfiguration ??
-          TieSheetThemeConfig.defaultPreset,
+          TieSheetThemeConfig.colourfulPreset,
       customModeSelected: () =>
           selectionState.liveCustomThemeConfiguration ??
-          TieSheetThemeConfig.defaultPreset,
+          TieSheetThemeConfig.colourfulPreset,
     );
   }
 
@@ -1014,7 +1014,7 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
                         TieSheetThemeEditorPanel(
                           currentThemeConfig:
                               selectionState.liveCustomThemeConfiguration ??
-                              TieSheetThemeConfig.defaultPreset,
+                              TieSheetThemeConfig.colourfulPreset,
                           onCloudPresetApplied: (preset) {
                             context.read<BracketThemeSelectionBloc>().add(
                               BracketThemeSelectionEvent.cloudPresetApplied(
