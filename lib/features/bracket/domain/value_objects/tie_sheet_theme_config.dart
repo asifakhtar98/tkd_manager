@@ -328,13 +328,13 @@ abstract class TieSheetThemeConfig with _$TieSheetThemeConfig {
     // Canvas & card
     canvasBackgroundColor: Color(0xFFFFFEFC),
     borderColor: Color(0xFF94A3B8),
-    connectorStrokeWidth: 0.0,
+    connectorStrokeWidth: 4.0,
     isInteractivityDisabled: false,
     // Text
     primaryTextColor: Color(0xFF1E293B),
     secondaryTextColor: Color(0xFF64748B),
-    isTextForceBold: false,
-    fontSizeDelta: 4.0,
+    isTextForceBold: true,
+    fontSizeDelta: 5.5,
     // Fill
     rowFillColor: Color(0xFFF8FAFC),
     headerFillColor: Color(0xFFE2E8F0),
@@ -360,8 +360,8 @@ abstract class TieSheetThemeConfig with _$TieSheetThemeConfig {
     medalSilverAccentColor: Color(0xFF94A3B8),
     medalBronzeAccentColor: Color(0xFFF97316),
     // Stroke widths
-    borderStrokeWidth: 3.5,
-    subtleStrokeWidth: 1.5,
+    borderStrokeWidth: 4.0,
+    subtleStrokeWidth: 4.0,
     wonConnectorStrokeWidth: 4.0,
     // Spacing
     canvasMargin: 36.0,
@@ -383,7 +383,7 @@ abstract class TieSheetThemeConfig with _$TieSheetThemeConfig {
     subHeaderLetterSpacing: 0.5,
     // Layout dimensions
     rowHeight: 42.0,
-    intraMatchGapHeight: 35.0,
+    intraMatchGapHeight: 60.0,
     interMatchGapHeight: 100.0,
     numberColumnWidth: 32.0,
     nameColumnWidth: 200.0,
@@ -394,11 +394,11 @@ abstract class TieSheetThemeConfig with _$TieSheetThemeConfig {
     centerGapWidth: 340.0,
     sectionLabelHeight: 32.0,
     // Medal table layout
-    medalTableWidth: 460.0,
-    medalRowHeight: 36.0,
-    medalNameColumnWidth: 250.0,
+    medalTableWidth: 590.0,
+    medalRowHeight: 54.0,
+    medalNameColumnWidth: 455.0,
     medalLabelColumnWidth: 120.0,
-    medalRowGap: 4.0,
+    medalRowGap: 7.0,
     // Junction geometry
     centerFinalMinimumSpan: 60.0,
     grandFinalOutputArmLength: 40.0,
@@ -409,9 +409,9 @@ abstract class TieSheetThemeConfig with _$TieSheetThemeConfig {
     thirdPlaceToMedalGap: 60.0,
     matchPillHorizontalOffset: 0.0,
     // Banner & logo
-    headerBannerHeight: 64.0,
-    logoMaxHeight: 60.0,
-    logoPadding: 12.0,
+    headerBannerHeight: 90.0,
+    logoMaxHeight: 105.0,
+    logoPadding: 18.0,
     // Additional colours
     matchPillFillColor: Color(0xFFFFFFFF),
     badgeTextColor: Color(0xFFFFFFFF),
@@ -420,8 +420,8 @@ abstract class TieSheetThemeConfig with _$TieSheetThemeConfig {
     headerSecondaryTextOpacity: 0.65,
     badgeOutlineOpacity: 0.3,
     // Canvas constraints
-    canvasMinimumWidth: 700.0,
-    canvasMinimumHeight: 500.0,
+    canvasMinimumWidth: 800.0,
+    canvasMinimumHeight: 1150.0,
     // Header text positioning
     headerTitleTopPadding: 8.0,
     headerSubtitleTopOffset: 30.0,
