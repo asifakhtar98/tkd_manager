@@ -161,13 +161,13 @@ void main() {
         },
       );
 
-      test('does not emit for userUpdated event', () async {
+      test('emits authenticated for userUpdated with a valid session', () async {
         final FakeUser fakeUser = FakeUser();
 
         authenticationBloc.add(const AuthenticationSubscriptionRequested());
         await Future<void>.delayed(Duration.zero);
 
-        // userUpdated should be a no-op.
+        // userUpdated with a valid user emits authenticated.
         authStateStreamController.add(
           AuthState(
             AuthChangeEvent.userUpdated,
@@ -175,14 +175,17 @@ void main() {
           ),
         );
 
-        // signedOut SHOULD emit.
+        // signedOut emits unauthenticated.
         authStateStreamController.add(
           AuthState(AuthChangeEvent.signedOut, null),
         );
 
         await expectLater(
           authenticationBloc.stream,
-          emitsInOrder([isA<AuthenticationUnauthenticated>()]),
+          emitsInOrder([
+            isA<AuthenticationAuthenticated>(),
+            isA<AuthenticationUnauthenticated>(),
+          ]),
         );
       });
 
