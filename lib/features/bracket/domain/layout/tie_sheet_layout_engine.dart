@@ -436,10 +436,6 @@ class TieSheetLayoutEngine with TieSheetLayoutHelperMixin {
       ),
     ];
 
-    final infoRowFontSize = fontSize(themeConfig.headerSubtitleBaseFontSize);
-    // Use the subtitle base font size for info row cells to keep them
-    // consistent with the header secondary text scale.
-
     return HeaderLayoutData(
       headerBannerBoundingRect: bannerRect,
       tournamentTitleTextLayout: titleText,

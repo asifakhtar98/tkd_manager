@@ -394,17 +394,17 @@ void main() {
           interMatchGapHeight: 100.0,
           numberColumnWidth: 32.0,
           nameColumnWidth: 200.0,
-          registrationIdColumnWidth: 120.0,
+          registrationIdColumnWidth: 150.0,
           roundColumnWidth: 170.0,
           headerTotalHeight: 100.0,
           subHeaderRowHeight: 28.0,
           centerGapWidth: 340.0,
           sectionLabelHeight: 32.0,
           // Medal table layout
-          medalTableWidth: 440.0,
+          medalTableWidth: 460.0,
           medalRowHeight: 36.0,
           medalNameColumnWidth: 250.0,
-          medalLabelColumnWidth: 100.0,
+          medalLabelColumnWidth: 120.0,
           medalRowGap: 4.0,
           // Junction geometry
           centerFinalMinimumSpan: 60.0,
@@ -430,6 +430,24 @@ void main() {
           // Canvas constraints
           canvasMinimumWidth: 700.0,
           canvasMinimumHeight: 500.0,
+          // Header text positioning
+          headerTitleTopPadding: 8.0,
+          headerSubtitleTopOffset: 30.0,
+          headerOrganizerTopOffset: 46.0,
+          headerBannerBottomGap: 12.0,
+          // Layout gaps
+          headerToTableGap: 12.0,
+          sectionLabelToTableGap: 8.0,
+          deCanvasBracketToMedalGap: 60.0,
+          medalTableTopPadding: 10.0,
+          deCanvasExtraWidthPadding: 100.0,
+          // Info row sizing
+          classificationDividerInset: 3.0,
+          // Base font sizes
+          headerTitleBaseFontSize: 18.0,
+          headerSubtitleBaseFontSize: 11.0,
+          headerOrganizerBaseFontSize: 10.0,
+          matchPillBaseFontSize: 10.0,
         );
         expect(custom, equals(preset));
       });
