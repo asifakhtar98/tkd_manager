@@ -59,6 +59,14 @@ class BracketViewerScreen extends StatefulWidget {
 class _BracketViewerScreenState extends State<BracketViewerScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
+  /// When `true`, immediate PDF regeneration calls are suppressed.
+  /// This prevents the expensive synchronous Syncfusion PDF layout and
+  /// render computation from blocking the page transition animation.
+  ///
+  /// Set to `false` after [_deferredPdfGenerationDelay] elapses, at which
+  /// point an immediate PDF regeneration is triggered.
+  bool _isPdfGenerationDeferred = true;
+
   /// Controls the [SfPdfViewer] zoom level programmatically.
   PdfViewerController _pdfViewerController = PdfViewerController();
 
@@ -125,6 +133,12 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
   static const String _taskLabelSaving = 'Saving…';
   static const String _taskLabelGenerating = 'Generating…';
 
+  /// Delay before allowing PDF generation after the page is pushed.
+  /// Allows the page transition animation to complete before the expensive
+  /// synchronous Syncfusion PDF layout and render computation runs on the
+  /// main thread.
+  static const Duration _deferredPdfGenerationDelay = Duration(seconds: 2);
+
   @override
   void initState() {
     super.initState();
@@ -134,6 +148,23 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
       onRegenerationScheduled: _handlePdfRegenerationScheduled,
     );
     _loadTournamentLogoImages();
+    _scheduleDeferredPdfGeneration();
+  }
+
+  /// Lifts the PDF generation deferral after [_deferredPdfGenerationDelay]
+  /// and triggers an immediate PDF regeneration.
+  ///
+  /// During the deferral window, all calls to
+  /// [_executeImmediateRegenerationFromCurrentState] and
+  /// [_requestDebouncedPdfRegeneration] are silently skipped, preventing
+  /// the expensive synchronous Syncfusion PDF computation from blocking
+  /// the page transition animation.
+  void _scheduleDeferredPdfGeneration() {
+    Future<void>.delayed(_deferredPdfGenerationDelay, () {
+      if (!mounted) return;
+      _isPdfGenerationDeferred = false;
+      _executeImmediateRegenerationFromCurrentState();
+    });
   }
 
   /// Called when the orchestrator starts a debounce timer.
@@ -323,6 +354,8 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
   /// changes. Multiple rapid-fire calls collapse into a single
   /// generation after the debounce window.
   void _requestDebouncedPdfRegeneration() {
+    if (_isPdfGenerationDeferred) return;
+
     final inputSnapshot = _buildRegenerationInputSnapshotFromCurrentState();
     if (inputSnapshot == null) return;
 
@@ -337,6 +370,8 @@ class _BracketViewerScreenState extends State<BracketViewerScreen> {
   /// retry after a generation error — paths where the user should
   /// not wait for the debounce window.
   void _executeImmediateRegenerationFromCurrentState() {
+    if (_isPdfGenerationDeferred) return;
+
     final inputSnapshot = _buildRegenerationInputSnapshotFromCurrentState();
     if (inputSnapshot == null) return;
 

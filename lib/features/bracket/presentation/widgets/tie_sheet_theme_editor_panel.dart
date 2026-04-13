@@ -674,7 +674,7 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
       title: 'Medals',
       icon: Icons.emoji_events_outlined,
       children: [
-        _SectionSubHeader(label: 'Gold'),
+        _SectionSubHeader(label: '1st Gold'),
         _buildColorPickerTile(
           context,
           label: 'Gold Fill',
@@ -699,7 +699,7 @@ class TieSheetThemeEditorPanel extends StatelessWidget {
             currentThemeConfig.copyWith(medalGoldAccentColor: color),
           ),
         ),
-        _SectionSubHeader(label: 'Silver'),
+        _SectionSubHeader(label: '2nd Silver'),
         _buildColorPickerTile(
           context,
           label: 'Silver Fill',

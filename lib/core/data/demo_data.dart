@@ -13,8 +13,8 @@ class DemoData {
     userId: 'demo-user-1',
     name: 'Demo Tournament 2022',
     dateRange: '18 Jan. to 22 Jan, 2022',
-    venue: 'Sanskriti School, Ajmer, Rajasthan',
-    organizer: 'Rajasthan Taekwondo Association',
+    venue: 'Abc School, Delhi',
+    organizer: 'Xyz Association',
     createdAt: DateTime.now(),
     updatedAt: DateTime.now(),
   );

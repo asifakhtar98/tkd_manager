@@ -1346,7 +1346,7 @@ class TieSheetLayoutEngine with TieSheetLayoutHelperMixin {
     final y =
         canvasSize.height - dims.medalTableTotalHeight - dims.canvasMargin + themeConfig.medalTableTopPadding;
     final delta = dims.fontSizeDelta;
-    final labels = ['Gold', 'Silver', '1st Bronze', '2nd Bronze'];
+    final labels = ['1st Gold', '2nd Silver', '1st Bronze', '2nd Bronze'];
     final medalTypes = [
       MedalType.gold,
       MedalType.silver,

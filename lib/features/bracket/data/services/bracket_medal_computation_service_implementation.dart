@@ -61,7 +61,7 @@ class BracketMedalComputationServiceImplementation
       BracketMedalPlacementEntity(
         participantId: championshipFinalMatch.winnerId!,
         rankStatus: 1,
-        displayPlacementLabel: 'Gold',
+        displayPlacementLabel: '1st Gold',
       ),
     );
 
@@ -73,7 +73,7 @@ class BracketMedalComputationServiceImplementation
         BracketMedalPlacementEntity(
           participantId: silverMedalistParticipantId,
           rankStatus: 2,
-          displayPlacementLabel: 'Silver',
+          displayPlacementLabel: '2nd Silver',
         ),
       );
     }
@@ -154,7 +154,7 @@ class BracketMedalComputationServiceImplementation
       BracketMedalPlacementEntity(
         participantId: decidingGrandFinalMatch.winnerId!,
         rankStatus: 1,
-        displayPlacementLabel: 'Gold',
+        displayPlacementLabel: '1st Gold',
       ),
     );
 
@@ -166,7 +166,7 @@ class BracketMedalComputationServiceImplementation
         BracketMedalPlacementEntity(
           participantId: silverMedalistParticipantId,
           rankStatus: 2,
-          displayPlacementLabel: 'Silver',
+          displayPlacementLabel: '2nd Silver',
         ),
       );
     }

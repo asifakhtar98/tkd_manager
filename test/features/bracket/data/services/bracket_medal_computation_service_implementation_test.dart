@@ -156,12 +156,12 @@ void main() {
       // Gold
       expect(placements[0].participantId, equals(alice));
       expect(placements[0].rankStatus, equals(1));
-      expect(placements[0].displayPlacementLabel, equals('Gold'));
+      expect(placements[0].displayPlacementLabel, equals('1st Gold'));
 
       // Silver
       expect(placements[1].participantId, equals(carol));
       expect(placements[1].rankStatus, equals(2));
-      expect(placements[1].displayPlacementLabel, equals('Silver'));
+      expect(placements[1].displayPlacementLabel, equals('2nd Silver'));
     });
 
     test('assigns Bronze positions from 3rd-place match winner and loser', () {
