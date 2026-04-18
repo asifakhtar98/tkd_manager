@@ -99,14 +99,14 @@ class _LoginScreenState extends State<LoginScreen> {
   };
 
   String get _headerSubtitle => switch (_authMode) {
-    _AuthMode.signIn => 'Sign in to continue',
-    _AuthMode.signUp => 'Sign up to get started',
+    _AuthMode.signIn => 'Login to continue',
+    _AuthMode.signUp => 'Register to get started',
     _AuthMode.forgotPassword => 'Enter your email to receive a reset link',
   };
 
   String get _submitButtonLabel => switch (_authMode) {
-    _AuthMode.signIn => 'Sign In',
-    _AuthMode.signUp => 'Sign Up',
+    _AuthMode.signIn => 'Login',
+    _AuthMode.signUp => 'Register',
     _AuthMode.forgotPassword => 'Send Reset Link',
   };
 
@@ -307,7 +307,7 @@ class _LoginScreenState extends State<LoginScreen> {
           TextButton(
             onPressed: isLoading ? null : () => _switchToMode(_AuthMode.signUp),
             child: Text(
-              'Sign Up',
+              'Register',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 color: colorScheme.primary,
@@ -323,7 +323,7 @@ class _LoginScreenState extends State<LoginScreen> {
           TextButton(
             onPressed: isLoading ? null : () => _switchToMode(_AuthMode.signIn),
             child: Text(
-              'Sign In',
+              'Log In',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 color: colorScheme.primary,
