@@ -57,6 +57,14 @@ sealed class AuthenticationEvent with _$AuthenticationEvent {
   /// that originated from an email confirmation PKCE redirect (the browser
   /// URL contains a `?code=` query parameter).
   @internal
-  const factory AuthenticationEvent.emailConfirmationDetected() =
-      AuthenticationEmailConfirmationDetected;
+  const factory AuthenticationEvent.emailConfirmationDetected({
+    @Default(true) bool performSignOut,
+  }) = AuthenticationEmailConfirmationDetected;
+
+  /// User tapped "Continue to Sign In" on the [EmailConfirmedScreen].
+  ///
+  /// Deterministically transitions the BLoC from [emailJustConfirmed] to
+  /// [unauthenticated] so the router guard can redirect to `/login`.
+  const factory AuthenticationEvent.emailConfirmationAcknowledged() =
+      AuthenticationEmailConfirmationAcknowledged;
 }

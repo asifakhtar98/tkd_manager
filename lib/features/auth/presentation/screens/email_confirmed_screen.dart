@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:tkd_saas/core/config/app_config.dart';
-import 'package:tkd_saas/core/router/app_routes.dart';
+import 'package:tkd_saas/features/auth/presentation/bloc/authentication_bloc.dart';
 
 /// Production-quality interstitial screen shown after a user confirms
 /// their email via Supabase's PKCE redirect.
@@ -133,7 +133,11 @@ class _EmailConfirmedScreenState extends State<EmailConfirmedScreen>
                           SizedBox(
                             height: 48,
                             child: FilledButton.icon(
-                              onPressed: () => context.go(RoutePaths.login),
+                              onPressed: () {
+                                context.read<AuthenticationBloc>().add(
+                                  const AuthenticationEmailConfirmationAcknowledged(),
+                                );
+                              },
                               icon: const Icon(Icons.login),
                               label: const Text(
                                 'Continue to Sign In',

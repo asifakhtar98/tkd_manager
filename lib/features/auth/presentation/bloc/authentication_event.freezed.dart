@@ -55,7 +55,7 @@ extension AuthenticationEventPatterns on AuthenticationEvent {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( AuthenticationSubscriptionRequested value)?  subscriptionRequested,TResult Function( AuthenticationSignInRequested value)?  signInRequested,TResult Function( AuthenticationSignUpRequested value)?  signUpRequested,TResult Function( AuthenticationSignOutRequested value)?  signOutRequested,TResult Function( AuthenticationPasswordResetRequested value)?  passwordResetRequested,TResult Function( AuthenticationPasswordUpdateRequested value)?  passwordUpdateRequested,TResult Function( AuthenticationStatusChanged value)?  statusChanged,TResult Function( AuthenticationPasswordRecoveryDetected value)?  passwordRecoveryDetected,TResult Function( AuthenticationEmailConfirmationDetected value)?  emailConfirmationDetected,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( AuthenticationSubscriptionRequested value)?  subscriptionRequested,TResult Function( AuthenticationSignInRequested value)?  signInRequested,TResult Function( AuthenticationSignUpRequested value)?  signUpRequested,TResult Function( AuthenticationSignOutRequested value)?  signOutRequested,TResult Function( AuthenticationPasswordResetRequested value)?  passwordResetRequested,TResult Function( AuthenticationPasswordUpdateRequested value)?  passwordUpdateRequested,TResult Function( AuthenticationStatusChanged value)?  statusChanged,TResult Function( AuthenticationPasswordRecoveryDetected value)?  passwordRecoveryDetected,TResult Function( AuthenticationEmailConfirmationDetected value)?  emailConfirmationDetected,TResult Function( AuthenticationEmailConfirmationAcknowledged value)?  emailConfirmationAcknowledged,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
 case AuthenticationSubscriptionRequested() when subscriptionRequested != null:
@@ -67,7 +67,8 @@ return passwordResetRequested(_that);case AuthenticationPasswordUpdateRequested(
 return passwordUpdateRequested(_that);case AuthenticationStatusChanged() when statusChanged != null:
 return statusChanged(_that);case AuthenticationPasswordRecoveryDetected() when passwordRecoveryDetected != null:
 return passwordRecoveryDetected(_that);case AuthenticationEmailConfirmationDetected() when emailConfirmationDetected != null:
-return emailConfirmationDetected(_that);case _:
+return emailConfirmationDetected(_that);case AuthenticationEmailConfirmationAcknowledged() when emailConfirmationAcknowledged != null:
+return emailConfirmationAcknowledged(_that);case _:
   return orElse();
 
 }
@@ -85,7 +86,7 @@ return emailConfirmationDetected(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( AuthenticationSubscriptionRequested value)  subscriptionRequested,required TResult Function( AuthenticationSignInRequested value)  signInRequested,required TResult Function( AuthenticationSignUpRequested value)  signUpRequested,required TResult Function( AuthenticationSignOutRequested value)  signOutRequested,required TResult Function( AuthenticationPasswordResetRequested value)  passwordResetRequested,required TResult Function( AuthenticationPasswordUpdateRequested value)  passwordUpdateRequested,required TResult Function( AuthenticationStatusChanged value)  statusChanged,required TResult Function( AuthenticationPasswordRecoveryDetected value)  passwordRecoveryDetected,required TResult Function( AuthenticationEmailConfirmationDetected value)  emailConfirmationDetected,}){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( AuthenticationSubscriptionRequested value)  subscriptionRequested,required TResult Function( AuthenticationSignInRequested value)  signInRequested,required TResult Function( AuthenticationSignUpRequested value)  signUpRequested,required TResult Function( AuthenticationSignOutRequested value)  signOutRequested,required TResult Function( AuthenticationPasswordResetRequested value)  passwordResetRequested,required TResult Function( AuthenticationPasswordUpdateRequested value)  passwordUpdateRequested,required TResult Function( AuthenticationStatusChanged value)  statusChanged,required TResult Function( AuthenticationPasswordRecoveryDetected value)  passwordRecoveryDetected,required TResult Function( AuthenticationEmailConfirmationDetected value)  emailConfirmationDetected,required TResult Function( AuthenticationEmailConfirmationAcknowledged value)  emailConfirmationAcknowledged,}){
 final _that = this;
 switch (_that) {
 case AuthenticationSubscriptionRequested():
@@ -97,7 +98,8 @@ return passwordResetRequested(_that);case AuthenticationPasswordUpdateRequested(
 return passwordUpdateRequested(_that);case AuthenticationStatusChanged():
 return statusChanged(_that);case AuthenticationPasswordRecoveryDetected():
 return passwordRecoveryDetected(_that);case AuthenticationEmailConfirmationDetected():
-return emailConfirmationDetected(_that);}
+return emailConfirmationDetected(_that);case AuthenticationEmailConfirmationAcknowledged():
+return emailConfirmationAcknowledged(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -111,7 +113,7 @@ return emailConfirmationDetected(_that);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( AuthenticationSubscriptionRequested value)?  subscriptionRequested,TResult? Function( AuthenticationSignInRequested value)?  signInRequested,TResult? Function( AuthenticationSignUpRequested value)?  signUpRequested,TResult? Function( AuthenticationSignOutRequested value)?  signOutRequested,TResult? Function( AuthenticationPasswordResetRequested value)?  passwordResetRequested,TResult? Function( AuthenticationPasswordUpdateRequested value)?  passwordUpdateRequested,TResult? Function( AuthenticationStatusChanged value)?  statusChanged,TResult? Function( AuthenticationPasswordRecoveryDetected value)?  passwordRecoveryDetected,TResult? Function( AuthenticationEmailConfirmationDetected value)?  emailConfirmationDetected,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( AuthenticationSubscriptionRequested value)?  subscriptionRequested,TResult? Function( AuthenticationSignInRequested value)?  signInRequested,TResult? Function( AuthenticationSignUpRequested value)?  signUpRequested,TResult? Function( AuthenticationSignOutRequested value)?  signOutRequested,TResult? Function( AuthenticationPasswordResetRequested value)?  passwordResetRequested,TResult? Function( AuthenticationPasswordUpdateRequested value)?  passwordUpdateRequested,TResult? Function( AuthenticationStatusChanged value)?  statusChanged,TResult? Function( AuthenticationPasswordRecoveryDetected value)?  passwordRecoveryDetected,TResult? Function( AuthenticationEmailConfirmationDetected value)?  emailConfirmationDetected,TResult? Function( AuthenticationEmailConfirmationAcknowledged value)?  emailConfirmationAcknowledged,}){
 final _that = this;
 switch (_that) {
 case AuthenticationSubscriptionRequested() when subscriptionRequested != null:
@@ -123,7 +125,8 @@ return passwordResetRequested(_that);case AuthenticationPasswordUpdateRequested(
 return passwordUpdateRequested(_that);case AuthenticationStatusChanged() when statusChanged != null:
 return statusChanged(_that);case AuthenticationPasswordRecoveryDetected() when passwordRecoveryDetected != null:
 return passwordRecoveryDetected(_that);case AuthenticationEmailConfirmationDetected() when emailConfirmationDetected != null:
-return emailConfirmationDetected(_that);case _:
+return emailConfirmationDetected(_that);case AuthenticationEmailConfirmationAcknowledged() when emailConfirmationAcknowledged != null:
+return emailConfirmationAcknowledged(_that);case _:
   return null;
 
 }
@@ -140,7 +143,7 @@ return emailConfirmationDetected(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  subscriptionRequested,TResult Function( String email,  String password)?  signInRequested,TResult Function( String email,  String password,  String organizationName)?  signUpRequested,TResult Function()?  signOutRequested,TResult Function( String email)?  passwordResetRequested,TResult Function( String newPassword)?  passwordUpdateRequested,TResult Function( User? user)?  statusChanged,TResult Function()?  passwordRecoveryDetected,TResult Function()?  emailConfirmationDetected,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  subscriptionRequested,TResult Function( String email,  String password)?  signInRequested,TResult Function( String email,  String password,  String organizationName)?  signUpRequested,TResult Function()?  signOutRequested,TResult Function( String email)?  passwordResetRequested,TResult Function( String newPassword)?  passwordUpdateRequested,TResult Function( User? user)?  statusChanged,TResult Function()?  passwordRecoveryDetected,TResult Function( bool performSignOut)?  emailConfirmationDetected,TResult Function()?  emailConfirmationAcknowledged,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case AuthenticationSubscriptionRequested() when subscriptionRequested != null:
 return subscriptionRequested();case AuthenticationSignInRequested() when signInRequested != null:
@@ -151,7 +154,8 @@ return passwordResetRequested(_that.email);case AuthenticationPasswordUpdateRequ
 return passwordUpdateRequested(_that.newPassword);case AuthenticationStatusChanged() when statusChanged != null:
 return statusChanged(_that.user);case AuthenticationPasswordRecoveryDetected() when passwordRecoveryDetected != null:
 return passwordRecoveryDetected();case AuthenticationEmailConfirmationDetected() when emailConfirmationDetected != null:
-return emailConfirmationDetected();case _:
+return emailConfirmationDetected(_that.performSignOut);case AuthenticationEmailConfirmationAcknowledged() when emailConfirmationAcknowledged != null:
+return emailConfirmationAcknowledged();case _:
   return orElse();
 
 }
@@ -169,7 +173,7 @@ return emailConfirmationDetected();case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  subscriptionRequested,required TResult Function( String email,  String password)  signInRequested,required TResult Function( String email,  String password,  String organizationName)  signUpRequested,required TResult Function()  signOutRequested,required TResult Function( String email)  passwordResetRequested,required TResult Function( String newPassword)  passwordUpdateRequested,required TResult Function( User? user)  statusChanged,required TResult Function()  passwordRecoveryDetected,required TResult Function()  emailConfirmationDetected,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  subscriptionRequested,required TResult Function( String email,  String password)  signInRequested,required TResult Function( String email,  String password,  String organizationName)  signUpRequested,required TResult Function()  signOutRequested,required TResult Function( String email)  passwordResetRequested,required TResult Function( String newPassword)  passwordUpdateRequested,required TResult Function( User? user)  statusChanged,required TResult Function()  passwordRecoveryDetected,required TResult Function( bool performSignOut)  emailConfirmationDetected,required TResult Function()  emailConfirmationAcknowledged,}) {final _that = this;
 switch (_that) {
 case AuthenticationSubscriptionRequested():
 return subscriptionRequested();case AuthenticationSignInRequested():
@@ -180,7 +184,8 @@ return passwordResetRequested(_that.email);case AuthenticationPasswordUpdateRequ
 return passwordUpdateRequested(_that.newPassword);case AuthenticationStatusChanged():
 return statusChanged(_that.user);case AuthenticationPasswordRecoveryDetected():
 return passwordRecoveryDetected();case AuthenticationEmailConfirmationDetected():
-return emailConfirmationDetected();}
+return emailConfirmationDetected(_that.performSignOut);case AuthenticationEmailConfirmationAcknowledged():
+return emailConfirmationAcknowledged();}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -194,7 +199,7 @@ return emailConfirmationDetected();}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  subscriptionRequested,TResult? Function( String email,  String password)?  signInRequested,TResult? Function( String email,  String password,  String organizationName)?  signUpRequested,TResult? Function()?  signOutRequested,TResult? Function( String email)?  passwordResetRequested,TResult? Function( String newPassword)?  passwordUpdateRequested,TResult? Function( User? user)?  statusChanged,TResult? Function()?  passwordRecoveryDetected,TResult? Function()?  emailConfirmationDetected,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  subscriptionRequested,TResult? Function( String email,  String password)?  signInRequested,TResult? Function( String email,  String password,  String organizationName)?  signUpRequested,TResult? Function()?  signOutRequested,TResult? Function( String email)?  passwordResetRequested,TResult? Function( String newPassword)?  passwordUpdateRequested,TResult? Function( User? user)?  statusChanged,TResult? Function()?  passwordRecoveryDetected,TResult? Function( bool performSignOut)?  emailConfirmationDetected,TResult? Function()?  emailConfirmationAcknowledged,}) {final _that = this;
 switch (_that) {
 case AuthenticationSubscriptionRequested() when subscriptionRequested != null:
 return subscriptionRequested();case AuthenticationSignInRequested() when signInRequested != null:
@@ -205,7 +210,8 @@ return passwordResetRequested(_that.email);case AuthenticationPasswordUpdateRequ
 return passwordUpdateRequested(_that.newPassword);case AuthenticationStatusChanged() when statusChanged != null:
 return statusChanged(_that.user);case AuthenticationPasswordRecoveryDetected() when passwordRecoveryDetected != null:
 return passwordRecoveryDetected();case AuthenticationEmailConfirmationDetected() when emailConfirmationDetected != null:
-return emailConfirmationDetected();case _:
+return emailConfirmationDetected(_that.performSignOut);case AuthenticationEmailConfirmationAcknowledged() when emailConfirmationAcknowledged != null:
+return emailConfirmationAcknowledged();case _:
   return null;
 
 }
@@ -649,7 +655,73 @@ String toString() {
 
 @internal
 class AuthenticationEmailConfirmationDetected implements AuthenticationEvent {
-  const AuthenticationEmailConfirmationDetected();
+  const AuthenticationEmailConfirmationDetected({this.performSignOut = true});
+  
+
+@JsonKey() final  bool performSignOut;
+
+/// Create a copy of AuthenticationEvent
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$AuthenticationEmailConfirmationDetectedCopyWith<AuthenticationEmailConfirmationDetected> get copyWith => _$AuthenticationEmailConfirmationDetectedCopyWithImpl<AuthenticationEmailConfirmationDetected>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AuthenticationEmailConfirmationDetected&&(identical(other.performSignOut, performSignOut) || other.performSignOut == performSignOut));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,performSignOut);
+
+@override
+String toString() {
+  return 'AuthenticationEvent.emailConfirmationDetected(performSignOut: $performSignOut)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $AuthenticationEmailConfirmationDetectedCopyWith<$Res> implements $AuthenticationEventCopyWith<$Res> {
+  factory $AuthenticationEmailConfirmationDetectedCopyWith(AuthenticationEmailConfirmationDetected value, $Res Function(AuthenticationEmailConfirmationDetected) _then) = _$AuthenticationEmailConfirmationDetectedCopyWithImpl;
+@useResult
+$Res call({
+ bool performSignOut
+});
+
+
+
+
+}
+/// @nodoc
+class _$AuthenticationEmailConfirmationDetectedCopyWithImpl<$Res>
+    implements $AuthenticationEmailConfirmationDetectedCopyWith<$Res> {
+  _$AuthenticationEmailConfirmationDetectedCopyWithImpl(this._self, this._then);
+
+  final AuthenticationEmailConfirmationDetected _self;
+  final $Res Function(AuthenticationEmailConfirmationDetected) _then;
+
+/// Create a copy of AuthenticationEvent
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? performSignOut = null,}) {
+  return _then(AuthenticationEmailConfirmationDetected(
+performSignOut: null == performSignOut ? _self.performSignOut : performSignOut // ignore: cast_nullable_to_non_nullable
+as bool,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
+class AuthenticationEmailConfirmationAcknowledged implements AuthenticationEvent {
+  const AuthenticationEmailConfirmationAcknowledged();
   
 
 
@@ -659,7 +731,7 @@ class AuthenticationEmailConfirmationDetected implements AuthenticationEvent {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AuthenticationEmailConfirmationDetected);
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AuthenticationEmailConfirmationAcknowledged);
 }
 
 
@@ -668,7 +740,7 @@ int get hashCode => runtimeType.hashCode;
 
 @override
 String toString() {
-  return 'AuthenticationEvent.emailConfirmationDetected()';
+  return 'AuthenticationEvent.emailConfirmationAcknowledged()';
 }
 
 

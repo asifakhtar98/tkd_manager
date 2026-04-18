@@ -714,6 +714,162 @@ void main() {
           expect(authenticationBloc.state, isA<AuthenticationAuthenticated>());
         },
       );
+
+      // ── BUG-2 regression: stream suppression ──────────────────────────────
+      test(
+        'signedOut stream event fired by our own signOut() is swallowed — '
+        'state remains emailJustConfirmed, not unauthenticated',
+        () async {
+          final FakeUser fakeUser = FakeUser();
+
+          when(
+            () => mockAuthenticationRepository.signOut(),
+          ).thenAnswer((_) async {});
+
+          authenticationBloc = AuthenticationBloc(
+            authenticationRepository: mockAuthenticationRepository,
+            isEmailConfirmationRedirect: () => true,
+          );
+
+          authenticationBloc.add(const AuthenticationSubscriptionRequested());
+          await Future<void>.delayed(Duration.zero);
+
+          // Trigger email confirmation detection.
+          authStateStreamController.add(
+            AuthState(
+              AuthChangeEvent.signedIn,
+              createFakeSession(user: fakeUser),
+            ),
+          );
+
+          await Future<void>.delayed(const Duration(milliseconds: 100));
+          expect(
+            authenticationBloc.state,
+            isA<AuthenticationEmailJustConfirmed>(),
+          );
+
+          // Simulate the signedOut event that Supabase fires in response to
+          // our signOut() call. This MUST be swallowed.
+          authStateStreamController.add(
+            AuthState(AuthChangeEvent.signedOut, null),
+          );
+
+          await Future<void>.delayed(const Duration(milliseconds: 100));
+
+          // State must still be emailJustConfirmed — NOT unauthenticated.
+          expect(
+            authenticationBloc.state,
+            isA<AuthenticationEmailJustConfirmed>(),
+          );
+        },
+      );
+
+      // ── BUG-2 regression: acknowledgement event ───────────────────────────
+      test(
+        'emailConfirmationAcknowledged deterministically transitions '
+        'from emailJustConfirmed to unauthenticated',
+        () async {
+          final FakeUser fakeUser = FakeUser();
+
+          when(
+            () => mockAuthenticationRepository.signOut(),
+          ).thenAnswer((_) async {});
+
+          authenticationBloc = AuthenticationBloc(
+            authenticationRepository: mockAuthenticationRepository,
+            isEmailConfirmationRedirect: () => true,
+          );
+
+          authenticationBloc.add(const AuthenticationSubscriptionRequested());
+          await Future<void>.delayed(Duration.zero);
+
+          // Enter emailJustConfirmed state.
+          authStateStreamController.add(
+            AuthState(
+              AuthChangeEvent.signedIn,
+              createFakeSession(user: fakeUser),
+            ),
+          );
+
+          await Future<void>.delayed(const Duration(milliseconds: 100));
+          expect(
+            authenticationBloc.state,
+            isA<AuthenticationEmailJustConfirmed>(),
+          );
+
+          // User taps "Continue to Sign In" — dispatches acknowledgement.
+          authenticationBloc.add(
+            const AuthenticationEmailConfirmationAcknowledged(),
+          );
+
+          await Future<void>.delayed(const Duration(milliseconds: 100));
+
+          // State must now be unauthenticated — router will redirect to /login.
+          expect(
+            authenticationBloc.state,
+            isA<AuthenticationUnauthenticated>(),
+          );
+        },
+      );
+
+      // ── Full round-trip regression ────────────────────────────────────────
+      test(
+        'full round-trip: signedIn → emailJustConfirmed → signedOut swallowed '
+        '→ acknowledged → unauthenticated',
+        () async {
+          final FakeUser fakeUser = FakeUser();
+
+          when(
+            () => mockAuthenticationRepository.signOut(),
+          ).thenAnswer((_) async {});
+
+          authenticationBloc = AuthenticationBloc(
+            authenticationRepository: mockAuthenticationRepository,
+            isEmailConfirmationRedirect: () => true,
+          );
+
+          authenticationBloc.add(const AuthenticationSubscriptionRequested());
+          await Future<void>.delayed(Duration.zero);
+
+          // Step 1: signedIn with email confirmation redirect.
+          authStateStreamController.add(
+            AuthState(
+              AuthChangeEvent.signedIn,
+              createFakeSession(user: fakeUser),
+            ),
+          );
+
+          await Future<void>.delayed(const Duration(milliseconds: 100));
+          expect(
+            authenticationBloc.state,
+            isA<AuthenticationEmailJustConfirmed>(),
+          );
+
+          // Step 2: signedOut fires from stream (our own signOut) — swallowed.
+          authStateStreamController.add(
+            AuthState(AuthChangeEvent.signedOut, null),
+          );
+
+          await Future<void>.delayed(const Duration(milliseconds: 100));
+          expect(
+            authenticationBloc.state,
+            isA<AuthenticationEmailJustConfirmed>(),
+          );
+
+          // Step 3: User acknowledges → unauthenticated.
+          authenticationBloc.add(
+            const AuthenticationEmailConfirmationAcknowledged(),
+          );
+
+          await Future<void>.delayed(const Duration(milliseconds: 100));
+          expect(
+            authenticationBloc.state,
+            isA<AuthenticationUnauthenticated>(),
+          );
+
+          verify(() => mockAuthenticationRepository.signOut()).called(1);
+        },
+      );
     });
 
     // ─────────────────────────────────────────────────────────────────────────
