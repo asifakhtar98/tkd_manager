@@ -307,6 +307,13 @@ class AuthenticationBloc
     AuthenticationEmailConfirmationAcknowledged event,
     Emitter<AuthenticationState> emit,
   ) {
+    // If the underlying PKCE exchange completely failed (e.g., missing code verifier
+    // in local storage), a `signedIn` event will never fire to clean up the intercept
+    // state. Defuse the interceptor manually here when the user explicitly leaves
+    // the screen, so their upcoming manual login is not hijacked.
+    _emailConfirmationCodeConsumed = true;
+    _capturedInitialUri = null;
+
     emit(const AuthenticationState.unauthenticated());
   }
 
