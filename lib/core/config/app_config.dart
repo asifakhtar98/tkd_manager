@@ -23,4 +23,40 @@ abstract final class AppConfig {
   /// Background image URL for auth screens.
   static const String authBackgroundImage =
       'https://lldlunqzkltclpfzpjxh.supabase.co/storage/v1/object/public/assets/tkd-bg-4234.jpg';
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Deep Link Configuration
+  // ─────────────────────────────────────────────────────────────────────────
+
+  /// Custom URL scheme registered in iOS `Info.plist` and Android
+  /// `AndroidManifest.xml`. Must match both native configurations exactly.
+  static const String deepLinkScheme = 'com.gamecon.app';
+
+  /// Path segment for email-confirmation deep links.
+  static const String emailConfirmedPath = '/email-confirmed';
+
+  /// Path segment for password-reset deep links.
+  static const String passwordResetPath = '/reset-password';
+
+  /// Full redirect URL for **mobile** email-confirmation links.
+  /// Example: `com.gamecon.app://email-confirmed`
+  static const String mobileEmailConfirmationRedirectUrl =
+      '$deepLinkScheme://$emailConfirmedPath';
+
+  /// Full redirect URL for **mobile** password-reset links.
+  /// Example: `com.gamecon.app://reset-password`
+  static const String mobilePasswordResetRedirectUrl =
+      '$deepLinkScheme://$passwordResetPath';
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // App Store URLs
+  // ─────────────────────────────────────────────────────────────────────────
+
+  /// Apple App Store listing URL (update after publishing).
+  static const String appStoreUrl =
+      'https://apps.apple.com/app/gamecon/idXXXXXXXXXX';
+
+  /// Google Play Store listing URL (update after publishing).
+  static const String playStoreUrl =
+      'https://play.google.com/store/apps/details?id=com.gamecon.app';
 }

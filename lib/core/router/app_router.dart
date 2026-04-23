@@ -79,7 +79,17 @@ class AppRouter {
               final bool isEmailJustConfirmed =
                   authState is AuthenticationEmailJustConfirmed;
 
+              // Public routes that do not require authentication.
+              const Set<String> publicPaths = {
+                RoutePaths.appDownload,
+              };
+              final bool isOnPublicPage =
+                  publicPaths.contains(currentLocation);
+
               if (authState is AuthenticationUnknown) return null;
+
+              // Always allow public routes regardless of auth state.
+              if (isOnPublicPage) return null;
 
               if (isEmailJustConfirmed && !isOnEmailConfirmedPage) {
                 return RoutePaths.emailConfirmed;

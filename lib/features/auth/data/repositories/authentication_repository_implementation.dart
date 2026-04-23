@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:injectable/injectable.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:tkd_saas/core/config/app_config.dart';
 import 'package:tkd_saas/core/error/failures.dart';
 import 'package:tkd_saas/features/auth/domain/entities/sign_up_result.dart';
 import 'package:tkd_saas/features/auth/domain/repositories/authentication_repository.dart';
@@ -184,17 +185,23 @@ class AuthenticationRepositoryImplementation
       _supabaseClient.auth.onAuthStateChange;
 
   /// On Flutter web, uses the current origin so Supabase email links redirect
-  /// back to the running application. Returns `null` on non-web platforms
-  /// (mobile deep links are handled differently).
-  String? get _webRedirectUrl => kIsWeb ? Uri.base.origin : null;
+  /// back to the running application. On mobile, returns the deep link URL
+  /// so the OS routes the user back into the app.
+  String? get _webRedirectUrl => kIsWeb
+      ? Uri.base.origin
+      : AppConfig.mobilePasswordResetRedirectUrl;
 
   /// Redirect URL used exclusively for **sign-up email confirmation** links.
   ///
-  /// Points to the `/email-confirmed` path so the [AuthenticationBloc] can
-  /// distinguish email-confirmation redirects from password-recovery redirects
-  /// by inspecting `Uri.base.path` instead of the ambiguous `?code=` param.
-  String? get _emailConfirmationRedirectUrl =>
-      kIsWeb ? '${Uri.base.origin}/email-confirmed' : null;
+  /// On web, points to `origin/email-confirmed` so the [AuthenticationBloc]
+  /// can distinguish email-confirmation redirects from password-recovery
+  /// redirects by inspecting `Uri.base.path`.
+  ///
+  /// On mobile, returns the deep link URL (`com.gamecon.app://email-confirmed`)
+  /// so the OS opens the app directly instead of the web browser.
+  String? get _emailConfirmationRedirectUrl => kIsWeb
+      ? '${Uri.base.origin}${AppConfig.emailConfirmedPath}'
+      : AppConfig.mobileEmailConfirmationRedirectUrl;
 
   /// Maps Supabase's technical error messages to friendlier text where
   /// possible, falling back to the raw message otherwise.

@@ -1,9 +1,11 @@
 import 'dart:async';
 
+import 'package:app_links/app_links.dart';
 import 'package:flutter/foundation.dart' show kIsWeb, visibleForTesting;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:tkd_saas/core/config/app_config.dart';
 import 'package:tkd_saas/features/auth/domain/entities/sign_up_result.dart';
 import 'package:tkd_saas/features/auth/domain/repositories/authentication_repository.dart';
 import 'package:tkd_saas/features/auth/presentation/bloc/authentication_event.dart';
@@ -53,6 +55,13 @@ class AuthenticationBloc
     on<AuthenticationEmailConfirmationAcknowledged>(
       _onEmailConfirmationAcknowledged,
     );
+
+    // On mobile, eagerly capture the initial deep link URI (if any) before
+    // supabase_flutter processes it. This mirrors the web `Uri.base` capture.
+    // Skip when a test override is present — tests don't have platform channels.
+    if (!kIsWeb && _isEmailConfirmationRedirectOverride == null) {
+      _captureInitialMobileDeepLink();
+    }
   }
 
   final AuthenticationRepository _authenticationRepository;
@@ -72,6 +81,13 @@ class AuthenticationBloc
   Uri? _capturedInitialUri;
 
   StreamSubscription<AuthState>? _authStateSubscription;
+
+  /// Subscription to the mobile deep link stream (warm-start deep links).
+  StreamSubscription<Uri>? _deepLinkSubscription;
+
+  /// Whether a mobile deep link for email confirmation was received.
+  /// Set by [_captureInitialMobileDeepLink] or the deep link stream listener.
+  bool _mobileEmailConfirmationDeepLinkReceived = false;
 
   /// Whether the PKCE email-confirmation `?code=` in the browser URL has
   /// already been consumed. Prevents re-detection on subsequent auth events
@@ -143,10 +159,17 @@ class AuthenticationBloc
     if (_isEmailConfirmationRedirectOverride != null) {
       return _isEmailConfirmationRedirectOverride();
     }
-    if (!kIsWeb || _capturedInitialUri == null) return false;
+
+    // ── Mobile deep link detection ──
+    if (!kIsWeb) {
+      return _mobileEmailConfirmationDeepLinkReceived;
+    }
+
+    // ── Web URI detection ──
+    if (_capturedInitialUri == null) return false;
 
     final bool isCorrectPath =
-        _capturedInitialUri!.path == '/email-confirmed';
+        _capturedInitialUri!.path == AppConfig.emailConfirmedPath;
     final bool hasCodeParameter =
         _capturedInitialUri!.queryParameters.containsKey('code');
     final bool hasAccessTokenFragment =
@@ -162,6 +185,44 @@ class AuthenticationBloc
     }
 
     return isRedirect;
+  }
+
+  /// Eagerly captures the initial deep link URI on mobile (cold start).
+  ///
+  /// On mobile, `Uri.base` is not meaningful — deep links arrive via the OS.
+  /// `AppLinks().getInitialLink()` returns the URI that launched the app.
+  ///
+  /// Also subscribes to `uriLinkStream` for warm-start deep links (when the
+  /// app is already running in the background and receives a deep link).
+  void _captureInitialMobileDeepLink() {
+    final AppLinks appLinks = AppLinks();
+
+    // Cold start: the app was launched via a deep link.
+    appLinks.getInitialLink().then((Uri? uri) {
+      if (uri != null && _isEmailConfirmationPath(uri)) {
+        _mobileEmailConfirmationDeepLinkReceived = true;
+      }
+    }).catchError((_) {
+      // Platform channels may fail in certain environments — ignore.
+    });
+
+    // Warm start: app is in background and receives a deep link.
+    _deepLinkSubscription = appLinks.uriLinkStream.listen((Uri uri) {
+      if (_isEmailConfirmationPath(uri)) {
+        _mobileEmailConfirmationDeepLinkReceived = true;
+      }
+    });
+  }
+
+  /// Checks whether the given [uri] matches the email confirmation
+  /// deep link redirect (e.g. `com.gamecon.app://email-confirmed?code=...`).
+  bool _isEmailConfirmationPath(Uri uri) {
+    // The deep link arrives as `com.gamecon.app://email-confirmed?code=...`
+    // where `host` is empty and `path` contains the route,
+    // OR as `com.gamecon.app:///email-confirmed?code=...` with a path.
+    final String effectivePath =
+        uri.host.isNotEmpty ? '/${uri.host}${uri.path}' : uri.path;
+    return effectivePath == AppConfig.emailConfirmedPath;
   }
 
   Future<void> _onSignInRequested(
@@ -320,6 +381,7 @@ class AuthenticationBloc
   @override
   Future<void> close() async {
     await _authStateSubscription?.cancel();
+    await _deepLinkSubscription?.cancel();
     return super.close();
   }
 }

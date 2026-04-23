@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:tkd_saas/core/di/injection.dart';
+import 'package:tkd_saas/features/app_download/presentation/screens/app_download_screen.dart';
 import 'package:tkd_saas/features/auth/presentation/screens/email_confirmed_screen.dart';
 import 'package:tkd_saas/features/auth/presentation/screens/login_screen.dart';
 import 'package:tkd_saas/features/auth/presentation/screens/password_reset_screen.dart';
@@ -63,6 +64,9 @@ abstract final class RoutePaths {
 
   /// Invoice generator route path `/invoice`
   static const String invoice = '/invoice';
+
+  /// Public app download landing page `/app`
+  static const String appDownload = '/app';
 }
 
 @TypedGoRoute<LoginRoute>(path: '/login')
@@ -147,6 +151,16 @@ class InvoiceRoute extends GoRouteData with $InvoiceRoute {
   @override
   Widget build(BuildContext context, GoRouterState state) =>
       const InvoiceGeneratorScreen();
+}
+
+@TypedGoRoute<AppDownloadRoute>(path: '/app')
+@immutable
+class AppDownloadRoute extends GoRouteData with $AppDownloadRoute {
+  const AppDownloadRoute();
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      const AppDownloadScreen();
 }
 
 @TypedGoRoute<DashboardRoute>(
