@@ -19,6 +19,7 @@ _ActivationRequestModel _$ActivationRequestModelFromJson(
   reviewedAt: json['reviewed_at'] == null
       ? null
       : DateTime.parse(json['reviewed_at'] as String),
+  billingInfo: json['billing_info'] as Map<String, dynamic>?,
 );
 
 Map<String, dynamic> _$ActivationRequestModelToJson(
@@ -32,4 +33,5 @@ Map<String, dynamic> _$ActivationRequestModelToJson(
   'status': instance.status,
   'created_at': instance.createdAt.toIso8601String(),
   'reviewed_at': instance.reviewedAt?.toIso8601String(),
+  'billing_info': instance.billingInfo,
 };

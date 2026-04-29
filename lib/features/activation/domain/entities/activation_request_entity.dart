@@ -13,5 +13,6 @@ abstract class ActivationRequestEntity with _$ActivationRequestEntity {
     required String status,
     required DateTime createdAt,
     DateTime? reviewedAt,
+    Map<String, dynamic>? billingInfo,
   }) = _ActivationRequestEntity;
 }

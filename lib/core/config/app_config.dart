@@ -25,6 +25,37 @@ abstract final class AppConfig {
       'https://lldlunqzkltclpfzpjxh.supabase.co/storage/v1/object/public/assets/tkd-bg-4234.jpg';
 
   // ─────────────────────────────────────────────────────────────────────────
+  // Activation Email Notifications
+  // ─────────────────────────────────────────────────────────────────────────
+
+  /// Resend API key sent to the whatsevr_server email proxy as
+  /// `external_smtp_key`. The server forwards it to Resend server-side,
+  /// avoiding browser CORS restrictions.
+  static const String resendApiKey = 're_Jz7tkWt5_LptzZ4wJbZiAxLqsy2XnnCaB';
+
+
+
+  /// Owner inbox that receives activation request notifications.
+  static const String productOwnerEmail =
+      'asifakhtar91298.personal@gmail.com';
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Whatsevr Server (Email Proxy)
+  // ─────────────────────────────────────────────────────────────────────────
+
+  /// Base URL for the whatsevr server used to proxy emails (avoids CORS).
+  static const String externalServerBaseUrl =
+      'https://whatsevr-server-dev.onrender.com';
+
+  /// Headers required by whatsevr_server's [RequestAuthMiddleware].
+  static const String whatsevrUserAgentId = 'tkd-saas-web';
+  static const String whatsevrUserAgentName = 'TKD SaaS Web';
+  static const String whatsevrUserAgentType = 'web';
+  static const String whatsevrAppVersionCode = '1';
+  static const String whatsevrBearerToken =
+      'Bearer ZSLBTlLJf8yrOAojKmcYQTyA6aS4WK3Quv1yCWGU1rI/6VAQIh8y';
+
+  // ─────────────────────────────────────────────────────────────────────────
   // Deep Link Configuration
   // ─────────────────────────────────────────────────────────────────────────
 

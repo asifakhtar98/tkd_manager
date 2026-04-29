@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:fpdart/fpdart.dart';
 import 'package:injectable/injectable.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -105,10 +107,11 @@ class ActivationRepositoryImpl implements IActivationRepository {
           .fetchUserActivationByUserId(request.userId);
 
       final nowUtc = DateTime.now().toUtc();
+      late final DateTime expiresAt;
 
       if (existingActivation == null) {
         // No existing activation — create new one starting from now
-        final expiresAt = nowUtc.add(Duration(days: request.requestedDays));
+        expiresAt = nowUtc.add(Duration(days: request.requestedDays));
         await _remoteDataSource.insertUserActivation(
           userId: request.userId,
           expiresAt: expiresAt,
@@ -116,20 +119,19 @@ class ActivationRepositoryImpl implements IActivationRepository {
       } else {
         final isStillActive = existingActivation.expiresAt.isAfter(nowUtc);
 
-        DateTime newExpiresAt;
         if (isStillActive) {
           // Still active — extend from current expiry
-          newExpiresAt = existingActivation.expiresAt.add(
+          expiresAt = existingActivation.expiresAt.add(
             Duration(days: request.requestedDays),
           );
         } else {
           // Expired — reset from now
-          newExpiresAt = nowUtc.add(Duration(days: request.requestedDays));
+          expiresAt = nowUtc.add(Duration(days: request.requestedDays));
         }
 
         await _remoteDataSource.updateUserActivationExpiresAt(
           userId: existingActivation.userId,
-          newExpiresAt: newExpiresAt,
+          newExpiresAt: expiresAt,
         );
       }
 
@@ -137,6 +139,24 @@ class ActivationRepositoryImpl implements IActivationRepository {
       await _remoteDataSource.updateActivationRequestStatus(
         requestId: request.id,
         newStatus: 'approved',
+      );
+
+      unawaited(
+        _remoteDataSource.sendActivationApprovedEmail(
+          activationRequestModel: ActivationRequestModel(
+            id: request.id,
+            userId: request.userId,
+            contactName: request.contactName,
+            requestedDays: request.requestedDays,
+            totalAmount: request.totalAmount,
+            status: 'approved',
+            createdAt: request.createdAt,
+            reviewedAt: nowUtc,
+            billingInfo: request.billingInfo,
+          ),
+          approvedAt: nowUtc,
+          expiresAt: expiresAt,
+        ),
       );
 
       return right(unit);

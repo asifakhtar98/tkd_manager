@@ -15,6 +15,7 @@ abstract class ActivationRequestModel with _$ActivationRequestModel {
     required String status,
     @JsonKey(name: 'created_at') required DateTime createdAt,
     @JsonKey(name: 'reviewed_at') DateTime? reviewedAt,
+    @JsonKey(name: 'billing_info') Map<String, dynamic>? billingInfo,
   }) = _ActivationRequestModel;
 
   factory ActivationRequestModel.fromJson(Map<String, dynamic> json) =>
@@ -32,6 +33,7 @@ extension ActivationRequestModelToDomain on ActivationRequestModel {
       status: status,
       createdAt: createdAt,
       reviewedAt: reviewedAt,
+      billingInfo: billingInfo,
     );
   }
 }

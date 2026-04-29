@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$ActivationRequestModel {
 
- String get id;@JsonKey(name: 'user_id') String get userId;@JsonKey(name: 'contact_name') String get contactName;@JsonKey(name: 'requested_days') int get requestedDays;@JsonKey(name: 'total_amount') int get totalAmount; String get status;@JsonKey(name: 'created_at') DateTime get createdAt;@JsonKey(name: 'reviewed_at') DateTime? get reviewedAt;
+ String get id;@JsonKey(name: 'user_id') String get userId;@JsonKey(name: 'contact_name') String get contactName;@JsonKey(name: 'requested_days') int get requestedDays;@JsonKey(name: 'total_amount') int get totalAmount; String get status;@JsonKey(name: 'created_at') DateTime get createdAt;@JsonKey(name: 'reviewed_at') DateTime? get reviewedAt;@JsonKey(name: 'billing_info') Map<String, dynamic>? get billingInfo;
 /// Create a copy of ActivationRequestModel
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $ActivationRequestModelCopyWith<ActivationRequestModel> get copyWith => _$Activa
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ActivationRequestModel&&(identical(other.id, id) || other.id == id)&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.contactName, contactName) || other.contactName == contactName)&&(identical(other.requestedDays, requestedDays) || other.requestedDays == requestedDays)&&(identical(other.totalAmount, totalAmount) || other.totalAmount == totalAmount)&&(identical(other.status, status) || other.status == status)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.reviewedAt, reviewedAt) || other.reviewedAt == reviewedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ActivationRequestModel&&(identical(other.id, id) || other.id == id)&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.contactName, contactName) || other.contactName == contactName)&&(identical(other.requestedDays, requestedDays) || other.requestedDays == requestedDays)&&(identical(other.totalAmount, totalAmount) || other.totalAmount == totalAmount)&&(identical(other.status, status) || other.status == status)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.reviewedAt, reviewedAt) || other.reviewedAt == reviewedAt)&&const DeepCollectionEquality().equals(other.billingInfo, billingInfo));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,userId,contactName,requestedDays,totalAmount,status,createdAt,reviewedAt);
+int get hashCode => Object.hash(runtimeType,id,userId,contactName,requestedDays,totalAmount,status,createdAt,reviewedAt,const DeepCollectionEquality().hash(billingInfo));
 
 @override
 String toString() {
-  return 'ActivationRequestModel(id: $id, userId: $userId, contactName: $contactName, requestedDays: $requestedDays, totalAmount: $totalAmount, status: $status, createdAt: $createdAt, reviewedAt: $reviewedAt)';
+  return 'ActivationRequestModel(id: $id, userId: $userId, contactName: $contactName, requestedDays: $requestedDays, totalAmount: $totalAmount, status: $status, createdAt: $createdAt, reviewedAt: $reviewedAt, billingInfo: $billingInfo)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $ActivationRequestModelCopyWith<$Res>  {
   factory $ActivationRequestModelCopyWith(ActivationRequestModel value, $Res Function(ActivationRequestModel) _then) = _$ActivationRequestModelCopyWithImpl;
 @useResult
 $Res call({
- String id,@JsonKey(name: 'user_id') String userId,@JsonKey(name: 'contact_name') String contactName,@JsonKey(name: 'requested_days') int requestedDays,@JsonKey(name: 'total_amount') int totalAmount, String status,@JsonKey(name: 'created_at') DateTime createdAt,@JsonKey(name: 'reviewed_at') DateTime? reviewedAt
+ String id,@JsonKey(name: 'user_id') String userId,@JsonKey(name: 'contact_name') String contactName,@JsonKey(name: 'requested_days') int requestedDays,@JsonKey(name: 'total_amount') int totalAmount, String status,@JsonKey(name: 'created_at') DateTime createdAt,@JsonKey(name: 'reviewed_at') DateTime? reviewedAt,@JsonKey(name: 'billing_info') Map<String, dynamic>? billingInfo
 });
 
 
@@ -65,7 +65,7 @@ class _$ActivationRequestModelCopyWithImpl<$Res>
 
 /// Create a copy of ActivationRequestModel
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? userId = null,Object? contactName = null,Object? requestedDays = null,Object? totalAmount = null,Object? status = null,Object? createdAt = null,Object? reviewedAt = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? userId = null,Object? contactName = null,Object? requestedDays = null,Object? totalAmount = null,Object? status = null,Object? createdAt = null,Object? reviewedAt = freezed,Object? billingInfo = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,userId: null == userId ? _self.userId : userId // ignore: cast_nullable_to_non_nullable
@@ -75,7 +75,8 @@ as int,totalAmount: null == totalAmount ? _self.totalAmount : totalAmount // ign
 as int,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime,reviewedAt: freezed == reviewedAt ? _self.reviewedAt : reviewedAt // ignore: cast_nullable_to_non_nullable
-as DateTime?,
+as DateTime?,billingInfo: freezed == billingInfo ? _self.billingInfo : billingInfo // ignore: cast_nullable_to_non_nullable
+as Map<String, dynamic>?,
   ));
 }
 
@@ -160,10 +161,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'user_id')  String userId, @JsonKey(name: 'contact_name')  String contactName, @JsonKey(name: 'requested_days')  int requestedDays, @JsonKey(name: 'total_amount')  int totalAmount,  String status, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'reviewed_at')  DateTime? reviewedAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'user_id')  String userId, @JsonKey(name: 'contact_name')  String contactName, @JsonKey(name: 'requested_days')  int requestedDays, @JsonKey(name: 'total_amount')  int totalAmount,  String status, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'reviewed_at')  DateTime? reviewedAt, @JsonKey(name: 'billing_info')  Map<String, dynamic>? billingInfo)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ActivationRequestModel() when $default != null:
-return $default(_that.id,_that.userId,_that.contactName,_that.requestedDays,_that.totalAmount,_that.status,_that.createdAt,_that.reviewedAt);case _:
+return $default(_that.id,_that.userId,_that.contactName,_that.requestedDays,_that.totalAmount,_that.status,_that.createdAt,_that.reviewedAt,_that.billingInfo);case _:
   return orElse();
 
 }
@@ -181,10 +182,10 @@ return $default(_that.id,_that.userId,_that.contactName,_that.requestedDays,_tha
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'user_id')  String userId, @JsonKey(name: 'contact_name')  String contactName, @JsonKey(name: 'requested_days')  int requestedDays, @JsonKey(name: 'total_amount')  int totalAmount,  String status, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'reviewed_at')  DateTime? reviewedAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id, @JsonKey(name: 'user_id')  String userId, @JsonKey(name: 'contact_name')  String contactName, @JsonKey(name: 'requested_days')  int requestedDays, @JsonKey(name: 'total_amount')  int totalAmount,  String status, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'reviewed_at')  DateTime? reviewedAt, @JsonKey(name: 'billing_info')  Map<String, dynamic>? billingInfo)  $default,) {final _that = this;
 switch (_that) {
 case _ActivationRequestModel():
-return $default(_that.id,_that.userId,_that.contactName,_that.requestedDays,_that.totalAmount,_that.status,_that.createdAt,_that.reviewedAt);case _:
+return $default(_that.id,_that.userId,_that.contactName,_that.requestedDays,_that.totalAmount,_that.status,_that.createdAt,_that.reviewedAt,_that.billingInfo);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -201,10 +202,10 @@ return $default(_that.id,_that.userId,_that.contactName,_that.requestedDays,_tha
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id, @JsonKey(name: 'user_id')  String userId, @JsonKey(name: 'contact_name')  String contactName, @JsonKey(name: 'requested_days')  int requestedDays, @JsonKey(name: 'total_amount')  int totalAmount,  String status, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'reviewed_at')  DateTime? reviewedAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id, @JsonKey(name: 'user_id')  String userId, @JsonKey(name: 'contact_name')  String contactName, @JsonKey(name: 'requested_days')  int requestedDays, @JsonKey(name: 'total_amount')  int totalAmount,  String status, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'reviewed_at')  DateTime? reviewedAt, @JsonKey(name: 'billing_info')  Map<String, dynamic>? billingInfo)?  $default,) {final _that = this;
 switch (_that) {
 case _ActivationRequestModel() when $default != null:
-return $default(_that.id,_that.userId,_that.contactName,_that.requestedDays,_that.totalAmount,_that.status,_that.createdAt,_that.reviewedAt);case _:
+return $default(_that.id,_that.userId,_that.contactName,_that.requestedDays,_that.totalAmount,_that.status,_that.createdAt,_that.reviewedAt,_that.billingInfo);case _:
   return null;
 
 }
@@ -216,7 +217,7 @@ return $default(_that.id,_that.userId,_that.contactName,_that.requestedDays,_tha
 @JsonSerializable()
 
 class _ActivationRequestModel implements ActivationRequestModel {
-  const _ActivationRequestModel({required this.id, @JsonKey(name: 'user_id') required this.userId, @JsonKey(name: 'contact_name') required this.contactName, @JsonKey(name: 'requested_days') required this.requestedDays, @JsonKey(name: 'total_amount') required this.totalAmount, required this.status, @JsonKey(name: 'created_at') required this.createdAt, @JsonKey(name: 'reviewed_at') this.reviewedAt});
+  const _ActivationRequestModel({required this.id, @JsonKey(name: 'user_id') required this.userId, @JsonKey(name: 'contact_name') required this.contactName, @JsonKey(name: 'requested_days') required this.requestedDays, @JsonKey(name: 'total_amount') required this.totalAmount, required this.status, @JsonKey(name: 'created_at') required this.createdAt, @JsonKey(name: 'reviewed_at') this.reviewedAt, @JsonKey(name: 'billing_info') final  Map<String, dynamic>? billingInfo}): _billingInfo = billingInfo;
   factory _ActivationRequestModel.fromJson(Map<String, dynamic> json) => _$ActivationRequestModelFromJson(json);
 
 @override final  String id;
@@ -227,6 +228,15 @@ class _ActivationRequestModel implements ActivationRequestModel {
 @override final  String status;
 @override@JsonKey(name: 'created_at') final  DateTime createdAt;
 @override@JsonKey(name: 'reviewed_at') final  DateTime? reviewedAt;
+ final  Map<String, dynamic>? _billingInfo;
+@override@JsonKey(name: 'billing_info') Map<String, dynamic>? get billingInfo {
+  final value = _billingInfo;
+  if (value == null) return null;
+  if (_billingInfo is EqualUnmodifiableMapView) return _billingInfo;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableMapView(value);
+}
+
 
 /// Create a copy of ActivationRequestModel
 /// with the given fields replaced by the non-null parameter values.
@@ -241,16 +251,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ActivationRequestModel&&(identical(other.id, id) || other.id == id)&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.contactName, contactName) || other.contactName == contactName)&&(identical(other.requestedDays, requestedDays) || other.requestedDays == requestedDays)&&(identical(other.totalAmount, totalAmount) || other.totalAmount == totalAmount)&&(identical(other.status, status) || other.status == status)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.reviewedAt, reviewedAt) || other.reviewedAt == reviewedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ActivationRequestModel&&(identical(other.id, id) || other.id == id)&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.contactName, contactName) || other.contactName == contactName)&&(identical(other.requestedDays, requestedDays) || other.requestedDays == requestedDays)&&(identical(other.totalAmount, totalAmount) || other.totalAmount == totalAmount)&&(identical(other.status, status) || other.status == status)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.reviewedAt, reviewedAt) || other.reviewedAt == reviewedAt)&&const DeepCollectionEquality().equals(other._billingInfo, _billingInfo));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,userId,contactName,requestedDays,totalAmount,status,createdAt,reviewedAt);
+int get hashCode => Object.hash(runtimeType,id,userId,contactName,requestedDays,totalAmount,status,createdAt,reviewedAt,const DeepCollectionEquality().hash(_billingInfo));
 
 @override
 String toString() {
-  return 'ActivationRequestModel(id: $id, userId: $userId, contactName: $contactName, requestedDays: $requestedDays, totalAmount: $totalAmount, status: $status, createdAt: $createdAt, reviewedAt: $reviewedAt)';
+  return 'ActivationRequestModel(id: $id, userId: $userId, contactName: $contactName, requestedDays: $requestedDays, totalAmount: $totalAmount, status: $status, createdAt: $createdAt, reviewedAt: $reviewedAt, billingInfo: $billingInfo)';
 }
 
 
@@ -261,7 +271,7 @@ abstract mixin class _$ActivationRequestModelCopyWith<$Res> implements $Activati
   factory _$ActivationRequestModelCopyWith(_ActivationRequestModel value, $Res Function(_ActivationRequestModel) _then) = __$ActivationRequestModelCopyWithImpl;
 @override @useResult
 $Res call({
- String id,@JsonKey(name: 'user_id') String userId,@JsonKey(name: 'contact_name') String contactName,@JsonKey(name: 'requested_days') int requestedDays,@JsonKey(name: 'total_amount') int totalAmount, String status,@JsonKey(name: 'created_at') DateTime createdAt,@JsonKey(name: 'reviewed_at') DateTime? reviewedAt
+ String id,@JsonKey(name: 'user_id') String userId,@JsonKey(name: 'contact_name') String contactName,@JsonKey(name: 'requested_days') int requestedDays,@JsonKey(name: 'total_amount') int totalAmount, String status,@JsonKey(name: 'created_at') DateTime createdAt,@JsonKey(name: 'reviewed_at') DateTime? reviewedAt,@JsonKey(name: 'billing_info') Map<String, dynamic>? billingInfo
 });
 
 
@@ -278,7 +288,7 @@ class __$ActivationRequestModelCopyWithImpl<$Res>
 
 /// Create a copy of ActivationRequestModel
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? userId = null,Object? contactName = null,Object? requestedDays = null,Object? totalAmount = null,Object? status = null,Object? createdAt = null,Object? reviewedAt = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? userId = null,Object? contactName = null,Object? requestedDays = null,Object? totalAmount = null,Object? status = null,Object? createdAt = null,Object? reviewedAt = freezed,Object? billingInfo = freezed,}) {
   return _then(_ActivationRequestModel(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,userId: null == userId ? _self.userId : userId // ignore: cast_nullable_to_non_nullable
@@ -288,7 +298,8 @@ as int,totalAmount: null == totalAmount ? _self.totalAmount : totalAmount // ign
 as int,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime,reviewedAt: freezed == reviewedAt ? _self.reviewedAt : reviewedAt // ignore: cast_nullable_to_non_nullable
-as DateTime?,
+as DateTime?,billingInfo: freezed == billingInfo ? _self._billingInfo : billingInfo // ignore: cast_nullable_to_non_nullable
+as Map<String, dynamic>?,
   ));
 }
 
