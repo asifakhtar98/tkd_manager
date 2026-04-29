@@ -1,6 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
-import 'package:tkd_saas/features/activation/domain/repositories/i_activation_repository.dart';
+import 'package:tkd_saas/features/admin/activation_review/domain/repositories/admin_activation_repository.dart';
 import 'admin_activation_event.dart';
 import 'admin_activation_state.dart';
 
@@ -8,11 +8,11 @@ import 'admin_activation_state.dart';
 /// can be approved or rejected.
 ///
 /// Approval triggers the subscription day-extension logic
-/// (all in [IActivationRepository.approveActivationRequest]).
+/// (all in [IAdminActivationRepository.approveActivationRequest]).
 @injectable
 class AdminActivationBloc
     extends Bloc<AdminActivationEvent, AdminActivationState> {
-  final IActivationRepository _repository;
+  final IAdminActivationRepository _repository;
 
   AdminActivationBloc(this._repository) : super(const AdminActivationState()) {
     on<AdminActivationLoadPendingRequests>(_onLoadPendingRequests);

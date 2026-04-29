@@ -5,7 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:injectable/injectable.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/config/app_config.dart';
-import '../models/activation_request_model.dart';
+import 'package:tkd_saas/core/shared/data/models/activation_request_model.dart';
 import '../models/user_activation_model.dart';
 
 /// Contract for all Supabase activation-related remote calls.
@@ -25,32 +25,6 @@ abstract class ActivationRemoteDataSource {
 
   /// Returns `true` if the current user exists in the `admin_users` table.
   Future<bool> isCurrentUserAdmin();
-
-  /// Fetches all activation requests with `status = 'pending'` (admin only, enforced by RLS).
-  Future<List<ActivationRequestModel>> fetchAllPendingActivationRequests();
-
-  /// Fetches the `user_activations` row for a specific [userId], or `null`.
-  ///
-  /// Admin only — used during the approval flow.
-  Future<UserActivationModel?> fetchUserActivationByUserId(String userId);
-
-  /// Inserts a new `user_activations` row (admin only).
-  Future<void> insertUserActivation({
-    required String userId,
-    required DateTime expiresAt,
-  });
-
-  /// Updates an existing `user_activations` row (admin only).
-  Future<void> updateUserActivationExpiresAt({
-    required String userId,
-    required DateTime newExpiresAt,
-  });
-
-  /// Updates an activation request's status and sets `reviewed_at` to now.
-  Future<void> updateActivationRequestStatus({
-    required String requestId,
-    required String newStatus,
-  });
 
   /// Sends the post-approval email to the user if a recipient email is available.
   Future<void> sendActivationApprovedEmail({
@@ -136,76 +110,6 @@ class ActivationRemoteDataSourceImpl implements ActivationRemoteDataSource {
         .maybeSingle();
 
     return response != null;
-  }
-
-  @override
-  Future<List<ActivationRequestModel>>
-  fetchAllPendingActivationRequests() async {
-    final response = await _supabaseClient
-        .from('activation_requests')
-        .select()
-        .eq('status', 'pending')
-        .order('created_at', ascending: true);
-
-    return (response as List)
-        .map(
-          (json) =>
-              ActivationRequestModel.fromJson(json as Map<String, dynamic>),
-        )
-        .toList();
-  }
-
-  @override
-  Future<UserActivationModel?> fetchUserActivationByUserId(
-    String userId,
-  ) async {
-    final response = await _supabaseClient
-        .from('user_activations')
-        .select()
-        .eq('user_id', userId)
-        .maybeSingle();
-
-    if (response == null) return null;
-    return UserActivationModel.fromJson(response);
-  }
-
-  @override
-  Future<void> insertUserActivation({
-    required String userId,
-    required DateTime expiresAt,
-  }) async {
-    await _supabaseClient.from('user_activations').insert({
-      'user_id': userId,
-      'expires_at': expiresAt.toUtc().toIso8601String(),
-    });
-  }
-
-  @override
-  Future<void> updateUserActivationExpiresAt({
-    required String userId,
-    required DateTime newExpiresAt,
-  }) async {
-    await _supabaseClient
-        .from('user_activations')
-        .update({
-          'expires_at': newExpiresAt.toUtc().toIso8601String(),
-          'updated_at': DateTime.now().toUtc().toIso8601String(),
-        })
-        .eq('user_id', userId);
-  }
-
-  @override
-  Future<void> updateActivationRequestStatus({
-    required String requestId,
-    required String newStatus,
-  }) async {
-    await _supabaseClient
-        .from('activation_requests')
-        .update({
-          'status': newStatus,
-          'reviewed_at': DateTime.now().toUtc().toIso8601String(),
-        })
-        .eq('id', requestId);
   }
 
   @override

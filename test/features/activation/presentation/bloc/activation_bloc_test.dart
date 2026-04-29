@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:tkd_saas/features/activation/domain/entities/activation_request_entity.dart';
+import 'package:tkd_saas/core/shared/domain/entities/activation_request_entity.dart';
 import 'package:tkd_saas/features/activation/domain/repositories/i_activation_repository.dart';
 import 'package:tkd_saas/features/activation/presentation/bloc/activation_bloc.dart';
 import 'package:tkd_saas/features/activation/presentation/bloc/activation_event.dart';

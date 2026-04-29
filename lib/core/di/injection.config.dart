@@ -23,8 +23,14 @@ import 'package:tkd_saas/features/activation/presentation/bloc/activation_bloc.d
     as _i84;
 import 'package:tkd_saas/features/activation/presentation/bloc/activation_status_bloc.dart'
     as _i558;
-import 'package:tkd_saas/features/admin_panel/presentation/bloc/admin_activation_bloc.dart'
-    as _i443;
+import 'package:tkd_saas/features/admin/activation_review/data/datasources/admin_activation_remote_datasource.dart'
+    as _i782;
+import 'package:tkd_saas/features/admin/activation_review/data/repositories/admin_activation_repository_impl.dart'
+    as _i453;
+import 'package:tkd_saas/features/admin/activation_review/domain/repositories/admin_activation_repository.dart'
+    as _i34;
+import 'package:tkd_saas/features/admin/activation_review/presentation/bloc/admin_activation_bloc.dart'
+    as _i1054;
 import 'package:tkd_saas/features/auth/data/repositories/authentication_repository_implementation.dart'
     as _i330;
 import 'package:tkd_saas/features/auth/domain/repositories/authentication_repository.dart'
@@ -102,6 +108,10 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i706.Uuid>(),
       ),
     );
+    gh.lazySingleton<_i782.AdminActivationRemoteDataSource>(
+      () =>
+          _i782.AdminActivationRemoteDataSourceImpl(gh<_i454.SupabaseClient>()),
+    );
     gh.lazySingleton<_i529.BracketSnapshotRepository>(
       () => _i900.SupabaseBracketSnapshotRepository(gh<_i454.SupabaseClient>()),
     );
@@ -145,6 +155,12 @@ extension GetItInjectableX on _i174.GetIt {
         isEmailConfirmationRedirect: isEmailConfirmationRedirect,
       ),
     );
+    gh.lazySingleton<_i34.IAdminActivationRepository>(
+      () => _i453.AdminActivationRepositoryImpl(
+        gh<_i782.AdminActivationRemoteDataSource>(),
+        gh<_i423.ActivationRemoteDataSource>(),
+      ),
+    );
     gh.factory<_i416.BracketBloc>(
       () => _i416.BracketBloc(
         gh<_i937.SingleEliminationBracketGeneratorService>(),
@@ -161,6 +177,9 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i529.BracketSnapshotRepository>(),
       ),
     );
+    gh.factory<_i1054.AdminActivationBloc>(
+      () => _i1054.AdminActivationBloc(gh<_i34.IAdminActivationRepository>()),
+    );
     gh.lazySingleton<_i936.IActivationRepository>(
       () => _i1013.ActivationRepositoryImpl(
         gh<_i423.ActivationRemoteDataSource>(),
@@ -168,9 +187,6 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i84.ActivationBloc>(
       () => _i84.ActivationBloc(gh<_i936.IActivationRepository>()),
-    );
-    gh.factory<_i443.AdminActivationBloc>(
-      () => _i443.AdminActivationBloc(gh<_i936.IActivationRepository>()),
     );
     gh.lazySingleton<_i558.ActivationStatusBloc>(
       () => _i558.ActivationStatusBloc(gh<_i936.IActivationRepository>()),

@@ -1,6 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import '../../../../core/error/failures.dart';
-import 'package:tkd_saas/features/activation/domain/entities/activation_request_entity.dart';
+import 'package:tkd_saas/core/error/failures.dart';
+import 'package:tkd_saas/core/shared/domain/entities/activation_request_entity.dart';
 
 part 'admin_activation_state.freezed.dart';
 

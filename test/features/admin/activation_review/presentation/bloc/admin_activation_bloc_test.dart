@@ -2,17 +2,17 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:tkd_saas/core/error/failures.dart';
-import 'package:tkd_saas/features/activation/domain/entities/activation_request_entity.dart';
-import 'package:tkd_saas/features/activation/domain/repositories/i_activation_repository.dart';
-import 'package:tkd_saas/features/admin_panel/presentation/bloc/admin_activation_bloc.dart';
-import 'package:tkd_saas/features/admin_panel/presentation/bloc/admin_activation_event.dart';
-import 'package:tkd_saas/features/admin_panel/presentation/bloc/admin_activation_state.dart';
+import 'package:tkd_saas/core/shared/domain/entities/activation_request_entity.dart';
+import 'package:tkd_saas/features/admin/activation_review/domain/repositories/admin_activation_repository.dart';
+import 'package:tkd_saas/features/admin/activation_review/presentation/bloc/admin_activation_bloc.dart';
+import 'package:tkd_saas/features/admin/activation_review/presentation/bloc/admin_activation_event.dart';
+import 'package:tkd_saas/features/admin/activation_review/presentation/bloc/admin_activation_state.dart';
 
-class MockActivationRepository extends Mock implements IActivationRepository {}
+class MockAdminActivationRepository extends Mock implements IAdminActivationRepository {}
 
 void main() {
   late AdminActivationBloc bloc;
-  late MockActivationRepository mockRepository;
+  late MockAdminActivationRepository mockRepository;
 
   final tRequest1 = ActivationRequestEntity(
     id: 'req-1',
@@ -35,7 +35,7 @@ void main() {
   );
 
   setUp(() {
-    mockRepository = MockActivationRepository();
+    mockRepository = MockAdminActivationRepository();
     bloc = AdminActivationBloc(mockRepository);
 
     registerFallbackValue(tRequest1);

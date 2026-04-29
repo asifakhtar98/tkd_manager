@@ -3,7 +3,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:tkd_saas/core/error/failures.dart';
 import 'package:tkd_saas/features/activation/data/datasources/activation_remote_datasource.dart';
-import 'package:tkd_saas/features/activation/data/models/activation_request_model.dart';
+import 'package:tkd_saas/core/shared/data/models/activation_request_model.dart';
 import 'package:tkd_saas/features/activation/data/repositories/activation_repository_impl.dart';
 
 class MockActivationRemoteDataSource extends Mock

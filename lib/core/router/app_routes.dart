@@ -20,8 +20,8 @@ import 'package:tkd_saas/features/tournament/domain/entities/tournament_entity.d
 import 'package:tkd_saas/features/tournament/presentation/bloc/tournament_bloc.dart';
 import 'package:tkd_saas/features/tournament/presentation/screens/tournament_detail_screen.dart';
 import 'package:tkd_saas/features/activation/presentation/screens/activate_software_screen.dart';
-import 'package:tkd_saas/features/admin_panel/presentation/screens/admin_activation_screen.dart';
-import 'package:tkd_saas/features/admin_panel/presentation/screens/admin_dashboard_screen.dart';
+import 'package:tkd_saas/features/admin/activation_review/presentation/screens/admin_activation_screen.dart';
+import 'package:tkd_saas/features/admin/dashboard/presentation/screens/admin_dashboard_screen.dart';
 import 'package:tkd_saas/features/profile/presentation/screens/profile_screen.dart';
 import 'package:tkd_saas/features/invoice/presentation/screens/invoice_generator_screen.dart';
 
