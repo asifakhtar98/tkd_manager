@@ -10,6 +10,7 @@ import 'package:tkd_saas/core/config/app_config.dart';
 import 'package:tkd_saas/core/di/injection.dart';
 import 'package:tkd_saas/core/router/app_router.dart';
 import 'package:tkd_saas/core/theme/app_theme.dart';
+import 'package:tkd_saas/core/shared/widgets/support_widgets.dart';
 import 'package:tkd_saas/features/auth/presentation/bloc/authentication_bloc.dart';
 import 'package:tkd_saas/features/tournament/presentation/bloc/tournament_bloc.dart';
 import 'package:tkd_saas/features/activation/presentation/bloc/activation_status_bloc.dart';
@@ -96,13 +97,53 @@ class TkdTournamentApp extends StatelessWidget {
               ? context.read<AuthenticationBloc>()
               : null;
 
+          final router = AppRouter.createRouter(
+            authenticationBloc: authenticationBloc,
+          );
+
           Widget app = MaterialApp.router(
             title: 'GameCon Tournament Manager',
             debugShowCheckedModeBanner: false,
             theme: AppTheme.light,
-            routerConfig: AppRouter.createRouter(
-              authenticationBloc: authenticationBloc,
-            ),
+            routerConfig: router,
+            builder: (context, child) {
+              return OrientationBuilder(
+                builder: (context, orientation) {
+                  if (orientation == Orientation.portrait) {
+                    return const Scaffold(
+                      body: Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.screen_rotation,
+                              size: 48,
+                              color: Colors.grey,
+                            ),
+                            SizedBox(height: 16),
+                            Text(
+                              'Please open in desktop landscape mode',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(fontSize: 24),
+                            ),
+                            SizedBox(height: 16),
+                            Text(
+                              'GameCon Tournament Manager',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(fontSize: 14),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }
+                  return Scaffold(
+                    body: child ?? const SizedBox.shrink(),
+                    floatingActionButton: GlobalSupportFAB(router: router),
+                  );
+                },
+              );
+            },
           );
 
           if (authenticationBloc != null) {
@@ -138,3 +179,4 @@ class TkdTournamentApp extends StatelessWidget {
     );
   }
 }
+
