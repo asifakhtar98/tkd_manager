@@ -58,6 +58,8 @@ class _GlobalSupportFABState extends State<GlobalSupportFAB> {
 }
 
 class SupportModalSheet extends StatelessWidget {
+  static const String supportPhoneNumber = '+918473997673';
+  
   const SupportModalSheet({super.key});
 
   @override
@@ -77,7 +79,7 @@ class SupportModalSheet extends StatelessWidget {
             Row(
               children: [
                 const SelectableText(
-                  '+918473997673',
+                  supportPhoneNumber,
                   style: TextStyle(fontSize: 18),
                 ),
                 const SizedBox(width: 8),
@@ -85,7 +87,7 @@ class SupportModalSheet extends StatelessWidget {
                   icon: const Icon(Icons.copy, size: 20),
                   tooltip: 'Copy Number',
                   onPressed: () {
-                    Clipboard.setData(const ClipboardData(text: '+918473997673'));
+                    Clipboard.setData(const ClipboardData(text: supportPhoneNumber));
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('Number copied to clipboard')),
                     );
@@ -95,7 +97,7 @@ class SupportModalSheet extends StatelessWidget {
                   icon: const Icon(Icons.open_in_new, size: 20),
                   tooltip: 'Open in WhatsApp',
                   onPressed: () async {
-                    final uri = Uri.parse('https://wa.me/918473997673');
+                    final uri = Uri.parse('https://wa.me/${supportPhoneNumber.replaceAll('+', '')}');
                     if (await canLaunchUrl(uri)) {
                       await launchUrl(uri, mode: LaunchMode.externalApplication);
                     } else {
