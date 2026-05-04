@@ -214,15 +214,17 @@ mixin $InvoiceRoute on GoRouteData {
   void replace(BuildContext context) => context.replace(location);
 }
 
-RouteBase get $appDownloadRoute =>
-    GoRouteData.$route(path: '/app', factory: $AppDownloadRoute._fromState);
+RouteBase get $appDownloadRoute => GoRouteData.$route(
+  path: '/download',
+  factory: $AppDownloadRoute._fromState,
+);
 
 mixin $AppDownloadRoute on GoRouteData {
   static AppDownloadRoute _fromState(GoRouterState state) =>
       const AppDownloadRoute();
 
   @override
-  String get location => GoRouteData.$location('/app');
+  String get location => GoRouteData.$location('/download');
 
   @override
   void go(BuildContext context) => context.go(location);

@@ -65,8 +65,8 @@ abstract final class RoutePaths {
   /// Invoice generator route path `/invoice`
   static const String invoice = '/invoice';
 
-  /// Public app download landing page `/app`
-  static const String appDownload = '/app';
+  /// Public app download landing page `/download`
+  static const String appDownload = '/download';
 }
 
 @TypedGoRoute<LoginRoute>(path: '/login')
@@ -153,7 +153,7 @@ class InvoiceRoute extends GoRouteData with $InvoiceRoute {
       const InvoiceGeneratorScreen();
 }
 
-@TypedGoRoute<AppDownloadRoute>(path: '/app')
+@TypedGoRoute<AppDownloadRoute>(path: '/download')
 @immutable
 class AppDownloadRoute extends GoRouteData with $AppDownloadRoute {
   const AppDownloadRoute();
