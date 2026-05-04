@@ -184,23 +184,24 @@ class AuthenticationRepositoryImplementation
   Stream<AuthState> get authStateChanges =>
       _supabaseClient.auth.onAuthStateChange;
 
-  /// On Flutter web, uses the current origin so Supabase email links redirect
-  /// back to the running application. On mobile, returns the deep link URL
-  /// so the OS routes the user back into the app.
+  /// On Flutter web, uses the current origin + `/app` so Supabase email links
+  /// redirect back to the Flutter PWA (which is served under `/app/` in
+  /// production). On mobile, returns the deep link URL so the OS routes the
+  /// user back into the app.
   String? get _webRedirectUrl => kIsWeb
-      ? Uri.base.origin
+      ? '${Uri.base.origin}/app'
       : AppConfig.mobilePasswordResetRedirectUrl;
 
   /// Redirect URL used exclusively for **sign-up email confirmation** links.
   ///
-  /// On web, points to `origin/email-confirmed` so the [AuthenticationBloc]
+  /// On web, points to `origin/app/email-confirmed` so the [AuthenticationBloc]
   /// can distinguish email-confirmation redirects from password-recovery
   /// redirects by inspecting `Uri.base.path`.
   ///
   /// On mobile, returns the deep link URL (`com.gamecon.app://email-confirmed`)
   /// so the OS opens the app directly instead of the web browser.
   String? get _emailConfirmationRedirectUrl => kIsWeb
-      ? '${Uri.base.origin}${AppConfig.emailConfirmedPath}'
+      ? '${Uri.base.origin}/app${AppConfig.emailConfirmedPath}'
       : AppConfig.mobileEmailConfirmationRedirectUrl;
 
   /// Maps Supabase's technical error messages to friendlier text where
